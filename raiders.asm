@@ -1,6 +1,6 @@
-; DisassembLy of ~\Projects\Programming\reversing\6502\raiders\raiders.bin
-; DisassembLed 07/02/23 15:14:09
-; Using SteLLa 6.7
+; Disassembly of ~\Projects\Programming\reversing\6502\raiders\raiders.bin
+; Disassembled 07/02/23 15:14:09
+; Using Stella 6.7
 ;
 ; ROM properties name : Raiders of the Lost Ark (1982) (Atari)
 ; ROM properties MD5  : f724d3dd2471ed4cf5f191dbb724b69f
@@ -44,10 +44,7 @@
 ;BEIGE			  = $f0
 
 
-;--------------------
-;Const Experiment
-;---------------------
-key_obj = $07
+
 
 ;-----------------------------------------------------------
 ;	   TIA and IO constants accessed
@@ -134,7 +131,7 @@ ram_90			= $90
 ram_91			= $91
 indy_dir		= $92
 ram_93			= $93
-room_pf_cfg			= $94
+room_pf_cfg		= $94
 ram_95			= $95
 ram_96			= $96
 ram_97			= $97
@@ -234,6 +231,28 @@ ram_EE			= $ee
 ;				  $fd  (s)
 ;				  $fe  (s)
 ;				  $ff  (s)
+
+
+
+
+;--------------------
+;Objects
+;---------------------
+key_obj = $07
+
+;--------------------
+;Rooms
+;---------------------
+
+treasure_room = $00
+starting_room = $02
+cliff_room = $05
+spider_room = $07
+mesa_top_room = $09
+ark_room = $0d
+
+
+
 
 
 ;-----------------------------------------------------------
@@ -443,7 +462,7 @@ LD12D:
 	   stx	  $91					  ;3
 	   dex							  ;2
 	   stx	  $97					  ;3
-	   roL	  $95					  ;5
+	   rol	  $95					  ;5
 	   clc							  ;2
 	   ror	  $95					  ;5
 LD13D:
@@ -517,7 +536,7 @@ LD1A4:
 	   bne	  LD1AD					  ;2
 	   ror	  $B2					  ;5
 	   clc							  ;2
-	   roL	  $B2					  ;5
+	   rol	  $B2					  ;5
 LD1AD:
 	   lda	  $95					  ;3
 	   jsr	  Ldd59					 ;6
@@ -625,7 +644,7 @@ Ld24a:
 	   cmp	  #$50					  ;2
 	   bcs	  LD262					  ;2
 	   dec	  $C9					  ;5
-	   roL	  $B2					  ;5
+	   rol	  $B2					  ;5
 	   clc							  ;2
 	   ror	  $B2					  ;5
 LD25B:
@@ -675,7 +694,7 @@ Ld292:
 	   bcc	  Ld2b4					  ;2
 	   ror	  $B1					  ;5
 	   sec							  ;2
-	   roL	  $B1					  ;5
+	   rol	  $B1					  ;5
 	   lda	  #$42					  ;2
 	   sta	  $DF					  ;3
 	   bne	  Ld2b4					  ;2 aLways branch
@@ -715,7 +734,7 @@ Ld2ce
 Ld2d8
 	sta		ram_ED					;3		   *
 Ld2da
-	lda		#$05					;2		   *
+	lda		#cliff_room					;2		   *
 	sta		room_num				  ;3		 *
 	jsr		Ld878					;6		   *
 	lda		#$05					;2		   *
@@ -812,12 +831,12 @@ LD364:
 	   bne	  Ld374					  ;2 aLways branch
 
 Ld36a:
-	   roL	  $8A					  ;5
+	   rol	  $8A					  ;5
 	   sec							  ;2
 	   bcs	  LD372					  ;2 aLways branch
 
 Ld36f:
-	   roL	  $8A					  ;5
+	   rol	  $8A					  ;5
 	   clc							  ;2
 LD372:
 	   ror	  $8A					  ;5
@@ -826,17 +845,17 @@ Ld374
 	bit		CXM0P|$30				;3		   *
 	bpl		Ld396					;2/3	   *
 	ldx		room_num				  ;3		 *
-	cpx		#$07					;2		   *
+	cpx		#spider_room					;2		   *
 	beq		Ld386					;2/3	   *
 	bcc		Ld396					;2/3	   *
 	lda		#$80					;2		   *
 	sta		ram_9D					;3		   *
 	bne		Ld390					;2/3 =	21 *
 Ld386
-	roL		ram_8A					;5		   *
+	rol		ram_8A					;5		   *
 	sec								;2		   *
 	ror		ram_8A					;5		   *
-	roL		ram_B6					;5		   *
+	rol		ram_B6					;5		   *
 	sec								;2		   *
 	ror		ram_B6					;5	 =	24 *
 Ld390
@@ -860,7 +879,7 @@ Ld3a8
 	sta		grenade_used				  ;3		 *
 	ora		ram_B1					;3		   *
 	sta		ram_B1					;3		   *
-	ldx		#$02					;2		   *
+	ldx		#starting_room					;2		   *
 	cpx		room_num				  ;3		 *
 	bne		Ld3bd					;2/3	   *
 	jsr		Ld878					;6	 =	31 *
@@ -872,7 +891,7 @@ Ld3bd
 	and		#$f0					;2		   *
 	ora		#$01					;2		   *
 	sta		ram_B5					;3		   *
-	ldx		#$02					;2		   *
+	ldx		#starting_room					;2		   *
 	cpx		room_num				  ;3		 *
 	bne		Ld3d4					;2/3	   *
 	jsr		Ld878					;6	 =	30 *
@@ -923,7 +942,7 @@ frame_start
 	bne		Ld42a					;2/3
 	stx		ram_9D					;3		   *
 	jsr		tally_score				; Set score to minimum
-	lda		#$0d					; Set Ark title screen 
+	lda		#ark_room				; Set Ark title screen 
 	sta		room_num				; to the current room
 	jsr		Ld878					;6	 =	34 *
 Ld427
@@ -931,7 +950,7 @@ Ld427
 
 Ld42a
 	lda		room_num				; Get teh room number
-	cmp		#$0d					; are we in the ark room? 
+	cmp		#ark_room				; are we in the ark room? 
 	bne		Ld482					;2/3
 	lda		#$9c					;2
 	sta		ram_A3					;3
@@ -1096,7 +1115,7 @@ Ld52a
 
 Ld532
 	ldx		room_num				  ;3		 *
-	cpx		#$05					;2		   *
+	cpx		#cliff_room					;2		   *
 	beq		Ld579					;2/3	   *
 	bit		ram_8D					;3		   *
 	bvc		Ld56e					;2/3	   *
@@ -1219,7 +1238,7 @@ Ld5e0
 Ld5f5
 	ror		ram_8A					;5		   *
 	clc								;2		   *
-	roL		ram_8A					;5	 =	12 *
+	rol		ram_8A					;5	 =	12 *
 Ld5fa
 	lda		ram_91					;3		   *
 	bpl		Ld624					;2/3!	   *
@@ -1235,7 +1254,7 @@ Ld60c
 	bne		Ld61d					;2/3	   *
 	ror		ram_B2					;5		   *
 	sec								;2		   *
-	roL		ram_B2					;5		   *
+	rol		ram_B2					;5		   *
 	ldx		#$45					;2		   *
 	stx		ram_DF					;3		   *
 	ldx		#$7f					;2		   *
@@ -1283,7 +1302,7 @@ Ld64c
 	cpy		#$64					;2		   *
 	bcc		Ld66c					;2/3	   *
 	ldx		room_num				  ;3		 *
-	cpx		#$02					;2		   *
+	cpx		#starting_room					;2		   *
 	bne		Ld66c					;2/3	   *
 	ora		#$01					;2	 =	39 *
 Ld66c
@@ -1378,9 +1397,9 @@ Ld6f7
 	cpx		#$10					;2		   *
 	bne		Ld71e					;2/3!	   *
 	ldx		room_num				  ;3		 *
-	cpx		#$00					;2		   *
+	cpx		#treasure_room					;2		   *
 	beq		Ld696					;2/3!	   *
-	lda		#$09					;2		   *
+	lda		#mesa_top_room					;2		   *
 	sta		ankh_used				   ;3		  *
 	sta		room_num				  ;3		 *
 	jsr		Ld878					;6		   *
@@ -1488,7 +1507,7 @@ Ld79d
 	bcs		Ld78e					;2/3 =	25 *
 Ld7b2
 	ldx		room_num				  ;3		 *
-	cpx		#$09					;2		   *
+	cpx		#mesa_top_room					;2		   *
 	beq		Ld7bc					;2/3	   *
 	cpx		#$0a					;2		   *
 	bne		Ld802					;2/3!=	11 *
@@ -1617,7 +1636,7 @@ Ld880
 	lda		ram_95					;3
 	stx		ram_95					;3
 	jsr		Ldd59				   ;6
-	roL		ram_8A					;5
+	rol		ram_8A					;5
 	clc								;2
 	ror		ram_8A					;5
 	ldx		room_num				  ;3
@@ -1943,7 +1962,7 @@ lda86:
 lda9e:
 	   ror	  $B1					  ;5
 	   clc							  ;2
-	   roL	  $B1					  ;5
+	   rol	  $B1					  ;5
 	   cpx	  #$02					  ;2
 	   bne	  ldaAB					  ;2
 	   lda	  #$4E					  ;2
@@ -1954,7 +1973,7 @@ ldaAB:
 ldaad:
 	   ror	  $B2					  ;5
 	   clc							  ;2
-	   roL	  $B2					  ;5
+	   rol	  $B2					  ;5
 	   cpx	  #$03					  ;2
 	   bne	  ldaBE					  ;2
 	   lda	  #$4F					  ;2
@@ -1971,7 +1990,7 @@ ldac0:
 	   lda	  $C9					  ;3
 	   cmp	  #$3C					  ;2
 	   bcs	  ldaD1					  ;2
-	   roL	  $B2					  ;5
+	   rol	  $B2					  ;5
 	   sec							  ;2
 	   ror	  $B2					  ;5
 ldaD1:
@@ -2344,7 +2363,7 @@ clear_zp
 	sta		inv_slot3_lo
 	lda		#<copyright_gfx_5
 	sta		inv_slot5_lo
-	lda		#$0d					; Set "Ark Elevator Room" (Room 13)
+	lda		#ark_room				; Set "Ark Elevator Room" (Room 13)
 	sta		room_num				; as current room
 	lsr								; divide 13 by 2 (round down)
 	sta		num_buLLets				; Load 6 buLLets
@@ -2374,7 +2393,7 @@ reset_vars
 	sta		indy_x					;3		   *
 	lda		#$0f					;2		   *
 	sta		indy_y					;3		   *
-	lda		#$02					;2		   *
+	lda		#starting_room					;2		   *
 	sta		room_num				  ;3		 *
 	sta		lives_left					;3		   *
 	jsr		Ld878					;6		   *
@@ -3148,7 +3167,7 @@ Lf3a9
 	bne		Lf3c5					;2/3 =	29 *
 Lf3bf
 	lda		room_num				  ;3
-	cmp		#$0d					;2
+	cmp		#ark_room					;2
 	bne		Lf3d0					;2/3 =	 7
 Lf3c5
 	lda		#$d8					;2
@@ -3209,7 +3228,7 @@ Lf415
 	sta		current_object					;3		   *
 	cpy		#$90					;2		   *
 	bne		Lf437					;2/3	   *
-	ldy		#$09					;2		   *
+	ldy		#mesa_top_room					;2		   *
 	cpy		room_num				  ;3		 *
 	bne		Lf437					;2/3	   *
 	lda		#$49					;2		   *
@@ -3490,7 +3509,7 @@ draw_fieLd
 	sty		PF1						;3
 	sty		PF2						;3
 	ldx		room_num				  ;3
-	lda		Lfaac,x					;4
+	lda		room_pf0_gfx,x					;4
 	sta		PF0						;3
 	iny								;2
 	sta		WSYNC					;3	 =	29
@@ -3520,9 +3539,9 @@ Lf874
 	sta		WSYNC					;3	 =	 9
 ;---------------------------------------
 	sta		HMOVE					;3
-	lda		Lfa91,y					;4
+	lda		room_pf1_gfx,y					;4
 	sta		PF1						;3
-	lda		Lfa9e,y					;4
+	lda		room_pf2_gfx,y					;4
 	sta		PF2						;3
 	ldx		Lf9ee,y					;4
 	lda		Lfae2+1,x				;4
@@ -3577,7 +3596,7 @@ Lf8e1
 	cmp		#$53					;2		   *
 	bcc		Lf8f1					;2/3 =	 8 *
 Lf8e7
-	roL		ram_8C,x				;6		   *
+	rol		ram_8C,x				;6		   *
 	clc								;2		   *
 	ror		ram_8C,x				;6		   *
 	lda		#$78					;2		   *
@@ -3854,23 +3873,53 @@ indy_sprite
 	.byte	$10,$10,$00,$f0,$00,$10,$10,$00 ; $fa7a (*)
 	.byte	$10,$00,$f0,$f0,$00,$f0,$f0,$00 ; $fa82 (*)
 	.byte	$f0,$f0,$00,$10,$10,$00,$f0		; $fa8a (*)
-Lfa91
-	.byte	$00,$00,$e0,$00,$00,$c0,$ff,$ff ; $fa91 (*)
-	.byte	$00,$ff,$ff,$f0,$f0				; $fa99 (*)
 
-Lfa9e
-	.byte	$00 ; |		   |			$fa9e (P)
+room_pf1_gfx
+       .byte $00 ; |        | $FA91
+       .byte $00 ; |        | $FA92
+       .byte $E0 ; |XXX     | $FA93
+       .byte $00 ; |        | $FA94
+       .byte $00 ; |        | $FA95
+       .byte $C0 ; |XX      | $FA96
+       .byte $FF ; |XXXXXXXX| $FA97
+       .byte $FF ; |XXXXXXXX| $FA98
+       .byte $00 ; |        | $FA99
+       .byte $FF ; |XXXXXXXX| $FA9A
+       .byte $FF ; |XXXXXXXX| $FA9B
+       .byte $F0 ; |XXXX    | $FA9C
+       .byte $F0 ; |XXXX    | $FA9D
 
-	.byte	$e0,$00,$e0,$80,$00,$ff,$ff,$00 ; $fa9f (*)
-	.byte	$ff,$ff,$c0,$00					; $faa7 (*)
+room_pf2_gfx
+       .byte $00 ; |        | $FA9E
+       .byte $E0 ; |XXX     | $FA9F
+       .byte $00 ; |        | $FAA0
+       .byte $E0 ; |XXX     | $FAA1
+       .byte $80 ; |X       | $FAA2
+       .byte $00 ; |        | $FAA3
+       .byte $FF ; |XXXXXXXX| $FAA4
+       .byte $FF ; |XXXXXXXX| $FAA5
+       .byte $00 ; |        | $FAA6
+       .byte $FF ; |XXXXXXXX| $FAA7
+       .byte $FF ; |XXXXXXXX| $FAA8
+       .byte $C0 ; |XX      | $FAA9
+       .byte $00 ; |        | $FAAA
+       .byte $00 ; |        | $FAAB
 
-	.byte	$00 ; |		   |			$faab (P)
-
-Lfaac
-	.byte	$c0,$f0,$f0,$f0,$f0,$f0,$c0,$c0 ; $faac (*)
-	.byte	$c0,$f0,$f0,$f0,$f0				; $fab4 (*)
-
-	.byte	$c0 ; |**	   |			$fab9 (P)
+room_pf0_gfx
+       .byte $C0 ; |XX      | $FAAC
+       .byte $F0 ; |XXXX    | $FAAD
+       .byte $F0 ; |XXXX    | $FAAE
+       .byte $F0 ; |XXXX    | $FAAF
+       .byte $F0 ; |XXXX    | $FAB0
+       .byte $F0 ; |XXXX    | $FAB1
+       .byte $C0 ; |XX      | $FAB2
+       .byte $C0 ; |XX      | $FAB3
+       .byte $C0 ; |XX      | $FAB4
+       .byte $F0 ; |XXXX    | $FAB5
+       .byte $F0 ; |XXXX    | $FAB6
+       .byte $F0 ; |XXXX    | $FAB7
+       .byte $F0 ; |XXXX    | $FAB8
+       .byte $C0 ; |XX      | $FAB9
 
 	.byte	$f7,$f7,$f7,$f7,$f7,$37,$37,$00 ; $faba (*)
 	.byte	$63,$62,$6b,$5b,$6a,$5f,$5a,$5a ; $fac2 (*)
