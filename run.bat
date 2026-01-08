@@ -1,0 +1,1 @@
+Stella.exe out\raiders.bin -debug
