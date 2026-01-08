@@ -6,6 +6,7 @@
 ; ROM properties MD5  : f724d3dd2471ed4cf5f191dbb724b69f
 ; Bankswitch type     : F8* (8K) 
 ;
+; Updated: Halkun
 ; Legend: *  = CODE not yet run (tentative code)
 ;         D  = DATA directive (referenced in some way)
 ;         G  = GFX directive, shown as '#' (stored in player, missile, ball)
