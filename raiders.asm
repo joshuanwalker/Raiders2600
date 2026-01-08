@@ -1230,7 +1230,7 @@ Ld802
 Ld80d
 	lda		ram_99					; Check status flag (likely screen initialization)
 	beq		Ld816					; If zero, skip subroutine
-	jsr		Ldd59					; Run special screen setup routine (e.g., reset state or clear screen)
+	jsr		AddTableValueToRam98	; Apply indexed adjustment to ram_98
 	lda		#$00					; Clear the flag afterward
 Ld816
 	sta		ram_99					; Store the updated flag
@@ -1305,7 +1305,7 @@ ResetRoomFlags
 	stx		ram_90					; Could be Indy or enemy action lock
 	lda		pickupStatusFlags					; Read item collection flags
 	stx		pickupStatusFlags					; Clear them all (reset pickups for new screen)
-	jsr		Ldd59					; General-purpose screen initialization/reset routine
+	jsr		AddTableValueToRam98	; Apply indexed adjustment to ram_98
 	rol		playerInput					 ; Rotate input flags  possibly to mask off an "item use" bit
 	clc								; 2
 	ror		playerInput					 ; Reverse the bit rotation; keeps input state consistent
@@ -1808,7 +1808,7 @@ Ldd3e
 	.byte	$b0,$06,$25,$c6,$f0,$01,$38,$60 ; $dd4b (*)
 	.byte	$25,$c7,$d0,$fb,$18,$60			; $dd53 (*)
 	
-Ldd59
+AddTableValueToRam98
 	and		#$1f					; 2
 	tax								; 2
 	lda		ram_98					; 3
@@ -2616,7 +2616,7 @@ Lf348
 Lf360
 	ldy		#$03					; 2
 Lf362
-	jsr		Lf8b3					; 6
+	jsr		MoveObjectTowardTarget	; 6
 Lf365
 	lda		frameCount					 ; get current frame count
 	and		#$06					; 2
@@ -2628,7 +2628,7 @@ Lf365
 Lf371
 	ldx		#$02					; 2
 Lf373
-	jsr		Lfef4					; 6
+	jsr		ProcessActiveObjectMovement ; 6
 	inx								; 2
 	cpx		#$05					; 2
 	bcc		Lf373					; 2
@@ -2753,7 +2753,7 @@ Lf437
 	adc		#$10					; 2
 	sta		ram_8D					; 3
 	ldx		#$03					; 2
-	jsr		Lfcea					; 6
+	jsr		ApplyMovementBitsToObject ; 6
 	jmp		Lf48b					; 3
 	
 Lf44b
@@ -2766,7 +2766,7 @@ Lf454
 	bit		ram_8D					; 3
 	bvc		Lf48b					; 2
 	ldx		#$03					; 2
-	jsr		Lfcea					; 6
+	jsr		ApplyMovementBitsToObject ; 6
 	lda		weaponXPos					; get bullet or whip horizontal position
 	sec								; 2
 	sbc		#$04					; 2
@@ -3071,7 +3071,7 @@ Lf874
 	.byte	$b0,$06,$25,$c6,$f0,$01,$38,$60 ; $f8a5 (*)
 	.byte	$25,$c7,$d0,$fb,$18,$60			; $f8ad (*)
 	
-Lf8b3
+MoveObjectTowardTarget
 	cpy		#$01					;2		   *
 	bne		Lf8bb					; 2
 	lda		indyYPos				  ; get Indy's vertical position
@@ -3104,7 +3104,7 @@ Lf8de
 	dec		objectXPos ,x				 ; 6
 	rts								; 6
 	
-Lf8e1
+ClampObjectPositionToBounds
 	lda		objectYPos,x				; 4
 	cmp		#$53					; 2
 	bcc		Lf8f1					; 2
@@ -3835,7 +3835,7 @@ Lfc89
 	.byte	$03,$01,$02,$04,$08,$10,$20,$40 ; $fce1 (*)
 	.byte	$80								; $fce9 (*)
 	
-Lfcea
+ApplyMovementBitsToObject
 	ror								; 2
 	bcs		Lfcef					; 2
 	dec		objectYPos,x				; 6
@@ -3924,14 +3924,14 @@ Lfef0
 	.byte	$7e ; | ###### |			$fef2 (G)
 	.byte	$ff ; |########|			$fef3 (G)
 	
-Lfef4
+ProcessActiveObjectMovement
 	lda		ram_8C,x				; 4
 	bmi		Lfef9					; 2
 	rts								; 6
 	
 Lfef9
-	jsr		Lfcea					; 6
-	jsr		Lf8e1					; 6
+	jsr		ApplyMovementBitsToObject ; 6
+	jsr		ClampObjectPositionToBounds ; 6
 	rts								; 6
 	
 	.byte	$80,$00,$07,$04,$77,$71,$75,$57 ; $ff00 (*)
