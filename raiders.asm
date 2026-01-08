@@ -451,9 +451,9 @@ thievesHorizPositions           = ram_EE
 Ld003
     jmp     game_start                   ;3   =   3
     
-Ld006
+HorizontallyPositionObjects
     ldx     #$04                    ;2   =   2
-Ld008
+.moveObjectLoop
     sta     WSYNC                   ;3   =   3 ; wait for next scan line
 ;---------------------------------------
     lda     enemy_x,x                ;4         ; get object's horizontal position
@@ -462,16 +462,16 @@ Ld008
     sta     HMP0,x                  ;4         ; set object's fine motion value
     and     #$0f                    ;2         ; mask off fine motion value
     tay                             ;2   =  18 ; move coarse move value to y
-Ld015
+.coarseMoveObject
     dey                             ;2        
-    bpl     Ld015                   ;2/3      
+    bpl     .coarseMoveObject                   ;2/3      
     sta     RESP0,x                 ;4         ; set object's coarse position
     dex                             ;2        
-    bpl     Ld008                   ;2/3      
+    bpl     .moveObjectLoop                   ;2/3      
     sta     WSYNC                   ;3   =  15 ; wait for next scan line
 ;---------------------------------------
     sta     HMOVE                   ;3        
-    jmp     Ldf9c                   ;3   =   6
+    jmp     JumpToDisplayKernel                   ;3   =   6
     
     .byte   $24,$31,$10,$34,$a6,$81,$e0,$0a ; $d024 (*)
     .byte   $90,$2e,$f0,$0f,$a5,$d1,$69,$01 ; $d02c (*)
@@ -560,7 +560,7 @@ Ld015
     .byte   $60,$bd,$d0,$dc,$48,$bd,$cf,$dc ; $d2c4 (*)
     .byte   $48,$60                         ; $d2cc (*)
     
-Ld2ce
+WarpToMesaSide
     lda     ram_DF                  ;3         * ; Load vertical position of an object (likely thief or Indy)
     sta     ram_EB                  ;3         * ; Store it to temp variable $EB (could be thief vertical position)
     lda     indy_y                  ;3         * ; get Indy's vertical position
@@ -569,18 +569,18 @@ Ld2ce
     sta     ram_ED                  ;3         * ; Store to temp variable $ED
     lda     #$05                    ;2         * ; Change screen to Mesa Side
     sta     room_num                  ;3         *
-    jsr     Ld878                   ;6         *
+    jsr     InitializeScreenState                   ;6         *
     lda     #$05                    ;2         * ; 2
     sta     indy_y                  ;3         * ; Set Indy's vertical position on entry to Mesa Side
     lda     #$50                    ;2         * ; 2
     sta     indy_x                  ;3         * ; Set Indy's horizontal position on entry
     tsx                             ;2         * ; 2
     cpx     #$fe                    ;2         * ; 2
-    bcs     Ld2ef                   ;2/3       * ; If X = $FE, jump to FailSafeToCollisionCheck (possibly collision or restore logic)
+    bcs     FailSafeToCollisionCheck                   ;2/3       * ; If X = $FE, jump to FailSafeToCollisionCheck (possibly collision or restore logic)
     rts                             ;6   =  51 * ; Otherwise, return
     
-Ld2ef
-    jmp     Ld374                   ;3   =   3 *
+FailSafeToCollisionCheck
+    jmp     CheckIfIndyShotOrTouchedByTsetseFlies                   ;3   =   3 *
     
     .byte   $24,$b3,$30,$f9,$a9,$50,$85,$eb ; $d2f2 (*)
     .byte   $a9,$41,$85,$ec,$a9,$4c,$d0,$d6 ; $d2fa (*)
@@ -600,85 +600,85 @@ Ld2ef
     .byte   $26,$8a,$38,$b0,$03,$26,$8a,$18 ; $d36a (*)
     .byte   $66,$8a                         ; $d372 (*)
     
-Ld374
+CheckIfIndyShotOrTouchedByTsetseFlies
     bit     CXM0P|$30               ;3         * ; check player collisions with missile0
-    bpl     Ld396                   ;2/3       * ; branch if didn't collide with Indy
+    bpl     CheckGrenadeDetonation                   ;2/3       * ; branch if didn't collide with Indy
     ldx     room_num                  ;3         * ; get the current screen id
     cpx     #$07                    ;2         * ; Are we in the Spider Room?
-    beq     Ld386                   ;2/3       * ; Yes,  go to ClearInputBit0ForSpiderRoom
-    bcc     Ld396                   ;2/3       * ; If screen ID is lower than Spider Room, skip
+    beq     ClearInputBit0ForSpiderRoom                   ;2/3       * ; Yes,  go to ClearInputBit0ForSpiderRoom
+    bcc     CheckGrenadeDetonation                   ;2/3       * ; If screen ID is lower than Spider Room, skip
     lda     #$80                    ;2         * ; Trigger a major event
     sta     ram_9D                  ;3         * ; 3
-    bne     Ld390                   ;2/3 =  21 * ; unconditional branch
-Ld386
+    bne     DespawnMissile0                   ;2/3 =  21 * ; unconditional branch
+ClearInputBit0ForSpiderRoom
     rol     ram_8A                  ;5         * ; Rotate input left, bit 7 ? carry
     sec                             ;2         * ; Set carry (overrides carry from rol)
     ror     ram_8A                  ;5         * ; Rotate right, carry -> bit 7 (bit 0 lost)
     rol     ram_B6                  ;5         * ; Rotate a status byte left (bit 7 ? carry)
     sec                             ;2         * ; Set carry (again overrides whatever came before)
     ror     ram_B6                  ;5   =  24 * ; Rotate right, carry -> bit 7 (bit 0 lost)
-Ld390
+DespawnMissile0
     lda     #$7f                    ;2         *
     sta     ram_8E                  ;3         * ; Possibly related state or shadow position
     sta     ram_D0                  ;3   =   8 * ; Move missile0 offscreen (to y=127)
-Ld396
+CheckGrenadeDetonation
     bit     ram_9A                  ;3         * ; Check status flags
-    bpl     Ld3d8                   ;2/3       * ; If bit 7 is clear, skip (no grenade active?)
-    bvs     Ld3a8                   ;2/3       * ; If bit 6 is set, jump (special case, maybe already exploded)
+    bpl     waitTime                   ;2/3       * ; If bit 7 is clear, skip (no grenade active?)
+    bvs     ApplyGrenadeWallEffect                   ;2/3       * ; If bit 6 is set, jump (special case, maybe already exploded)
     lda     time_of_day                  ;3         * ; get seconds time value
     cmp     ram_9B                  ;3         * ; compare with grenade detination time
-    bne     Ld3d8                   ;2/3       * ; branch if not time to detinate grenade
+    bne     waitTime                   ;2/3       * ; branch if not time to detinate grenade
     lda     #$a0                    ;2         * ; 2
     sta     ram_D1                  ;3         * ; Move bullet/whip offscreen (simulate detonation?)
     sta     ram_9D                  ;3   =  23 * ; Trigger major event (explosion happened?)
-Ld3a8
+ApplyGrenadeWallEffect
     lsr     ram_9A                  ;5         * ; Logical shift right: bit 0 -> carry
-    bcc     Ld3d4                   ;2/3       * ; If bit 0 was clear, skip this (grenade effect not triggered)
+    bcc     SkipUpdate                   ;2/3       * ; If bit 0 was clear, skip this (grenade effect not triggered)
     lda     #$02                    ;2         *
     sta     grenade_used                  ;3         * ; Apply penalty (e.g., reduce score)
     ora     ram_B1                  ;3         *
     sta     ram_B1                  ;3         * ; Mark the entrance room as having the grenade opening
     ldx     #$02                    ;2         *
     cpx     room_num                  ;3         *
-    bne     Ld3bd                   ;2/3       * ; branch if not in the ENTRANCE_ROOM
-    jsr     Ld878                   ;6   =  31 * ; Update visuals/state to reflect the wall opening
-Ld3bd
+    bne     UpdateEntranceRoomEventState                   ;2/3       * ; branch if not in the ENTRANCE_ROOM
+    jsr     InitializeScreenState                   ;6   =  31 * ; Update visuals/state to reflect the wall opening
+UpdateEntranceRoomEventState
     lda     ram_B5                  ;3         * ; 3
     and     #$0f                    ;2         *
-    beq     Ld3d4                   ;2/3       * ; If no condition active, exit
+    beq     SkipUpdate                   ;2/3       * ; If no condition active, exit
     lda     ram_B5                  ;3         *
     and     #$f0                    ;2         * ; Clear lower nibble
     ora     #$01                    ;2         * ; Set bit 0 (indicate some triggered state)
     sta     ram_B5                  ;3         * ; Store updated state
     ldx     #$02                    ;2         *
     cpx     room_num                  ;3         *
-    bne     Ld3d4                   ;2/3       * ; branch if not in the ENTRANCE_ROOM
-    jsr     Ld878                   ;6   =  30 * ; Refresh screen visuals
-Ld3d4
+    bne     SkipUpdate                   ;2/3       * ; branch if not in the ENTRANCE_ROOM
+    jsr     InitializeScreenState                   ;6   =  30 * ; Refresh screen visuals
+SkipUpdate
     sec                             ;2         *
-    jsr     Lda10                   ;6   =   8 * ; carry set...take away selected item
-Ld3d8
+    jsr     TakeItemFromInventory                   ;6   =   8 * ; carry set...take away selected item
+waitTime
     lda     INTIM                   ;4        
-    bne     Ld3d8                   ;2/3 =   6
-Ld3dd
+    bne     waitTime                   ;2/3 =   6
+StartNewFrame
     lda     #$02                    ;2        
     sta     WSYNC                   ;3   =   5 ; wait for next scan line
 ;---------------------------------------
     sta     VSYNC                   ;3         ; start vertical sync (D1 = 1)
     lda     #$50                    ;2        
     cmp     ram_D1                  ;3        
-    bcs     Ld3eb                   ;2/3      
+    bcs     UpdateFrameAndSecondsTimer                   ;2/3      
     sta     ram_CB                  ;3   =  13 *
-Ld3eb
+UpdateFrameAndSecondsTimer
     inc     frame_counter           ;Up the frame counter by 1        ; increment frame count
     lda     #$3f                    ;    
     and     frame_counter           ;Every 63 frames (?)    
-    bne     Ld3fb                   ;      ; branch if roughly 60 frames haven't passed
+    bne     firstLineOfVerticalSync                   ;      ; branch if roughly 60 frames haven't passed
     inc     time_of_day             ;Increse the time of day       ; increment every second
     lda     ram_A1                  ;3         ; If $A1 is positive, skip
-    bpl     Ld3fb                   ;2/3      
+    bpl     firstLineOfVerticalSync                   ;2/3      
     dec     ram_A1                  ;5   =  27 * ; Else, decrement it
-Ld3fb
+firstLineOfVerticalSync
     sta     WSYNC                   ;3   =   3 ; Wait for start of next scanline
 ;---------------------------------------
     bit     ram_9C                  ;3        
@@ -700,10 +700,10 @@ frame_start
     inx                             ;2         ; Increment counter
     bne     Ld42a                   ;2/3       ; If not overflowed, check initials display
     stx     ram_9D                  ;3         * ; Overflowed: zero -> set majorEventFlag to 0
-    jsr     Ldddb                   ;6         * ; Call final score calculation
+    jsr     DetermineFinalScore                   ;6         * ; Call final score calculation
     lda     #$0d                    ;2         *
     sta     room_num                  ;3         *
-    jsr     Ld878                   ;6   =  34 * ; Transition to Ark Room
+    jsr     InitializeScreenState                   ;6   =  34 * ; Transition to Ark Room
 Ld427
     jmp     Ld80d                   ;3   =   3 ; 3
     
@@ -957,7 +957,7 @@ Ld5ac
 Ld5b1
     ror     ram_85                  ;5         * ; Rotate player input to extract direction
     bcs     Ld5d1                   ;2/3       * ; If carry set, skip
-    jsr     Ld97c                   ;6         * ; Run event/collision subroutine
+    jsr     CheckRoomOverrideCondition                   ;6         * ; Run event/collision subroutine
     bcs     Ld5db                   ;2/3       * ; If failed/blocked, exit
     bvc     Ld5d1                   ;2/3       * ; If no vertical/horizontal event flag, skip
     ldy     ram_84                  ;3         * ; Event index
@@ -981,7 +981,7 @@ Ld5d1
     bcs     Ld5e0                   ;2/3 =  12 * ; Else, exit
 Ld5db
     sty     room_num                  ;3         * ; Set new screen based on event result
-    jsr     Ld878                   ;6   =   9 * ; Load new room or area
+    jsr     InitializeScreenState                   ;6   =   9 * ; Load new room or area
 Ld5e0
     bit     INPT4|$30               ;3         * ; read action button from left controller
     bmi     Ld5f5                   ;2/3       * ; branch if action button not pressed
@@ -991,7 +991,7 @@ Ld5e0
     ror                             ;2         * ; Check bit 0 of input
     bcs     Ld5fa                   ;2/3       * ; If set, already mid-action, skip
     sec                             ;2         * ; Prepare to take item
-    jsr     Lda10                   ;6         * ; carry set...take away selected item
+    jsr     TakeItemFromInventory                   ;6         * ; carry set...take away selected item
     inc     ram_8A                  ;5         * ; Advance to next inventory slot
     bne     Ld5fa                   ;2/3 =  32 * ; Always branch
 Ld5f5
@@ -1019,7 +1019,7 @@ Ld60c
     ldx     #$7f                    ;2         * ; 2
     stx     ram_D0                  ;3   =  26 *
 Ld61d
-    jsr     Ldce9                   ;6   =   6 *
+    jsr     PlaceItemInInventory                   ;6   =   6 *
 Ld620
     lda     #$00                    ;2         * ; 2
     sta     ram_91                  ;3   =   5 * ; Clear item pickup/use state
@@ -1088,7 +1088,7 @@ Ld68b
     bvc     Ld6d5                   ;2/3       * ; If bit 6 is clear (no vertical event active), skip to further checks
     bit     CXM1FB|$30              ;3         * ; Check collision between missile 1 and playfield
     bmi     Ld699                   ;2/3       * ; If collision occurred (bit 7 set), go to handle collision impact
-    jsr     Ld2ce                   ;6   =  16 * ; No collision  warp Indy to Mesa Side (context-dependent event)
+    jsr     WarpToMesaSide                   ;6   =  16 * ; No collision  warp Indy to Mesa Side (context-dependent event)
 Ld696
     jmp     Ld777                   ;3   =   3 * ; 3
     
@@ -1161,7 +1161,7 @@ Ld6f7
     lda     #$09                    ;2         * ; Mark this warp use (likely applies 9-point score penalty)
     sta     ankh_used                  ;3         * ; set to reduce score by 9 points
     sta     room_num                  ;3         * ; Change current screen to Mesa Field
-    jsr     Ld878                   ;6         * ; Load the data for the new screen
+    jsr     InitializeScreenState                   ;6         * ; Load the data for the new screen
     lda     #$4c                    ;2         * ; Prepare a flag or state value for later use (e.g., warp effect)
     sta     indy_x                  ;3         * ; Set Indy's horizontal position
     sta     ram_CB                  ;3         * ; Set projectile's horizontal position (same as Indy)
@@ -1348,7 +1348,7 @@ Ld841
     dex                             ;2        
     bpl     Ld841                   ;2/3 =  16 ; Loop through all Thieves' Den enemy positions
 Ld84b
-    jmp     Ld006                   ;3   =   3
+    jmp     HorizontallyPositionObjects                   ;3   =   3
     
 Ld84e
     lda     #$4d                    ;2         ; Set Indy's horizontal position in the Ark Room
@@ -1379,12 +1379,12 @@ Ld873
     sta     ram_D7                  ;3         * ; Store it to a specific control variable
     rts                             ;6   =  11 * ; Return from subroutine
     
-Ld878
+InitializeScreenState
     lda     ram_9A                  ;3         ; Load player item state / status flags
-    bpl     Ld880                   ;2/3       ; If bit 7 is clear (no grenade/parachute active), skip flag set
+    bpl     ResetRoomFlags                   ;2/3       ; If bit 7 is clear (no grenade/parachute active), skip flag set
     ora     #$40                    ;2         * ; Set bit 6: possibly "re-entering room" or "just warped"
     sta     ram_9A                  ;3   =  10 * ; Save updated status
-Ld880
+ResetRoomFlags
     lda     #$5c                    ;2         ; Likely a vertical offset or a default Y-position baseline
     sta     ram_96                  ;3         ; Used for digging or vertical alignment mechanics
     ldx     #$00                    ;2         ; Clear various status bytes
@@ -1511,44 +1511,44 @@ Ld958
     sty     ram_D5                  ;3   =  23 * ; Set snake enemy Y-position baseline
 Ld968
     cpx     #$09                    ;2         *
-    bne     Ld977                   ;2/3       * ; If not Mesa Field, skip
+    bne     ReturnFromRoomSpecificInit                   ;2/3       * ; If not Mesa Field, skip
     ldy     indy_y                  ;3         * ; get Indy's vertical position
     cpy     #$49                    ;2         * ; 2
-    bcc     Ld977                   ;2/3       * ; If Indy is above threshold, no sinking
+    bcc     ReturnFromRoomSpecificInit                   ;2/3       * ; If Indy is above threshold, no sinking
     lda     #$50                    ;2         * ; 2
     sta     ram_DF                  ;3         * ; Set environmental sink value  starts Indy sinking
     rts                             ;6   =  22 * ; return
     
-Ld977
+ReturnFromRoomSpecificInit
     lda     #$00                    ;2         *
     sta     ram_DF                  ;3         * ; Clear the environmental sink value (Indy won't sink)
     rts                             ;6   =  11 * ; Return to caller (completes screen init)
     
-Ld97c
+CheckRoomOverrideCondition
     ldy     Lde00,x                 ;4         * ; Load room override index based on current screen ID
     cpy     ram_86                  ;3         * ; Compare with current override key or control flag
-    beq     Ld986                   ;2/3       * ; If it matches, apply special overrides
+    beq     ApplyRoomOverridesIfMatched                   ;2/3       * ; If it matches, apply special overrides
     clc                             ;2         * ; Clear carry (no override occurred)
     clv                             ;2         * ; Clear overflow (in case its used for flag-based branching)
     rts                             ;6   =  19 * ; Exit with no overrides
     
-Ld986
+ApplyRoomOverridesIfMatched
     ldy     Lde34,x                 ;4         * ; Load vertical override flag
-    bmi     Ld99b                   ;2/3 =   6 * ; If negative, skip overrides and return with SEC
-Ld98b
+    bmi     CheckAdvancedOverrideConditions                   ;2/3 =   6 * ; If negative, skip overrides and return with SEC
+CheckVerticalOverride
     lda     Ldf04,x                 ;4         * ; Load vertical position override (if any)
-    beq     Ld992                   ;2/3 =   6 * ; If zero, skip vertical positioning
-Ld990
+    beq     ApplyHorizontalOverride                   ;2/3 =   6 * ; If zero, skip vertical positioning
+ApplyVerticalOverride
     sta     indy_y                  ;3   =   3 * ; Apply vertical override to Indy
-Ld992
+ApplyHorizontalOverride
     lda     Ldf38,x                 ;4         * ; Load horizontal position override (if any)
-    beq     Ld999                   ;2/3       * ; If zero, skip horizontal positioning
+    beq     ReturnFromOverrideWithSEC                   ;2/3       * ; If zero, skip horizontal positioning
     sta     indy_x                  ;3   =   9 * ; Apply horizontal override to Indy
-Ld999
+ReturnFromOverrideWithSEC
     sec                             ;2         * ; Set carry to indicate an override was applied
     rts                             ;6   =   8 * ; Return to caller
     
-Ld99b
+CheckAdvancedOverrideConditions
     iny                             ;2         * ; Bump Y from previous LDE34 value
     beq     Ld9f9                   ;2/3       * ; If it was $FF, return early
     iny                             ;2         *
@@ -1559,11 +1559,11 @@ Ld99b
     bcc     Ld9af                   ;2/3       * ; If below lower limit, use another check
     ldy     Lde9c,x                 ;4         * ; Load upper horizontal boundary
     bmi     Ld9c7                   ;2/3       * ; If negative, apply default vertical
-    bpl     Ld98b                   ;2/3 =  25 * ; Always taken  go check vertical override normally
+    bpl     CheckVerticalOverride                   ;2/3 =  25 * ; Always taken  go check vertical override normally
 Ld9af
     ldy     Lded0,x                 ;4         * ; Load alternate override flag
     bmi     Ld9c7                   ;2/3       * ; If negative, jump to handle special override
-    bpl     Ld98b                   ;2/3 =   8 * ; Always taken
+    bpl     CheckVerticalOverride                   ;2/3 =   8 * ; Always taken
 Ld9b6
     lda     ram_87                  ;3         * ; Load current horizontal position
     cmp     Lde68,x                 ;4         * ; Compare with lower limit
@@ -1571,15 +1571,15 @@ Ld9b6
     cmp     Lde9c,x                 ;4         * ; Compare with upper limit
     bcs     Ld9f9                   ;2/3       *
     ldy     Lded0,x                 ;4         * ; Load override control byte
-    bpl     Ld98b                   ;2/3 =  21 * ; If positive, allow override
+    bpl     CheckVerticalOverride                   ;2/3 =  21 * ; If positive, allow override
 Ld9c7
     iny                             ;2         *
     bmi     Ld9d4                   ;2/3       * ; If negative, special flag check
     ldy     #$08                    ;2         * ; Use a fixed override value
     bit     ram_AF                  ;3         * ; Check room flag register
-    bpl     Ld98b                   ;2/3       * ; If bit 7 is clear, proceed
+    bpl     CheckVerticalOverride                   ;2/3       * ; If bit 7 is clear, proceed
     lda     #$41                    ;2         *
-    bne     Ld990                   ;2/3 =  15 * ; Always taken  apply forced vertical position
+    bne     ApplyVerticalOverride                   ;2/3 =  15 * ; Always taken  apply forced vertical position
 Ld9d4
     iny                             ;2         * ; 2
     bne     Ld9e1                   ;2/3       * ; Always taken unless overflowed
@@ -1587,7 +1587,7 @@ Ld9d4
     and     #$0f                    ;2         * ; Mask to lower nibble
     bne     Ld9f9                   ;2/3       * ; If any bits set, don't override
     ldy     #$06                    ;2         * ; 2
-    bne     Ld98b                   ;2/3 =  15 * ; Always taken
+    bne     CheckVerticalOverride                   ;2/3 =  15 * ; Always taken
 Ld9e1
     iny                             ;2         * ; 2
     bne     Ld9f0                   ;2/3       * ; Continue check chain
@@ -1596,13 +1596,13 @@ Ld9e1
     cmp     #$0a                    ;2         * ; 2
     bcs     Ld9f9                   ;2/3       * ; 2
     ldy     #$06                    ;2         * ; 2
-    bne     Ld98b                   ;2/3 =  17 * ; Always taken
+    bne     CheckVerticalOverride                   ;2/3 =  17 * ; Always taken
 Ld9f0
     iny                             ;2         * ; 2
     bne     Ld9fe                   ;2/3       * ; Continue to final check
     ldy     #$01                    ;2         * ; 2
     bit     ram_8A                  ;3         *
-    bmi     Ld98b                   ;2/3 =  11 * ; If fire button pressed, allow override
+    bmi     CheckVerticalOverride                   ;2/3 =  11 * ; If fire button pressed, allow override
 Ld9f9
     clc                             ;2         * ; Clear carry to signal no override
     bit     Ld9fd                   ;4   =   6 * ; Dummy BIT used for timing/padding
@@ -1619,56 +1619,56 @@ Ld9fe
     bne     Ld9f9                   ;2/3!      * ; branch if not holding Head of Ra
     bit     INPT5|$30               ;3         * ; read action button from right controller
     bmi     Ld9f9                   ;2/3!      * ; branch if action button not pressed
-    jmp     Ld98b                   ;3   =  21 * ; All conditions met: apply vertical override
+    jmp     CheckVerticalOverride                   ;3   =  21 * ; All conditions met: apply vertical override
     
-Lda10
+TakeItemFromInventory
     ldy     ram_C4                  ;3         * ; get number of inventory items
-    bne     Lda16                   ;2/3       * ; branch if Indy carrying items
+    bne     .takeItemFromInventory                   ;2/3       * ; branch if Indy carrying items
     clc                             ;2         * ; Otherwise, clear carry (indicates no item removed)
     rts                             ;6   =  13 * ; Return (nothing to do)
     
-Lda16
-    bcs     Lda40                   ;2/3       *
+.takeItemFromInventory
+    bcs     .takeSelectedItemFromInventory                   ;2/3       *
     tay                             ;2         * ; move item id to be removed to y
     asl                             ;2         * ; multiply value by 8 to get graphic LSB
     asl                             ;2         *
     asl                             ;2         *
     ldx     #$0a                    ;2   =  12 * ; Start from the last inventory slot (there are 6 slots, each 2 bytes)
-Lda1e
+.takeItemFromInventoryLoop
     cmp     inv_slot1_lo,x                ;4         * ; Compare target LSB value to current inventory slot
-    bne     Lda3a                   ;2/3       * ; If not a match, try the next slot
+    bne     .checkNextItem                   ;2/3       * ; If not a match, try the next slot
     cpx     cursor_pos                  ;3         *
-    beq     Lda3a                   ;2/3       *
+    beq     .checkNextItem                   ;2/3       *
     dec     ram_C4                  ;5         * ; reduce number of inventory items
     lda     #$00                    ;2         *
     sta     inv_slot1_lo,x                ;4         * ; place empty sprite in inventory
     cpy     #$05                    ;2         * ; If item index is less than 5, skip clearing pickup flag
-    bcc     Lda37                   ;2/3       * ; 2
+    bcc     FinalizeInventoryRemoval                   ;2/3       * ; 2
 	; Remove pickup status bit if this is a non-basket item
     tya                             ;2         * ; Move item ID to A
     tax                             ;2         * ; move item id to x
-    jsr     Ldd1b                   ;6         * ; Update pickup/basket flags to show it's no longer taken
+    jsr     ShowItemAsNotTaken                   ;6         * ; Update pickup/basket flags to show it's no longer taken
     txa                             ;2         * ; X -> A
     tay                             ;2   =  40 * ; And back to Y for further use
-Lda37
-    jmp     Ldaf7                   ;3   =   3 * ; 3
+FinalizeInventoryRemoval
+    jmp     FinalizeInventorySelection                   ;3   =   3 * ; 3
     
-Lda3a
+.checkNextItem
     dex                             ;2         * ; Move to previous inventory slot
     dex                             ;2         * ; Each slot is 2 bytes (pointer to sprite)
-    bpl     Lda1e                   ;2/3       * ; If still within bounds, continue checking
+    bpl     .takeItemFromInventoryLoop                   ;2/3       * ; If still within bounds, continue checking
     clc                             ;2         * ; Clear carry  no matching item was found/removed
     rts                             ;6   =  14 * ; Return (nothing removed)
     
-Lda40
+.takeSelectedItemFromInventory
     lda     #$00                    ;2         *
     ldx     cursor_pos                  ;3         *
     sta     inv_slot1_lo,x                ;4         * ; remove selected item from inventory
     ldx     current_inv                  ;3         * ; get current selected inventory id
     cpx     #$07                    ;2         *
-    bcc     Lda4f                   ;2/3       * ; 2
-    jsr     Ldd1b                   ;6   =  22 *
-Lda4f
+    bcc     JumpToItemRemovalHandler                   ;2/3       * ; 2
+    jsr     ShowItemAsNotTaken                   ;6   =  22 *
+JumpToItemRemovalHandler
     txa                             ;2         * ; move inventory id to accumulator
     tay                             ;2         * ; move inventory id to y
     asl                             ;2         * ; multiple inventory id by 2
@@ -1701,7 +1701,7 @@ Lda4f
     .byte   $f0,$f4,$86,$c3,$4a,$4a,$4a,$85 ; $daee (*)
     .byte   $c5                             ; $daf6 (*)
     
-Ldaf7
+FinalizeInventorySelection
     lda     #$0d                    ;2         * ; Mask to clear bit 6 (parachute active flag)
     sta     ram_A2                  ;3         * ; 3
     sec                             ;2         * ; Set carry to indicate success
@@ -1823,24 +1823,24 @@ Ldc76
     .byte   $d3,$73,$d3,$cd,$d2,$6e,$d3,$73 ; $dcde (*)
     .byte   $d3,$73,$d3                     ; $dce6 (*)
     
-Ldce9
+PlaceItemInInventory
     ldx     ram_C4                  ;3         * ; get number of inventory items
     cpx     #$06                    ;2         * ; see if Indy carrying maximum number of items
-    bcc     Ldcf1                   ;2/3       * ; branch if Indy has room to carry more items
+    bcc     .spaceAvailableForItem                   ;2/3       * ; branch if Indy has room to carry more items
     clc                             ;2         *
     rts                             ;6   =  15 *
     
-Ldcf1
+.spaceAvailableForItem
     ldx     #$0a                    ;2   =   2 *
-Ldcf3
+.searchForEmptySpaceLoop
     ldy     inv_slot1_lo,x                ;4         * ; get the LSB for the inventory graphic
-    beq     Ldcfc                   ;2/3       * ; branch if nothing is in the inventory slot
+    beq     .addInventoryItem                   ;2/3       * ; branch if nothing is in the inventory slot
     dex                             ;2         *
     dex                             ;2         *
-    bpl     Ldcf3                   ;2/3       *
+    bpl     .searchForEmptySpaceLoop                   ;2/3       *
     brk                             ;7   =  19 * ; break if no more items can be carried
     
-Ldcfc
+.addInventoryItem
     tay                             ;2         * ; move item number to y
     asl                             ;2         * ; mutliply item number by 8 for graphic LSB
     asl                             ;2         *
@@ -1856,29 +1856,29 @@ Ldd0a
     bcc     Ldd15                   ;2/3       * ; 2
     tya                             ;2         * ; move item number to accumulator
     tax                             ;2         * ; move item number to x
-    jsr     Ldd2f                   ;6   =  19 *
+    jsr     ShowItemAsTaken                   ;6   =  19 *
 Ldd15
     lda     #$0c                    ;2         *
     sta     ram_A2                  ;3         *
     sec                             ;2         *
     rts                             ;6   =  13 *
     
-Ldd1b
+ShowItemAsNotTaken
     lda     Ldc64,x                 ;4         * ; get the item index value
     lsr                             ;2         * ; shift D0 to carry
     tay                             ;2         *
     lda     Ldc5c,y                 ;4         *
-    bcs     Ldd2a                   ;2/3       * ; branch if item not a basket item
+    bcs     .showPickUpItemAsNotTaken                   ;2/3       * ; branch if item not a basket item
     and     ram_C6                  ;3         *
     sta     ram_C6                  ;3         * ; clear status bit showing item not taken
     rts                             ;6   =  26 *
     
-Ldd2a
+.showPickUpItemAsNotTaken
     and     ram_C7                  ;3         *
     sta     ram_C7                  ;3         * ; clear status bit showing item not taken
     rts                             ;6   =  12 *
     
-Ldd2f
+ShowItemAsTaken
     lda     Ldc64,x                 ;4         * ; get the item index value
     lsr                             ;2         * ; shift D0 to carry
     tax                             ;2         *
@@ -1946,8 +1946,8 @@ clear_zp
     sta     room_num                  ;3        
     lsr                             ;2        
     sta     num_bullets             ; Load 6 bullets         
-    jsr     Ld878                   ;6        
-    jmp     Ld3dd                   ;3   =  77
+    jsr     InitializeScreenState                   ;6        
+    jmp     StartNewFrame                   ;3   =  77
     
 reset_vars
     lda     #$20                    ;2         *
@@ -1975,10 +1975,10 @@ reset_vars
     lda     #$02                    ;2         *
     sta     room_num                  ;3         *
     sta     lives_left                  ;3         *
-    jsr     Ld878                   ;6         *
+    jsr     InitializeScreenState                   ;6         *
     jmp     Ld80d                   ;3   =  75 * ; 3
     
-Ldddb
+DetermineFinalScore
     lda     ram_9E                  ;3         * ; get current adventure points
     sec                             ;2         *
     sbc     shovel_used                  ;3         * ; reduce for finding the Ark of the Covenant
@@ -2066,9 +2066,9 @@ Ldf7c
     .byte   $01,$04,$05,$00,$0a,$0c,$0f,$00 ; $df8c (*)
     .byte   $02,$04,$05,$08,$0a,$0d,$0f,$00 ; $df94 (*)
     
-Ldf9c
+JumpToDisplayKernel
     lda     INTIM                   ;4        
-    bne     Ldf9c                   ;2/3      
+    bne     JumpToDisplayKernel                   ;2/3      
     sta     WSYNC                   ;3   =   9
 ;---------------------------------------
     sta     WSYNC                   ;3   =   3
