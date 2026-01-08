@@ -277,687 +277,687 @@ cold_start
 	jmp		game_start				;cold start
 
 ld006
-	ldx		#$04					;2	 =	 2
+	ldx		#$04					
 ld008
-	sta		wsync					;3	 =	 3
+	sta		wsync					
 ;---------------------------------------
-	lda		enemy_x,x				 ;4
-	tay								;2
-	lda		room_miss0_size_tabl,y					;4
-	sta		hmp0,x					;4
-	and		#$0f					;2
-	tay								;2	 =	18
+	lda		enemy_x,x				 
+	tay								
+	lda		room_miss0_size_tabl,y					
+	sta		hmp0,x					
+	and		#$0f					
+	tay								
 ld015
-	dey								;2
-	bpl		ld015					;2/3
-	sta		resp0,x					;4
-	dex								;2
-	bpl		ld008					;2/3
-	sta		wsync					;3	 =	15
+	dey								
+	bpl		ld015					
+	sta		resp0,x					
+	dex								
+	bpl		ld008					
+	sta		wsync					
 ;---------------------------------------
-	sta		hmove					;3
-	jmp		ldf9c					;3	 =	 6
+	sta		hmove					
+	jmp		ldf9c					
 
 ld024:
-	   bit	  cxm1p					  ;3
-	   bpl	  ld05c					  ;2
-	   ldx	  $81					  ;3
-	   cpx	  #$0a					  ;2
-	   bcc	  ld05c					  ;2
-	   beq	  ld03f					  ;2
-	   lda	  $d1					  ;3
-	   adc	  #$01					  ;2
-	   lsr							  ;2
-	   lsr							  ;2
-	   lsr							  ;2
-	   lsr							  ;2
-	   tax							  ;2
-	   lda	  #$08					  ;2
-	   eor	  $df,x					  ;4
-	   sta	  $df,x					  ;4
+	   bit	  cxm1p					  
+	   bpl	  ld05c					  
+	   ldx	  $81					  
+	   cpx	  #$0a					  
+	   bcc	  ld05c					  
+	   beq	  ld03f					  
+	   lda	  $d1					  
+	   adc	  #$01					  
+	   lsr							  
+	   lsr							  
+	   lsr							  
+	   lsr							  
+	   tax							  
+	   lda	  #$08					  
+	   eor	  $df,x					  
+	   sta	  $df,x					  
 ld03f:
-	   lda	  $8f					  ;3
-	   bpl	  ld054					  ;2
-	   and	  #$7f					  ;2
-	   sta	  $8f					  ;3
-	   lda	  $95					  ;3
-	   and	  #$1f					  ;2
-	   beq	  ld050					  ;2
-	   jsr	  ldce9					  ;6
+	   lda	  $8f					  
+	   bpl	  ld054					  
+	   and	  #$7f					  
+	   sta	  $8f					  
+	   lda	  $95					  
+	   and	  #$1f					  
+	   beq	  ld050					  
+	   jsr	  ldce9					  
 ld050:
-	   lda	  #$40					  ;2
-	   sta	  $95					  ;3
+	   lda	  #$40					  
+	   sta	  $95					  
 ld054:
-	   lda	  #$7f					  ;2
-	   sta	  $d1					  ;3
-	   lda	  #$04					  ;2
-	   sta	  thief_shot			  ;3 4 points (lost)
+	   lda	  #$7f					  
+	   sta	  $d1					  
+	   lda	  #$04					  
+	   sta	  thief_shot			  
 ld05c:
-	   bit	  cxm1fb				  ;3
-	   bpl	  ld0aa					  ;2
-	   ldx	  $81					  ;3
-	   cpx	  #$09					  ;2
-	   beq	  ld0bc					  ;2
-	   cpx	  #$06					  ;2
-	   beq	  ld06e					  ;2
-	   cpx	  #$08					  ;2
-	   bne	  ld0aa					  ;2
+	   bit	  cxm1fb				  
+	   bpl	  ld0aa					  
+	   ldx	  $81					  
+	   cpx	  #$09					  
+	   beq	  ld0bc					  
+	   cpx	  #$06					  
+	   beq	  ld06e					  
+	   cpx	  #$08					  
+	   bne	  ld0aa					  
 ld06e:
-	   lda	  $d1					  ;3
-	   sbc	  $d4					  ;3
-	   lsr							  ;2
-	   lsr							  ;2
-	   beq	  ld087					  ;2
-	   tax							  ;2
-	   ldy	  $cb					  ;3
-	   cpy	  #$12					  ;2
-	   bcc	  ld0a4					  ;2
-	   cpy	  #$8d					  ;2
-	   bcs	  ld0a4					  ;2
-	   lda	  #$00					  ;2
-	   sta	  $e5,x					  ;4
-	   beq	  ld0a4					  ;2 always branch
+	   lda	  $d1					  
+	   sbc	  $d4					  
+	   lsr							  
+	   lsr							  
+	   beq	  ld087					  
+	   tax							  
+	   ldy	  $cb					  
+	   cpy	  #$12					  
+	   bcc	  ld0a4					  
+	   cpy	  #$8d					  
+	   bcs	  ld0a4					  
+	   lda	  #$00					  
+	   sta	  $e5,x					  
+	   beq	  ld0a4					  
 
 ld087:
-	   lda	  $cb					  ;3
-	   cmp	  #$30					  ;2
-	   bcs	  ld09e					  ;2
-	   sbc	  #$10					  ;2
-	   eor	  #$1f					  ;2
+	   lda	  $cb					  
+	   cmp	  #$30					  
+	   bcs	  ld09e					  
+	   sbc	  #$10					  
+	   eor	  #$1f					  
 ld091:
-	   lsr							  ;2
-	   lsr							  ;2
-	   tax							  ;2
-	   lda	  ldc5c,x				  ;4
-	   and	  $e5					  ;3
-	   sta	  $e5					  ;3
-	   jmp	  ld0a4					  ;3
+	   lsr							  
+	   lsr							  
+	   tax							  
+	   lda	  ldc5c,x				  
+	   and	  $e5					  
+	   sta	  $e5					  
+	   jmp	  ld0a4					  
 
 ld09e:
-	   sbc	  #$71					  ;2
-	   cmp	  #$20					  ;2
-	   bcc	  ld091					  ;2
+	   sbc	  #$71					  
+	   cmp	  #$20					  
+	   bcc	  ld091					  
 ld0a4:
-	   ldy	  #$7f					  ;2
-	   sty	  $8f					  ;3
-	   sty	  $d1					  ;3
+	   ldy	  #$7f					  
+	   sty	  $8f					  
+	   sty	  $d1					  
 ld0aa:
-	   bit	  cxm1fb				  ;3
-	   bvc	  ld0bc					  ;2
-	   bit	  $93					  ;3
-	   bvc	  ld0bc					  ;2
-	   lda	  #$5a					  ;2
-	   sta	  $d2					  ;3
-	   sta	  $dc					  ;3
-	   sta	  $8f					  ;3
-	   sta	  $d1					  ;3
+	   bit	  cxm1fb				  
+	   bvc	  ld0bc					  
+	   bit	  $93					  
+	   bvc	  ld0bc					  
+	   lda	  #$5a					  
+	   sta	  $d2					  
+	   sta	  $dc					  
+	   sta	  $8f					  
+	   sta	  $d1					  
 ld0bc:
-	   bit	  cxp1fb				  ;3
-	   bvc	  ld0ed					  ;2
-	   ldx	  $81					  ;3
-	   cpx	  #$06					  ;2
-	   beq	  ld0e2					  ;2
-	   lda	  current_object		  ;3
-	   cmp	  #$02					  ;2 is object the flute?
-	   beq	  ld0ed					  ;2  ...branch if so
-	   bit	  $93					  ;3
-	   bpl	  ld0da					  ;2
-	   lda	  $83					  ;3
-	   and	  #$07					  ;2
-	   ora	  #$80					  ;2
-	   sta	  $a1					  ;3
-	   bne	  ld0ed					  ;2 always branch
+	   bit	  cxp1fb				  
+	   bvc	  ld0ed					  
+	   ldx	  $81					  
+	   cpx	  #$06					  
+	   beq	  ld0e2					  
+	   lda	  current_object		  
+	   cmp	  #$02					  
+	   beq	  ld0ed					  
+	   bit	  $93					  
+	   bpl	  ld0da					  
+	   lda	  $83					  
+	   and	  #$07					  
+	   ora	  #$80					  
+	   sta	  $a1					  
+	   bne	  ld0ed					  
 
 ld0da:
-	   bvc	  ld0ed					  ;2
-	   lda	  #$80					  ;2
-	   sta	  $9d					  ;3
-	   bne	  ld0ed					  ;2 always branch
+	   bvc	  ld0ed					  
+	   lda	  #$80					  
+	   sta	  $9d					  
+	   bne	  ld0ed					  
 
 ld0e2:
-	   lda	  $d6					  ;3
-	   cmp	  #$ba					  ;2
-	   bne	  ld0ed					  ;2
-	   lda	  #$0f					  ;2
-	   jsr	  ldce9					  ;6
+	   lda	  $d6					  
+	   cmp	  #$ba					  
+	   bne	  ld0ed					  
+	   lda	  #$0f					  
+	   jsr	  ldce9					  
 ld0ed:
-	   ldx	  #$05					  ;2
-	   cpx	  $81					  ;3
-	   bne	  ld12d					  ;2
-	   bit	  cxm0p					  ;3
-	   bpl	  ld106					  ;2
-	   stx	  $cf					  ;3
-	   lda	  #$0c					  ;2
-	   sta	  $81					  ;3
-	   jsr	  ld878					  ;6
-	   lda	  #$4c					  ;2
-	   sta	  $c9					  ;3
-	   bne	  ld12b					  ;2 always branch
+	   ldx	  #$05					  
+	   cpx	  $81					  
+	   bne	  ld12d					  
+	   bit	  cxm0p					  
+	   bpl	  ld106					  
+	   stx	  $cf					  
+	   lda	  #$0c					  
+	   sta	  $81					  
+	   jsr	  ld878					  
+	   lda	  #$4c					  
+	   sta	  $c9					  
+	   bne	  ld12b					  
 
 ld106:
-	   ldx	  $cf					  ;3
-	   cpx	  #$4f					  ;2
-	   bcc	  ld12d					  ;2
-	   lda	  #$0a					  ;2
-	   sta	  $81					  ;3
-	   jsr	  ld878					  ;6
-	   lda	  $eb					  ;3
-	   sta	  $df					  ;3
-	   lda	  $ec					  ;3
-	   sta	  $cf					  ;3
-	   lda	  $ed					  ;3
-	   sta	  $c9					  ;3
-	   lda	  #$fd					  ;2
-	   and	  $b4					  ;3
-	   sta	  $b4					  ;3
-	   bmi	  ld12b					  ;2
-	   lda	  #$80					  ;2
-	   sta	  $9d					  ;3
+	   ldx	  $cf					  
+	   cpx	  #$4f					  
+	   bcc	  ld12d					  
+	   lda	  #$0a					  
+	   sta	  $81					  
+	   jsr	  ld878					  
+	   lda	  $eb					  
+	   sta	  $df					  
+	   lda	  $ec					  
+	   sta	  $cf					  
+	   lda	  $ed					  
+	   sta	  $c9					  
+	   lda	  #$fd					  
+	   and	  $b4					  
+	   sta	  $b4					  
+	   bmi	  ld12b					  
+	   lda	  #$80					  
+	   sta	  $9d					  
 ld12b:
-	   sta	  cxclr					  ;3
+	   sta	  cxclr					  
 ld12d:
-	   bit	  cxppmm				  ;3
-	   bmi	  ld140					  ;2
-	   ldx	  #$00					  ;2
-	   stx	  $91					  ;3
-	   dex							  ;2
-	   stx	  $97					  ;3
-	   rol	  $95					  ;5
-	   clc							  ;2
-	   ror	  $95					  ;5
+	   bit	  cxppmm				  
+	   bmi	  ld140					  
+	   ldx	  #$00					  
+	   stx	  $91					  
+	   dex							  
+	   stx	  $97					  
+	   rol	  $95					  
+	   clc							  
+	   ror	  $95					  
 ld13d:
-	   jmp	  ld2b4					  ;3
+	   jmp	  ld2b4					  
 
 ld140:
-	   lda	  $81					  ;3
-	   bne	  ld157					  ;2
-	   lda	  $af					  ;3
-	   and	  #$07					  ;2
-	   tax							  ;2
-	   lda	  ldf78,x				  ;4
-	   jsr	  ldce9					  ;6
-	   bcc	  ld13d					  ;2
-	   lda	  #$01					  ;2
-	   sta	  $df					  ;3
-	   bne	  ld13d					  ;2 always branch
+	   lda	  $81					  
+	   bne	  ld157					  
+	   lda	  $af					  
+	   and	  #$07					  
+	   tax							  
+	   lda	  ldf78,x				  
+	   jsr	  ldce9					  
+	   bcc	  ld13d					  
+	   lda	  #$01					  
+	   sta	  $df					  
+	   bne	  ld13d					  
 
 ld157:
-	   asl							  ;2
-	   tax							  ;2
-	   lda	  ldc9b+1,x				  ;4
-	   pha							  ;3
-	   lda	  ldc9b,x				  ;4
-	   pha							  ;3
-	   rts							  ;6
+	   asl							  
+	   tax							  
+	   lda	  ldc9b+1,x				  
+	   pha							  
+	   lda	  ldc9b,x				  
+	   pha							  
+	   rts							  
 
 ld162:
-	   lda	  $cf					  ;3
-	   cmp	  #$3f					  ;2
-	   bcc	  ld18a					  ;2
-	   lda	  $96					  ;3
-	   cmp	  #$54					  ;2
-	   bne	  ld1c1					  ;2
-	   lda	  $8c					  ;3
-	   cmp	  $8b					  ;3
-	   bne	  ld187					  ;2
-	   lda	  #$58					  ;2 lfa58 too?
-	   sta	  $9c					  ;3
-	   sta	  $9e					  ;3 game over...start with ped. height = #$88
-	   jsr	  tally_score					  ;6 ...and tally the variables
-	   lda	  #$0d					  ;2
-	   sta	  $81					  ;3
-	   jsr	  ld878					  ;6
-	   jmp	  ld3d8					  ;3
+	   lda	  $cf					  
+	   cmp	  #$3f					  
+	   bcc	  ld18a					  
+	   lda	  $96					  
+	   cmp	  #$54					  
+	   bne	  ld1c1					  
+	   lda	  $8c					  
+	   cmp	  $8b					  
+	   bne	  ld187					  
+	   lda	  #$58					  
+	   sta	  $9c					  
+	   sta	  $9e					  
+	   jsr	  tally_score					  
+	   lda	  #$0d					  
+	   sta	  $81					  
+	   jsr	  ld878					  
+	   jmp	  ld3d8					  
 
 ld187:
-	   jmp	  ld2da					  ;3
+	   jmp	  ld2da					  
 
 ld18a:
-	   lda	  #$0b					  ;2
-	   bne	  ld194					  ;2 always branch
+	   lda	  #$0b					  
+	   bne	  ld194					  
 
 ld18e:
-	   lda	  #$07					  ;2
-	   bne	  ld194					  ;2 always branch
+	   lda	  #$07					  
+	   bne	  ld194					  
 
 ld192:
-	   lda	  #$04					  ;2
+	   lda	  #$04					  
 ld194:
-	   bit	  $95					  ;3
-	   bmi	  ld1c1					  ;2
-	   clc							  ;2
-	   jsr	  lda10					  ;6
-	   bcs	  ld1a4					  ;2
-	   sec							  ;2
-	   jsr	  lda10					  ;6
-	   bcc	  ld1c1					  ;2
+	   bit	  $95					  
+	   bmi	  ld1c1					  
+	   clc							  
+	   jsr	  lda10					  
+	   bcs	  ld1a4					  
+	   sec							  
+	   jsr	  lda10					  
+	   bcc	  ld1c1					  
 ld1a4:
-	   cpy	  #$0b					  ;2
-	   bne	  ld1ad					  ;2
-	   ror	  $b2					  ;5
-	   clc							  ;2
-	   rol	  $b2					  ;5
+	   cpy	  #$0b					  
+	   bne	  ld1ad					  
+	   ror	  $b2					  
+	   clc							  
+	   rol	  $b2					  
 ld1ad:
-	   lda	  $95					  ;3
-	   jsr	  ldd59					 ;6
-	   tya							  ;2
-	   ora	  #$c0					  ;2
-	   sta	  $95					  ;3
-	   bne	  ld1c1					  ;2 always branch
+	   lda	  $95					  
+	   jsr	  ldd59					 
+	   tya							  
+	   ora	  #$c0					  
+	   sta	  $95					  
+	   bne	  ld1c1					  
 
 ld1b9:
-	   ldx	  #$00					  ;2
-	   stx	  $b6					  ;3
-	   lda	  #$80					  ;2
-	   sta	  $9d					  ;3
+	   ldx	  #$00					  
+	   stx	  $b6					  
+	   lda	  #$80					  
+	   sta	  $9d					  
 ld1c1:
-	   jmp	  ld2b4					  ;3
+	   jmp	  ld2b4					  
 
 ld1c4:
-	   bit	  $b4					  ;3
-	   bvs	  ld1e8					  ;2
-	   bpl	  ld1e8					  ;2
-	   lda	  $c9					  ;3
-	   cmp	  #$2b					  ;2
-	   bcc	  ld1e2					  ;2
-	   ldx	  $cf					  ;3
-	   cpx	  #$27					  ;2
-	   bcc	  ld1e2					  ;2
-	   cpx	  #$2b					  ;2
-	   bcs	  ld1e2					  ;2
-	   lda	  #$40					  ;2
-	   ora	  $b4					  ;3
-	   sta	  $b4					  ;3
-	   bne	  ld1e8					  ;2
+	   bit	  $b4					  
+	   bvs	  ld1e8					  
+	   bpl	  ld1e8					  
+	   lda	  $c9					  
+	   cmp	  #$2b					  
+	   bcc	  ld1e2					  
+	   ldx	  $cf					  
+	   cpx	  #$27					  
+	   bcc	  ld1e2					  
+	   cpx	  #$2b					  
+	   bcs	  ld1e2					  
+	   lda	  #$40					  
+	   ora	  $b4					  
+	   sta	  $b4					  
+	   bne	  ld1e8					  
 ld1e2:
-	   lda	  #$03					  ;2
-	   sec							  ;2
-	   jsr	  lda10					  ;6
+	   lda	  #$03					  
+	   sec							  
+	   jsr	  lda10					  
 ld1e8:
-	   jmp	  ld2b4					  ;3
+	   jmp	  ld2b4					  
 
 ld1eb:
-	   bit	  cxp1fb				  ;3
-	   bpl	  ld21a					  ;2
-	   ldy	  $cf					  ;3
-	   cpy	  #$3a					  ;2
-	   bcc	  ld200					  ;2
-	   lda	  #$e0					  ;2
-	   and	  $91					  ;3
-	   ora	  #$43					  ;2
-	   sta	  $91					  ;3
-	   jmp	  ld2b4					  ;3
+	   bit	  cxp1fb				  
+	   bpl	  ld21a					  
+	   ldy	  $cf					  
+	   cpy	  #$3a					  
+	   bcc	  ld200					  
+	   lda	  #$e0					  
+	   and	  $91					  
+	   ora	  #$43					  
+	   sta	  $91					  
+	   jmp	  ld2b4					  
 
 ld200:
-	   cpy	  #$20					  ;2
-	   bcc	  ld20b					  ;2
+	   cpy	  #$20					  
+	   bcc	  ld20b					  
 ld204:
-	   lda	  #$00					  ;2
-	   sta	  $91					  ;3
-	   jmp	  ld2b4					  ;3
+	   lda	  #$00					  
+	   sta	  $91					  
+	   jmp	  ld2b4					  
 
 ld20b:
-	   cpy	  #$09					  ;2
-	   bcc	  ld204					  ;2
-	   lda	  #$e0					  ;2
-	   and	  $91					  ;3
-	   ora	  #$42					  ;2
-	   sta	  $91					  ;3
-	   jmp	  ld2b4					  ;3
+	   cpy	  #$09					  
+	   bcc	  ld204					  
+	   lda	  #$e0					  
+	   and	  $91					  
+	   ora	  #$42					  
+	   sta	  $91					  
+	   jmp	  ld2b4					  
 
 ld21a:
-	   lda	  $cf					  ;3
-	   cmp	  #$3a					  ;2
-	   bcc	  ld224					  ;2
-	   ldx	  #$07					  ;2
-	   bne	  ld230					  ;2 always branch
+	   lda	  $cf					  
+	   cmp	  #$3a					  
+	   bcc	  ld224					  
+	   ldx	  #$07					  
+	   bne	  ld230					  
 
 ld224:
-	   lda	  $c9					  ;3
-	   cmp	  #$4c					  ;2
-	   bcs	  ld22e					  ;2
-	   ldx	  #$05					  ;2
-	   bne	  ld230					  ;2 always branch
+	   lda	  $c9					  
+	   cmp	  #$4c					  
+	   bcs	  ld22e					  
+	   ldx	  #$05					  
+	   bne	  ld230					  
 
 ld22e:
-	   ldx	  #$0d					  ;2
+	   ldx	  #$0d					  
 ld230:
-	   lda	  #$40					  ;2
-	   sta	  $93					  ;3
-	   lda	  $83					  ;3
-	   and	  #$1f					  ;2
-	   cmp	  #$02					  ;2
-	   bcs	  ld23e					  ;2
-	   ldx	  #$0e					  ;2
+	   lda	  #$40					  
+	   sta	  $93					  
+	   lda	  $83					  
+	   and	  #$1f					  
+	   cmp	  #$02					  
+	   bcs	  ld23e					  
+	   ldx	  #$0e					  
 ld23e:
-	   jsr	  ldd43					  ;6
-	   bcs	  ld247					  ;2
-	   txa							  ;2
-	   jsr	  ldce9					  ;6
+	   jsr	  ldd43					  
+	   bcs	  ld247					  
+	   txa							  
+	   jsr	  ldce9					  
 ld247:
-	   jmp	  ld2b4					  ;3
+	   jmp	  ld2b4					  
 
 ld24a:
-	   bit	  cxp1fb				  ;3
-	   bmi	  ld26e					  ;2
-	   lda	  $c9					  ;3
-	   cmp	  #$50					  ;2
-	   bcs	  ld262					  ;2
-	   dec	  $c9					  ;5
-	   rol	  $b2					  ;5
-	   clc							  ;2
-	   ror	  $b2					  ;5
+	   bit	  cxp1fb				  
+	   bmi	  ld26e					  
+	   lda	  $c9					  
+	   cmp	  #$50					  
+	   bcs	  ld262					  
+	   dec	  $c9					  
+	   rol	  $b2					  
+	   clc							  
+	   ror	  $b2					  
 ld25b:
-	   lda	  #$00					  ;2
-	   sta	  $91					  ;3
+	   lda	  #$00					  
+	   sta	  $91					  
 ld25f:
-	   jmp	  ld2b4					  ;3
+	   jmp	  ld2b4					  
 
 ld262:
-	   ldx	  #$06					  ;2
-	   lda	  $83					  ;3
-	   cmp	  #$40					  ;2
-	   bcs	  ld23e					  ;2
-	   ldx	  #$07					  ;2
-	   bne	  ld23e					  ;2 always branch
+	   ldx	  #$06					  
+	   lda	  $83					  
+	   cmp	  #$40					  
+	   bcs	  ld23e					  
+	   ldx	  #$07					  
+	   bne	  ld23e					  
 
 ld26e:
-	   ldy	  $cf					  ;3
-	   cpy	  #$44					  ;2
-	   bcc	  ld27e					  ;2
-	   lda	  #$e0					  ;2
-	   and	  $91					  ;3
-	   ora	  #$0b					  ;2
+	   ldy	  $cf					  
+	   cpy	  #$44					  
+	   bcc	  ld27e					  
+	   lda	  #$e0					  
+	   and	  $91					  
+	   ora	  #$0b					  
 ld27a:
-	   sta	  $91					  ;3
-	   bne	  ld25f					  ;2
+	   sta	  $91					  
+	   bne	  ld25f					  
 ld27e:
-	   cpy	  #$20					  ;2
-	   bcs	  ld25b					  ;2
-	   cpy	  #$0b					  ;2
-	   bcc	  ld25b					  ;2
-	   lda	  #$e0					  ;2
-	   and	  $91					  ;3
-	   ora	  #$41					  ;2
-	   bne	  ld27a					  ;2 always branch
+	   cpy	  #$20					  
+	   bcs	  ld25b					  
+	   cpy	  #$0b					  
+	   bcc	  ld25b					  
+	   lda	  #$e0					  
+	   and	  $91					  
+	   ora	  #$41					  
+	   bne	  ld27a					  
 
 ld28e:
-	   inc	  $c9					  ;5
-	   bne	  ld2b4					  ;2 always branch
+	   inc	  $c9					  
+	   bne	  ld2b4					  
 
 ld292:
-	   lda	  $cf					  ;3
-	   cmp	  #$3f					  ;2
-	   bcc	  ld2aa					  ;2
-	   lda	  #$0a					  ;2
-	   jsr	  ldce9					  ;6
-	   bcc	  ld2b4					  ;2
-	   ror	  $b1					  ;5
-	   sec							  ;2
-	   rol	  $b1					  ;5
-	   lda	  #$42					  ;2
-	   sta	  $df					  ;3
-	   bne	  ld2b4					  ;2 always branch
+	   lda	  $cf					  
+	   cmp	  #$3f					  
+	   bcc	  ld2aa					  
+	   lda	  #$0a					  
+	   jsr	  ldce9					  
+	   bcc	  ld2b4					  
+	   ror	  $b1					  
+	   sec							  
+	   rol	  $b1					  
+	   lda	  #$42					  
+	   sta	  $df					  
+	   bne	  ld2b4					  
 
 ld2aa:
-	   cmp	  #$16					  ;2
-	   bcc	  ld2b2					  ;2
-	   cmp	  #$1f					  ;2
-	   bcc	  ld2b4					  ;2
+	   cmp	  #$16					  
+	   bcc	  ld2b2					  
+	   cmp	  #$1f					  
+	   bcc	  ld2b4					  
 ld2b2:
-	   dec	  $c9					  ;5
+	   dec	  $c9					  
 ld2b4:
-	   lda	  $81					  ;3
-	   asl							  ;2
-	   tax							  ;2
-	   bit	  cxp1fb				  ;3
-	   bpl	  ld2c5					  ;2
-	   lda	  ldcb5+1,x				  ;4
-	   pha							  ;3
-	   lda	  ldcb5,x				  ;4
-	   pha							  ;3
-	   rts							  ;6
+	   lda	  $81					  
+	   asl							  
+	   tax							  
+	   bit	  cxp1fb				  
+	   bpl	  ld2c5					  
+	   lda	  ldcb5+1,x				  
+	   pha							  
+	   lda	  ldcb5,x				  
+	   pha							  
+	   rts							  
 
 ld2c5:
-	   lda	  ldccf+1,x				  ;4
-	   pha							  ;3
-	   lda	  ldccf,x				  ;4
-	   pha							  ;3
-	   rts							  ;6
+	   lda	  ldccf+1,x				  
+	   pha							  
+	   lda	  ldccf,x				  
+	   pha							  
+	   rts							  
 
 ld2ce
-	lda		ram_df					;3		   *
-	sta		ram_eb					;3		   *
-	lda		indy_y					;3		   *
-	sta		ram_ec					;3		   *
-	lda		indy_x					;3		   *
+	lda		ram_df					
+	sta		ram_eb					
+	lda		indy_y					
+	sta		ram_ec					
+	lda		indy_x					
 ld2d8
-	sta		ram_ed					;3		   *
+	sta		ram_ed					
 ld2da
-	lda		#cliff_room					;2		   *
-	sta		room_num				  ;3		 *
-	jsr		ld878					;6		   *
-	lda		#$05					;2		   *
-	sta		indy_y					;3		   *
-	lda		#$50					;2		   *
-	sta		indy_x					;3		   *
-	tsx								;2		   *
-	cpx		#$fe					;2		   *
-	bcs		ld2ef					;2/3	   *
-	rts								;6	 =	51 *
+	lda		#cliff_room					
+	sta		room_num				  
+	jsr		ld878					
+	lda		#$05					
+	sta		indy_y					
+	lda		#$50					
+	sta		indy_x					
+	tsx								
+	cpx		#$fe					
+	bcs		ld2ef					
+	rts								
 
 ld2ef
-	jmp		ld374					;3	 =	 3 *
+	jmp		ld374					
 
 
 
 ld2f2:
-	   bit	  $b3					  ;3
-	   bmi	  ld2ef					  ;2
-	   lda	  #$50					  ;2
-	   sta	  $eb					  ;3
-	   lda	  #$41					  ;2
-	   sta	  $ec					  ;3
-	   lda	  #$4c					  ;2
-	   bne	  ld2d8					  ;2 always branch
+	   bit	  $b3					  
+	   bmi	  ld2ef					  
+	   lda	  #$50					  
+	   sta	  $eb					  
+	   lda	  #$41					  
+	   sta	  $ec					  
+	   lda	  #$4c					  
+	   bne	  ld2d8					  
 
 ld302:
-	   ldy	  $c9					  ;3
-	   cpy	  #$2c					  ;2
-	   bcc	  ld31a					  ;2
-	   cpy	  #$6b					  ;2
-	   bcs	  ld31c					  ;2
-	   ldy	  $cf					  ;3
-	   iny							  ;2
-	   cpy	  #$1e					  ;2
-	   bcc	  ld315					  ;2
-	   dey							  ;2
-	   dey							  ;2
+	   ldy	  $c9					  
+	   cpy	  #$2c					  
+	   bcc	  ld31a					  
+	   cpy	  #$6b					  
+	   bcs	  ld31c					  
+	   ldy	  $cf					  
+	   iny							  
+	   cpy	  #$1e					  
+	   bcc	  ld315					  
+	   dey							  
+	   dey							  
 ld315:
-	   sty	  $cf					  ;3
-	   jmp	  ld364					  ;3
+	   sty	  $cf					  
+	   jmp	  ld364					  
 
 ld31a:
-	   iny							  ;2
-	   iny							  ;2
+	   iny							  
+	   iny							  
 ld31c:
-	   dey							  ;2
-	   sty	  $c9					  ;3
-	   bne	  ld364					  ;2 always branch
+	   dey							  
+	   sty	  $c9					  
+	   bne	  ld364					  
 
 ld321:
-	   lda	  #$02					  ;2
-	   and	  $b1					  ;3
-	   beq	  ld331					  ;2
-	   lda	  $cf					  ;3
-	   cmp	  #$12					  ;2
-	   bcc	  ld331					  ;2
-	   cmp	  #$24					  ;2
-	   bcc	  ld36a					  ;2
+	   lda	  #$02					  
+	   and	  $b1					  
+	   beq	  ld331					  
+	   lda	  $cf					  
+	   cmp	  #$12					  
+	   bcc	  ld331					  
+	   cmp	  #$24					  
+	   bcc	  ld36a					  
 ld331:
-	   dec	  $c9					  ;5
-	   bne	  ld364					  ;2 always branch
+	   dec	  $c9					  
+	   bne	  ld364					  
 
 ld335:
-	   ldx	  #$1a					  ;2
-	   lda	  $c9					  ;3
-	   cmp	  #$4c					  ;2
-	   bcc	  ld33f					  ;2
-	   ldx	  #$7d					  ;2
+	   ldx	  #$1a					  
+	   lda	  $c9					  
+	   cmp	  #$4c					  
+	   bcc	  ld33f					  
+	   ldx	  #$7d					  
 ld33f:
-	   stx	  $c9					  ;3
-	   ldx	  #$40					  ;2
-	   stx	  $cf					  ;3
-	   ldx	  #$ff					  ;2
-	   stx	  $e5					  ;3
-	   ldx	  #$01					  ;2
-	   stx	  $e6					  ;3
-	   stx	  $e7					  ;3
-	   stx	  $e8					  ;3
-	   stx	  $e9					  ;3
-	   stx	  $ea					  ;3
-	   bne	  ld364					  ;2 always branch
+	   stx	  $c9					  
+	   ldx	  #$40					  
+	   stx	  $cf					  
+	   ldx	  #$ff					  
+	   stx	  $e5					  
+	   ldx	  #$01					  
+	   stx	  $e6					  
+	   stx	  $e7					  
+	   stx	  $e8					  
+	   stx	  $e9					  
+	   stx	  $ea					  
+	   bne	  ld364					  
 
 ld357:
-	   lda	  $92					  ;3
-	   and	  #$0f					  ;2
-	   tay							  ;2
-	   lda	  ldfd5,y				  ;4
-	   ldx	  #$01					  ;2
-	   jsr	  move_enemy				  ;6
+	   lda	  $92					  
+	   and	  #$0f					  
+	   tay							  
+	   lda	  ldfd5,y				  
+	   ldx	  #$01					  
+	   jsr	  move_enemy				  
 ld364:
-	   lda	  #$05					  ;2
-	   sta	  $a2					  ;3
-	   bne	  ld374					  ;2 always branch
+	   lda	  #$05					  
+	   sta	  $a2					  
+	   bne	  ld374					  
 
 ld36a:
-	   rol	  $8a					  ;5
-	   sec							  ;2
-	   bcs	  ld372					  ;2 always branch
+	   rol	  $8a					  
+	   sec							  
+	   bcs	  ld372					  
 
 ld36f:
-	   rol	  $8a					  ;5
-	   clc							  ;2
+	   rol	  $8a					  
+	   clc							  
 ld372:
-	   ror	  $8a					  ;5
+	   ror	  $8a					  
 
 ld374
-	bit		cxm0p|$30				;3		   *
-	bpl		ld396					;2/3	   *
-	ldx		room_num				  ;3		 *
-	cpx		#spider_room					;2		   *
-	beq		ld386					;2/3	   *
-	bcc		ld396					;2/3	   *
-	lda		#$80					;2		   *
-	sta		ram_9d					;3		   *
-	bne		ld390					;2/3 =	21 *
+	bit		cxm0p|$30				
+	bpl		ld396					
+	ldx		room_num				  
+	cpx		#spider_room					
+	beq		ld386					
+	bcc		ld396					
+	lda		#$80					
+	sta		ram_9d					
+	bne		ld390					
 ld386
-	rol		ram_8a					;5		   *
-	sec								;2		   *
-	ror		ram_8a					;5		   *
-	rol		ram_b6					;5		   *
-	sec								;2		   *
-	ror		ram_b6					;5	 =	24 *
+	rol		ram_8a					
+	sec								
+	ror		ram_8a					
+	rol		ram_b6					
+	sec								
+	ror		ram_b6					
 ld390
-	lda		#$7f					;2		   *
-	sta		ram_8e					;3		   *
-	sta		ram_d0					;3	 =	 8 *
+	lda		#$7f					
+	sta		ram_8e					
+	sta		ram_d0					
 ld396
-	bit		ram_9a					;3		   *
-	bpl		ld3d8					;2/3	   *
-	bvs		ld3a8					;2/3	   *
-	lda		time_of_day					 ;3			*
-	cmp		ram_9b					;3		   *
-	bne		ld3d8					;2/3	   *
-	lda		#$a0					;2		   *
-	sta		ram_d1					;3		   *
-	sta		ram_9d					;3	 =	23 *
+	bit		ram_9a					
+	bpl		ld3d8					
+	bvs		ld3a8					
+	lda		time_of_day					 
+	cmp		ram_9b					
+	bne		ld3d8					
+	lda		#$a0					
+	sta		ram_d1					
+	sta		ram_9d					
 ld3a8
-	lsr		ram_9a					;5		   *
-	bcc		ld3d4					;2/3	   *
-	lda		#$02					;2		   *
-	sta		grenade_used				  ;3		 *
-	ora		ram_b1					;3		   *
-	sta		ram_b1					;3		   *
-	ldx		#starting_room					;2		   *
-	cpx		room_num				  ;3		 *
-	bne		ld3bd					;2/3	   *
-	jsr		ld878					;6	 =	31 *
+	lsr		ram_9a					
+	bcc		ld3d4					
+	lda		#$02					
+	sta		grenade_used				  
+	ora		ram_b1					
+	sta		ram_b1					
+	ldx		#starting_room					
+	cpx		room_num				  
+	bne		ld3bd					
+	jsr		ld878					
 ld3bd
-	lda		ram_b5					;3		   *
-	and		#$0f					;2		   *
-	beq		ld3d4					;2/3	   *
-	lda		ram_b5					;3		   *
-	and		#$f0					;2		   *
-	ora		#$01					;2		   *
-	sta		ram_b5					;3		   *
-	ldx		#starting_room					;2		   *
-	cpx		room_num				  ;3		 *
-	bne		ld3d4					;2/3	   *
-	jsr		ld878					;6	 =	30 *
+	lda		ram_b5					
+	and		#$0f					
+	beq		ld3d4					
+	lda		ram_b5					
+	and		#$f0					
+	ora		#$01					
+	sta		ram_b5					
+	ldx		#starting_room					
+	cpx		room_num				  
+	bne		ld3d4					
+	jsr		ld878					
 ld3d4
-	sec								;2		   *
-	jsr		lda10					;6	 =	 8 *
+	sec								
+	jsr		lda10					
 ld3d8
-	lda		intim					;4
-	bne		ld3d8					;2/3 =	 6
+	lda		intim					
+	bne		ld3d8					
 ld3dd
-	lda		#$02					;2
-	sta		wsync					;3	 =	 5
+	lda		#$02					
+	sta		wsync					
 ;---------------------------------------
-	sta		vsync					;3
-	lda		#$50					;2
-	cmp		ram_d1					;3
-	bcs		ld3eb					;2/3
-	sta		ram_cb					;3	 =	13 *
+	sta		vsync					
+	lda		#$50					
+	cmp		ram_d1					
+	bcs		ld3eb					
+	sta		ram_cb					
 ld3eb
 	inc		frame_counter			;up the frame counter by 1
 	lda		#$3f					;
 	and		frame_counter			;every 63 frames (?)
 	bne		ld3fb					;
 	inc		time_of_day				;increse the time of day
-	lda		ram_a1					;3
-	bpl		ld3fb					;2/3
-	dec		ram_a1					;5	 =	27 *
+	lda		ram_a1					
+	bpl		ld3fb					
+	dec		ram_a1					
 ld3fb
-	sta		wsync					;3	 =	 3
+	sta		wsync					
 ;---------------------------------------
-	bit		ram_9c					;3
-	bpl		frame_start					  ;2/3
-	ror		swchb					;6		   *
-	bcs		frame_start					  ;2/3		 *
-	jmp		game_start					 ;3	  =	 16 *
+	bit		ram_9c					
+	bpl		frame_start					  
+	ror		swchb					
+	bcs		frame_start					  
+	jmp		game_start					 
 
 frame_start
 	sta		wsync					;wait for first sync
 ;---------------------------------------
 	lda		#$00					;load a for vsync pause
 	ldx		#$2c					;load timer for
-	sta		wsync					;3	 =	 7
+	sta		wsync					
 ;---------------------------------------
-	sta		vsync					;3
-	stx		tim64t					;4
-	ldx		ram_9d					;3
-	inx								;2
-	bne		ld42a					;2/3
-	stx		ram_9d					;3		   *
+	sta		vsync					
+	stx		tim64t					
+	ldx		ram_9d					
+	inx								
+	bne		ld42a					
+	stx		ram_9d					
 	jsr		tally_score				; set score to minimum
 	lda		#ark_room				; set ark title screen 
 	sta		room_num				; to the current room
-	jsr		ld878					;6	 =	34 *
+	jsr		ld878					
 ld427
-	jmp		ld80d					;3	 =	 3
+	jmp		ld80d					
 
 ld42a
 	lda		room_num				; get teh room number
 	cmp		#ark_room				; are we in the ark room? 
-	bne		ld482					;2/3
-	lda		#$9c					;2
-	sta		ram_a3					;3
+	bne		ld482					
+	lda		#$9c					
+	sta		ram_a3					
 	ldy		yar_found				; check if yar was found
 	beq		ld44a					; if not hold for button(?)
-	bit		ram_9c					;3		   *
-	bmi		ld44a					;2/3	   *
+	bit		ram_9c					
+	bmi		ld44a					
 	ldx		#>dev_name_1_gfx		; get programmer 1 initials...
 	stx		inv_slot_hi				; put in slot 1
 	stx		inv_slot2_hi			
@@ -966,938 +966,938 @@ ld42a
 	lda		#<dev_name_2_gfx		; get programmer 2 initials...
 	sta		inv_slot2_lo			; put in slot 2
 ld44a
-	ldy		indy_y					;3
-	cpy		#$7c					;2
-	bcs		ld465					;2/3
-	cpy		score				   ;3
-	bcc		ld45b					;2/3
-	bit		inpt5|$30				;3		   *
-	bmi		ld427					;2/3	   *
-	jmp		game_start					 ;3	  =	 20 *
+	ldy		indy_y					
+	cpy		#$7c					
+	bcs		ld465					
+	cpy		score				   
+	bcc		ld45b					
+	bit		inpt5|$30				
+	bmi		ld427					
+	jmp		game_start					 
 
 ld45b
-	lda		frame_counter				   ;3
-	ror								;2
-	bcc		ld427					;2/3
-	iny								;2
-	sty		indy_y					;3
-	bne		ld427					;2/3 =	14
+	lda		frame_counter				   
+	ror								
+	bcc		ld427					
+	iny								
+	sty		indy_y					
+	bne		ld427					
 ld465
-	bit		ram_9c					;3		   *
-	bmi		ld46d					;2/3	   *
-	lda		#$0e					;2		   *
-	sta		ram_a2					;3	 =	10 *
+	bit		ram_9c					
+	bmi		ld46d					
+	lda		#$0e					
+	sta		ram_a2					
 ld46d
-	lda		#$80					;2		   *
-	sta		ram_9c					;3		   *
-	bit		inpt5|$30				;3		   *
-	bmi		ld427					;2/3	   *
-	lda		frame_counter				   ;3		  *
-	and		#$0f					;2		   *
-	bne		ld47d					;2/3	   *
-	lda		#$05					;2	 =	19 *
+	lda		#$80					
+	sta		ram_9c					
+	bit		inpt5|$30				
+	bmi		ld427					
+	lda		frame_counter				   
+	and		#$0f					
+	bne		ld47d					
+	lda		#$05					
 ld47d
-	sta		ram_8c					;3		   *
-	jmp		reset_vars					 ;3	  =	  6 *
+	sta		ram_8c					
+	jmp		reset_vars					 
 
 ld482
-	bit		ram_93					;3		   *
-	bvs		ld489					;2/3 =	 5 *
+	bit		ram_93					
+	bvs		ld489					
 ld486
-	jmp		ld51c					;3	 =	 3 *
+	jmp		ld51c					
 
 ld489
-	lda		frame_counter				   ;3		  *
-	and		#$03					;2		   *
-	bne		ld501					;2/3!	   *
-	ldx		snake_y					 ;3			*
-	cpx		#$60					;2		   *
-	bcc		ld4a5					;2/3	   *
-	bit		ram_9d					;3		   *
-	bmi		ld486					;2/3	   *
-	ldx		#$00					;2		   *
-	lda		indy_x					;3		   *
-	cmp		#$20					;2		   *
-	bcs		ld4a3					;2/3	   *
-	lda		#$20					;2	 =	30 *
+	lda		frame_counter				   
+	and		#$03					
+	bne		ld501					
+	ldx		snake_y					 
+	cpx		#$60					
+	bcc		ld4a5					
+	bit		ram_9d					
+	bmi		ld486					
+	ldx		#$00					
+	lda		indy_x					
+	cmp		#$20					
+	bcs		ld4a3					
+	lda		#$20					
 ld4a3
-	sta		ram_cc					;3	 =	 3 *
+	sta		ram_cc					
 ld4a5
-	inx								;2		   *
-	stx		snake_y					 ;3			*
-	txa								;2		   *
-	sec								;2		   *
-	sbc		#$07					;2		   *
-	bpl		ld4b0					;2/3	   *
-	lda		#$00					;2	 =	15 *
+	inx								
+	stx		snake_y					 
+	txa								
+	sec								
+	sbc		#$07					
+	bpl		ld4b0					
+	lda		#$00					
 ld4b0
-	sta		ram_d2					;3		   *
-	and		#$f8					;2		   *
-	cmp		ram_d5					;3		   *
-	beq		ld501					;2/3!	   *
-	sta		ram_d5					;3		   *
-	lda		ram_d4					;3		   *
-	and		#$03					;2		   *
-	tax								;2		   *
-	lda		ram_d4					;3		   *
-	lsr								;2		   *
-	lsr								;2		   *
-	tay								;2		   *
-	lda		ldbff,x					;4		   *
-	clc								;2		   *
-	adc		ldbff,y					;4		   *
-	clc								;2		   *
-	adc		ram_cc					;3		   *
-	ldx		#$00					;2		   *
-	cmp		#$87					;2		   *
-	bcs		ld4e2					;2/3	   *
-	cmp		#$18					;2		   *
-	bcc		ld4de					;2/3	   *
-	sbc		indy_x					;3		   *
-	sbc		#$03					;2		   *
-	bpl		ld4e2					;2/3 =	61 *
+	sta		ram_d2					
+	and		#$f8					
+	cmp		ram_d5					
+	beq		ld501					
+	sta		ram_d5					
+	lda		ram_d4					
+	and		#$03					
+	tax								
+	lda		ram_d4					
+	lsr								
+	lsr								
+	tay								
+	lda		ldbff,x					
+	clc								
+	adc		ldbff,y					
+	clc								
+	adc		ram_cc					
+	ldx		#$00					
+	cmp		#$87					
+	bcs		ld4e2					
+	cmp		#$18					
+	bcc		ld4de					
+	sbc		indy_x					
+	sbc		#$03					
+	bpl		ld4e2					
 ld4de
-	inx								;2		   *
-	inx								;2		   *
-	eor		#$ff					;2	 =	 6 *
+	inx								
+	inx								
+	eor		#$ff					
 ld4e2
-	cmp		#$09					;2		   *
-	bcc		ld4e7					;2/3	   *
-	inx								;2	 =	 6 *
+	cmp		#$09					
+	bcc		ld4e7					
+	inx								
 ld4e7
-	txa								;2		   *
-	asl								;2		   *
-	asl								;2		   *
-	sta		ram_84					;3		   *
-	lda		ram_d4					;3		   *
-	and		#$03					;2		   *
-	tax								;2		   *
-	lda		ldbff,x					;4		   *
-	clc								;2		   *
-	adc		ram_cc					;3		   *
-	sta		ram_cc					;3		   *
-	lda		ram_d4					;3		   *
-	lsr								;2		   *
-	lsr								;2		   *
-	ora		ram_84					;3		   *
-	sta		ram_d4					;3	 =	41 *
+	txa								
+	asl								
+	asl								
+	sta		ram_84					
+	lda		ram_d4					
+	and		#$03					
+	tax								
+	lda		ldbff,x					
+	clc								
+	adc		ram_cc					
+	sta		ram_cc					
+	lda		ram_d4					
+	lsr								
+	lsr								
+	ora		ram_84					
+	sta		ram_d4					
 ld501
-	lda		ram_d4					;3		   *
-	and		#$03					;2		   *
-	tax								;2		   *
-	lda		ldbfb,x					;4		   *
-	sta		ram_d6					;3		   *
-	lda		#$fa					;2		   *
-	sta		ram_d7					;3		   *
-	lda		ram_d4					;3		   *
-	lsr								;2		   *
-	lsr								;2		   *
-	tax								;2		   *
-	lda		ldbfb,x					;4		   *
-	sec								;2		   *
-	sbc		#$08					;2		   *
-	sta		ram_d8					;3	 =	39 *
+	lda		ram_d4					
+	and		#$03					
+	tax								
+	lda		ldbfb,x					
+	sta		ram_d6					
+	lda		#$fa					
+	sta		ram_d7					
+	lda		ram_d4					
+	lsr								
+	lsr								
+	tax								
+	lda		ldbfb,x					
+	sec								
+	sbc		#$08					
+	sta		ram_d8					
 ld51c
-	bit		ram_9d					;3		   *
-	bpl		ld523					;2/3	   *
-	jmp		ld802					;3	 =	 8 *
+	bit		ram_9d					
+	bpl		ld523					
+	jmp		ld802					
 
 ld523
-	bit		ram_a1					;3		   *
-	bpl		ld52a					;2/3	   *
-	jmp		ld78c					;3	 =	 8 *
+	bit		ram_a1					
+	bpl		ld52a					
+	jmp		ld78c					
 
 ld52a
-	lda		frame_counter				   ;3		  *
-	ror								;2		   *
-	bcc		ld532					;2/3	   *
-	jmp		ld627					;3	 =	10 *
+	lda		frame_counter				   
+	ror								
+	bcc		ld532					
+	jmp		ld627					
 
 ld532
-	ldx		room_num				  ;3		 *
-	cpx		#cliff_room					;2		   *
-	beq		ld579					;2/3	   *
-	bit		ram_8d					;3		   *
-	bvc		ld56e					;2/3	   *
-	ldx		ram_cb					;3		   *
-	txa								;2		   *
-	sec								;2		   *
-	sbc		indy_x					;3		   *
-	tay								;2		   *
-	lda		swcha					;4		   *
-	ror								;2		   *
-	bcc		ld55b					;2/3	   *
-	ror								;2		   *
-	bcs		ld579					;2/3	   *
-	cpy		#$09					;2		   *
-	bcc		ld579					;2/3	   *
-	tya								;2		   *
-	bpl		ld556					;2/3 =	44 *
+	ldx		room_num				  
+	cpx		#cliff_room					
+	beq		ld579					
+	bit		ram_8d					
+	bvc		ld56e					
+	ldx		ram_cb					
+	txa								
+	sec								
+	sbc		indy_x					
+	tay								
+	lda		swcha					
+	ror								
+	bcc		ld55b					
+	ror								
+	bcs		ld579					
+	cpy		#$09					
+	bcc		ld579					
+	tya								
+	bpl		ld556					
 ld553
-	inx								;2		   *
-	bne		ld557					;2/3 =	 4 *
+	inx								
+	bne		ld557					
 ld556
-	dex								;2	 =	 2 *
+	dex								
 ld557
-	stx		ram_cb					;3		   *
-	bne		ld579					;2/3 =	 5 *
+	stx		ram_cb					
+	bne		ld579					
 ld55b
-	cpx		#$75					;2		   *
-	bcs		ld579					;2/3	   *
-	cpx		#$1a					;2		   *
-	bcc		ld579					;2/3	   *
-	dey								;2		   *
-	dey								;2		   *
-	cpy		#$07					;2		   *
-	bcc		ld579					;2/3	   *
-	tya								;2		   *
-	bpl		ld553					;2/3	   *
-	bmi		ld556					;2/3 =	22 *
+	cpx		#$75					
+	bcs		ld579					
+	cpx		#$1a					
+	bcc		ld579					
+	dey								
+	dey								
+	cpy		#$07					
+	bcc		ld579					
+	tya								
+	bpl		ld553					
+	bmi		ld556					
 ld56e
-	bit		ram_b4					;3		   *
-	bmi		ld579					;2/3	   *
-	bit		ram_8a					;3		   *
-	bpl		ld57c					;2/3	   *
-	ror								;2		   *
-	bcc		ld57c					;2/3 =	14 *
+	bit		ram_b4					
+	bmi		ld579					
+	bit		ram_8a					
+	bpl		ld57c					
+	ror								
+	bcc		ld57c					
 ld579
-	jmp		ld5e0					;3	 =	 3 *
+	jmp		ld5e0					
 
 ld57c
-	ldx		#$01					;2		   *
-	lda		swcha					;4		   *
-	sta		ram_85					;3		   *
-	and		#$0f					;2		   *
-	cmp		#$0f					;2		   *
-	beq		ld579					;2/3	   *
-	sta		indy_dir				  ;3		 *
-	jsr		move_enemy					 ;6			*
-	ldx		room_num				  ;3		 *
-	ldy		#$00					;2		   *
-	sty		ram_84					;3		   *
-	beq		ld599					;2/3 =	34 *
+	ldx		#$01					
+	lda		swcha					
+	sta		ram_85					
+	and		#$0f					
+	cmp		#$0f					
+	beq		ld579					
+	sta		indy_dir				  
+	jsr		move_enemy					 
+	ldx		room_num				  
+	ldy		#$00					
+	sty		ram_84					
+	beq		ld599					
 ld596
-	tax								;2		   *
-	inc		ram_84					;5	 =	 7 *
+	tax								
+	inc		ram_84					
 ld599
-	lda		indy_x					;3		   *
-	pha								;3		   *
-	lda		indy_y					;3		   *
-	ldy		ram_84					;3		   *
-	cpy		#$02					;2		   *
-	bcs		ld5ac					;2/3	   *
-	sta		ram_86					;3		   *
-	pla								;4		   *
-	sta		ram_87					;3		   *
-	jmp		ld5b1					;3	 =	29 *
+	lda		indy_x					
+	pha								
+	lda		indy_y					
+	ldy		ram_84					
+	cpy		#$02					
+	bcs		ld5ac					
+	sta		ram_86					
+	pla								
+	sta		ram_87					
+	jmp		ld5b1					
 
 ld5ac
-	sta		ram_87					;3		   *
-	pla								;4		   *
-	sta		ram_86					;3	 =	10 *
+	sta		ram_87					
+	pla								
+	sta		ram_86					
 ld5b1
-	ror		ram_85					;5		   *
-	bcs		ld5d1					;2/3	   *
-	jsr		ld97c					;6		   *
-	bcs		ld5db					;2/3	   *
-	bvc		ld5d1					;2/3	   *
-	ldy		ram_84					;3		   *
-	lda		ldf6c,y					;4		   *
-	cpy		#$02					;2		   *
-	bcs		ld5cc					;2/3	   *
-	adc		indy_y					;3		   *
-	sta		indy_y					;3		   *
-	jmp		ld5d1					;3	 =	37 *
+	ror		ram_85					
+	bcs		ld5d1					
+	jsr		ld97c					
+	bcs		ld5db					
+	bvc		ld5d1					
+	ldy		ram_84					
+	lda		ldf6c,y					
+	cpy		#$02					
+	bcs		ld5cc					
+	adc		indy_y					
+	sta		indy_y					
+	jmp		ld5d1					
 
 ld5cc
-	clc								;2		   *
-	adc		indy_x					;3		   *
-	sta		indy_x					;3	 =	 8 *
+	clc								
+	adc		indy_x					
+	sta		indy_x					
 ld5d1
-	txa								;2		   *
-	clc								;2		   *
-	adc		#$0d					;2		   *
-	cmp		#$34					;2		   *
-	bcc		ld596					;2/3	   *
-	bcs		ld5e0					;2/3 =	12 *
+	txa								
+	clc								
+	adc		#$0d					
+	cmp		#$34					
+	bcc		ld596					
+	bcs		ld5e0					
 ld5db
-	sty		room_num				  ;3		 *
-	jsr		ld878					;6	 =	 9 *
+	sty		room_num				  
+	jsr		ld878					
 ld5e0
-	bit		inpt4|$30				;3		   *
-	bmi		ld5f5					;2/3	   *
-	bit		ram_9a					;3		   *
-	bmi		ld624					;2/3!	   *
-	lda		ram_8a					;3		   *
-	ror								;2		   *
-	bcs		ld5fa					;2/3	   *
-	sec								;2		   *
-	jsr		lda10					;6		   *
-	inc		ram_8a					;5		   *
-	bne		ld5fa					;2/3 =	32 *
+	bit		inpt4|$30				
+	bmi		ld5f5					
+	bit		ram_9a					
+	bmi		ld624					
+	lda		ram_8a					
+	ror								
+	bcs		ld5fa					
+	sec								
+	jsr		lda10					
+	inc		ram_8a					
+	bne		ld5fa					
 ld5f5
-	ror		ram_8a					;5		   *
-	clc								;2		   *
-	rol		ram_8a					;5	 =	12 *
+	ror		ram_8a					
+	clc								
+	rol		ram_8a					
 ld5fa
-	lda		ram_91					;3		   *
-	bpl		ld624					;2/3!	   *
-	and		#$1f					;2		   *
-	cmp		#$01					;2		   *
-	bne		ld60c					;2/3	   *
-	inc		num_bullets					 ;5			*
-	inc		num_bullets					 ;5			*
-	inc		num_bullets					 ;5			*
-	bne		ld620					;2/3 =	28 *
+	lda		ram_91					
+	bpl		ld624					
+	and		#$1f					
+	cmp		#$01					
+	bne		ld60c					
+	inc		num_bullets					 
+	inc		num_bullets					 
+	inc		num_bullets					 
+	bne		ld620					
 ld60c
-	cmp		#$0b					;2		   *
-	bne		ld61d					;2/3	   *
-	ror		ram_b2					;5		   *
-	sec								;2		   *
-	rol		ram_b2					;5		   *
-	ldx		#$45					;2		   *
-	stx		ram_df					;3		   *
-	ldx		#$7f					;2		   *
-	stx		ram_d0					;3	 =	26 *
+	cmp		#$0b					
+	bne		ld61d					
+	ror		ram_b2					
+	sec								
+	rol		ram_b2					
+	ldx		#$45					
+	stx		ram_df					
+	ldx		#$7f					
+	stx		ram_d0					
 ld61d
-	jsr		ldce9					;6	 =	 6 *
+	jsr		ldce9					
 ld620
-	lda		#$00					;2		   *
-	sta		ram_91					;3	 =	 5 *
+	lda		#$00					
+	sta		ram_91					
 ld624
-	jmp		ld777					;3	 =	 3 *
+	jmp		ld777					
 
 ld627
-	bit		ram_9a					;3		   *
-	bmi		ld624					;2/3	   *
-	bit		inpt5|$30				;3		   *
-	bpl		ld638					;2/3	   *
-	lda		#$fd					;2		   *
-	and		ram_8a					;3		   *
-	sta		ram_8a					;3		   *
-	jmp		ld777					;3	 =	21 *
+	bit		ram_9a					
+	bmi		ld624					
+	bit		inpt5|$30				
+	bpl		ld638					
+	lda		#$fd					
+	and		ram_8a					
+	sta		ram_8a					
+	jmp		ld777					
 
 ld638
-	lda		#$02					;2		   *
-	bit		ram_8a					;3		   *
-	bne		ld696					;2/3	   *
-	ora		ram_8a					;3		   *
-	sta		ram_8a					;3		   *
-	ldx		current_object					;3		   *
-	cpx		#$05					;2		   *
-	beq		ld64c					;2/3	   *
-	cpx		#$06					;2		   *
-	bne		ld671					;2/3 =	24 *
+	lda		#$02					
+	bit		ram_8a					
+	bne		ld696					
+	ora		ram_8a					
+	sta		ram_8a					
+	ldx		current_object					
+	cpx		#$05					
+	beq		ld64c					
+	cpx		#$06					
+	bne		ld671					
 ld64c
-	ldx		indy_y					;3		   *
-	stx		ram_d1					;3		   *
-	ldy		indy_x					;3		   *
-	sty		ram_cb					;3		   *
-	lda		time_of_day					 ;3			*
-	adc		#$04					;2		   *
-	sta		ram_9b					;3		   *
-	lda		#$80					;2		   *
-	cpx		#$35					;2		   *
-	bcs		ld66c					;2/3	   *
-	cpy		#$64					;2		   *
-	bcc		ld66c					;2/3	   *
-	ldx		room_num				  ;3		 *
-	cpx		#starting_room					;2		   *
-	bne		ld66c					;2/3	   *
-	ora		#$01					;2	 =	39 *
+	ldx		indy_y					
+	stx		ram_d1					
+	ldy		indy_x					
+	sty		ram_cb					
+	lda		time_of_day					 
+	adc		#$04					
+	sta		ram_9b					
+	lda		#$80					
+	cpx		#$35					
+	bcs		ld66c					
+	cpy		#$64					
+	bcc		ld66c					
+	ldx		room_num				  
+	cpx		#starting_room					
+	bne		ld66c					
+	ora		#$01					
 ld66c
-	sta		ram_9a					;3		   *
-	jmp		ld777					;3	 =	 6 *
+	sta		ram_9a					
+	jmp		ld777					
 
 ld671
-	cpx		#$03					;2		   *
-	bne		ld68b					;2/3	   *
-	stx		parachute_used					;3		   *
-	lda		ram_b4					;3		   *
-	bmi		ld696					;2/3	   *
-	ora		#$80					;2		   *
-	sta		ram_b4					;3		   *
-	lda		indy_y					;3		   *
-	sbc		#$06					;2		   *
-	bpl		ld687					;2/3	   *
-	lda		#$01					;2	 =	26 *
+	cpx		#$03					
+	bne		ld68b					
+	stx		parachute_used					
+	lda		ram_b4					
+	bmi		ld696					
+	ora		#$80					
+	sta		ram_b4					
+	lda		indy_y					
+	sbc		#$06					
+	bpl		ld687					
+	lda		#$01					
 ld687
-	sta		indy_y					;3		   *
-	bpl		ld6d2					;2/3 =	 5 *
+	sta		indy_y					
+	bpl		ld6d2					
 ld68b
-	bit		ram_8d					;3		   *
-	bvc		ld6d5					;2/3	   *
-	bit		cxm1fb|$30				;3		   *
-	bmi		ld699					;2/3	   *
-	jsr		ld2ce					;6	 =	16 *
+	bit		ram_8d					
+	bvc		ld6d5					
+	bit		cxm1fb|$30				
+	bmi		ld699					
+	jsr		ld2ce					
 ld696
-	jmp		ld777					;3	 =	 3 *
+	jmp		ld777					
 
 ld699
-	lda		ram_d1					;3		   *
-	lsr								;2		   *
-	sec								;2		   *
-	sbc		#$06					;2		   *
-	clc								;2		   *
-	adc		ram_df					;3		   *
-	lsr								;2		   *
-	lsr								;2		   *
-	lsr								;2		   *
-	lsr								;2		   *
-	cmp		#$08					;2		   *
-	bcc		ld6ac					;2/3	   *
-	lda		#$07					;2	 =	28 *
+	lda		ram_d1					
+	lsr								
+	sec								
+	sbc		#$06					
+	clc								
+	adc		ram_df					
+	lsr								
+	lsr								
+	lsr								
+	lsr								
+	cmp		#$08					
+	bcc		ld6ac					
+	lda		#$07					
 ld6ac
-	sta		ram_84					;3		   *
-	lda		ram_cb					;3		   *
-	sec								;2		   *
-	sbc		#$10					;2		   *
-	and		#$60					;2		   *
-	lsr								;2		   *
-	lsr								;2		   *
-	adc		ram_84					;3		   *
-	tay								;2		   *
-	lda		ldf7c,y					;4		   *
-	sta		ram_8b					;3		   *
-	ldx		ram_d1					;3		   *
-	dex								;2		   *
-	stx		ram_d1					;3		   *
-	stx		indy_y					;3		   *
-	ldx		ram_cb					;3		   *
-	dex								;2		   *
-	dex								;2		   *
-	stx		ram_cb					;3		   *
-	stx		indy_x					;3		   *
-	lda		#$46					;2		   *
-	sta		ram_8d					;3	 =	57 *
+	sta		ram_84					
+	lda		ram_cb					
+	sec								
+	sbc		#$10					
+	and		#$60					
+	lsr								
+	lsr								
+	adc		ram_84					
+	tay								
+	lda		ldf7c,y					
+	sta		ram_8b					
+	ldx		ram_d1					
+	dex								
+	stx		ram_d1					
+	stx		indy_y					
+	ldx		ram_cb					
+	dex								
+	dex								
+	stx		ram_cb					
+	stx		indy_x					
+	lda		#$46					
+	sta		ram_8d					
 ld6d2
-	jmp		ld773					;3	 =	 3 *
+	jmp		ld773					
 
 ld6d5
-	cpx		#$0b					;2		   *
-	bne		ld6f7					;2/3	   *
-	lda		indy_y					;3		   *
-	cmp		#$41					;2		   *
-	bcc		ld696					;2/3	   *
-	bit		cxppmm|$30				;3		   *
-	bpl		ld696					;2/3	   *
-	inc		ram_97					;5		   *
-	bne		ld696					;2/3	   *
-	ldy		ram_96					;3		   *
-	dey								;2		   *
-	cpy		#$54					;2		   *
-	bcs		ld6ef					;2/3	   *
-	iny								;2	 =	34 *
+	cpx		#$0b					
+	bne		ld6f7					
+	lda		indy_y					
+	cmp		#$41					
+	bcc		ld696					
+	bit		cxppmm|$30				
+	bpl		ld696					
+	inc		ram_97					
+	bne		ld696					
+	ldy		ram_96					
+	dey								
+	cpy		#$54					
+	bcs		ld6ef					
+	iny								
 ld6ef
-	sty		ram_96					;3		   *
-	lda		#$0a					;2		   *
-	sta		shovel_used					 ;3			*
-	bne		ld696					;2/3 =	10 *
+	sty		ram_96					
+	lda		#$0a					
+	sta		shovel_used					 
+	bne		ld696					
 ld6f7
-	cpx		#$10					;2		   *
-	bne		ld71e					;2/3!	   *
-	ldx		room_num				  ;3		 *
-	cpx		#treasure_room					;2		   *
-	beq		ld696					;2/3!	   *
-	lda		#mesa_top_room					;2		   *
-	sta		ankh_used				   ;3		  *
-	sta		room_num				  ;3		 *
-	jsr		ld878					;6		   *
-	lda		#$4c					;2		   *
-	sta		indy_x					;3		   *
-	sta		ram_cb					;3		   *
-	lda		#$46					;2		   *
-	sta		indy_y					;3		   *
-	sta		ram_d1					;3		   *
-	sta		ram_8d					;3		   *
-	lda		#$1d					;2		   *
-	sta		ram_df					;3		   *
-	bne		ld777					;2/3 =	51 *
+	cpx		#$10					
+	bne		ld71e					
+	ldx		room_num				  
+	cpx		#treasure_room					
+	beq		ld696					
+	lda		#mesa_top_room					
+	sta		ankh_used				   
+	sta		room_num				  
+	jsr		ld878					
+	lda		#$4c					
+	sta		indy_x					
+	sta		ram_cb					
+	lda		#$46					
+	sta		indy_y					
+	sta		ram_d1					
+	sta		ram_8d					
+	lda		#$1d					
+	sta		ram_df					
+	bne		ld777					
 ld71e
-	lda		swcha					;4		   *
-	and		#$0f					;2		   *
-	cmp		#$0f					;2		   *
-	beq		ld777					;2/3	   *
-	cpx		#$0d					;2		   *
-	bne		ld747					;2/3	   *
-	bit		ram_8f					;3		   *
-	bmi		ld777					;2/3	   *
-	ldy		num_bullets					 ;3			*
-	bmi		ld777					;2/3	   *
-	dec		num_bullets					 ;5			*
-	ora		#$80					;2		   *
-	sta		ram_8f					;3		   *
-	lda		indy_y					;3		   *
-	adc		#$04					;2		   *
-	sta		ram_d1					;3		   *
-	lda		indy_x					;3		   *
-	adc		#$04					;2		   *
-	sta		ram_cb					;3		   *
-	bne		ld773					;2/3 =	52 *
+	lda		swcha					
+	and		#$0f					
+	cmp		#$0f					
+	beq		ld777					
+	cpx		#$0d					
+	bne		ld747					
+	bit		ram_8f					
+	bmi		ld777					
+	ldy		num_bullets					 
+	bmi		ld777					
+	dec		num_bullets					 
+	ora		#$80					
+	sta		ram_8f					
+	lda		indy_y					
+	adc		#$04					
+	sta		ram_d1					
+	lda		indy_x					
+	adc		#$04					
+	sta		ram_cb					
+	bne		ld773					
 ld747
-	cpx		#$0a					;2		   *
-	bne		ld777					;2/3	   *
-	ora		#$80					;2		   *
-	sta		ram_8d					;3		   *
-	ldy		#$04					;2		   *
-	ldx		#$05					;2		   *
-	ror								;2		   *
-	bcs		ld758					;2/3	   *
-	ldx		#$fa					;2	 =	19 *
+	cpx		#$0a					
+	bne		ld777					
+	ora		#$80					
+	sta		ram_8d					
+	ldy		#$04					
+	ldx		#$05					
+	ror								
+	bcs		ld758					
+	ldx		#$fa					
 ld758
-	ror								;2		   *
-	bcs		ld75d					;2/3	   *
-	ldx		#$0f					;2	 =	 6 *
+	ror								
+	bcs		ld75d					
+	ldx		#$0f					
 ld75d
-	ror								;2		   *
-	bcs		ld762					;2/3	   *
-	ldy		#$f7					;2	 =	 6 *
+	ror								
+	bcs		ld762					
+	ldy		#$f7					
 ld762
-	ror								;2		   *
-	bcs		ld767					;2/3	   *
-	ldy		#$10					;2	 =	 6 *
+	ror								
+	bcs		ld767					
+	ldy		#$10					
 ld767
-	tya								;2		   *
-	clc								;2		   *
-	adc		indy_x					;3		   *
-	sta		ram_cb					;3		   *
-	txa								;2		   *
-	clc								;2		   *
-	adc		indy_y					;3		   *
-	sta		ram_d1					;3	 =	20 *
+	tya								
+	clc								
+	adc		indy_x					
+	sta		ram_cb					
+	txa								
+	clc								
+	adc		indy_y					
+	sta		ram_d1					
 ld773
-	lda		#$0f					;2		   *
-	sta		ram_a3					;3	 =	 5 *
+	lda		#$0f					
+	sta		ram_a3					
 ld777
-	bit		ram_b4					;3		   *
-	bpl		ld783					;2/3	   *
-	lda		#$63					;2		   *
-	sta		indy_anim				   ;3		  *
-	lda		#$0f					;2		   *
-	bne		ld792					;2/3 =	14 *
+	bit		ram_b4					
+	bpl		ld783					
+	lda		#$63					
+	sta		indy_anim				   
+	lda		#$0f					
+	bne		ld792					
 ld783
-	lda		swcha					;4		   *
-	and		#$0f					;2		   *
-	cmp		#$0f					;2		   *
-	bne		ld796					;2/3 =	10 *
+	lda		swcha					
+	and		#$0f					
+	cmp		#$0f					
+	bne		ld796					
 ld78c
-	lda		#$58					;2	 =	 2 *
+	lda		#$58					
 ld78e
-	sta		indy_anim				   ;3		  *
-	lda		#$0b					;2	 =	 5 *
+	sta		indy_anim				   
+	lda		#$0b					
 ld792
-	sta		indy_h					;3		   *
-	bne		ld7b2					;2/3 =	 5 *
+	sta		indy_h					
+	bne		ld7b2					
 ld796
-	lda		#$03					;2		   *
-	bit		ram_8a					;3		   *
-	bmi		ld79d					;2/3	   *
-	lsr								;2	 =	 9 *
+	lda		#$03					
+	bit		ram_8a					
+	bmi		ld79d					
+	lsr								
 ld79d
-	and		frame_counter				   ;3		  *
-	bne		ld7b2					;2/3	   *
-	lda		#$0b					;2		   *
-	clc								;2		   *
-	adc		indy_anim				   ;3		  *
-	cmp		#$58					;2		   *
-	bcc		ld78e					;2/3	   *
-	lda		#$02					;2		   *
-	sta		ram_a3					;3		   *
-	lda		#$00					;2		   *
-	bcs		ld78e					;2/3 =	25 *
+	and		frame_counter				   
+	bne		ld7b2					
+	lda		#$0b					
+	clc								
+	adc		indy_anim				   
+	cmp		#$58					
+	bcc		ld78e					
+	lda		#$02					
+	sta		ram_a3					
+	lda		#$00					
+	bcs		ld78e					
 ld7b2
-	ldx		room_num				  ;3		 *
-	cpx		#mesa_top_room					;2		   *
-	beq		ld7bc					;2/3	   *
-	cpx		#$0a					;2		   *
-	bne		ld802					;2/3!=	11 *
+	ldx		room_num				  
+	cpx		#mesa_top_room					
+	beq		ld7bc					
+	cpx		#$0a					
+	bne		ld802					
 ld7bc
-	lda		frame_counter				   ;3		  *
-	bit		ram_8a					;3		   *
-	bpl		ld7c3					;2/3	   *
-	lsr								;2	 =	10 *
+	lda		frame_counter				   
+	bit		ram_8a					
+	bpl		ld7c3					
+	lsr								
 ld7c3
-	ldy		indy_y					;3		   *
-	cpy		#$27					;2		   *
-	beq		ld802					;2/3!	   *
-	ldx		ram_df					;3		   *
-	bcs		ld7e8					;2/3	   *
-	beq		ld802					;2/3!	   *
-	inc		indy_y					;5		   *
-	inc		ram_d1					;5		   *
-	and		#$02					;2		   *
-	bne		ld802					;2/3!	   *
-	dec		ram_df					;5		   *
-	inc		enemy_y					 ;5			*
-	inc		ram_d0					;5		   *
-	inc		ram_d2					;5		   *
-	inc		enemy_y					 ;5			*
-	inc		ram_d0					;5		   *
-	inc		ram_d2					;5		   *
-	jmp		ld802					;3	 =	66 *
+	ldy		indy_y					
+	cpy		#$27					
+	beq		ld802					
+	ldx		ram_df					
+	bcs		ld7e8					
+	beq		ld802					
+	inc		indy_y					
+	inc		ram_d1					
+	and		#$02					
+	bne		ld802					
+	dec		ram_df					
+	inc		enemy_y					 
+	inc		ram_d0					
+	inc		ram_d2					
+	inc		enemy_y					 
+	inc		ram_d0					
+	inc		ram_d2					
+	jmp		ld802					
 
 ld7e8
-	cpx		#$50					;2		   *
-	bcs		ld802					;2/3!	   *
-	dec		indy_y					;5		   *
-	dec		ram_d1					;5		   *
-	and		#$02					;2		   *
-	bne		ld802					;2/3!	   *
-	inc		ram_df					;5		   *
-	dec		enemy_y					 ;5			*
-	dec		ram_d0					;5		   *
-	dec		ram_d2					;5		   *
-	dec		enemy_y					 ;5			*
-	dec		ram_d0					;5		   *
-	dec		ram_d2					;5	 =	53 *
+	cpx		#$50					
+	bcs		ld802					
+	dec		indy_y					
+	dec		ram_d1					
+	and		#$02					
+	bne		ld802					
+	inc		ram_df					
+	dec		enemy_y					 
+	dec		ram_d0					
+	dec		ram_d2					
+	dec		enemy_y					 
+	dec		ram_d0					
+	dec		ram_d2					
 ld802
-	lda		#$28					;2		   *
-	sta		ram_88					;3		   *
-	lda		#$f5					;2		   *
-	sta		ram_89					;3		   *
-	jmp		ldfad					;3	 =	13 *
+	lda		#$28					
+	sta		ram_88					
+	lda		#$f5					
+	sta		ram_89					
+	jmp		ldfad					
 
 ld80d
-	lda		ram_99					;3
-	beq		set_room_attr					;2/3
-	jsr		ldd59				   ;6		  *
-	lda		#$00					;2	 =	13 *
+	lda		ram_99					
+	beq		set_room_attr					
+	jsr		ldd59				   
+	lda		#$00					
 set_room_attr
-	sta		ram_99					;3
-	ldx		room_num				  ;3
-	lda		room_miss0_size_tabl,x					;4
-	sta		nusiz0					;3
-	lda		room_pf_cfg					;3
-	sta		ctrlpf					;3
-	lda		room_bg_color_tbl,x					;4
-	sta		colubk					;3
-	lda		room_pf_color_tbl,x					;4
-	sta		colupf					;3
-	lda		room_p0_color_tbl,x					;4
-	sta		colup0					;3
-	lda		room_p1_color_tbl,x					;4
-	sta		colup1					;3
-	cpx		#$0b					;2
-	bcc		ld84b					;2/3
-	lda		#$20					;2
-	sta		ram_d4					;3
-	ldx		#$04					;2	 =	58
+	sta		ram_99					
+	ldx		room_num				  
+	lda		room_miss0_size_tabl,x					
+	sta		nusiz0					
+	lda		room_pf_cfg					
+	sta		ctrlpf					
+	lda		room_bg_color_tbl,x					
+	sta		colubk					
+	lda		room_pf_color_tbl,x					
+	sta		colupf					
+	lda		room_p0_color_tbl,x					
+	sta		colup0					
+	lda		room_p1_color_tbl,x					
+	sta		colup1					
+	cpx		#$0b					
+	bcc		ld84b					
+	lda		#$20					
+	sta		ram_d4					
+	ldx		#$04					
 ld841
-	ldy		ram_e5,x				;4
-	lda		room_miss0_size_tabl,y					;4
-	sta		ram_ee,x				;4
-	dex								;2
-	bpl		ld841					;2/3 =	16
+	ldy		ram_e5,x				
+	lda		room_miss0_size_tabl,y					
+	sta		ram_ee,x				
+	dex								
+	bpl		ld841					
 ld84b
-	jmp		ld006					;3	 =	 3
+	jmp		ld006					
 
 ld84e
-	lda		#$4d					;2
-	sta		indy_x					;3
-	lda		#$48					;2
-	sta		enemy_x					 ;3
-	lda		#$1f					;2
-	sta		indy_y					;3
-	rts								;6	 =	21
+	lda		#$4d					
+	sta		indy_x					
+	lda		#$48					
+	sta		enemy_x					 
+	lda		#$1f					
+	sta		indy_y					
+	rts								
 
 ld85b
-	ldx		#$00					;2		   *
-	txa								;2	 =	 4 *
+	ldx		#$00					
+	txa								
 ld85e
-	sta		ram_df,x				;4		   *
-	sta		ram_e0,x				;4		   *
-	sta		pf1_data,x				  ;4		 *
-	sta		ram_e2,x				;4		   *
-	sta		pf2_data,x				  ;4		 *
-	sta		ram_e4,x				;4		   *
-	txa								;2		   *
-	bne		ld873					;2/3	   *
-	ldx		#$06					;2		   *
-	lda		#$14					;2		   *
-	bne		ld85e					;2/3 =	34 *
+	sta		ram_df,x				
+	sta		ram_e0,x				
+	sta		pf1_data,x				  
+	sta		ram_e2,x				
+	sta		pf2_data,x				  
+	sta		ram_e4,x				
+	txa								
+	bne		ld873					
+	ldx		#$06					
+	lda		#$14					
+	bne		ld85e					
 ld873
-	lda		#$fc					;2		   *
-	sta		ram_d7					;3		   *
-	rts								;6	 =	11 *
+	lda		#$fc					
+	sta		ram_d7					
+	rts								
 
 ld878
-	lda		ram_9a					;3
-	bpl		ld880					;2/3
-	ora		#$40					;2		   *
-	sta		ram_9a					;3	 =	10 *
+	lda		ram_9a					
+	bpl		ld880					
+	ora		#$40					
+	sta		ram_9a					
 ld880
-	lda		#$5c					;2
-	sta		ram_96					;3
-	ldx		#$00					;2
-	stx		ram_93					;3
-	stx		ram_b6					;3
-	stx		ram_8e					;3
-	stx		ram_90					;3
-	lda		ram_95					;3
-	stx		ram_95					;3
-	jsr		ldd59				   ;6
-	rol		ram_8a					;5
-	clc								;2
-	ror		ram_8a					;5
-	ldx		room_num				  ;3
-	lda		ldb92,x					;4
-	sta		room_pf_cfg					;3
-	cpx		#$0d					;2
-	beq		ld84e					;2/3
-	cpx		#$05					;2		   *
-	beq		ld8b1					;2/3	   *
-	cpx		#$0c					;2		   *
-	beq		ld8b1					;2/3	   *
-	lda		#$00					;2		   *
-	sta		ram_8b					;3	 =	70 *
+	lda		#$5c					
+	sta		ram_96					
+	ldx		#$00					
+	stx		ram_93					
+	stx		ram_b6					
+	stx		ram_8e					
+	stx		ram_90					
+	lda		ram_95					
+	stx		ram_95					
+	jsr		ldd59				   
+	rol		ram_8a					
+	clc								
+	ror		ram_8a					
+	ldx		room_num				  
+	lda		ldb92,x					
+	sta		room_pf_cfg					
+	cpx		#$0d					
+	beq		ld84e					
+	cpx		#$05					
+	beq		ld8b1					
+	cpx		#$0c					
+	beq		ld8b1					
+	lda		#$00					
+	sta		ram_8b					
 ld8b1
-	lda		ldbee,x					;4		   *
-	sta		emy_anim				  ;3		 *
-	lda		ldbe1,x					;4		   *
-	sta		ram_de					;3		   *
-	lda		ldbc9,x					;4		   *
-	sta		snake_y					 ;3			*
-	lda		ldbd4,x					;4		   *
-	sta		enemy_x					 ;3			*
-	lda		ldc0e,x					;4		   *
-	sta		ram_ca					;3		   *
-	lda		ldc1b,x					;4		   *
-	sta		ram_d0					;3		   *
-	cpx		#$0b					;2		   *
-	bcs		ld85b					;2/3	   *
-	adc		ldc03,x					;4		   *
-	sta		ram_e0					;3		   *
-	lda		ldc28,x					;4		   *
-	sta		pf1_data				  ;3		 *
-	lda		ldc33,x					;4		   *
-	sta		ram_e2					;3		   *
-	lda		ldc3e,x					;4		   *
-	sta		pf2_data				  ;3		 *
-	lda		ldc49,x					;4		   *
-	sta		ram_e4					;3		   *
-	lda		#$55					;2		   *
-	sta		ram_d2					;3		   *
-	sta		ram_d1					;3		   *
-	cpx		#$06					;2		   *
-	bcs		ld93e					;2/3!	   *
-	lda		#$00					;2		   *
-	cpx		#$00					;2		   *
-	beq		ld91b					;2/3!	   *
-	cpx		#$02					;2		   *
-	beq		ld92a					;2/3	   *
-	sta		enemy_y					 ;3	  = 106 *
+	lda		ldbee,x					
+	sta		emy_anim				  
+	lda		ldbe1,x					
+	sta		ram_de					
+	lda		ldbc9,x					
+	sta		snake_y					 
+	lda		ldbd4,x					
+	sta		enemy_x					 
+	lda		ldc0e,x					
+	sta		ram_ca					
+	lda		ldc1b,x					
+	sta		ram_d0					
+	cpx		#$0b					
+	bcs		ld85b					
+	adc		ldc03,x					
+	sta		ram_e0					
+	lda		ldc28,x					
+	sta		pf1_data				  
+	lda		ldc33,x					
+	sta		ram_e2					
+	lda		ldc3e,x					
+	sta		pf2_data				  
+	lda		ldc49,x					
+	sta		ram_e4					
+	lda		#$55					
+	sta		ram_d2					
+	sta		ram_d1					
+	cpx		#$06					
+	bcs		ld93e					
+	lda		#$00					
+	cpx		#$00					
+	beq		ld91b					
+	cpx		#$02					
+	beq		ld92a					
+	sta		enemy_y					 
 ld902
-	ldy		#$4f					;2		   *
-	cpx		#$02					;2		   *
-	bcc		ld918					;2/3	   *
-	lda		ram_af,x				;4		   *
-	ror								;2		   *
-	bcc		ld918					;2/3	   *
-	ldy		ldf72,x					;4		   *
-	cpx		#$03					;2		   *
-	bne		ld918					;2/3	   *
-	lda		#$ff					;2		   *
-	sta		ram_d0					;3	 =	27 *
+	ldy		#$4f					
+	cpx		#$02					
+	bcc		ld918					
+	lda		ram_af,x				
+	ror								
+	bcc		ld918					
+	ldy		ldf72,x					
+	cpx		#$03					
+	bne		ld918					
+	lda		#$ff					
+	sta		ram_d0					
 ld918
-	sty		ram_df					;3		   *
-	rts								;6	 =	 9 *
+	sty		ram_df					
+	rts								
 
 ld91b
-	lda		ram_af					;3		   *
-	and		#$78					;2		   *
-	sta		ram_af					;3		   *
-	lda		#$1a					;2		   *
-	sta		enemy_y					 ;3			*
-	lda		#$26					;2		   *
-	sta		ram_df					;3		   *
-	rts								;6	 =	24 *
+	lda		ram_af					
+	and		#$78					
+	sta		ram_af					
+	lda		#$1a					
+	sta		enemy_y					 
+	lda		#$26					
+	sta		ram_df					
+	rts								
 
 ld92a
-	lda		ram_b1					;3		   *
-	and		#$07					;2		   *
-	lsr								;2		   *
-	bne		ld935					;2/3	   *
-	ldy		#$ff					;2		   *
-	sty		ram_d0					;3	 =	14 *
+	lda		ram_b1					
+	and		#$07					
+	lsr								
+	bne		ld935					
+	ldy		#$ff					
+	sty		ram_d0					
 ld935
-	tay								;2		   *
-	lda		ldf70,y					;4		   *
-	sta		enemy_y					 ;3			*
-	jmp		ld902					;3	 =	12 *
+	tay								
+	lda		ldf70,y					
+	sta		enemy_y					 
+	jmp		ld902					
 
 ld93e
-	cpx		#$08					;2		   *
-	beq		ld950					;2/3	   *
-	cpx		#$06					;2		   *
-	bne		ld968					;2/3	   *
-	ldy		#$00					;2		   *
-	sty		ram_d8					;3		   *
-	ldy		#$40					;2		   *
-	sty		ram_e5					;3		   *
-	bne		ld958					;2/3 =	20 *
+	cpx		#$08					
+	beq		ld950					
+	cpx		#$06					
+	bne		ld968					
+	ldy		#$00					
+	sty		ram_d8					
+	ldy		#$40					
+	sty		ram_e5					
+	bne		ld958					
 ld950
-	ldy		#$ff					;2		   *
-	sty		ram_e5					;3		   *
-	iny								;2		   *
-	sty		ram_d8					;3		   *
-	iny								;2	 =	12 *
+	ldy		#$ff					
+	sty		ram_e5					
+	iny								
+	sty		ram_d8					
+	iny								
 ld958
-	sty		ram_e6					;3		   *
-	sty		ram_e7					;3		   *
-	sty		ram_e8					;3		   *
-	sty		ram_e9					;3		   *
-	sty		ram_ea					;3		   *
-	ldy		#$39					;2		   *
-	sty		ram_d4					;3		   *
-	sty		ram_d5					;3	 =	23 *
+	sty		ram_e6					
+	sty		ram_e7					
+	sty		ram_e8					
+	sty		ram_e9					
+	sty		ram_ea					
+	ldy		#$39					
+	sty		ram_d4					
+	sty		ram_d5					
 ld968
-	cpx		#$09					;2		   *
-	bne		ld977					;2/3	   *
-	ldy		indy_y					;3		   *
-	cpy		#$49					;2		   *
-	bcc		ld977					;2/3	   *
-	lda		#$50					;2		   *
-	sta		ram_df					;3		   *
-	rts								;6	 =	22 *
+	cpx		#$09					
+	bne		ld977					
+	ldy		indy_y					
+	cpy		#$49					
+	bcc		ld977					
+	lda		#$50					
+	sta		ram_df					
+	rts								
 
 ld977
-	lda		#$00					;2		   *
-	sta		ram_df					;3		   *
-	rts								;6	 =	11 *
+	lda		#$00					
+	sta		ram_df					
+	rts								
 
 ld97c
-	ldy		lde00,x					;4		   *
-	cpy		ram_86					;3		   *
-	beq		ld986					;2/3	   *
-	clc								;2		   *
-	clv								;2		   *
-	rts								;6	 =	19 *
+	ldy		lde00,x					
+	cpy		ram_86					
+	beq		ld986					
+	clc								
+	clv								
+	rts								
 
 ld986
-	ldy		lde34,x					;4		   *
-	bmi		ld99b					;2/3 =	 6 *
+	ldy		lde34,x					
+	bmi		ld99b					
 ld98b
-	lda		ldf04,x					;4		   *
-	beq		ld992					;2/3 =	 6 *
+	lda		ldf04,x					
+	beq		ld992					
 ld990
-	sta		indy_y					;3	 =	 3 *
+	sta		indy_y					
 ld992
-	lda		ldf38,x					;4		   *
-	beq		ld999					;2/3	   *
-	sta		indy_x					;3	 =	 9 *
+	lda		ldf38,x					
+	beq		ld999					
+	sta		indy_x					
 ld999
-	sec								;2		   *
-	rts								;6	 =	 8 *
+	sec								
+	rts								
 
 ld99b
-	iny								;2		   *
-	beq		ld9f9					;2/3	   *
-	iny								;2		   *
-	bne		ld9b6					;2/3	   *
-	ldy		lde68,x					;4		   *
-	cpy		ram_87					;3		   *
-	bcc		ld9af					;2/3	   *
-	ldy		lde9c,x					;4		   *
-	bmi		ld9c7					;2/3	   *
-	bpl		ld98b					;2/3 =	25 *
+	iny								
+	beq		ld9f9					
+	iny								
+	bne		ld9b6					
+	ldy		lde68,x					
+	cpy		ram_87					
+	bcc		ld9af					
+	ldy		lde9c,x					
+	bmi		ld9c7					
+	bpl		ld98b					
 ld9af
-	ldy		lded0,x					;4		   *
-	bmi		ld9c7					;2/3	   *
-	bpl		ld98b					;2/3 =	 8 *
+	ldy		lded0,x					
+	bmi		ld9c7					
+	bpl		ld98b					
 ld9b6
-	lda		ram_87					;3		   *
-	cmp		lde68,x					;4		   *
-	bcc		ld9f9					;2/3	   *
-	cmp		lde9c,x					;4		   *
-	bcs		ld9f9					;2/3	   *
-	ldy		lded0,x					;4		   *
-	bpl		ld98b					;2/3 =	21 *
+	lda		ram_87					
+	cmp		lde68,x					
+	bcc		ld9f9					
+	cmp		lde9c,x					
+	bcs		ld9f9					
+	ldy		lded0,x					
+	bpl		ld98b					
 ld9c7
-	iny								;2		   *
-	bmi		ld9d4					;2/3	   *
-	ldy		#$08					;2		   *
-	bit		ram_af					;3		   *
-	bpl		ld98b					;2/3	   *
-	lda		#$41					;2		   *
-	bne		ld990					;2/3 =	15 *
+	iny								
+	bmi		ld9d4					
+	ldy		#$08					
+	bit		ram_af					
+	bpl		ld98b					
+	lda		#$41					
+	bne		ld990					
 ld9d4
-	iny								;2		   *
-	bne		ld9e1					;2/3	   *
-	lda		ram_b5					;3		   *
-	and		#$0f					;2		   *
-	bne		ld9f9					;2/3	   *
-	ldy		#$06					;2		   *
-	bne		ld98b					;2/3 =	15 *
+	iny								
+	bne		ld9e1					
+	lda		ram_b5					
+	and		#$0f					
+	bne		ld9f9					
+	ldy		#$06					
+	bne		ld98b					
 ld9e1
-	iny								;2		   *
-	bne		ld9f0					;2/3	   *
-	lda		ram_b5					;3		   *
-	and		#$0f					;2		   *
-	cmp		#$0a					;2		   *
-	bcs		ld9f9					;2/3	   *
-	ldy		#$06					;2		   *
-	bne		ld98b					;2/3 =	17 *
+	iny								
+	bne		ld9f0					
+	lda		ram_b5					
+	and		#$0f					
+	cmp		#$0a					
+	bcs		ld9f9					
+	ldy		#$06					
+	bne		ld98b					
 ld9f0
-	iny								;2		   *
-	bne		ld9fe					;2/3	   *
-	ldy		#$01					;2		   *
-	bit		ram_8a					;3		   *
-	bmi		ld98b					;2/3 =	11 *
+	iny								
+	bne		ld9fe					
+	ldy		#$01					
+	bit		ram_8a					
+	bmi		ld98b					
 ld9f9
-	clc								;2		   *
-	bit		ld9fd					;4	 =	 6 *
+	clc								
+	bit		ld9fd					
 
 ld9fd
 	.byte	$60								; $d9fd (d)
 
 ld9fe
-	iny								;2		   *
-	bne		ld9f9					;2/3!	   *
-	ldy		#$06					;2		   *
-	lda		#$0e					;2		   *
-	cmp		current_object					;3		   *
-	bne		ld9f9					;2/3!	   *
-	bit		inpt5|$30				;3		   *
-	bmi		ld9f9					;2/3!	   *
-	jmp		ld98b					;3	 =	21 *
+	iny								
+	bne		ld9f9					
+	ldy		#$06					
+	lda		#$0e					
+	cmp		current_object					
+	bne		ld9f9					
+	bit		inpt5|$30				
+	bmi		ld9f9					
+	jmp		ld98b					
 
 lda10
-	ldy		ram_c4					;3		   *
-	bne		lda16					;2/3	   *
-	clc								;2		   *
-	rts								;6	 =	13 *
+	ldy		ram_c4					
+	bne		lda16					
+	clc								
+	rts								
 
 lda16
-	bcs		check_key					;2/3	   *
-	tay								;2		   *
-	asl								;2		   *
-	asl								;2		   *
-	asl								;2		   *
-	ldx		#$0a					;2	 =	12 *
+	bcs		check_key					
+	tay								
+	asl								
+	asl								
+	asl								
+	ldx		#$0a					
 lda1e
-	cmp		inv_slot_lo,x				  ;4		 *
-	bne		lda3a					;2/3	   *
-	cpx		cursor_pos					;3		   *
-	beq		lda3a					;2/3	   *
-	dec		ram_c4					;5		   *
-	lda		#$00					;2		   *
-	sta		inv_slot_lo,x				  ;4		 *
-	cpy		#$05					;2		   *
-	bcc		lda37					;2/3	   *
-	tya								;2		   *
-	tax								;2		   *
-	jsr		ldd1b					;6		   *
-	txa								;2		   *
-	tay								;2	 =	40 *
+	cmp		inv_slot_lo,x				  
+	bne		lda3a					
+	cpx		cursor_pos					
+	beq		lda3a					
+	dec		ram_c4					
+	lda		#$00					
+	sta		inv_slot_lo,x				  
+	cpy		#$05					
+	bcc		lda37					
+	tya								
+	tax								
+	jsr		ldd1b					
+	txa								
+	tay								
 lda37
-	jmp		ldaf7					;3	 =	 3 *
+	jmp		ldaf7					
 
 lda3a
-	dex								;2		   *
-	dex								;2		   *
-	bpl		lda1e					;2/3	   *
-	clc								;2		   *
-	rts								;6	 =	14 *
+	dex								
+	dex								
+	bpl		lda1e					
+	clc								
+	rts								
 
 check_key
 	lda		#<blank_gfx				; load blank space
@@ -1905,127 +1905,127 @@ check_key
 	sta		inv_slot_lo,x			; put in current slot
 	ldx		current_object			; is the current object
 	cpx		#key_obj				; the key?
-	bcc		lda4f					;2/3	   *
-	jsr		ldd1b					;6	 =	22 *
+	bcc		lda4f					
+	jsr		ldd1b					
 lda4f
-	txa								;2		   *
-	tay								;2		   *
-	asl								;2		   *
-	tax								;2		   *
-	lda		ldc76,x					;4		   *
-	pha								;3		   *
-	lda		ldc75,x					;4		   *
-	pha								;3		   *
-	ldx		room_num				  ;3		 *
-	rts								;6	 =	31 *
+	txa								
+	tay								
+	asl								
+	tax								
+	lda		ldc76,x					
+	pha								
+	lda		ldc75,x					
+	pha								
+	ldx		room_num				  
+	rts								
 
 lda5e:
-	   lda	  #$3f					  ;2
-	   and	  $b4					  ;3
-	   sta	  $b4					  ;3
+	   lda	  #$3f					  
+	   and	  $b4					  
+	   sta	  $b4					  
 lda64:
-	   jmp	  ldad8					  ;3
+	   jmp	  ldad8					  
 
 lda67:
-	   stx	  $8d					  ;3
-	   lda	  #$70					  ;2
-	   sta	  $d1					  ;3
-	   bne	  lda64					  ;2 always branch
+	   stx	  $8d					  
+	   lda	  #$70					  
+	   sta	  $d1					  
+	   bne	  lda64					  
 
 lda6f:
-	   lda	  #$42					  ;2
-	   cmp	  $91					  ;3
-	   bne	  lda86					  ;2
-	   lda	  #$03					  ;2
-	   sta	  $81					  ;3
-	   jsr	  ld878					  ;6
-	   lda	  #$15					  ;2
-	   sta	  $c9					  ;3
-	   lda	  #$1c					  ;2
-	   sta	  $cf					  ;3
-	   bne	  ldad8					  ;2 always branch
+	   lda	  #$42					  
+	   cmp	  $91					  
+	   bne	  lda86					  
+	   lda	  #$03					  
+	   sta	  $81					  
+	   jsr	  ld878					  
+	   lda	  #$15					  
+	   sta	  $c9					  
+	   lda	  #$1c					  
+	   sta	  $cf					  
+	   bne	  ldad8					  
 
 lda86:
-	   cpx	  #$05					  ;2
-	   bne	  ldad8					  ;2
-	   lda	  #$05					  ;2
-	   cmp	  $8b					  ;3
-	   bne	  ldad8					  ;2
-	   sta	  yar_found				  ;3 5 points (gained)...shared from existing compare value
-	   lda	  #$00					  ;2
-	   sta	  $ce					  ;3
-	   lda	  #$02					  ;2
-	   ora	  $b4					  ;3
-	   sta	  $b4					  ;3
-	   bne	  ldad8					  ;2 always branch
+	   cpx	  #$05					  
+	   bne	  ldad8					  
+	   lda	  #$05					  
+	   cmp	  $8b					  
+	   bne	  ldad8					  
+	   sta	  yar_found				  
+	   lda	  #$00					  
+	   sta	  $ce					  
+	   lda	  #$02					  
+	   ora	  $b4					  
+	   sta	  $b4					  
+	   bne	  ldad8					  
 
 lda9e:
-	   ror	  $b1					  ;5
-	   clc							  ;2
-	   rol	  $b1					  ;5
-	   cpx	  #$02					  ;2
-	   bne	  ldaab					  ;2
-	   lda	  #$4e					  ;2
-	   sta	  $df					  ;3
+	   ror	  $b1					  
+	   clc							  
+	   rol	  $b1					  
+	   cpx	  #$02					  
+	   bne	  ldaab					  
+	   lda	  #$4e					  
+	   sta	  $df					  
 ldaab:
-	   bne	  ldad8					  ;2 always branch
+	   bne	  ldad8					  
 
 ldaad:
-	   ror	  $b2					  ;5
-	   clc							  ;2
-	   rol	  $b2					  ;5
-	   cpx	  #$03					  ;2
-	   bne	  ldabe					  ;2
-	   lda	  #$4f					  ;2
-	   sta	  $df					  ;3
-	   lda	  #$4b					  ;2
-	   sta	  $d0					  ;3
+	   ror	  $b2					  
+	   clc							  
+	   rol	  $b2					  
+	   cpx	  #$03					  
+	   bne	  ldabe					  
+	   lda	  #$4f					  
+	   sta	  $df					  
+	   lda	  #$4b					  
+	   sta	  $d0					  
 ldabe:
-	   bne	  ldad8					  ;2 always branch
+	   bne	  ldad8					  
 
 ldac0:
-	   ldx	  $81					  ;3
-	   cpx	  #$03					  ;2
-	   bne	  ldad1					  ;2
-	   lda	  $c9					  ;3
-	   cmp	  #$3c					  ;2
-	   bcs	  ldad1					  ;2
-	   rol	  $b2					  ;5
-	   sec							  ;2
-	   ror	  $b2					  ;5
+	   ldx	  $81					  
+	   cpx	  #$03					  
+	   bne	  ldad1					  
+	   lda	  $c9					  
+	   cmp	  #$3c					  
+	   bcs	  ldad1					  
+	   rol	  $b2					  
+	   sec							  
+	   ror	  $b2					  
 ldad1:
-	   lda	  $91					  ;3
-	   clc							  ;2
-	   adc	  #$40					  ;2
-	   sta	  $91					  ;3
+	   lda	  $91					  
+	   clc							  
+	   adc	  #$40					  
+	   sta	  $91					  
 ldad8:
-	   dec	  $c4					  ;5
-	   bne	  ldae2					  ;2
-	   lda	  #$00					  ;2
-	   sta	  current_object		  ;3
-	   beq	  ldaf7					  ;2 always branch
+	   dec	  $c4					  
+	   bne	  ldae2					  
+	   lda	  #$00					  
+	   sta	  current_object		  
+	   beq	  ldaf7					  
 
 ldae2:
-	   ldx	  $c3					  ;3
+	   ldx	  $c3					  
 ldae4:
-	   inx							  ;2
-	   inx							  ;2
-	   cpx	  #$0b					  ;2
-	   bcc	  ldaec					  ;2
-	   ldx	  #$00					  ;2
+	   inx							  
+	   inx							  
+	   cpx	  #$0b					  
+	   bcc	  ldaec					  
+	   ldx	  #$00					  
 ldaec:
-	   lda	  inv_slot_lo,x		 ;4
-	   beq	  ldae4					  ;2 branch if current slot is free
-	   stx	  $c3					  ;3  ...or store the slot number
-	   lsr							  ;2
-	   lsr							  ;2
-	   lsr							  ;2
-	   sta	  current_object		  ;3 ...and the object number
+	   lda	  inv_slot_lo,x		 
+	   beq	  ldae4					  
+	   stx	  $c3					  
+	   lsr							  
+	   lsr							  
+	   lsr							  
+	   sta	  current_object		  
 ldaf7
-	lda		#$0d					;2		   *
-	sta		ram_a2					;3		   *
-	sec								;2		   *
-	rts								;6	 =	13 *
+	lda		#$0d					
+	sta		ram_a2					
+	sec								
+	rts								
 
 	.byte	$00,$00,$00						; $dafd (*)
 room_miss0_size_tabl
@@ -2231,104 +2231,104 @@ ldccf:
 	   .word ld374-1 ; $dce7/e8
 
 ldce9
-	ldx		ram_c4					;3		   *
-	cpx		#$06					;2		   *
-	bcc		ldcf1					;2/3	   *
-	clc								;2		   *
-	rts								;6	 =	15 *
+	ldx		ram_c4					
+	cpx		#$06					
+	bcc		ldcf1					
+	clc								
+	rts								
 
 ldcf1
-	ldx		#$0a					;2	 =	 2 *
+	ldx		#$0a					
 ldcf3
-	ldy		inv_slot_lo,x				  ;4		 *
+	ldy		inv_slot_lo,x				  
 	beq		ldcfc					; branch if current slot is free
-	dex								;2		   *
-	dex								;2		   *
-	bpl		ldcf3					;2/3	   *
+	dex								
+	dex								
+	bpl		ldcf3					
 	brk								; unused
 
 ldcfc
-	tay								;2		   *
+	tay								
 	asl								; multiply object number by 8 for gfx
 	asl								;...
 	asl								;...
 	sta		inv_slot_lo,x			; and store in current slot
-	lda		ram_c4					;3		   *
-	bne		ldd0a					;2/3	   *
-	stx		cursor_pos					;3		   *
-	sty		current_object					;3	 =	23 *
+	lda		ram_c4					
+	bne		ldd0a					
+	stx		cursor_pos					
+	sty		current_object					
 ldd0a
-	inc		ram_c4					;5		   *
-	cpy		#$04					;2		   *
-	bcc		ldd15					;2/3	   *
-	tya								;2		   *
-	tax								;2		   *
-	jsr		ldd2f					;6	 =	19 *
+	inc		ram_c4					
+	cpy		#$04					
+	bcc		ldd15					
+	tya								
+	tax								
+	jsr		ldd2f					
 ldd15
-	lda		#$0c					;2		   *
-	sta		ram_a2					;3		   *
-	sec								;2		   *
-	rts								;6	 =	13 *
+	lda		#$0c					
+	sta		ram_a2					
+	sec								
+	rts								
 
 ldd1b
-	lda		ldc64,x					;4		   *
-	lsr								;2		   *
-	tay								;2		   *
-	lda		ldc5c,y					;4		   *
-	bcs		ldd2a					;2/3	   *
-	and		ram_c6					;3		   *
-	sta		ram_c6					;3		   *
-	rts								;6	 =	26 *
+	lda		ldc64,x					
+	lsr								
+	tay								
+	lda		ldc5c,y					
+	bcs		ldd2a					
+	and		ram_c6					
+	sta		ram_c6					
+	rts								
 
 ldd2a
-	and		ram_c7					;3		   *
-	sta		ram_c7					;3		   *
-	rts								;6	 =	12 *
+	and		ram_c7					
+	sta		ram_c7					
+	rts								
 
 ldd2f
-	lda		ldc64,x					;4		   *
-	lsr								;2		   *
-	tax								;2		   *
-	lda		ldc54,x					;4		   *
-	bcs		ldd3e					;2/3	   *
-	ora		ram_c6					;3		   *
-	sta		ram_c6					;3		   *
-	rts								;6	 =	26 *
+	lda		ldc64,x					
+	lsr								
+	tax								
+	lda		ldc54,x					
+	bcs		ldd3e					
+	ora		ram_c6					
+	sta		ram_c6					
+	rts								
 
 ldd3e
-	ora		ram_c7					;3		   *
-	sta		ram_c7					;3		   *
-	rts								;6	 =	12 *
+	ora		ram_c7					
+	sta		ram_c7					
+	rts								
 
 ldd43:
-	   lda	  ldc64,x				  ;4
-	   lsr							  ;2
-	   tay							  ;2
-	   lda	  ldc54,y				  ;4
-	   bcs	  ldd53					  ;2
-	   and	  ram_c6					 ;3
-	   beq	  ldd52					  ;2
-	   sec							  ;2
+	   lda	  ldc64,x				  
+	   lsr							  
+	   tay							  
+	   lda	  ldc54,y				  
+	   bcs	  ldd53					  
+	   and	  ram_c6					 
+	   beq	  ldd52					  
+	   sec							  
 ldd52:
-	   rts							  ;6
+	   rts							  
 
 ldd53:
-	   and	  ram_c7					 ;3
-	   bne	  ldd52					  ;2
-	   clc							  ;2
-	   rts							  ;6
+	   and	  ram_c7					 
+	   bne	  ldd52					  
+	   clc							  
+	   rts							  
 
 
 ldd59
-	and		#$1f					;2
-	tax								;2
-	lda		ram_98					;3
-	cpx		#$0c					;2
-	bcs		ldd67					;2/3
-	adc		ldfe5,x					;4
-	sta		ram_98					;3	 =	18
+	and		#$1f					
+	tax								
+	lda		ram_98					
+	cpx		#$0c					
+	bcs		ldd67					
+	adc		ldfe5,x					
+	sta		ram_98					
 ldd67
-	rts								;6	 =	 6
+	rts								
 
 game_start
 	sei								; turn off interrupts
@@ -2367,37 +2367,37 @@ clear_zp
 	sta		room_num				; as current room
 	lsr								; divide 13 by 2 (round down)
 	sta		num_bullets				; load 6 bullets
-	jsr		ld878					;6
-	jmp		ld3dd					;3	 =	77
+	jsr		ld878					
+	jmp		ld3dd					
 
 reset_vars
-	lda		#$20					;2		   *
-	sta		inv_slot_lo				  ;3		 *
-	lsr								;2		   *
-	lsr								;2		   *
-	lsr								;2		   *
-	sta		current_object					;3		   *
-	inc		ram_c4					;5		   *
-	lda		#$00					;2		   *
-	sta		inv_slot2_lo				  ;3		 *
-	sta		inv_slot3_lo				  ;3		 *
-	sta		inv_slot4_lo				  ;3		 *
-	sta		inv_slot5_lo				  ;3		 *
-	lda		#$64					;2		   *
-	sta		score				   ;3		  *
-	lda		#$58					;2		   *
-	sta		indy_anim				   ;3		  *
-	lda		#$fa					;2		   *
-	sta		ram_da					;3		   *
-	lda		#$4c					;2		   *
-	sta		indy_x					;3		   *
-	lda		#$0f					;2		   *
-	sta		indy_y					;3		   *
-	lda		#starting_room					;2		   *
-	sta		room_num				  ;3		 *
-	sta		lives_left					;3		   *
-	jsr		ld878					;6		   *
-	jmp		ld80d					;3	 =	75 *
+	lda		#$20					
+	sta		inv_slot_lo				  
+	lsr								
+	lsr								
+	lsr								
+	sta		current_object					
+	inc		ram_c4					
+	lda		#$00					
+	sta		inv_slot2_lo				  
+	sta		inv_slot3_lo				  
+	sta		inv_slot4_lo				  
+	sta		inv_slot5_lo				  
+	lda		#$64					
+	sta		score				   
+	lda		#$58					
+	sta		indy_anim				   
+	lda		#$fa					
+	sta		ram_da					
+	lda		#$4c					
+	sta		indy_x					
+	lda		#$0f					
+	sta		indy_y					
+	lda		#starting_room					
+	sta		room_num				  
+	sta		lives_left					
+	jsr		ld878					
+	jmp		ld80d					
 
 tally_score
 	lda		score				   	; load score
@@ -2495,26 +2495,26 @@ ldf7c
 	.byte	$02,$04,$05,$08,$0a,$0d,$0f,$00 ; $df94 (*)
 
 ldf9c
-	lda		intim					;4
-	bne		ldf9c					;2/3
-	sta		wsync					;3	 =	 9
+	lda		intim					
+	bne		ldf9c					
+	sta		wsync					
 ;---------------------------------------
-	sta		wsync					;3	 =	 3
+	sta		wsync					
 ;---------------------------------------
-	lda		#$44					;2
-	sta		ram_88					;3
-	lda		#$f8					;2
-	sta		ram_89					;3	 =	10
+	lda		#$44					
+	sta		ram_88					
+	lda		#$f8					
+	sta		ram_89					
 ldfad
-	lda		#$ad					;2
-	sta		ram_84					;3
-	lda		#$f9					;2
-	sta		ram_85					;3
-	lda		#$ff					;2
-	sta		ram_86					;3
-	lda		#$4c					;2
-	sta		ram_87					;3
-	jmp.w	ram_84					;3	 =	23
+	lda		#$ad					
+	sta		ram_84					
+	lda		#$f9					
+	sta		ram_85					
+	lda		#$ff					
+	sta		ram_86					
+	lda		#$4c					
+	sta		ram_87					
+	jmp.w	ram_84					
 
 move_enemy
 	ror								;move first bit into carry
@@ -2557,407 +2557,407 @@ ldfe5
 	org		$1000
 	rorg	$f000
 
-	lda		lfff8					;4	 =	 4
+	lda		lfff8					
 lf003
-	cmp		ram_e0					;3		   *
-	bcs		lf01a					;2/3	   *
-	lsr								;2		   *
-	clc								;2		   *
-	adc		ram_df					;3		   *
-	tay								;2		   *
-	sta		wsync					;3	 =	17 *
+	cmp		ram_e0					
+	bcs		lf01a					
+	lsr								
+	clc								
+	adc		ram_df					
+	tay								
+	sta		wsync					
 ;---------------------------------------
-	sta		hmove					;3		   *
-	lda		(pf1_data),y			  ;5		 *
-	sta		pf1						;3		   *
-	lda		(pf2_data),y			  ;5		 *
-	sta		pf2						;3		   *
-	bcc		lf033					;2/3 =	21 *
+	sta		hmove					
+	lda		(pf1_data),y			  
+	sta		pf1						
+	lda		(pf2_data),y			  
+	sta		pf2						
+	bcc		lf033					
 lf01a
-	sbc		ram_d4					;3		   *
-	lsr								;2		   *
-	lsr								;2		   *
-	sta		wsync					;3	 =	10 *
+	sbc		ram_d4					
+	lsr								
+	lsr								
+	sta		wsync					
 ;---------------------------------------
-	sta		hmove					;3		   *
-	tax								;2		   *
-	cpx		ram_d5					;3		   *
-	bcc		lf02d					;2/3	   *
-	ldx		ram_d8					;3		   *
-	lda		#$00					;2		   *
-	beq		lf031					;2/3 =	17 *
+	sta		hmove					
+	tax								
+	cpx		ram_d5					
+	bcc		lf02d					
+	ldx		ram_d8					
+	lda		#$00					
+	beq		lf031					
 lf02d
-	lda		ram_e5,x				;4		   *
-	ldx		ram_d8					;3	 =	 7 *
+	lda		ram_e5,x				
+	ldx		ram_d8					
 lf031
-	sta		pf1,x					;4	 =	 4 *
+	sta		pf1,x					
 lf033
-	ldx		#$1e					;2		   *
-	txs								;2		   *
-	lda		scan_line				   ;3		  *
-	sec								;2		   *
-	sbc		indy_y					;3		   *
-	cmp		indy_h					;3		   *
-	bcs		lf079					;2/3	   *
-	tay								;2		   *
-	lda		(indy_anim),y			   ;5		  *
-	tax								;2	 =	26 *
+	ldx		#$1e					
+	txs								
+	lda		scan_line				   
+	sec								
+	sbc		indy_y					
+	cmp		indy_h					
+	bcs		lf079					
+	tay								
+	lda		(indy_anim),y			   
+	tax								
 lf043
-	lda		scan_line				   ;3		  *
-	sec								;2		   *
-	sbc		enemy_y					 ;3			*
-	cmp		snake_y					 ;3			*
-	bcs		lf07d					;2/3	   *
-	tay								;2		   *
-	lda		(emy_anim),y			  ;5		 *
-	tay								;2	 =	22 *
+	lda		scan_line				   
+	sec								
+	sbc		enemy_y					 
+	cmp		snake_y					 
+	bcs		lf07d					
+	tay								
+	lda		(emy_anim),y			  
+	tay								
 lf050
-	lda		scan_line				   ;3		  *
-	sta		wsync					;3	 =	 6 *
+	lda		scan_line				   
+	sta		wsync					
 ;---------------------------------------
-	sta		hmove					;3		   *
-	cmp		ram_d1					;3		   *
-	php								;3		   *
-	cmp		ram_d0					;3		   *
-	php								;3		   *
-	stx		grp1					;3		   *
-	sty		grp0					;3		   *
-	sec								;2		   *
-	sbc		ram_d2					;3		   *
-	cmp		#$08					;2		   *
-	bcs		lf06e					;2/3	   *
-	tay								;2		   *
-	lda		(ram_d6),y				;5		   *
-	sta		enabl					;3		   *
-	sta		hmbl					;3	 =	43 *
+	sta		hmove					
+	cmp		ram_d1					
+	php								
+	cmp		ram_d0					
+	php								
+	stx		grp1					
+	sty		grp0					
+	sec								
+	sbc		ram_d2					
+	cmp		#$08					
+	bcs		lf06e					
+	tay								
+	lda		(ram_d6),y				
+	sta		enabl					
+	sta		hmbl					
 lf06e
-	inc		scan_line				   ;5		  *
-	lda		scan_line				   ;3		  *
-	cmp		#$50					;2		   *
-	bcc		lf003					;2/3	   *
-	jmp		lf1ea					;3	 =	15 *
+	inc		scan_line				   
+	lda		scan_line				   
+	cmp		#$50					
+	bcc		lf003					
+	jmp		lf1ea					
 
 lf079
-	ldx		#$00					;2		   *
-	beq		lf043					;2/3 =	 4 *
+	ldx		#$00					
+	beq		lf043					
 lf07d
-	ldy		#$00					;2		   *
-	beq		lf050					;2/3 =	 4 *
+	ldy		#$00					
+	beq		lf050					
 lf081
-	cpx		#$4f					;2		   *
-	bcc		lf088					;2/3	   *
-	jmp		lf1ea					;3	 =	 7 *
+	cpx		#$4f					
+	bcc		lf088					
+	jmp		lf1ea					
 
 lf088
-	lda		#$00					;2		   *
-	beq		lf0a4					;2/3 =	 4 *
+	lda		#$00					
+	beq		lf0a4					
 lf08c
-	lda		(emy_anim),y			  ;5		 *
-	bmi		lf09c					;2/3	   *
-	cpy		ram_df					;3		   *
-	bcs		lf081					;2/3	   *
-	cpy		enemy_y					 ;3			*
-	bcc		lf088					;2/3	   *
-	sta		grp0					;3		   *
-	bcs		lf0a4					;2/3 =	22 *
+	lda		(emy_anim),y			  
+	bmi		lf09c					
+	cpy		ram_df					
+	bcs		lf081					
+	cpy		enemy_y					 
+	bcc		lf088					
+	sta		grp0					
+	bcs		lf0a4					
 lf09c
-	asl								;2		   *
-	tay								;2		   *
-	and		#$02					;2		   *
-	tax								;2		   *
-	tya								;2		   *
-	sta		(pf1_data,x)			  ;6   =  16 *
+	asl								
+	tay								
+	and		#$02					
+	tax								
+	tya								
+	sta		(pf1_data,x)			  
 lf0a4
-	inc		scan_line				   ;5		  *
-	ldx		scan_line				   ;3		  *
-	lda		#$02					;2		   *
-	cpx		ram_d0					;3		   *
-	bcc		lf0b2					;2/3	   *
-	cpx		ram_e0					;3		   *
-	bcc		lf0b3					;2/3 =	20 *
+	inc		scan_line				   
+	ldx		scan_line				   
+	lda		#$02					
+	cpx		ram_d0					
+	bcc		lf0b2					
+	cpx		ram_e0					
+	bcc		lf0b3					
 lf0b2
-	ror								;2	 =	 2 *
+	ror								
 lf0b3
-	sta		enam0					;3		   *
+	sta		enam0					
 lf0b5
-	sta		wsync					;3	 =	 6 *
+	sta		wsync					
 ;---------------------------------------
-	sta		hmove					;3		   *
-	txa								;2		   *
-	sec								;2		   *
-	sbc		ram_d5					;3		   *
-	cmp		#$10					;2		   *
-	bcs		lf0ff					;2/3	   *
-	tay								;2		   *
-	cmp		#$08					;2		   *
-	bcc		lf0fb					;2/3	   *
-	lda		ram_d8					;3		   *
-	sta		ram_d6					;3	 =	26 *
+	sta		hmove					
+	txa								
+	sec								
+	sbc		ram_d5					
+	cmp		#$10					
+	bcs		lf0ff					
+	tay								
+	cmp		#$08					
+	bcc		lf0fb					
+	lda		ram_d8					
+	sta		ram_d6					
 lf0ca
-	lda		(ram_d6),y				;5		   *
-	sta		hmbl					;3	 =	 8 *
+	lda		(ram_d6),y				
+	sta		hmbl					
 lf0ce
-	ldy		#$00					;2		   *
-	txa								;2		   *
-	cmp		ram_d1					;3		   *
-	bne		lf0d6					;2/3	   *
-	dey								;2	 =	11 *
+	ldy		#$00					
+	txa								
+	cmp		ram_d1					
+	bne		lf0d6					
+	dey								
 lf0d6
-	sty		enam1					;3		   *
-	sec								;2		   *
-	sbc		indy_y					;3		   *
-	cmp		indy_h					;3		   *
-	bcs		lf107					;2/3!	   *
-	tay								;2		   *
-	lda		(indy_anim),y			   ;5	=  20 *
+	sty		enam1					
+	sec								
+	sbc		indy_y					
+	cmp		indy_h					
+	bcs		lf107					
+	tay								
+	lda		(indy_anim),y			   
 lf0e2
-	ldy		scan_line				   ;3		  *
-	sta		grp1					;3		   *
-	sta		wsync					;3	 =	 9 *
+	ldy		scan_line				   
+	sta		grp1					
+	sta		wsync					
 ;---------------------------------------
-	sta		hmove					;3		   *
-	lda		#$02					;2		   *
-	cpx		ram_d2					;3		   *
-	bcc		lf0f9					;2/3	   *
-	cpx		snake_y					 ;3			*
-	bcc		lf0f5					;2/3 =	15 *
+	sta		hmove					
+	lda		#$02					
+	cpx		ram_d2					
+	bcc		lf0f9					
+	cpx		snake_y					 
+	bcc		lf0f5					
 lf0f4
-	ror								;2	 =	 2 *
+	ror								
 lf0f5
-	sta		enabl					;3		   *
-	bcc		lf08c					;2/3 =	 5 *
+	sta		enabl					
+	bcc		lf08c					
 lf0f9
-	bcc		lf0f4					;2/3 =	 2 *
+	bcc		lf0f4					
 lf0fb
-	nop								;2		   *
-	jmp		lf0ca					;3	 =	 5 *
+	nop								
+	jmp		lf0ca					
 
 lf0ff
-	pha								;3		   *
-	pla								;4		   *
-	pha								;3		   *
-	pla								;4		   *
-	nop								;2		   *
-	jmp		lf0ce					;3	 =	19 *
+	pha								
+	pla								
+	pha								
+	pla								
+	nop								
+	jmp		lf0ce					
 
 lf107
-	lda		#$00					;2		   *
-	beq		lf0e2					;2/3!=	 4 *
+	lda		#$00					
+	beq		lf0e2					
 lf10b
-	inx								;2		   *
-	sta		hmclr					;3		   *
-	cpx		#$a0					;2		   *
-	bcc		lf140					;2/3	   *
-	jmp		lf1ea					;3	 =	12 *
+	inx								
+	sta		hmclr					
+	cpx		#$a0					
+	bcc		lf140					
+	jmp		lf1ea					
 
 lf115
-	sta		wsync					;3	 =	 3 *
+	sta		wsync					
 ;---------------------------------------
-	sta		hmove					;3		   *
-	inx								;2		   *
-	lda		ram_84					;3		   *
-	sta		grp0					;3		   *
-	lda		ram_85					;3		   *
-	sta		colup0					;3		   *
-	txa								;2		   *
-	ldx		#$1f					;2		   *
-	txs								;2		   *
-	tax								;2		   *
-	lsr								;2		   *
-	cmp		ram_d2					;3		   *
-	php								;3		   *
-	cmp		ram_d1					;3		   *
-	php								;3		   *
-	cmp		ram_d0					;3		   *
-	php								;3		   *
-	sec								;2		   *
-	sbc		indy_y					;3		   *
-	cmp		indy_h					;3		   *
-	bcs		lf10b					;2/3	   *
-	tay								;2		   *
-	lda		(indy_anim),y			   ;5		  *
-	sta		hmclr					;3		   *
-	inx								;2		   *
-	sta		grp1					;3	 =	70 *
+	sta		hmove					
+	inx								
+	lda		ram_84					
+	sta		grp0					
+	lda		ram_85					
+	sta		colup0					
+	txa								
+	ldx		#$1f					
+	txs								
+	tax								
+	lsr								
+	cmp		ram_d2					
+	php								
+	cmp		ram_d1					
+	php								
+	cmp		ram_d0					
+	php								
+	sec								
+	sbc		indy_y					
+	cmp		indy_h					
+	bcs		lf10b					
+	tay								
+	lda		(indy_anim),y			   
+	sta		hmclr					
+	inx								
+	sta		grp1					
 lf140
-	sta		wsync					;3	 =	 3 *
+	sta		wsync					
 ;---------------------------------------
-	sta		hmove					;3		   *
-	bit		ram_d4					;3		   *
-	bpl		lf157					;2/3	   *
-	ldy		ram_89					;3		   *
-	lda		ram_88					;3		   *
-	lsr		ram_d4					;5	 =	19 *
+	sta		hmove					
+	bit		ram_d4					
+	bpl		lf157					
+	ldy		ram_89					
+	lda		ram_88					
+	lsr		ram_d4					
 lf14e
-	dey								;2		   *
-	bpl		lf14e					;2/3	   *
-	sta		resp0					;3		   *
-	sta		hmp0					;3		   *
-	bmi		lf115					;2/3 =	12 *
+	dey								
+	bpl		lf14e					
+	sta		resp0					
+	sta		hmp0					
+	bmi		lf115					
 lf157
-	bvc		lf177					;2/3	   *
-	txa								;2		   *
-	and		#$0f					;2		   *
-	tay								;2		   *
-	lda		(emy_anim),y			  ;5		 *
-	sta		grp0					;3		   *
-	lda		(ram_d6),y				;5		   *
-	sta		colup0					;3		   *
-	iny								;2		   *
-	lda		(emy_anim),y			  ;5		 *
-	sta		ram_84					;3		   *
-	lda		(ram_d6),y				;5		   *
-	sta		ram_85					;3		   *
-	cpy		snake_y					 ;3			*
-	bcc		lf174					;2/3	   *
-	lsr		ram_d4					;5	 =	52 *
+	bvc		lf177					
+	txa								
+	and		#$0f					
+	tay								
+	lda		(emy_anim),y			  
+	sta		grp0					
+	lda		(ram_d6),y				
+	sta		colup0					
+	iny								
+	lda		(emy_anim),y			  
+	sta		ram_84					
+	lda		(ram_d6),y				
+	sta		ram_85					
+	cpy		snake_y					 
+	bcc		lf174					
+	lsr		ram_d4					
 lf174
-	jmp		lf115					;3	 =	 3 *
+	jmp		lf115					
 
 lf177
-	lda		#$20					;2		   *
-	bit		ram_d4					;3		   *
-	beq		lf1a7					;2/3	   *
-	txa								;2		   *
-	lsr								;2		   *
-	lsr								;2		   *
-	lsr								;2		   *
-	lsr								;2		   *
-	lsr								;2		   *
-	bcs		lf115					;2/3	   *
-	tay								;2		   *
-	sty		ram_87					;3		   *
-	lda.wy	ram_df,y				;4		   *
-	sta		refp0					;3		   *
-	sta		nusiz0					;3		   *
-	sta		ram_86					;3		   *
-	bpl		lf1a2					;2/3	   *
-	lda		ram_96					;3		   *
-	sta		emy_anim				  ;3		 *
-	lda		#$65					;2		   *
-	sta		ram_d6					;3		   *
-	lda		#$00					;2		   *
-	sta		ram_d4					;3		   *
-	jmp		lf115					;3	 =	60 *
+	lda		#$20					
+	bit		ram_d4					
+	beq		lf1a7					
+	txa								
+	lsr								
+	lsr								
+	lsr								
+	lsr								
+	lsr								
+	bcs		lf115					
+	tay								
+	sty		ram_87					
+	lda.wy	ram_df,y				
+	sta		refp0					
+	sta		nusiz0					
+	sta		ram_86					
+	bpl		lf1a2					
+	lda		ram_96					
+	sta		emy_anim				  
+	lda		#$65					
+	sta		ram_d6					
+	lda		#$00					
+	sta		ram_d4					
+	jmp		lf115					
 
 lf1a2
-	lsr		ram_d4					;5		   *
-	jmp		lf115					;3	 =	 8 *
+	lsr		ram_d4					
+	jmp		lf115					
 
 lf1a7
-	lsr								;2		   *
-	bit		ram_d4					;3		   *
-	beq		lf1ce					;2/3	   *
-	ldy		ram_87					;3		   *
-	lda		#$08					;2		   *
-	and		ram_86					;3		   *
-	beq		lf1b6					;2/3	   *
-	lda		#$03					;2	 =	19 *
+	lsr								
+	bit		ram_d4					
+	beq		lf1ce					
+	ldy		ram_87					
+	lda		#$08					
+	and		ram_86					
+	beq		lf1b6					
+	lda		#$03					
 lf1b6
-	eor.wy	ram_e5,y				;4		   *
-	and		#$03					;2		   *
-	tay								;2		   *
-	lda		lfc40,y					;4		   *
-	sta		emy_anim				  ;3		 *
-	lda		#$44					;2		   *
-	sta		ram_d6					;3		   *
-	lda		#$0f					;2		   *
-	sta		snake_y					 ;3			*
-	lsr		ram_d4					;5		   *
-	jmp		lf115					;3	 =	33 *
+	eor.wy	ram_e5,y				
+	and		#$03					
+	tay								
+	lda		lfc40,y					
+	sta		emy_anim				  
+	lda		#$44					
+	sta		ram_d6					
+	lda		#$0f					
+	sta		snake_y					 
+	lsr		ram_d4					
+	jmp		lf115					
 
 lf1ce
-	txa								;2		   *
-	and		#$1f					;2		   *
-	cmp		#$0c					;2		   *
-	beq		lf1d8					;2/3	   *
-	jmp		lf115					;3	 =	11 *
+	txa								
+	and		#$1f					
+	cmp		#$0c					
+	beq		lf1d8					
+	jmp		lf115					
 
 lf1d8
-	ldy		ram_87					;3		   *
-	lda.wy	ram_ee,y				;4		   *
-	sta		ram_88					;3		   *
-	and		#$0f					;2		   *
-	sta		ram_89					;3		   *
-	lda		#$80					;2		   *
-	sta		ram_d4					;3		   *
-	jmp		lf115					;3	 =	23 *
+	ldy		ram_87					
+	lda.wy	ram_ee,y				
+	sta		ram_88					
+	and		#$0f					
+	sta		ram_89					
+	lda		#$80					
+	sta		ram_d4					
+	jmp		lf115					
 
 lf1ea
-	sta		wsync					;3	 =	 3
+	sta		wsync					
 ;---------------------------------------
-	sta		hmove					;3
-	ldx		#$ff					;2
-	stx		pf1						;3
-	stx		pf2						;3
-	inx								;2
-	stx		grp0					;3
-	stx		grp1					;3
-	stx		enam0					;3
-	stx		enam1					;3
-	stx		enabl					;3
-	sta		wsync					;3	 =	31
+	sta		hmove					
+	ldx		#$ff					
+	stx		pf1						
+	stx		pf2						
+	inx								
+	stx		grp0					
+	stx		grp1					
+	stx		enam0					
+	stx		enam1					
+	stx		enabl					
+	sta		wsync					
 ;---------------------------------------
-	sta		hmove					;3
-	lda		#$03					;2
-	ldy		#$00					;2
-	sty		refp1					;3
-	sta		nusiz0					;3
-	sta		nusiz1					;3
-	sta		vdelp0					;3
-	sta		vdelp1					;3
-	sty		grp0					;3
-	sty		grp1					;3
-	sty		grp0					;3
-	sty		grp1					;3
-	nop								;2
-	sta		resp0					;3
-	sta		resp1					;3
-	sty		hmp1					;3
-	lda		#$f0					;2
-	sta		hmp0					;3
-	sty		refp0					;3
-	sta		wsync					;3	 =	56
+	sta		hmove					
+	lda		#$03					
+	ldy		#$00					
+	sty		refp1					
+	sta		nusiz0					
+	sta		nusiz1					
+	sta		vdelp0					
+	sta		vdelp1					
+	sty		grp0					
+	sty		grp1					
+	sty		grp0					
+	sty		grp1					
+	nop								
+	sta		resp0					
+	sta		resp1					
+	sty		hmp1					
+	lda		#$f0					
+	sta		hmp0					
+	sty		refp0					
+	sta		wsync					
 ;---------------------------------------
-	sta		hmove					;3
-	lda		#$1a					;2
-	sta		colup0					;3
-	sta		colup1					;3
-	lda		cursor_pos					;3
-	lsr								;2
-	tay								;2
-	lda		lfff2,y					;4
-	sta		hmbl					;3
-	and		#$0f					;2
-	tay								;2
-	ldx		#$00					;2
-	stx		hmp0					;3
-	sta		wsync					;3	 =	37
+	sta		hmove					
+	lda		#$1a					
+	sta		colup0					
+	sta		colup1					
+	lda		cursor_pos					
+	lsr								
+	tay								
+	lda		lfff2,y					
+	sta		hmbl					
+	and		#$0f					
+	tay								
+	ldx		#$00					
+	stx		hmp0					
+	sta		wsync					
 ;---------------------------------------
-	stx		pf0						;3
-	stx		colubk					;3
-	stx		pf1						;3
-	stx		pf2						;3	 =	12
+	stx		pf0						
+	stx		colubk					
+	stx		pf1						
+	stx		pf2						
 lf24a
-	dey								;2
-	bpl		lf24a					;2/3
-	sta		resbl					;3
-	stx		ctrlpf					;3
-	sta		wsync					;3	 =	13
+	dey								
+	bpl		lf24a					
+	sta		resbl					
+	stx		ctrlpf					
+	sta		wsync					
 ;---------------------------------------
-	sta		hmove					;3
-	lda		#$3f					;2
-	and		frame_counter				   ;3
-	bne		draw_menu					;2/3
-	lda		#$3f					;2
-	and		time_of_day					 ;3
-	bne		draw_menu					;2/3
-	lda		ram_b5					;3		   *
-	and		#$0f					;2		   *
-	beq		draw_menu					;2/3	   *
-	cmp		#$0f					;2		   *
-	beq		draw_menu					;2/3	   *
-	inc		ram_b5					;5	 =	33 *
+	sta		hmove					
+	lda		#$3f					
+	and		frame_counter				   
+	bne		draw_menu					
+	lda		#$3f					
+	and		time_of_day					 
+	bne		draw_menu					
+	lda		ram_b5					
+	and		#$0f					
+	beq		draw_menu					
+	cmp		#$0f					
+	beq		draw_menu					
+	inc		ram_b5					
 draw_menu
 	sta		wsync					; draw blank line
 	lda		#$42					; set red...
@@ -2966,992 +2966,992 @@ draw_menu
 	sta		wsync					;
 	sta		wsync					;
 	sta		wsync					;
-	lda		#$07					;2
-	sta		ram_84					;3	 =	 5
+	lda		#$07					
+	sta		ram_84					
 draw_inventory
-	ldy		ram_84					;3
-	lda		(inv_slot_lo),y			  ;5
-	sta		grp0					;3
-	sta		wsync					;3	 =	14
+	ldy		ram_84					
+	lda		(inv_slot_lo),y			  
+	sta		grp0					
+	sta		wsync					
 ;---------------------------------------
-	lda		(inv_slot2_lo),y			  ;5
-	sta		grp1					;3
-	lda		(inv_slot3_lo),y			  ;5
-	sta		grp0					;3
-	lda		(inv_slot4_lo),y			  ;5
-	sta		ram_85					;3
-	lda		(inv_slot5_lo),y			  ;5
-	tax								;2
-	lda		(inv_slot6_lo),y			  ;5
-	tay								;2
-	lda		ram_85					;3
-	sta		grp1					;3
-	stx		grp0					;3
-	sty		grp1					;3
-	sty		grp0					;3
-	dec		ram_84					;5
-	bpl		draw_inventory					 ;2/3
-	lda		#$00					;2
-	sta		wsync					;3	 =	65
+	lda		(inv_slot2_lo),y			  
+	sta		grp1					
+	lda		(inv_slot3_lo),y			  
+	sta		grp0					
+	lda		(inv_slot4_lo),y			  
+	sta		ram_85					
+	lda		(inv_slot5_lo),y			  
+	tax								
+	lda		(inv_slot6_lo),y			  
+	tay								
+	lda		ram_85					
+	sta		grp1					
+	stx		grp0					
+	sty		grp1					
+	sty		grp0					
+	dec		ram_84					
+	bpl		draw_inventory					 
+	lda		#$00					
+	sta		wsync					
 ;---------------------------------------
-	sta		grp0					;3
-	sta		grp1					;3
-	sta		grp0					;3
-	sta		grp1					;3
-	sta		nusiz0					;3
-	sta		nusiz1					;3
-	sta		vdelp0					;3
-	sta		vdelp1					;3
-	sta		wsync					;3	 =	27
+	sta		grp0					
+	sta		grp1					
+	sta		grp0					
+	sta		grp1					
+	sta		nusiz0					
+	sta		nusiz1					
+	sta		vdelp0					
+	sta		vdelp1					
+	sta		wsync					
 ;---------------------------------------
-	sta		wsync					;3	 =	 3
+	sta		wsync					
 ;---------------------------------------
-	ldy		#$02					;2
-	lda		ram_c4					;3
-	bne		lf2c6					;2/3
-	dey								;2	 =	 9
+	ldy		#$02					
+	lda		ram_c4					
+	bne		lf2c6					
+	dey								
 lf2c6
-	sty		enabl					;3
-	ldy		#$08					;2
-	sty		colupf					;3
-	sta		wsync					;3	 =	11
+	sty		enabl					
+	ldy		#$08					
+	sty		colupf					
+	sta		wsync					
 ;---------------------------------------
-	sta		wsync					;3	 =	 3
+	sta		wsync					
 ;---------------------------------------
-	ldy		#$00					;2
-	sty		enabl					;3
-	sta		wsync					;3	 =	 8
+	ldy		#$00					
+	sty		enabl					
+	sta		wsync					
 ;---------------------------------------
-	sta		wsync					;3	 =	 3
+	sta		wsync					
 ;---------------------------------------
-	sta		wsync					;3	 =	 3
+	sta		wsync					
 ;---------------------------------------
-	ldx		#$0f					;2
-	stx		vblank					;3
-	ldx		#$24					;2
-	stx		tim64t					;4
-	ldx		#$ff					;2
-	txs								;2
-	ldx		#$01					;2	 =	17
+	ldx		#$0f					
+	stx		vblank					
+	ldx		#$24					
+	stx		tim64t					
+	ldx		#$ff					
+	txs								
+	ldx		#$01					
 lf2e8
-	lda		ram_a2,x				;4
-	sta		audc0,x					;4
-	sta		audv0,x					;4
-	bmi		lf2fb					;2/3
-	ldy		#$00					;2
-	sty		ram_a2,x				;4	 =	20
+	lda		ram_a2,x				
+	sta		audc0,x					
+	sta		audv0,x					
+	bmi		lf2fb					
+	ldy		#$00					
+	sty		ram_a2,x				
 lf2f4
-	sta		audf0,x					;4
-	dex								;2
-	bpl		lf2e8					;2/3
-	bmi		lf320					;2/3!=	10
+	sta		audf0,x					
+	dex								
+	bpl		lf2e8					
+	bmi		lf320					
 lf2fb
-	cmp		#$9c					;2
-	bne		lf314					;2/3!
-	lda		#$0f					;2
-	and		frame_counter				   ;3
-	bne		lf30d					;2/3
-	dec		diamond_h				   ;5
-	bpl		lf30d					;2/3
-	lda		#$17					;2
-	sta		diamond_h				   ;3	=  23
+	cmp		#$9c					
+	bne		lf314					
+	lda		#$0f					
+	and		frame_counter				   
+	bne		lf30d					
+	dec		diamond_h				   
+	bpl		lf30d					
+	lda		#$17					
+	sta		diamond_h				   
 lf30d
-	ldy		diamond_h				   ;3
-	lda		lfbe8,y					;4
-	bne		lf2f4					;2/3!=	 9
+	ldy		diamond_h				   
+	lda		lfbe8,y					
+	bne		lf2f4					
 lf314
-	lda		frame_counter				   ;3		  *
-	lsr								;2		   *
-	lsr								;2		   *
-	lsr								;2		   *
-	lsr								;2		   *
-	tay								;2		   *
-	lda		lfaee,y					;4		   *
-	bne		lf2f4					;2/3!=	19 *
+	lda		frame_counter				   
+	lsr								
+	lsr								
+	lsr								
+	lsr								
+	tay								
+	lda		lfaee,y					
+	bne		lf2f4					
 lf320
-	lda		current_object					;3
-	cmp		#$0f					;2
-	beq		lf330					;2/3
-	cmp		#$02					;2
-	bne		lf344					;2/3
-	lda		#$84					;2		   *
-	sta		ram_a3					;3		   *
-	bne		lf348					;2/3 =	18 *
+	lda		current_object					
+	cmp		#$0f					
+	beq		lf330					
+	cmp		#$02					
+	bne		lf344					
+	lda		#$84					
+	sta		ram_a3					
+	bne		lf348					
 lf330
-	bit		inpt5|$30				;3		   *
-	bpl		lf338					;2/3	   *
-	lda		#$78					;2		   *
-	bne		lf340					;2/3 =	 9 *
+	bit		inpt5|$30				
+	bpl		lf338					
+	lda		#$78					
+	bne		lf340					
 lf338
-	lda		time_of_day					 ;3			*
-	and		#$e0					;2		   *
-	lsr								;2		   *
-	lsr								;2		   *
-	adc		#$98					;2	 =	11 *
+	lda		time_of_day					 
+	and		#$e0					
+	lsr								
+	lsr								
+	adc		#$98					
 lf340
-	ldx		cursor_pos					;3		   *
-	sta		inv_slot_lo,x				  ;4   =   7 *
+	ldx		cursor_pos					
+	sta		inv_slot_lo,x				  
 lf344
-	lda		#$00					;2
-	sta		ram_a3					;3	 =	 5
+	lda		#$00					
+	sta		ram_a3					
 lf348
-	bit		ram_93					;3
-	bpl		lf371					;2/3
-	lda		frame_counter				   ;3		  *
-	and		#$07					;2		   *
-	cmp		#$05					;2		   *
-	bcc		lf365					;2/3	   *
-	ldx		#$04					;2		   *
-	ldy		#$01					;2		   *
-	bit		ram_9d					;3		   *
-	bmi		lf360					;2/3	   *
-	bit		ram_a1					;3		   *
-	bpl		lf362					;2/3 =	28 *
+	bit		ram_93					
+	bpl		lf371					
+	lda		frame_counter				   
+	and		#$07					
+	cmp		#$05					
+	bcc		lf365					
+	ldx		#$04					
+	ldy		#$01					
+	bit		ram_9d					
+	bmi		lf360					
+	bit		ram_a1					
+	bpl		lf362					
 lf360
-	ldy		#$03					;2	 =	 2 *
+	ldy		#$03					
 lf362
-	jsr		lf8b3					;6	 =	 6 *
+	jsr		lf8b3					
 lf365
-	lda		frame_counter				   ;3		  *
-	and		#$06					;2		   *
-	asl								;2		   *
-	asl								;2		   *
-	sta		ram_d6					;3		   *
-	lda		#$fd					;2		   *
-	sta		ram_d7					;3	 =	17 *
+	lda		frame_counter				   
+	and		#$06					
+	asl								
+	asl								
+	sta		ram_d6					
+	lda		#$fd					
+	sta		ram_d7					
 lf371
-	ldx		#$02					;2	 =	 2
+	ldx		#$02					
 lf373
-	jsr		lfef4					;6
-	inx								;2
-	cpx		#$05					;2
-	bcc		lf373					;2/3
-	bit		ram_9d					;3
-	bpl		lf3bf					;2/3
-	lda		frame_counter				   ;3		  *
-	bvs		lf39d					;2/3	   *
-	and		#$0f					;2		   *
-	bne		lf3c5					;2/3	   *
-	ldx		indy_h					;3		   *
-	dex								;2		   *
-	stx		ram_a3					;3		   *
-	cpx		#$03					;2		   *
-	bcc		lf398					;2/3	   *
-	lda		#$8f					;2		   *
-	sta		ram_d1					;3		   *
-	stx		indy_h					;3		   *
-	bcs		lf3c5					;2/3 =	48 *
+	jsr		lfef4					
+	inx								
+	cpx		#$05					
+	bcc		lf373					
+	bit		ram_9d					
+	bpl		lf3bf					
+	lda		frame_counter				   
+	bvs		lf39d					
+	and		#$0f					
+	bne		lf3c5					
+	ldx		indy_h					
+	dex								
+	stx		ram_a3					
+	cpx		#$03					
+	bcc		lf398					
+	lda		#$8f					
+	sta		ram_d1					
+	stx		indy_h					
+	bcs		lf3c5					
 lf398
-	sta		frame_counter				   ;3		  *
-	sec								;2		   *
-	ror		ram_9d					;5	 =	10 *
+	sta		frame_counter				   
+	sec								
+	ror		ram_9d					
 lf39d
-	cmp		#$3c					;2		   *
-	bcc		lf3a9					;2/3	   *
-	bne		lf3a5					;2/3	   *
-	sta		ram_a3					;3	 =	 9 *
+	cmp		#$3c					
+	bcc		lf3a9					
+	bne		lf3a5					
+	sta		ram_a3					
 lf3a5
-	ldy		#$00					;2		   *
-	sty		indy_h					;3	 =	 5 *
+	ldy		#$00					
+	sty		indy_h					
 lf3a9
-	cmp		#$78					;2		   *
-	bcc		lf3c5					;2/3	   *
-	lda		#$0b					;2		   *
-	sta		indy_h					;3		   *
-	sta		ram_a3					;3		   *
-	sta		ram_9d					;3		   *
-	dec		lives_left					;5		   *
-	bpl		lf3c5					;2/3	   *
-	lda		#$ff					;2		   *
-	sta		ram_9d					;3		   *
-	bne		lf3c5					;2/3 =	29 *
+	cmp		#$78					
+	bcc		lf3c5					
+	lda		#$0b					
+	sta		indy_h					
+	sta		ram_a3					
+	sta		ram_9d					
+	dec		lives_left					
+	bpl		lf3c5					
+	lda		#$ff					
+	sta		ram_9d					
+	bne		lf3c5					
 lf3bf
-	lda		room_num				  ;3
-	cmp		#ark_room					;2
-	bne		lf3d0					;2/3 =	 7
+	lda		room_num				  
+	cmp		#ark_room					
+	bne		lf3d0					
 lf3c5
-	lda		#$d8					;2
-	sta		ram_88					;3
-	lda		#$d3					;2
-	sta		ram_89					;3
-	jmp		lf493					;3	 =	13
+	lda		#$d8					
+	sta		ram_88					
+	lda		#$d3					
+	sta		ram_89					
+	jmp		lf493					
 
 lf3d0
-	bit		ram_8d					;3		   *
-	bvs		lf437					;2/3!	   *
-	bit		ram_b4					;3		   *
-	bmi		lf437					;2/3!	   *
-	bit		ram_9a					;3		   *
-	bmi		lf437					;2/3!	   *
-	lda		#$07					;2		   *
-	and		frame_counter				   ;3		  *
-	bne		lf437					;2/3!	   *
-	lda		ram_c4					;3		   *
-	and		#$06					;2		   *
-	beq		lf437					;2/3!	   *
-	ldx		cursor_pos					;3		   *
-	lda		inv_slot_lo,x				  ;4		 *
-	cmp		#$98					;2		   *
-	bcc		lf3f2					;2/3	   *
-	lda		#$78					;2	 =	42 *
+	bit		ram_8d					
+	bvs		lf437					
+	bit		ram_b4					
+	bmi		lf437					
+	bit		ram_9a					
+	bmi		lf437					
+	lda		#$07					
+	and		frame_counter				   
+	bne		lf437					
+	lda		ram_c4					
+	and		#$06					
+	beq		lf437					
+	ldx		cursor_pos					
+	lda		inv_slot_lo,x				  
+	cmp		#$98					
+	bcc		lf3f2					
+	lda		#$78					
 lf3f2
-	bit		swcha					;4		   *
-	bmi		lf407					;2/3!	   *
-	sta		inv_slot_lo,x				  ;4   =  10 *
+	bit		swcha					
+	bmi		lf407					
+	sta		inv_slot_lo,x				  
 lf3f9
-	inx								;2		   *
-	inx								;2		   *
-	cpx		#$0b					;2		   *
-	bcc		lf401					;2/3!	   *
-	ldx		#$00					;2	 =	10 *
+	inx								
+	inx								
+	cpx		#$0b					
+	bcc		lf401					
+	ldx		#$00					
 lf401
-	ldy		inv_slot_lo,x				  ;4		 *
-	beq		lf3f9					;2/3!	   *
-	bne		lf415					;2/3 =	 8 *
+	ldy		inv_slot_lo,x				  
+	beq		lf3f9					
+	bne		lf415					
 lf407
-	bvs		lf437					;2/3	   *
-	sta		inv_slot_lo,x				  ;4   =   6 *
+	bvs		lf437					
+	sta		inv_slot_lo,x				  
 lf40b
-	dex								;2		   *
-	dex								;2		   *
-	bpl		lf411					;2/3	   *
-	ldx		#$0a					;2	 =	 8 *
+	dex								
+	dex								
+	bpl		lf411					
+	ldx		#$0a					
 lf411
-	ldy		inv_slot_lo,x				  ;4		 *
-	beq		lf40b					;2/3 =	 6 *
+	ldy		inv_slot_lo,x				  
+	beq		lf40b					
 lf415
-	stx		cursor_pos					;3		   *
-	tya								;2		   *
-	lsr								;2		   *
-	lsr								;2		   *
-	lsr								;2		   *
-	sta		current_object					;3		   *
-	cpy		#$90					;2		   *
-	bne		lf437					;2/3	   *
-	ldy		#mesa_top_room					;2		   *
-	cpy		room_num				  ;3		 *
-	bne		lf437					;2/3	   *
-	lda		#$49					;2		   *
-	sta		ram_8d					;3		   *
-	lda		indy_y					;3		   *
-	adc		#$09					;2		   *
-	sta		ram_d1					;3		   *
-	lda		indy_x					;3		   *
-	adc		#$09					;2		   *
-	sta		ram_cb					;3	 =	46 *
+	stx		cursor_pos					
+	tya								
+	lsr								
+	lsr								
+	lsr								
+	sta		current_object					
+	cpy		#$90					
+	bne		lf437					
+	ldy		#mesa_top_room					
+	cpy		room_num				  
+	bne		lf437					
+	lda		#$49					
+	sta		ram_8d					
+	lda		indy_y					
+	adc		#$09					
+	sta		ram_d1					
+	lda		indy_x					
+	adc		#$09					
+	sta		ram_cb					
 lf437
-	lda		ram_8d					;3		   *
-	bpl		lf454					;2/3	   *
-	cmp		#$bf					;2		   *
-	bcs		lf44b					;2/3	   *
-	adc		#$10					;2		   *
-	sta		ram_8d					;3		   *
-	ldx		#$03					;2		   *
-	jsr		lfcea					;6		   *
-	jmp		lf48b					;3	 =	25 *
+	lda		ram_8d					
+	bpl		lf454					
+	cmp		#$bf					
+	bcs		lf44b					
+	adc		#$10					
+	sta		ram_8d					
+	ldx		#$03					
+	jsr		lfcea					
+	jmp		lf48b					
 
 lf44b
-	lda		#$70					;2		   *
-	sta		ram_d1					;3		   *
-	lsr								;2		   *
-	sta		ram_8d					;3		   *
-	bne		lf48b					;2/3 =	12 *
+	lda		#$70					
+	sta		ram_d1					
+	lsr								
+	sta		ram_8d					
+	bne		lf48b					
 lf454
-	bit		ram_8d					;3		   *
-	bvc		lf48b					;2/3	   *
-	ldx		#$03					;2		   *
-	jsr		lfcea					;6		   *
-	lda		ram_cb					;3		   *
-	sec								;2		   *
-	sbc		#$04					;2		   *
-	cmp		indy_x					;3		   *
-	bne		lf46a					;2/3	   *
-	lda		#$03					;2		   *
-	bne		lf481					;2/3 =	29 *
+	bit		ram_8d					
+	bvc		lf48b					
+	ldx		#$03					
+	jsr		lfcea					
+	lda		ram_cb					
+	sec								
+	sbc		#$04					
+	cmp		indy_x					
+	bne		lf46a					
+	lda		#$03					
+	bne		lf481					
 lf46a
-	cmp		#$11					;2		   *
-	beq		lf472					;2/3	   *
-	cmp		#$84					;2		   *
-	bne		lf476					;2/3 =	 8 *
+	cmp		#$11					
+	beq		lf472					
+	cmp		#$84					
+	bne		lf476					
 lf472
-	lda		#$0f					;2		   *
-	bne		lf481					;2/3 =	 4 *
+	lda		#$0f					
+	bne		lf481					
 lf476
-	lda		ram_d1					;3		   *
-	sec								;2		   *
-	sbc		#$05					;2		   *
-	cmp		indy_y					;3		   *
-	bne		lf487					;2/3	   *
-	lda		#$0c					;2	 =	14 *
+	lda		ram_d1					
+	sec								
+	sbc		#$05					
+	cmp		indy_y					
+	bne		lf487					
+	lda		#$0c					
 lf481
-	eor		ram_8d					;3		   *
-	sta		ram_8d					;3		   *
-	bne		lf48b					;2/3 =	 8 *
+	eor		ram_8d					
+	sta		ram_8d					
+	bne		lf48b					
 lf487
-	cmp		#$4a					;2		   *
-	bcs		lf472					;2/3 =	 4 *
+	cmp		#$4a					
+	bcs		lf472					
 lf48b
-	lda		#$24					;2		   *
-	sta		ram_88					;3		   *
-	lda		#$d0					;2		   *
-	sta		ram_89					;3	 =	10 *
+	lda		#$24					
+	sta		ram_88					
+	lda		#$d0					
+	sta		ram_89					
 lf493
-	lda		#$ad					;2
-	sta		ram_84					;3
-	lda		#$f8					;2
-	sta		ram_85					;3
-	lda		#$ff					;2
-	sta		ram_86					;3
-	lda		#$4c					;2
-	sta		ram_87					;3
-	jmp.w	ram_84					;3	 =	23
+	lda		#$ad					
+	sta		ram_84					
+	lda		#$f8					
+	sta		ram_85					
+	lda		#$ff					
+	sta		ram_86					
+	lda		#$4c					
+	sta		ram_87					
+	jmp.w	ram_84					
 
 lf4a6
-	sta		wsync					;3	 =	 3
+	sta		wsync					
 ;---------------------------------------
-	cpx		#$12					;2
-	bcc		lf4d0					;2/3
-	txa								;2
-	sbc		indy_y					;3
-	bmi		lf4c9					;2/3
-	cmp		#$14					;2
-	bcs		lf4bd					;2/3
-	lsr								;2
-	tay								;2
-	lda		indy_sprite,y				  ;4
-	jmp		lf4c3					;3	 =	26
+	cpx		#$12					
+	bcc		lf4d0					
+	txa								
+	sbc		indy_y					
+	bmi		lf4c9					
+	cmp		#$14					
+	bcs		lf4bd					
+	lsr								
+	tay								
+	lda		indy_sprite,y				  
+	jmp		lf4c3					
 
 lf4bd
-	and		#$03					;2
-	tay								;2
-	lda		lf9fc,y					;4	 =	 8
+	and		#$03					
+	tay								
+	lda		lf9fc,y					
 lf4c3
-	sta		grp1					;3
-	lda		indy_y					;3
-	sta		colup1					;3	 =	 9
+	sta		grp1					
+	lda		indy_y					
+	sta		colup1					
 lf4c9
-	inx								;2
-	cpx		#$90					;2
-	bcs		lf4ea					;2/3
-	bcc		lf4a6					;2/3 =	 8
+	inx								
+	cpx		#$90					
+	bcs		lf4ea					
+	bcc		lf4a6					
 lf4d0
-	bit		ram_9c					;3
-	bmi		lf4e5					;2/3
-	txa								;2
-	sbc		#$07					;2
-	bmi		lf4e5					;2/3
-	tay								;2
-	lda		lfb40,y					;4
-	sta		grp1					;3
-	txa								;2
-	adc		frame_counter				   ;3
-	asl								;2
-	sta		colup1					;3	 =	30
+	bit		ram_9c					
+	bmi		lf4e5					
+	txa								
+	sbc		#$07					
+	bmi		lf4e5					
+	tay								
+	lda		lfb40,y					
+	sta		grp1					
+	txa								
+	adc		frame_counter				   
+	asl								
+	sta		colup1					
 lf4e5
-	inx								;2
-	cpx		#$0f					;2
-	bcc		lf4a6					;2/3 =	 6
+	inx								
+	cpx		#$0f					
+	bcc		lf4a6					
 lf4ea
-	sta		wsync					;3	 =	 3
+	sta		wsync					
 ;---------------------------------------
-	cpx		#$20					;2
-	bcs		lf511					;2/3!
-	bit		ram_9c					;3
-	bmi		lf504					;2/3!
-	txa								;2
-	ldy		#$7e					;2
-	and		#$0e					;2
-	bne		lf4fd					;2/3
-	ldy		#$ff					;2	 =	19
+	cpx		#$20					
+	bcs		lf511					
+	bit		ram_9c					
+	bmi		lf504					
+	txa								
+	ldy		#$7e					
+	and		#$0e					
+	bne		lf4fd					
+	ldy		#$ff					
 lf4fd
-	sty		grp0					;3
-	txa								;2
-	eor		#$ff					;2
-	sta		colup0					;3	 =	10
+	sty		grp0					
+	txa								
+	eor		#$ff					
+	sta		colup0					
 lf504
-	inx								;2
-	cpx		#$1d					;2
-	bcc		lf4ea					;2/3!
-	lda		#$00					;2
-	sta		grp0					;3
-	sta		grp1					;3
-	beq		lf4a6					;2/3!=	16
+	inx								
+	cpx		#$1d					
+	bcc		lf4ea					
+	lda		#$00					
+	sta		grp0					
+	sta		grp1					
+	beq		lf4a6					
 lf511
-	txa								;2
-	sbc		#$90					;2
-	cmp		#$0f					;2
-	bcc		lf51b					;2/3
-	jmp		lf1ea					;3	 =	11
+	txa								
+	sbc		#$90					
+	cmp		#$0f					
+	bcc		lf51b					
+	jmp		lf1ea					
 
 lf51b
-	lsr								;2
-	lsr								;2
-	tay								;2
-	lda		lfef0,y					;4
-	sta		grp0					;3
-	stx		colup0					;3
-	inx								;2
-	bne		lf4ea					;2/3!
-	lda		room_num				  ;3		 *
-	asl								;2		   *
-	tax								;2		   *
-	lda		lfc89,x					;4		   *
-	pha								;3		   *
-	lda		lfc88,x					;4		   *
-	pha								;3		   *
-	rts								;6	 =	47 *
+	lsr								
+	lsr								
+	tay								
+	lda		lfef0,y					
+	sta		grp0					
+	stx		colup0					
+	inx								
+	bne		lf4ea					
+	lda		room_num				  
+	asl								
+	tax								
+	lda		lfc89,x					
+	pha								
+	lda		lfc88,x					
+	pha								
+	rts								
 
 lf535:
-       lda    #$7f                    ;2
-       sta    $ce                     ;3
-       sta    $d0                     ;3
-       sta    $d2                     ;3
-       bne    lf59a                   ;2 always branch
+       lda    #$7f                    
+       sta    $ce                     
+       sta    $d0                     
+       sta    $d2                     
+       bne    lf59a                   
 
 lf53f
-       ldx    #$00                    ;2
-       ldy    #$01                    ;2
-       bit    cxp1fb                  ;3
-       bmi    lf55b                   ;2
-       bit    $b6                     ;3
-       bmi    lf55b                   ;2
-       lda    $82                     ;3
-       and    #$07                    ;2
-       bne    lf55e                   ;2
-       ldy    #$05                    ;2
-       lda    #$4c                    ;2
-       sta    $cd                     ;3
-       lda    #$23                    ;2
-       sta    $d3                     ;3
+       ldx    #$00                    
+       ldy    #$01                    
+       bit    cxp1fb                  
+       bmi    lf55b                   
+       bit    $b6                     
+       bmi    lf55b                   
+       lda    $82                     
+       and    #$07                    
+       bne    lf55e                   
+       ldy    #$05                    
+       lda    #$4c                    
+       sta    $cd                     
+       lda    #$23                    
+       sta    $d3                     
 lf55b:
-       jsr    lf8b3                   ;6
+       jsr    lf8b3                   
 lf55e:
-       lda    #$80                    ;2
-       sta    $93                     ;3
-       lda    $ce                     ;3
-       and    #$01                    ;2
-       ror    $c8                     ;5
-       rol                            ;2
-       tay                            ;2
-       ror                            ;2
-       rol    $c8                     ;5
-       lda    lfaea,y                 ;4
-       sta    $dd                     ;3
-       lda    #$fc    ;2
-       sta    $de                     ;3
-       lda    $8e                     ;3
-       bmi    lf59a                   ;2
-       ldx    #$50                    ;2
-       stx    $ca                     ;3
-       ldx    #$26                    ;2
-       stx    $d0                     ;3
-       lda    $b6                     ;3
-       bmi    lf59a                   ;2
-       bit    $9d                     ;3
-       bmi    lf59a                   ;2
-       and    #$07                    ;2
-       bne    lf592                   ;2
-       ldy    #$06                    ;2
-       sty    $b6                     ;3
+       lda    #$80                    
+       sta    $93                     
+       lda    $ce                     
+       and    #$01                    
+       ror    $c8                     
+       rol                            
+       tay                            
+       ror                            
+       rol    $c8                     
+       lda    lfaea,y                 
+       sta    $dd                     
+       lda    #$fc    
+       sta    $de                     
+       lda    $8e                     
+       bmi    lf59a                   
+       ldx    #$50                    
+       stx    $ca                     
+       ldx    #$26                    
+       stx    $d0                     
+       lda    $b6                     
+       bmi    lf59a                   
+       bit    $9d                     
+       bmi    lf59a                   
+       and    #$07                    
+       bne    lf592                   
+       ldy    #$06                    
+       sty    $b6                     
 lf592:
-       tax                            ;2
-       lda    lfcd2,x                 ;4
-       sta    $8e                     ;3
-       dec    $b6                     ;5
+       tax                            
+       lda    lfcd2,x                 
+       sta    $8e                     
+       dec    $b6                     
 lf59a:
-       jmp    lf833                   ;3
+       jmp    lf833                   
 
 lf59d:
-       lda    #$80                    ;2
-       sta    $93                     ;3
-       ldx    #$00                    ;2
-       bit    $9d                     ;3
-       bmi    lf5ab                   ;2
-       bit    $95                     ;3
-       bvc    lf5b7                   ;2
+       lda    #$80                    
+       sta    $93                     
+       ldx    #$00                    
+       bit    $9d                     
+       bmi    lf5ab                   
+       bit    $95                     
+       bvc    lf5b7                   
 lf5ab:
-       ldy    #$05                    ;2
-       lda    #$55                    ;2
-       sta    $cd                     ;3
-       sta    $d3                     ;3
-       lda    #$01                    ;2
-       bne    lf5bb                   ;2 always branch
+       ldy    #$05                    
+       lda    #$55                    
+       sta    $cd                     
+       sta    $d3                     
+       lda    #$01                    
+       bne    lf5bb                   
 
 lf5b7:
-       ldy    #$01                    ;2
-       lda    #$03                    ;2
+       ldy    #$01                    
+       lda    #$03                    
 lf5bb:
-       and    $82                     ;3
-       bne    lf5ce                   ;2
-       jsr    lf8b3                   ;6
-       lda    $ce                     ;3
-       bpl    lf5ce                   ;2
-       cmp    #$a0                    ;2
-       bcc    lf5ce                   ;2
-       inc    $ce                     ;5
-       inc    $ce                     ;5
+       and    $82                     
+       bne    lf5ce                   
+       jsr    lf8b3                   
+       lda    $ce                     
+       bpl    lf5ce                   
+       cmp    #$a0                    
+       bcc    lf5ce                   
+       inc    $ce                     
+       inc    $ce                     
 lf5ce:
-       bvc    lf5de                   ;2
-       lda    $ce                     ;3
-       cmp    #$51                    ;2
-       bcc    lf5de                   ;2
-       lda    $95                     ;3
-       sta    $99                     ;3
-       lda    #$00                    ;2
-       sta    $95                     ;3
+       bvc    lf5de                   
+       lda    $ce                     
+       cmp    #$51                    
+       bcc    lf5de                   
+       lda    $95                     
+       sta    $99                     
+       lda    #$00                    
+       sta    $95                     
 lf5de:
-       lda    $c8                     ;3
-       cmp    $c9                     ;3
-       bcs    lf5e7                   ;2
-       dex                            ;2
-       eor    #$03                    ;2
+       lda    $c8                     
+       cmp    $c9                     
+       bcs    lf5e7                   
+       dex                            
+       eor    #$03                    
 lf5e7:
-       stx    refp0                   ;3
-       and    #$03                    ;2
-       asl                            ;2
-       asl                            ;2
-       asl                            ;2
-       asl                            ;2
-       sta    $dd                     ;3
-       lda    $82                     ;3
-       and    #$7f                    ;2
-       bne    lf617                   ;2
-       lda    $ce                     ;3
-       cmp    #$4a                    ;2
-       bcs    lf617                   ;2
-       ldy    $98                     ;3
-       beq    lf617                   ;2
-       dey                            ;2
-       sty    $98                     ;3
-       ldy    #$8e                    ;2
-       adc    #$03                    ;2
-       sta    $d0                     ;3
-       cmp    $cf                     ;3
-       bcs    lf60f                   ;2
-       dey                            ;2
+       stx    refp0                   
+       and    #$03                    
+       asl                            
+       asl                            
+       asl                            
+       asl                            
+       sta    $dd                     
+       lda    $82                     
+       and    #$7f                    
+       bne    lf617                   
+       lda    $ce                     
+       cmp    #$4a                    
+       bcs    lf617                   
+       ldy    $98                     
+       beq    lf617                   
+       dey                            
+       sty    $98                     
+       ldy    #$8e                    
+       adc    #$03                    
+       sta    $d0                     
+       cmp    $cf                     
+       bcs    lf60f                   
+       dey                            
 lf60f:
-       lda    $c8                     ;3
-       adc    #$04                    ;2
-       sta    $ca                     ;3
-       sty    $8e                     ;3
+       lda    $c8                     
+       adc    #$04                    
+       sta    $ca                     
+       sty    $8e                     
 lf617:
-       ldy    #$7f                    ;2
-       lda    $8e                     ;3
-       bmi    lf61f                   ;2
-       sty    $d0                     ;3
+       ldy    #$7f                    
+       lda    $8e                     
+       bmi    lf61f                   
+       sty    $d0                     
 lf61f:
-       lda    $d1                     ;3
-       cmp    #$52                    ;2
-       bcc    lf627                   ;2
-       sty    $d1                     ;3
+       lda    $d1                     
+       cmp    #$52                    
+       bcc    lf627                   
+       sty    $d1                     
 lf627:
-       jmp    lf833                   ;3
+       jmp    lf833                   
 
 lf62a:
-       ldx    #$3a                    ;2
-       stx    $e9                     ;3
-       ldx    #$85                    ;2
-       stx    $e3                     ;3
-       ldx    #$03                    ;2 3 points (gained)
-       stx    mesa_entered            ;3
-       bne    lf63a                   ;2 always branch
+       ldx    #$3a                    
+       stx    $e9                     
+       ldx    #$85                    
+       stx    $e3                     
+       ldx    #$03                    
+       stx    mesa_entered            
+       bne    lf63a                   
 
 lf638
-       ldx    #$04                    ;2
+       ldx    #$04                    
 lf63a:
-       lda    lfcd8,x                 ;4
-       and    $82                     ;3
-       bne    lf656                   ;2
-       ldy    $e5,x                   ;4
-       lda    #$08                    ;2
-       and    $df,x                   ;4
-       bne    lf65c                   ;2
-       dey                            ;2
-       cpy    #$14                    ;2
-       bcs    lf654                   ;2
+       lda    lfcd8,x                 
+       and    $82                     
+       bne    lf656                   
+       ldy    $e5,x                   
+       lda    #$08                    
+       and    $df,x                   
+       bne    lf65c                   
+       dey                            
+       cpy    #$14                    
+       bcs    lf654                   
 lf64e:
-       lda    #$08                    ;2
-       eor    $df,x                   ;4
-       sta    $df,x                   ;4
+       lda    #$08                    
+       eor    $df,x                   
+       sta    $df,x                   
 lf654:
-       sty    $e5,x                   ;4
+       sty    $e5,x                   
 lf656:
-       dex                            ;2
-       bpl    lf63a                   ;2
-       jmp    lf833                   ;3
+       dex                            
+       bpl    lf63a                   
+       jmp    lf833                   
 
 lf65c:
-       iny                            ;2
-       cpy    #$85                    ;2
-       bcs    lf64e                   ;2
-       bcc    lf654                   ;2 always branch
+       iny                            
+       cpy    #$85                    
+       bcs    lf64e                   
+       bcc    lf654                   
 
 lf663
-       bit    $b4                     ;3
-       bpl    lf685                   ;2
-       bvc    lf66d                   ;2
-       dec    $c9                     ;5
-       bne    lf685                   ;2
+       bit    $b4                     
+       bpl    lf685                   
+       bvc    lf66d                   
+       dec    $c9                     
+       bne    lf685                   
 lf66d:
-       lda    $82                     ;3
-       ror                            ;2
-       bcc    lf685                   ;2
-       lda    swcha                   ;4
-       sta    $92                     ;3
-       ror                            ;2
-       ror                            ;2
-       ror                            ;2
-       bcs    lf680                   ;2
-       dec    $c9                     ;5
-       bne    lf685                   ;2
+       lda    $82                     
+       ror                            
+       bcc    lf685                   
+       lda    swcha                   
+       sta    $92                     
+       ror                            
+       ror                            
+       ror                            
+       bcs    lf680                   
+       dec    $c9                     
+       bne    lf685                   
 lf680:
-       ror                            ;2
-       bcs    lf685                   ;2
-       inc    $c9                     ;5
+       ror                            
+       bcs    lf685                   
+       inc    $c9                     
 lf685:
-       lda    #$02                    ;2
-       and    $b4                     ;3
-       bne    lf691                   ;2
-       sta    $8d                     ;3
-       lda    #$0b                    ;2
-       sta    $ce                     ;3
+       lda    #$02                    
+       and    $b4                     
+       bne    lf691                   
+       sta    $8d                     
+       lda    #$0b                    
+       sta    $ce                     
 lf691:
-       ldx    $cf                     ;3
-       lda    $82                     ;3
-       bit    $b4                     ;3
-       bmi    lf6a3                   ;2
-       cpx    #$15                    ;2
-       bcc    lf6a3                   ;2
-       cpx    #$30                    ;2
-       bcc    lf6aa                   ;2
-       bcs    lf6a9                   ;2 always branch
+       ldx    $cf                     
+       lda    $82                     
+       bit    $b4                     
+       bmi    lf6a3                   
+       cpx    #$15                    
+       bcc    lf6a3                   
+       cpx    #$30                    
+       bcc    lf6aa                   
+       bcs    lf6a9                   
 
 lf6a3:
-       ror                            ;2
-       bcc    lf6aa                   ;2
+       ror                            
+       bcc    lf6aa                   
 lf6a6:
-       jmp    lf833                   ;3
+       jmp    lf833                   
 
 lf6a9:
-       inx                            ;2
+       inx                            
 lf6aa:
-       inx                            ;2
-       stx    $cf                     ;3
-       bne    lf6a6                   ;2 always branch
+       inx                            
+       stx    $cf                     
+       bne    lf6a6                   
 
 lf6af:
-       lda    $c9                     ;3
-       cmp    #$64                    ;2
-       bcc    lf6bc                   ;2
-       rol    $b2                     ;5
-       clc                            ;2
-       ror    $b2                     ;5
-       bpl    lf6de                   ;2
+       lda    $c9                     
+       cmp    #$64                    
+       bcc    lf6bc                   
+       rol    $b2                     
+       clc                            
+       ror    $b2                     
+       bpl    lf6de                   
 lf6bc:
-       cmp    #$2c                    ;2
-       beq    lf6c6                   ;2
-       lda    #$7f                    ;2
-       sta    $d2                     ;3
-       bne    lf6de                   ;2 always branch
+       cmp    #$2c                    
+       beq    lf6c6                   
+       lda    #$7f                    
+       sta    $d2                     
+       bne    lf6de                   
 
 lf6c6:
-       bit    $b2                     ;3
-       bmi    lf6de                   ;2
-       lda    #$30                    ;2
-       sta    $cc                     ;3
-       ldy    #$00                    ;2
-       sty    $d2                     ;3
-       ldy    #$7f                    ;2
-       sty    $dc                     ;3
-       sty    $d5                     ;3
-       inc    $c9                     ;5
-       lda    #$80                    ;2
-       sta    $9d                     ;3
+       bit    $b2                     
+       bmi    lf6de                   
+       lda    #$30                    
+       sta    $cc                     
+       ldy    #$00                    
+       sty    $d2                     
+       ldy    #$7f                    
+       sty    $dc                     
+       sty    $d5                     
+       inc    $c9                     
+       lda    #$80                    
+       sta    $9d                     
 lf6de:
-       jmp    lf833                   ;3
+       jmp    lf833                   
 
 lf6e1:
-       ldy    $df                     ;3
-       dey                            ;2
-       bne    lf6de                   ;2
-       lda    $af                     ;3
-       and    #$07                    ;2
-       bne    lf71d                   ;2
-       lda    #$40                    ;2
-       sta    $93                     ;3
-       lda    $83                     ;3
-       lsr                            ;2
-       lsr                            ;2
-       lsr                            ;2
-       lsr                            ;2
-       lsr                            ;2
-       tax                            ;2
-       ldy    lfcdc,x                 ;4
-       ldx    lfcaa,y                 ;4
-       sty    $84                     ;3
-       jsr    lf89d                   ;6
-       bcc    lf70a                   ;2
+       ldy    $df                     
+       dey                            
+       bne    lf6de                   
+       lda    $af                     
+       and    #$07                    
+       bne    lf71d                   
+       lda    #$40                    
+       sta    $93                     
+       lda    $83                     
+       lsr                            
+       lsr                            
+       lsr                            
+       lsr                            
+       lsr                            
+       tax                            
+       ldy    lfcdc,x                 
+       ldx    lfcaa,y                 
+       sty    $84                     
+       jsr    lf89d                   
+       bcc    lf70a                   
 lf705:
-       inc    $df                     ;5
-       bne    lf6de                   ;2 always branch
+       inc    $df                     
+       bne    lf6de                   
 
 
        .byte $00 ; |        | $f709 unused
 
 
 lf70a:
-       ldy    $84                     ;3
-       tya                            ;2
-       ora    $af                     ;3
-       sta    $af                     ;3
-       lda    lfca2,y                 ;4
-       sta    $ce                     ;3
-       lda    lfca6,y                 ;4
-       sta    $df                     ;3
-       bne    lf6de                   ;2 always branch
+       ldy    $84                     
+       tya                            
+       ora    $af                     
+       sta    $af                     
+       lda    lfca2,y                 
+       sta    $ce                     
+       lda    lfca6,y                 
+       sta    $df                     
+       bne    lf6de                   
 
 lf71d:
-       cmp    #$04                    ;2
-       bcs    lf705                   ;2
-       rol    $af                     ;5
-       sec                            ;2
-       ror    $af                     ;5
-       bmi    lf705                   ;2 always branch
+       cmp    #$04                    
+       bcs    lf705                   
+       rol    $af                     
+       sec                            
+       ror    $af                     
+       bmi    lf705                   
 
 lf728: ;map room stuff...
-       ldy    #$00                    ;2
-       sty    $d2                     ;3
-       ldy    #$7f                    ;2
-       sty    $dc                     ;3
-       sty    $d5                     ;3
-       lda    #$71                    ;2
-       sta    $cc                     ;3
-       ldy    #$4f                    ;2
-       lda    #$3a                    ;2
-       cmp    $cf                     ;3
-       bne    lf74a                   ;2
-       lda    current_object          ;3
-       cmp    #$07                    ;2 is object the key?
-       beq    lf74c                   ;2  ...branch if so
-       lda    #$5e                    ;2
-       cmp    $c9                     ;3
-       beq    lf74c                   ;2
+       ldy    #$00                    
+       sty    $d2                     
+       ldy    #$7f                    
+       sty    $dc                     
+       sty    $d5                     
+       lda    #$71                    
+       sta    $cc                     
+       ldy    #$4f                    
+       lda    #$3a                    
+       cmp    $cf                     
+       bne    lf74a                   
+       lda    current_object          
+       cmp    #$07                    
+       beq    lf74c                   
+       lda    #$5e                    
+       cmp    $c9                     
+       beq    lf74c                   
 lf74a:
-       ldy    #$0d                    ;2
+       ldy    #$0d                    
 lf74c:
-       sty    $df                     ;3
-       lda    $83                     ;3
-       sec                            ;2
-       sbc    #$10                    ;2
-       bpl    lf75a                   ;2
-       eor    #$ff                    ;2
-       sec                            ;2
-       adc    #$00                    ;2
+       sty    $df                     
+       lda    $83                     
+       sec                            
+       sbc    #$10                    
+       bpl    lf75a                   
+       eor    #$ff                    
+       sec                            
+       adc    #$00                    
 lf75a:
-       cmp    #$0b                    ;2
-       bcc    lf760                   ;2
-       lda    #$0b                    ;2
+       cmp    #$0b                    
+       bcc    lf760                   
+       lda    #$0b                    
 lf760:
-       sta    $ce                     ;3
-       bit    $b3                     ;3
-       bpl    lf78b                   ;2
-       cmp    #$08                    ;2
-       bcs    lf787                   ;2
-       ldx    current_object          ;3
-       cpx    #$0e                    ;2 is object the headpiece (revealing the ark's location)
-       bne    lf787                   ;2  ...branch if not
-       stx    ark_found               ;3 14 points (gained)...shared from existing compare val.
-       lda    #$04                    ;2
-       and    $82                     ;3
-       bne    lf787                   ;2
-       lda    $8c                     ;3
-       and    #$0f                    ;2
-       tax                            ;2
-       lda    lfac2,x                 ;4
-       sta    $cb                     ;3
-       lda    lfad2,x                 ;4
-       bne    lf789                   ;2 always branch
+       sta    $ce                     
+       bit    $b3                     
+       bpl    lf78b                   
+       cmp    #$08                    
+       bcs    lf787                   
+       ldx    current_object          
+       cpx    #$0e                    
+       bne    lf787                   
+       stx    ark_found               
+       lda    #$04                    
+       and    $82                     
+       bne    lf787                   
+       lda    $8c                     
+       and    #$0f                    
+       tax                            
+       lda    lfac2,x                 
+       sta    $cb                     
+       lda    lfad2,x                 
+       bne    lf789                   
 
 lf787:
-       lda    #$70                    ;2
+       lda    #$70                    
 lf789:
-       sta    $d1                     ;3
+       sta    $d1                     
 lf78b:
-       rol    $b3                     ;5
-       lda    #$3a                    ;2
-       cmp    $cf                     ;3
-       bne    lf7a2                   ;2
-       cpy    #$4f                    ;2
-       beq    lf79d                   ;2
-       lda    #$5e                    ;2
-       cmp    $c9                     ;3
-       bne    lf7a2                   ;2
+       rol    $b3                     
+       lda    #$3a                    
+       cmp    $cf                     
+       bne    lf7a2                   
+       cpy    #$4f                    
+       beq    lf79d                   
+       lda    #$5e                    
+       cmp    $c9                     
+       bne    lf7a2                   
 lf79d:
-       sec                            ;2
-       ror    $b3                     ;5
-       bmi    lf7a5                   ;2
+       sec                            
+       ror    $b3                     
+       bmi    lf7a5                   
 lf7a2:
-       clc                            ;2
-       ror    $b3                     ;5
+       clc                            
+       ror    $b3                     
 lf7a5:
-       jmp    lf833                   ;3
+       jmp    lf833                   
 
 lf7a8:
-       lda    #$08                    ;2
-       and    $c7                     ;3
-       bne    lf7c0                   ;2
-       lda    #$4c                    ;2
-       sta    $cc                     ;3
-       lda    #$2a                    ;2
-       sta    $d2                     ;3
-       lda    #$ba                    ;2
-       sta    $d6                     ;3
-       lda    #$fa                    ;2
-       sta    $d7                     ;3
-       bne    lf7c4                   ;2 always branch
+       lda    #$08                    
+       and    $c7                     
+       bne    lf7c0                   
+       lda    #$4c                    
+       sta    $cc                     
+       lda    #$2a                    
+       sta    $d2                     
+       lda    #$ba                    
+       sta    $d6                     
+       lda    #$fa                    
+       sta    $d7                     
+       bne    lf7c4                   
 
 lf7c0:
-       lda    #$f0                    ;2
-       sta    $d2                     ;3
+       lda    #$f0                    
+       sta    $d2                     
 lf7c4:
-       lda    $b5                     ;3
-       and    #$0f                    ;2
-       beq    lf833                   ;2
-       sta    $dc                     ;3
-       ldy    #$14                    ;2
-       sty    $ce                     ;3
-       ldy    #$3b                    ;2
-       sty    $e0                     ;3
-       iny                            ;2
-       sty    $d4                     ;3
-       lda    #$c1                    ;2
-       sec                            ;2
-       sbc    $dc                     ;3
-       sta    $dd                     ;3
-       bne    lf833                   ;2 always branch
+       lda    $b5                     
+       and    #$0f                    
+       beq    lf833                   
+       sta    $dc                     
+       ldy    #$14                    
+       sty    $ce                     
+       ldy    #$3b                    
+       sty    $e0                     
+       iny                            
+       sty    $d4                     
+       lda    #$c1                    
+       sec                            
+       sbc    $dc                     
+       sta    $dd                     
+       bne    lf833                   
 
 lf7e0:
-       lda    $82                     ;3
-       and    #$18                    ;2
-       adc    #$e0                    ;2
-       sta    $dd                     ;3
-       lda    $82                     ;3
-       and    #$07                    ;2
-       bne    lf80f                   ;2
-       ldx    #$00                    ;2
-       ldy    #$01                    ;2
-       lda    $cf                     ;3
-       cmp    #$3a                    ;2
-       bcc    lf80c                   ;2
-       lda    $c9                     ;3
-       cmp    #$2b                    ;2
-       bcc    lf802                   ;2
-       cmp    #$6d                    ;2
-       bcc    lf80c                   ;2
+       lda    $82                     
+       and    #$18                    
+       adc    #$e0                    
+       sta    $dd                     
+       lda    $82                     
+       and    #$07                    
+       bne    lf80f                   
+       ldx    #$00                    
+       ldy    #$01                    
+       lda    $cf                     
+       cmp    #$3a                    
+       bcc    lf80c                   
+       lda    $c9                     
+       cmp    #$2b                    
+       bcc    lf802                   
+       cmp    #$6d                    
+       bcc    lf80c                   
 lf802:
-       ldy    #$05                    ;2
-       lda    #$4c                    ;2
-       sta    $cd                     ;3
-       lda    #$0b                    ;2
-       sta    $d3                     ;3
+       ldy    #$05                    
+       lda    #$4c                    
+       sta    $cd                     
+       lda    #$0b                    
+       sta    $d3                     
 lf80c:
-       jsr    lf8b3                   ;6
+       jsr    lf8b3                   
 lf80f:
-       ldx    #$4e                    ;2 lowest spot of the screen
-       cpx    $cf                     ;3 compare against player's vertical location
-       bne    lf833                   ;2  ...branch if not the same
-       ldx    $c9                     ;3 check horizontal location...
-       cpx    #$76                    ;2
-       beq    lf81f                   ;2
-       cpx    #$14                    ;2
-       bne    lf833                   ;2 skip if not over either escape hatch
+       ldx    #$4e                    
+       cpx    $cf                     
+       bne    lf833                   
+       ldx    $c9                     
+       cpx    #$76                    
+       beq    lf81f                   
+       cpx    #$14                    
+       bne    lf833                   
 lf81f:
-       lda    swcha                   ;4
-       and    #$0f                    ;2
-       cmp    #$0d                    ;2 down pressed?
-       bne    lf833                   ;2  ...branch if not
-       sta    escape_hatch_used       ;3 13 points (lost)...shared from existing joystick dir.
-       lda    #$4c                    ;2  reset horizontal location to center
-       sta    $c9                     ;3
-       ror    $b5                     ;5
-       sec                            ;2
-       rol    $b5                     ;5
+       lda    swcha                   
+       and    #$0f                    
+       cmp    #$0d                    
+       bne    lf833                   
+       sta    escape_hatch_used       
+       lda    #$4c                    
+       sta    $c9                     
+       ror    $b5                     
+       sec                            
+       rol    $b5                     
 lf833
-       lda    #<ld80d                 ;2
-       sta    $88                     ;3
-       lda    #>ld80d                 ;2
-       sta    $89                     ;3
-       jmp    lf493                   ;3
+       lda    #<ld80d                 
+       sta    $88                     
+       lda    #>ld80d                 
+       sta    $89                     
+       jmp    lf493                   
 
 lf83e
-       lda    #$40                    ;2
-       sta    $93                     ;3
-       bne    lf833                   ;2 always branch
+       lda    #$40                    
+       sta    $93                     
+       bne    lf833                   
 
 draw_field
-	sta		wsync					;3	 =	 3
+	sta		wsync					
 ;---------------------------------------
-	sta		hmclr					;3
-	sta		cxclr					;3
-	ldy		#$ff					;2
-	sty		pf1						;3
-	sty		pf2						;3
-	ldx		room_num				  ;3
-	lda		room_pf0_gfx,x					;4
-	sta		pf0						;3
-	iny								;2
-	sta		wsync					;3	 =	29
+	sta		hmclr					
+	sta		cxclr					
+	ldy		#$ff					
+	sty		pf1						
+	sty		pf2						
+	ldx		room_num				  
+	lda		room_pf0_gfx,x					
+	sta		pf0						
+	iny								
+	sta		wsync					
 ;---------------------------------------
-	sta		hmove					;3
-	sty		vblank					;3
-	sty		scan_line				   ;3
-	cpx		#$04					;2
-	bne		lf865					;2/3
-	dey								;2	 =	15 *
+	sta		hmove					
+	sty		vblank					
+	sty		scan_line				   
+	cpx		#$04					
+	bne		lf865					
+	dey								
 lf865
-	sty		enabl					;3
-	cpx		#$0d					;2
-	beq		lf874					;2/3
-	bit		ram_9d					;3		   *
-	bmi		lf874					;2/3	   *
-	ldy		swcha					;4		   *
-	sty		refp1					;3	 =	19 *
+	sty		enabl					
+	cpx		#$0d					
+	beq		lf874					
+	bit		ram_9d					
+	bmi		lf874					
+	ldy		swcha					
+	sty		refp1					
 lf874
-	sta		wsync					;3	 =	 3
+	sta		wsync					
 ;---------------------------------------
-	sta		hmove					;3
-	sta		wsync					;3	 =	 6
+	sta		hmove					
+	sta		wsync					
 ;---------------------------------------
-	sta		hmove					;3
-	ldy		room_num				  ;3
-	sta		wsync					;3	 =	 9
+	sta		hmove					
+	ldy		room_num				  
+	sta		wsync					
 ;---------------------------------------
-	sta		hmove					;3
-	lda		room_pf1_gfx,y					;4
-	sta		pf1						;3
-	lda		room_pf2_gfx,y					;4
-	sta		pf2						;3
-	ldx		lf9ee,y					;4
-	lda		lfae2+1,x				;4
-	pha								;3
-	lda		lfae2,x					;4
-	pha								;3
-	lda		#$00					;2
-	tax								;2
-	sta		ram_84					;3
-	rts								;6	 =	48
+	sta		hmove					
+	lda		room_pf1_gfx,y					
+	sta		pf1						
+	lda		room_pf2_gfx,y					
+	sta		pf2						
+	ldx		lf9ee,y					
+	lda		lfae2+1,x				
+	pha								
+	lda		lfae2,x					
+	pha								
+	lda		#$00					
+	tax								
+	sta		ram_84					
+	rts								
 
 lf89d:
-       lda    lfc75,x                 ;4
-       lsr                            ;2
-       tay                            ;2
-       lda    lfce2,y                 ;4
-       bcs    lf8ad                   ;2
-       and    $c6                     ;3
-       beq    lf8ac                   ;2
-       sec                            ;2
+       lda    lfc75,x                 
+       lsr                            
+       tay                            
+       lda    lfce2,y                 
+       bcs    lf8ad                   
+       and    $c6                     
+       beq    lf8ac                   
+       sec                            
 lf8ac
-       rts                            ;6
+       rts                            
 
 lf8ad									;called dynamically 
        and    $c7                     ;and c7
@@ -3962,57 +3962,57 @@ lf8ad									;called dynamically
 
 
 lf8b3
-	cpy		#$01					;2		   *
-	bne		lf8bb					;2/3	   *
-	lda		indy_y					;3		   *
-	bmi		lf8cc					;2/3 =	 9 *
+	cpy		#$01					
+	bne		lf8bb					
+	lda		indy_y					
+	bmi		lf8cc					
 lf8bb
-	lda		enemy_y,x				 ;4			*
-	cmp.wy	enemy_y,y				 ;4			*
-	bne		lf8c6					;2/3	   *
-	cpy		#$05					;2		   *
-	bcs		lf8ce					;2/3 =	14 *
+	lda		enemy_y,x				 
+	cmp.wy	enemy_y,y				 
+	bne		lf8c6					
+	cpy		#$05					
+	bcs		lf8ce					
 lf8c6
-	bcs		lf8cc					;2/3	   *
-	inc		enemy_y,x				 ;6			*
-	bne		lf8ce					;2/3 =	10 *
+	bcs		lf8cc					
+	inc		enemy_y,x				 
+	bne		lf8ce					
 lf8cc
-	dec		enemy_y,x				 ;6	  =	  6 *
+	dec		enemy_y,x				 
 lf8ce
-	lda		enemy_x,x				 ;4			*
-	cmp.wy	enemy_x,y				 ;4			*
-	bne		lf8d9					;2/3	   *
-	cpy		#$05					;2		   *
-	bcs		lf8dd					;2/3 =	14 *
+	lda		enemy_x,x				 
+	cmp.wy	enemy_x,y				 
+	bne		lf8d9					
+	cpy		#$05					
+	bcs		lf8dd					
 lf8d9
-	bcs		lf8de					;2/3	   *
-	inc		enemy_x,x				 ;6	  =	  8 *
+	bcs		lf8de					
+	inc		enemy_x,x				 
 lf8dd
-	rts								;6	 =	 6 *
+	rts								
 
 lf8de
-	dec		enemy_x,x				 ;6			*
-	rts								;6	 =	12 *
+	dec		enemy_x,x				 
+	rts								
 
 lf8e1
-	lda		enemy_y,x				 ;4			*
-	cmp		#$53					;2		   *
-	bcc		lf8f1					;2/3 =	 8 *
+	lda		enemy_y,x				 
+	cmp		#$53					
+	bcc		lf8f1					
 lf8e7
-	rol		ram_8c,x				;6		   *
-	clc								;2		   *
-	ror		ram_8c,x				;6		   *
-	lda		#$78					;2		   *
-	sta		enemy_y,x				 ;4			*
-	rts								;6	 =	26 *
+	rol		ram_8c,x				
+	clc								
+	ror		ram_8c,x				
+	lda		#$78					
+	sta		enemy_y,x				 
+	rts								
 
 lf8f1
-	lda		enemy_x,x				 ;4			*
-	cmp		#$10					;2		   *
-	bcc		lf8e7					;2/3	   *
-	cmp		#$8e					;2		   *
-	bcs		lf8e7					;2/3	   *
-	rts								;6	 =	18 *
+	lda		enemy_x,x				 
+	cmp		#$10					
+	bcc		lf8e7					
+	cmp		#$8e					
+	bcs		lf8e7					
+	rts								
 
 	.byte	$00,$00,$00,$00,$00,$e4,$7e,$9a ; $f8fc (*)
 	.byte	$e4,$a6,$5a,$7e,$e4,$7f,$00,$00 ; $f904 (*)
@@ -4888,23 +4888,23 @@ lfce2
        .byte $80 ; |x       | $fce9
 
 lfcea
-	ror								;2		   *
-	bcs		lfcef					;2/3	   *
-	dec		enemy_y,x				 ;6	  =	 10 *
+	ror								
+	bcs		lfcef					
+	dec		enemy_y,x				 
 lfcef
-	ror								;2		   *
-	bcs		lfcf4					;2/3	   *
-	inc		enemy_y,x				 ;6	  =	 10 *
+	ror								
+	bcs		lfcf4					
+	inc		enemy_y,x				 
 lfcf4
-	ror								;2		   *
-	bcs		lfcf9					;2/3	   *
-	dec		enemy_x,x				 ;6	  =	 10 *
+	ror								
+	bcs		lfcf9					
+	dec		enemy_x,x				 
 lfcf9
-	ror								;2		   *
-	bcs		lfcfe					;2/3	   *
-	inc		enemy_x,x				 ;6	  =	 10 *
+	ror								
+	bcs		lfcfe					
+	inc		enemy_x,x				 
 lfcfe
-	rts								;6	 =	 6 *
+	rts								
 
 	.byte	$00,$f2,$40,$f2,$c0,$12,$10,$f2 ; $fcff (*)
 	.byte	$00,$12,$20,$02,$b0,$f2,$30,$12 ; $fd07 (*)
@@ -4977,14 +4977,14 @@ lfef0
 	.byte	$ff ; |########|			$fef3 (g)
 
 lfef4
-	lda		ram_8c,x				;4
-	bmi		lfef9					;2/3
-	rts								;6	 =	12
+	lda		ram_8c,x				
+	bmi		lfef9					
+	rts								
 
 lfef9
-	jsr		lfcea					;6		   *
-	jsr		lf8e1					;6		   *
-	rts								;6	 =	18 *
+	jsr		lfcea					
+	jsr		lf8e1					
+	rts								
 
 
 
