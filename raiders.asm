@@ -16,7 +16,7 @@
 ; = EXACT GAME ROM, THE LABELS AND COMMENTS ARE THE INTERPRETATION OF MY OWN   =
 ; = AND MAY NOT REPRESENT THE ORIGINAL VISION OF THE AUTHOR.                    =
 ; =                                                                             =
-; = THE ASSEMBLED CODE IS � 1982, ATARI, INC.                                   =
+; = THE ASSEMBLED CODE IS  1982, ATARI, INC.                                   =
 ; =                                                                             =
 ; ==============================================================================
 ;
@@ -567,7 +567,7 @@ Ld465
     bit     ram_9C                  ;3         * ; Check bit 7 of resetEnableFlag
     bmi     Ld46d                   ;2/3       * ; If bit 7 is set, skip (reset enabled)
     lda     #$0e                    ;2         *
-    sta     ram_A2                  ;3   =  10 * ; Set Indy�s state to 0E
+    sta     ram_A2                  ;3   =  10 * ; Set Indys state to 0E
 Ld46d
     lda     #$80                    ;2         *
     sta     ram_9C                  ;3         * ; Set bit 7 to enable reset logic
@@ -602,7 +602,7 @@ Ld489
     bcs     Ld4a3                   ;2/3       * ; If Indy is right of x=$20, skip
     lda     #$20                    ;2   =  30 * ; 2
 Ld4a3
-    sta     ram_CC                  ;3   =   3 * ; Store Indy�s forced horizontal position?
+    sta     ram_CC                  ;3   =   3 * ; Store Indys forced horizontal position?
 Ld4a5
     inx                             ;2         * ; 2
     stx     snake_y                  ;3         * ; Increment and store progression step or counter
@@ -612,11 +612,11 @@ Ld4a5
     bpl     Ld4b0                   ;2/3       * ; If result = 0, continue
     lda     #$00                    ;2   =  15 * ; Otherwise, reset A to 0
 Ld4b0
-    sta     ram_D2                  ;3         * ; Store A (probably from LD4A5) into $D2 � possibly temporary Y position
+    sta     ram_D2                  ;3         * ; Store A (probably from LD4A5) into $D2  possibly temporary Y position
     and     #$f8                    ;2         * ; 2
     cmp     ram_D5                  ;3         * ; 3
-    beq     Ld501                   ;2/3!      * ; If vertical alignment hasn�t changed, skip update
-    sta     ram_D5                  ;3         * ; Update snake�s vertical position
+    beq     Ld501                   ;2/3!      * ; If vertical alignment hasnt changed, skip update
+    sta     ram_D5                  ;3         * ; Update snakes vertical position
     lda     ram_D4                  ;3         * ; 3
     and     #$03                    ;2         * ; 2
     tax                             ;2         * ; 2
@@ -640,7 +640,7 @@ Ld4b0
 Ld4de
     inx                             ;2         * ; X = 1
     inx                             ;2         * ; X = 2 (prepare alternate motion state)
-    eor     #$ff                    ;2   =   6 * ; Flip delta (one�s complement)
+    eor     #$ff                    ;2   =   6 * ; Flip delta (ones complement)
 Ld4e2
     cmp     #$09                    ;2         *
     bcc     Ld4e7                   ;2/3       * ; If too close, skip speed/direction adjustment
@@ -759,7 +759,7 @@ Ld57c
     beq     Ld599                   ;2/3 =  34 * ; Unconditional (Y=0, so BNE not taken)
 Ld596
     tax                             ;2         * ; Transfer A to X (probably to use as an object index or ID)
-    inc     ram_84                  ;5   =   7 * ; Increment $84 � a general-purpose counter or index
+    inc     ram_84                  ;5   =   7 * ; Increment $84  a general-purpose counter or index
 Ld599
     lda     indy_x                  ;3         * ; 3
     pha                             ;3         * ; Temporarily store horizontal position
@@ -910,7 +910,7 @@ Ld68b
     bvc     Ld6d5                   ;2/3       * ; If bit 6 is clear (no vertical event active), skip to further checks
     bit     CXM1FB|$30              ;3         * ; Check collision between missile 1 and playfield
     bmi     Ld699                   ;2/3       * ; If collision occurred (bit 7 set), go to handle collision impact
-    jsr     Ld2ce                   ;6   =  16 * ; No collision � warp Indy to Mesa Side (context-dependent event)
+    jsr     Ld2ce                   ;6   =  16 * ; No collision  warp Indy to Mesa Side (context-dependent event)
 Ld696
     jmp     Ld777                   ;3   =   3 * ; 3
     
@@ -935,20 +935,20 @@ Ld6ac
     sbc     #$10                    ;2         * ; Adjust for impact zone alignment
     and     #$60                    ;2         * ; Mask to relevant bits (coarse horizontal zone)
     lsr                             ;2         *
-    lsr                             ;2         * ; Divide by 4 � convert to tile region
+    lsr                             ;2         * ; Divide by 4  convert to tile region
     adc     ram_84                  ;3         * ; Combine with vertical region index to form a unique map zone index
     tay                             ;2         * ; Move index to Y
     lda     Ldf7c,y                 ;4         * ; Load impact response from lookup table
-    sta     ram_8B                  ;3         * ; Store result � likely affects state or visual of game field
+    sta     ram_8B                  ;3         * ; Store result  likely affects state or visual of game field
     ldx     ram_D1                  ;3         * ; get bullet or whip vertical position
-    dex                             ;2         * ; Decrease projectile X by 2 � simulate impact offset
+    dex                             ;2         * ; Decrease projectile X by 2  simulate impact offset
     stx     ram_D1                  ;3         *
-    stx     indy_y                  ;3         * ; Sync Indy's horizontal position to projectile�s new position
+    stx     indy_y                  ;3         * ; Sync Indy's horizontal position to projectiles new position
     ldx     ram_CB                  ;3         *
-    dex                             ;2         * ; Decrease projectile X by 2 � simulate impact offset
+    dex                             ;2         * ; Decrease projectile X by 2  simulate impact offset
     dex                             ;2         *
     stx     ram_CB                  ;3         *
-    stx     indy_x                  ;3         * ; Sync Indy's horizontal position to projectile�s new position
+    stx     indy_x                  ;3         * ; Sync Indy's horizontal position to projectiles new position
     lda     #$46                    ;2         * ; Set special state value
     sta     ram_8D                  ;3   =  57 * ; Likely a flag used by event logic
 Ld6d2
@@ -1041,10 +1041,10 @@ Ld767
     tya                             ;2         * ; Move horizontal offset (Y) into A
     clc                             ;2         *
     adc     indy_x                  ;3         *
-    sta     ram_CB                  ;3         * ; Add to Indy�s current horizontal position
+    sta     ram_CB                  ;3         * ; Add to Indys current horizontal position
     txa                             ;2         * ; 2				 ; Move vertical offset (X) into A
     clc                             ;2         * ; 2
-    adc     indy_y                  ;3         * ; Add to Indy�s current vertical position
+    adc     indy_y                  ;3         * ; Add to Indys current vertical position
     sta     ram_D1                  ;3   =  20 * ; Set whip strike vertical position
 Ld773
     lda     #$0f                    ;2         * ; Set effect timer or flag for whip (e.g., 15 frames)
@@ -1185,7 +1185,7 @@ Ld85b
     ldx     #$00                    ;2         * ; Start at index 0
     txa                             ;2   =   4 * ; A = 0 (will be used to clear memory)
 Ld85e
-    sta     ram_DF,x                ;4         * ; Clear/reset memory at $DF�$E4
+    sta     ram_DF,x                ;4         * ; Clear/reset memory at $DF$E4
     sta     ram_E0,x                ;4         *
     sta     PF1_data,x                ;4         *
     sta     ram_E2,x                ;4         *
@@ -1217,7 +1217,7 @@ Ld880
     lda     ram_95                  ;3         ; Read item collection flags
     stx     ram_95                  ;3         ; Clear them all (reset pickups for new screen)
     jsr     Ldd59                   ;6         ; General-purpose screen initialization/reset routine
-    rol     ram_8A                  ;5         ; Rotate input flags � possibly to mask off an "item use" bit
+    rol     ram_8A                  ;5         ; Rotate input flags  possibly to mask off an "item use" bit
     clc                             ;2         ; 2
     ror     ram_8A                  ;5         ; Reverse the bit rotation; keeps input state consistent
     ldx     room_num                  ;3         ; Load which room Indy is in
@@ -1285,7 +1285,7 @@ Ld918
     
 Ld91b
     lda     ram_AF                  ;3         * ; Load screen control byte
-    and     #$78                    ;2         * ; Mask off all but bits 3�6 (preserve mid flags, clear others)
+    and     #$78                    ;2         * ; Mask off all but bits 36 (preserve mid flags, clear others)
     sta     ram_AF                  ;3         * ; Save the updated control state
     lda     #$1a                    ;2         *
     sta     enemy_y                  ;3         * ; Set vertical position for the top object
@@ -1338,7 +1338,7 @@ Ld968
     cpy     #$49                    ;2         * ; 2
     bcc     Ld977                   ;2/3       * ; If Indy is above threshold, no sinking
     lda     #$50                    ;2         * ; 2
-    sta     ram_DF                  ;3         * ; Set environmental sink value � starts Indy sinking
+    sta     ram_DF                  ;3         * ; Set environmental sink value  starts Indy sinking
     rts                             ;6   =  22 * ; return
     
 Ld977
@@ -1351,7 +1351,7 @@ Ld97c
     cpy     ram_86                  ;3         * ; Compare with current override key or control flag
     beq     Ld986                   ;2/3       * ; If it matches, apply special overrides
     clc                             ;2         * ; Clear carry (no override occurred)
-    clv                             ;2         * ; Clear overflow (in case it�s used for flag-based branching)
+    clv                             ;2         * ; Clear overflow (in case its used for flag-based branching)
     rts                             ;6   =  19 * ; Exit with no overrides
     
 Ld986
@@ -1381,7 +1381,7 @@ Ld99b
     bcc     Ld9af                   ;2/3       * ; If below lower limit, use another check
     ldy     Lde9c,x                 ;4         * ; Load upper horizontal boundary
     bmi     Ld9c7                   ;2/3       * ; If negative, apply default vertical
-    bpl     Ld98b                   ;2/3 =  25 * ; Always taken � go check vertical override normally
+    bpl     Ld98b                   ;2/3 =  25 * ; Always taken  go check vertical override normally
 Ld9af
     ldy     Lded0,x                 ;4         * ; Load alternate override flag
     bmi     Ld9c7                   ;2/3       * ; If negative, jump to handle special override
@@ -1401,7 +1401,7 @@ Ld9c7
     bit     ram_AF                  ;3         * ; Check room flag register
     bpl     Ld98b                   ;2/3       * ; If bit 7 is clear, proceed
     lda     #$41                    ;2         *
-    bne     Ld990                   ;2/3 =  15 * ; Always taken � apply forced vertical position
+    bne     Ld990                   ;2/3 =  15 * ; Always taken  apply forced vertical position
 Ld9d4
     iny                             ;2         * ; 2
     bne     Ld9e1                   ;2/3       * ; Always taken unless overflowed
@@ -1479,7 +1479,7 @@ Lda3a
     dex                             ;2         * ; Move to previous inventory slot
     dex                             ;2         * ; Each slot is 2 bytes (pointer to sprite)
     bpl     Lda1e                   ;2/3       * ; If still within bounds, continue checking
-    clc                             ;2         * ; Clear carry � no matching item was found/removed
+    clc                             ;2         * ; Clear carry  no matching item was found/removed
     rts                             ;6   =  14 * ; Return (nothing removed)
     
 Lda40
@@ -1966,7 +1966,7 @@ Lf003
     sta     PF1                     ;3         * ; 3 = @11
     lda     (PF2_data),y              ;5         * ; 5
     sta     PF2                     ;3         * ; 3 = @19
-    bcc     Lf033                   ;2/3 =  21 * ; 2�
+    bcc     Lf033                   ;2/3 =  21 * ; 2
 Lf01a
     sbc     ram_D4                  ;3         * ; 3
     lsr                             ;2         * ; 2
@@ -1993,7 +1993,7 @@ Lf033
     sec                             ;2         * ; 2
     sbc     indy_y                  ;3         * ; 3
     cmp     indy_h                  ;3         * ; 3
-    bcs     Lf079                   ;2/3       * ; 2�
+    bcs     Lf079                   ;2/3       * ; 2
     tay                             ;2         * ; 2
     lda     (indy_anim),y              ;5         * ; 5
     tax                             ;2   =  26 * ; 2
@@ -2002,7 +2002,7 @@ Lf043
     sec                             ;2         * ; 2
     sbc     enemy_y                  ;3         * ; 3
     cmp     snake_y                  ;3         * ; 3
-    bcs     Lf07d                   ;2/3       * ; 2�
+    bcs     Lf07d                   ;2/3       * ; 2
     tay                             ;2         * ; 2
     lda     (emy_anim),y              ;5         * ; 5
     tay                             ;2   =  22 * ; 2
@@ -2030,7 +2030,7 @@ Lf06e
     inc     scan_line                  ;5         * ; 5		  increment scanline
     lda     scan_line                  ;3         * ; 3
     cmp     #$50                    ;2         * ; 2
-    bcc     Lf003                   ;2/3       * ; 2�
+    bcc     Lf003                   ;2/3       * ; 2
     jmp     Lf1ea                   ;3   =  15 * ; 3
     
 Lf079
@@ -2038,10 +2038,10 @@ Lf079
     beq     Lf043                   ;2/3 =   4 * ; 2
 Lf07d
     ldy     #$00                    ;2         * ; 2
-    beq     Lf050                   ;2/3 =   4 * ; 2�
+    beq     Lf050                   ;2/3 =   4 * ; 2
 Lf081
     cpx     #$4f                    ;2         * ; 2
-    bcc     Lf088                   ;2/3       * ; 2�
+    bcc     Lf088                   ;2/3       * ; 2
     jmp     Lf1ea                   ;3   =   7 * ; 3
     
 Lf088
@@ -2049,11 +2049,11 @@ Lf088
     beq     Lf0a4                   ;2/3 =   4 * ; 3	  unconditional branch
 Lf08c
     lda     (emy_anim),y              ;5         * ; 5
-    bmi     Lf09c                   ;2/3       * ; 2�
+    bmi     Lf09c                   ;2/3       * ; 2
     cpy     ram_DF                  ;3         * ; 3
-    bcs     Lf081                   ;2/3       * ; 2�
+    bcs     Lf081                   ;2/3       * ; 2
     cpy     enemy_y                  ;3         * ; 3
-    bcc     Lf088                   ;2/3       * ; 2�
+    bcc     Lf088                   ;2/3       * ; 2
     sta     GRP0                    ;3         * ; 3
     bcs     Lf0a4                   ;2/3 =  22 * ; 3	  unconditional branch
 Lf09c
@@ -2068,9 +2068,9 @@ Lf0a4
     ldx     scan_line                  ;3         * ; 3		  get current scan line
     lda     #$02                    ;2         * ; 2
     cpx     ram_D0                  ;3         * ; 3
-    bcc     Lf0b2                   ;2/3       * ; 2�		 branch if not time to draw missile
+    bcc     Lf0b2                   ;2/3       * ; 2		 branch if not time to draw missile
     cpx     ram_E0                  ;3         * ; 3
-    bcc     Lf0b3                   ;2/3 =  20 * ; 2�
+    bcc     Lf0b3                   ;2/3 =  20 * ; 2
 Lf0b2
     ror                             ;2   =   2 * ; 2		  shift ENABLE_BM right
 Lf0b3
@@ -2083,10 +2083,10 @@ Lf0b3
     sec                             ;2         * ; 2
     sbc     ram_D5                  ;3         * ; 3		  subtract Snake vertical position
     cmp     #$10                    ;2         * ; 2
-    bcs     Lf0ff                   ;2/3       * ; 2�
+    bcs     Lf0ff                   ;2/3       * ; 2
     tay                             ;2         * ; 2
     cmp     #$08                    ;2         * ; 2
-    bcc     Lf0fb                   ;2/3       * ; 2�
+    bcc     Lf0fb                   ;2/3       * ; 2
     lda     ram_D8                  ;3         * ; 3
     sta     ram_D6                  ;3   =  26 * ; 3
 Lf0ca
@@ -2096,14 +2096,14 @@ Lf0ce
     ldy     #$00                    ;2         * ; 2
     txa                             ;2         * ; 2		  move scanline count to accumulator
     cmp     ram_D1                  ;3         * ; 3
-    bne     Lf0d6                   ;2/3       * ; 2�
+    bne     Lf0d6                   ;2/3       * ; 2
     dey                             ;2   =  11 * ; 2		  y = -1
 Lf0d6
     sty     ENAM1                   ;3         * ; 3 = @48
     sec                             ;2         * ; 2
     sbc     indy_y                  ;3         * ; 3
     cmp     indy_h                  ;3         * ; 3
-    bcs     Lf107                   ;2/3!      * ; 2�+1
+    bcs     Lf107                   ;2/3!      * ; 2+1
     tay                             ;2         * ; 2
     lda     (indy_anim),y              ;5   =  20 * ; 5
 Lf0e2
@@ -2115,9 +2115,9 @@ Lf0e2
     sta     HMOVE                   ;3         * ; 3
     lda     #$02                    ;2         * ; 2
     cpx     ram_D2                  ;3         * ; 3
-    bcc     Lf0f9                   ;2/3       * ; 2�
+    bcc     Lf0f9                   ;2/3       * ; 2
     cpx     snake_y                  ;3         * ; 3
-    bcc     Lf0f5                   ;2/3 =  15 * ; 2�
+    bcc     Lf0f5                   ;2/3 =  15 * ; 2
 Lf0f4
     ror                             ;2   =   2 * ; 2
 Lf0f5
@@ -2144,7 +2144,7 @@ Lf10b
     inx                             ;2         * ; 2		  increment scanline
     sta     HMCLR                   ;3         * ; 3		  clear horizontal movement registers
     cpx     #$a0                    ;2         * ; 2
-    bcc     Lf140                   ;2/3       * ; 2�
+    bcc     Lf140                   ;2/3       * ; 2
     jmp     Lf1ea                   ;3   =  12 * ; 3
     
 Lf115
@@ -2171,7 +2171,7 @@ Lf115
     sec                             ;2         * ; 2
     sbc     indy_y                  ;3         * ; 3
     cmp     indy_h                  ;3         * ; 3
-    bcs     Lf10b                   ;2/3       * ; 2�
+    bcs     Lf10b                   ;2/3       * ; 2
     tay                             ;2         * ; 2		  move scanline value to y
     lda     (indy_anim),y              ;5         * ; 5		  get Indy graphic data
     sta     HMCLR                   ;3         * ; 3 = @65	  clear horizontal movement registers
@@ -2183,18 +2183,18 @@ Lf140
 ;--------------------------------------
     sta     HMOVE                   ;3         * ; 3
     bit     ram_D4                  ;3         * ; 3
-    bpl     Lf157                   ;2/3       * ; 2�
+    bpl     Lf157                   ;2/3       * ; 2
     ldy     ram_89                  ;3         * ; 3
     lda     ram_88                  ;3         * ; 3
     lsr     ram_D4                  ;5   =  19 * ; 5
 Lf14e
     dey                             ;2         * ; 2
-    bpl     Lf14e                   ;2/3       * ; 2�
+    bpl     Lf14e                   ;2/3       * ; 2
     sta     RESP0                   ;3         * ; 3
     sta     HMP0                    ;3         * ; 3
     bmi     Lf115                   ;2/3 =  12 * ; 3 unconditional branch
 Lf157
-    bvc     Lf177                   ;2/3       * ; 2�
+    bvc     Lf177                   ;2/3       * ; 2
     txa                             ;2         * ; 2
     and     #$0f                    ;2         * ; 2
     tay                             ;2         * ; 2
@@ -2208,7 +2208,7 @@ Lf157
     lda     (ram_D6),y              ;5         * ; 5
     sta     ram_85                  ;3         * ; 3
     cpy     snake_y                  ;3         * ; 3
-    bcc     Lf174                   ;2/3       * ; 2�
+    bcc     Lf174                   ;2/3       * ; 2
     lsr     ram_D4                  ;5   =  52 * ; 5
 Lf174
     jmp     Lf115                   ;3   =   3 * ; 3
@@ -2223,7 +2223,7 @@ Lf177
     lsr                             ;2         * ; 2
     lsr                             ;2         * ; 2
     lsr                             ;2         * ; 2
-    bcs     Lf115                   ;2/3       * ; 2�
+    bcs     Lf115                   ;2/3       * ; 2
     tay                             ;2         * ; 2
     sty     ram_87                  ;3         * ; 3
     lda.wy  ram_DF,y                ;4         *
@@ -2343,7 +2343,7 @@ Lf1ea
     stx     PF2                     ;3   =  12 ; 3 = @12
 Lf24a
     dey                             ;2         ; 2
-    bpl     Lf24a                   ;2/3       ; 2�
+    bpl     Lf24a                   ;2/3       ; 2
     sta     RESBL                   ;3         ; 3
     stx     CTRLPF                  ;3         ; 3
     sta     WSYNC                   ;3   =  13
@@ -2400,7 +2400,7 @@ draw_inventory
     sty     GRP1                    ;3         ; 3 = @50
     sty     GRP0                    ;3         ; 3 = @53
     dec     ram_84                  ;5         ; 5
-    bpl     draw_inventory                   ;2/3       ; 2�
+    bpl     draw_inventory                   ;2/3       ; 2
     lda     #$00                    ;2         ; 2
     sta     WSYNC                   ;3   =  65
 ;---------------------------------------
@@ -2421,7 +2421,7 @@ draw_inventory
 ;--------------------------------------
     ldy     #$02                    ;2         ; 2
     lda     ram_C4                  ;3         ; 3		  get number of inventory items
-    bne     Lf2c6                   ;2/3       ; 2�		 branch if Indy carry items
+    bne     Lf2c6                   ;2/3       ; 2		 branch if Indy carry items
     dey                             ;2   =   9 ; 2		  y = 1
 Lf2c6
     sty     ENABL                   ;3         ; 3 = @12
@@ -2728,12 +2728,12 @@ Lf4a6
 ;---------------------------------------
 ;--------------------------------------
     cpx     #$12                    ;2         ; 2
-    bcc     Lf4d0                   ;2/3       ; 2�
+    bcc     Lf4d0                   ;2/3       ; 2
     txa                             ;2         ; 2		  move scanline to accumulator
     sbc     indy_y                  ;3         ; 3
-    bmi     Lf4c9                   ;2/3       ; 2�
+    bmi     Lf4c9                   ;2/3       ; 2
     cmp     #$14                    ;2         ; 2
-    bcs     Lf4bd                   ;2/3       ; 2�
+    bcs     Lf4bd                   ;2/3       ; 2
     lsr                             ;2         ; 2
     tay                             ;2         ; 2
     lda     indy_sprite,y                 ;4         ; 4
@@ -2750,14 +2750,14 @@ Lf4c3
 Lf4c9
     inx                             ;2         ; 2		  increment scanline count
     cpx     #$90                    ;2         ; 2
-    bcs     Lf4ea                   ;2/3       ; 2�
+    bcs     Lf4ea                   ;2/3       ; 2
     bcc     Lf4a6                   ;2/3 =   8 ; 3		  unconditional branch
 Lf4d0
     bit     ram_9C                  ;3         ; 3
-    bmi     Lf4e5                   ;2/3       ; 2�
+    bmi     Lf4e5                   ;2/3       ; 2
     txa                             ;2         ; 2		  move scanline to accumulator
     sbc     #$07                    ;2         ; 2
-    bmi     Lf4e5                   ;2/3       ; 2�
+    bmi     Lf4e5                   ;2/3       ; 2
     tay                             ;2         ; 2
     lda     Lfb40,y                 ;4         ; 4
     sta     GRP1                    ;3         ; 3
@@ -2768,19 +2768,19 @@ Lf4d0
 Lf4e5
     inx                             ;2         ; 2
     cpx     #$0f                    ;2         ; 2
-    bcc     Lf4a6                   ;2/3 =   6 ; 2�
+    bcc     Lf4a6                   ;2/3 =   6 ; 2
 Lf4ea
     sta     WSYNC                   ;3   =   3
 ;---------------------------------------
 ;--------------------------------------
     cpx     #$20                    ;2         ; 2
-    bcs     Lf511                   ;2/3!      ; 2�+1
+    bcs     Lf511                   ;2/3!      ; 2+1
     bit     ram_9C                  ;3         ; 3
     bmi     Lf504                   ;2/3!      ; 2
     txa                             ;2         ; 2		  move scanline to accumulator
     ldy     #$7e                    ;2         ; 2
     and     #$0e                    ;2         ; 2
-    bne     Lf4fd                   ;2/3       ; 2�
+    bne     Lf4fd                   ;2/3       ; 2
     ldy     #$ff                    ;2   =  19 ; 2
 Lf4fd
     sty     GRP0                    ;3         ; 3
@@ -2794,12 +2794,12 @@ Lf504
     lda     #$00                    ;2         ; 2
     sta     GRP0                    ;3         ; 3
     sta     GRP1                    ;3         ; 3
-    beq     Lf4a6                   ;2/3!=  16 ; 2�+1		 unconditional branch
+    beq     Lf4a6                   ;2/3!=  16 ; 2+1		 unconditional branch
 Lf511
     txa                             ;2         ; 2 = @08
     sbc     #$90                    ;2         ; 2
     cmp     #$0f                    ;2         ; 2
-    bcc     Lf51b                   ;2/3       ; 2�
+    bcc     Lf51b                   ;2/3       ; 2
     jmp     Lf1ea                   ;3   =  11 ; 3
     
 Lf51b
@@ -2939,14 +2939,14 @@ draw_field
     sty     VBLANK                  ;3         ; 3 = @06	  enable TIA (D1 = 0)
     sty     scan_line                  ;3         ; 3
     cpx     #$04                    ;2         ; 2
-    bne     Lf865                   ;2/3       ; 2�		 branch if not in Map Room
+    bne     Lf865                   ;2/3       ; 2		 branch if not in Map Room
     dey                             ;2   =  15 * ; 2		  y = -1
 Lf865
     sty     ENABL                   ;3         ; 3 = @18
     cpx     #$0d                    ;2         ; 2
-    beq     Lf874                   ;2/3       ; 2�		 branch if in Ark Room
+    beq     Lf874                   ;2/3       ; 2		 branch if in Ark Room
     bit     ram_9D                  ;3         * ; 3
-    bmi     Lf874                   ;2/3       * ; 2�
+    bmi     Lf874                   ;2/3       * ; 2
     ldy     SWCHA                   ;4         * ; 4		  read joystick values
     sty     REFP1                   ;3   =  19 * ; 3 = @34
 Lf874
