@@ -126,6 +126,104 @@ TIM64T          = $0296
 
 
 ;-----------------------------------------------------------
+;      Additional constants from verboseraiders.asm
+;-----------------------------------------------------------
+
+SOUND_CHANNEL_SAW              = 1
+SOUND_CHANNEL_ENGINE           = 3
+SOUND_CHANNEL_SQUARE           = 4
+SOUND_CHANNEL_BASS             = 6
+SOUND_CHANNEL_PITFALL          = 7
+SOUND_CHANNEL_NOISE            = 8
+SOUND_CHANNEL_LEAD             = 12
+SOUND_CHANNEL_BUZZ             = 15
+
+LEAD_E4                         = 15
+LEAD_D4                         = 17
+LEAD_C4_SHARP                   = 18
+LEAD_A3                         = 23
+LEAD_E3_2                       = 31
+
+BANK0TOP                       = $1000
+BANK1TOP                       = $2000
+BANK0_REORG                    = $d000
+BANK1_REORG                    = $f000
+BANK0STROBE                    = $fff8
+BANK1STROBE                    = $fff9
+
+LDA_ABS                        = $ad
+JMP_ABS                        = $4c
+
+INIT_SCORE                     = 100
+
+SET_PLAYER_0_COLOR             = %10000000
+SET_PLAYER_0_HMOVE             = %10000001
+
+XMAX                           = 160
+
+ID_TREASURE_ROOM               = 0
+ID_MARKETPLACE                 = 1
+ID_ENTRANCE_ROOM               = 2
+ID_BLACK_MARKET                = 3
+ID_MAP_ROOM                    = 4
+ID_MESA_SIDE                   = 5
+ID_TEMPLE_ENTRANCE             = 6
+ID_SPIDER_ROOM                 = 7
+ID_ROOM_OF_SHINING_LIGHT       = 8
+ID_MESA_FIELD                  = 9
+ID_VALLEY_OF_POISON            = 10
+ID_THIEVES_DEN                 = 11
+ID_WELL_OF_SOULS               = 12
+ID_ARK_ROOM                    = 13
+
+H_ARK_OF_THE_COVENANT          = 7
+H_PEDESTAL                     = 15
+H_INDY_SPRITE                  = 11
+H_INVENTORY_SPRITES            = 8
+H_PARACHUTE_INDY_SPRITE        = 15
+H_THIEF                        = 16
+H_KERNEL                       = 160
+
+ENTRANCE_ROOM_CAVE_VERT_POS    = 9
+ENTRANCE_ROOM_ROCK_VERT_POS    = 53
+
+MAX_INVENTORY_ITEMS            = 6
+
+INDY_CARRYING_WHIP             = %00000001
+GRENADE_OPENING_IN_WALL        = %00000010
+INDY_NOT_CARRYING_COINS        = %10000000
+INDY_CARRYING_SHOVEL           = %00000001
+
+BASKET_STATUS_MARKET_GRENADE   = %00000001
+BASKET_STATUS_BLACK_MARKET_GRENADE = %00000010
+BACKET_STATUS_REVOLVER         = %00001000
+BASKET_STATUS_REVOLVER         = BACKET_STATUS_REVOLVER
+BASKET_STATUS_COINS            = %00010000
+BASKET_STATUS_KEY              = %00100000
+
+PICKUP_ITEM_STATUS_WHIP        = %00000001
+PICKUP_ITEM_STATUS_SHOVEL      = %00000010
+PICKUP_ITEM_STATUS_HEAD_OF_RA  = %00000100
+PICKUP_ITEM_STATUS_TIME_PIECE  = %00001000
+PICKUP_ITEM_STATUS_HOUR_GLASS  = %00100000
+PICKUP_ITEM_STATUS_ANKH        = %01000000
+PICKUP_ITEM_STATUS_CHAI        = %10000000
+
+PENALTY_GRENADE_OPENING        = 2
+PENALTY_SHOOTING_THIEF         = 4
+PENALTY_ESCAPE_SHINING_LIGHT_PRISON = 13
+BONUS_USING_PARACHUTE          = 3
+BONUS_LANDING_IN_MESA          = 3
+BONUS_FINDING_YAR              = 5
+BONUS_SKIP_MESA_FIELD          = 9
+BONUS_FINDING_ARK              = 10
+BONUS_USING_HEAD_OF_RA_IN_MAPROOM = 14
+
+BULLET_OR_WHIP_ACTIVE          = %10000000
+USING_GRENADE_OR_PARACHUTE     = %00000010
+
+
+;-----------------------------------------------------------
 ;      RIOT RAM (zero-page) labels
 ;-----------------------------------------------------------
 
@@ -245,6 +343,86 @@ ram_EE          = $ee ; thieves horizontal positions ($ee-$f1)
 ;                 $f0  (i)
 ;                 $f1  (i)
 ;                 $f2  (i)
+
+
+;-----------------------------------------------------------
+;      Label aliases from verboseraiders.asm
+;-----------------------------------------------------------
+
+scanline                        = scan_line
+currentScreenId                 = room_num
+frameCount                      = frame_counter
+secondsTimer                    = time_of_day
+bankSwitchingVariables          = ram_84
+bankSwitchLDAInstruction        = bankSwitchingVariables
+bankStrobeAddress               = ram_85
+bankSwitchJMPInstruction        = ram_86
+bankSwitchJMPAddress            = ram_87
+loopCount                       = ram_84
+tempCharHolder                  = ram_85
+zp_88                           = ram_88
+zp_89                           = ram_89
+playerInput                     = ram_8A
+zp_8B                           = ram_8B
+zp_8C                           = ram_8C
+zp_8D                           = ram_8D
+zp_8E                           = ram_8E
+bulletOrWhipStatus              = ram_8F
+playfieldControl                = ram_94
+pickupStatusFlags               = ram_95
+grenadeDetinationTime           = ram_9B
+grenadeDetonationTime           = ram_9B
+resetEnableFlag                 = ram_9C
+majorEventFlag                  = ram_9D
+adventurePoints                 = ram_9E
+lives                           = lives_left
+numberOfBullets                 = num_bullets
+grenadeOpeningPenalty           = grenade_used
+escapedShiningLightPenalty      = escape_hatch_used
+findingArkBonus                 = shovel_used
+usingParachuteBonus             = parachute_used
+skipToMesaFieldBonus            = ankh_used
+findingYarEasterEggBonus        = yar_found
+usingHeadOfRaInMapRoomBonus     = ark_found
+shootingThiefPenalty            = thief_shot
+landingInMesaBonus              = mesa_entered
+entranceRoomState               = ram_B1
+blackMarketState                = ram_B2
+inventoryGraphicPointers        = inv_slot1_lo
+selectedInventoryIndex          = cursor_pos
+numberOfInventoryItems          = ram_C4
+selectedInventoryId             = current_inv
+basketItemsStatus               = ram_C6
+pickupItemsStatus               = ram_C7
+objectHorizPositions            = enemy_x
+indyHorizPos                    = indy_x
+bulletOrWhipHorizPos            = ram_CB
+objectVertPositions             = enemy_y
+topObjectVertPos                = enemy_y
+shiningLightVertPos             = enemy_y
+indyVertPos                     = indy_y
+missile0VertPos                 = ram_D0
+bulletOrWhipVertPos             = ram_D1
+snakeVertPos                    = ram_D5
+timePieceGraphicPointers        = ram_D6
+player0ColorPointers            = timePieceGraphicPointers
+indyGraphicPointers             = indy_anim
+indySpriteHeight                = indy_h
+player0SpriteHeight             = snake_y
+player0GraphicPointers          = emy_anim
+thievesDirectionAndSize         = ram_DF
+bottomObjectVertPos             = ram_DF
+whipVertPos                     = ram_DF
+shovelVertPos                   = ram_DF
+player0TIAPointers              = PF1_data
+player0ColorPointer             = PF1_data
+player0FineMotionPointer        = PF2_data
+pf1GraphicPointers              = PF1_data
+pf2GraphicPointers              = PF2_data
+thievesHMOVEIndex               = ram_E5
+dungeonGraphics                 = ram_E5
+topOfDungeonGraphic             = ram_E5
+thievesHorizPositions           = ram_EE
 
 ;                 $fc  (s)
 ;                 $fd  (s)
