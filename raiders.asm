@@ -323,7 +323,7 @@ ld03f:
 	   lda	  $95					  
 	   and	  #$1f					  
 	   beq	  ld050					  
-	   jsr	  ldce9					  
+	   jsr	  PlaceItemInInventory					  
 ld050:
 	   lda	  #$40					  
 	   sta	  $95					  
@@ -419,7 +419,7 @@ ld0e2:
 	   cmp	  #$ba					  
 	   bne	  ld0ed					  
 	   lda	  #$0f					  
-	   jsr	  ldce9					  
+	   jsr	  PlaceItemInInventory					  
 ld0ed:
 	   ldx	  #$05					  
 	   cpx	  $81					  
@@ -429,7 +429,7 @@ ld0ed:
 	   stx	  $cf					  
 	   lda	  #$0c					  
 	   sta	  $81					  
-	   jsr	  ld878					  
+	   jsr	  InitializeScreenState					  
 	   lda	  #$4c					  
 	   sta	  $c9					  
 	   bne	  ld12b					  
@@ -440,7 +440,7 @@ ld106:
 	   bcc	  ld12d					  
 	   lda	  #$0a					  
 	   sta	  $81					  
-	   jsr	  ld878					  
+	   jsr	  InitializeScreenState					  
 	   lda	  $eb					  
 	   sta	  $df					  
 	   lda	  $ec					  
@@ -475,7 +475,7 @@ ld140:
 	   and	  #$07					  
 	   tax							  
 	   lda	  ldf78,x				  
-	   jsr	  ldce9					  
+	   jsr	  PlaceItemInInventory					  
 	   bcc	  ld13d					  
 	   lda	  #$01					  
 	   sta	  $df					  
@@ -506,11 +506,11 @@ ld162:
 	   jsr	  tally_score					  
 	   lda	  #$0d					  
 	   sta	  $81					  
-	   jsr	  ld878					  
+	   jsr	  InitializeScreenState					  
 	   jmp	  ld3d8					  
 
 ld187:
-	   jmp	  ld2da					  
+	   jmp	  PlaceIndyInMesaSide					  
 
 ld18a:
 	   lda	  #$0b					  
@@ -526,10 +526,10 @@ ld194:
 	   bit	  $95					  
 	   bmi	  ld1c1					  
 	   clc							  
-	   jsr	  lda10					  
+	   jsr	  TakeItemFromInventory					  
 	   bcs	  ld1a4					  
 	   sec							  
-	   jsr	  lda10					  
+	   jsr	  TakeItemFromInventory					  
 	   bcc	  ld1c1					  
 ld1a4:
 	   cpy	  #$0b					  
@@ -572,7 +572,7 @@ ld1c4:
 ld1e2:
 	   lda	  #$03					  
 	   sec							  
-	   jsr	  lda10					  
+	   jsr	  TakeItemFromInventory					  
 ld1e8:
 	   jmp	  ld2b4					  
 
@@ -630,10 +630,10 @@ ld230:
 	   bcs	  ld23e					  
 	   ldx	  #$0e					  
 ld23e:
-	   jsr	  ldd43					  
+	   jsr	  DetermineIfItemAlreadyTaken					  
 	   bcs	  ld247					  
 	   txa							  
-	   jsr	  ldce9					  
+	   jsr	  PlaceItemInInventory					  
 ld247:
 	   jmp	  ld2b4					  
 
@@ -690,7 +690,7 @@ ld292:
 	   cmp	  #$3f					  
 	   bcc	  ld2aa					  
 	   lda	  #$0a					  
-	   jsr	  ldce9					  
+	   jsr	  PlaceItemInInventory					  
 	   bcc	  ld2b4					  
 	   ror	  $b1					  
 	   sec							  
@@ -725,41 +725,41 @@ ld2c5:
 	   pha							  
 	   rts							  
 
-ld2ce
+WarpToMesaSide
 	lda		ram_df					
 	sta		ram_eb					
 	lda		indy_y					
 	sta		ram_ec					
 	lda		indy_x					
-ld2d8
+SaveIndyAndThiefPosition
 	sta		ram_ed					
-ld2da
+PlaceIndyInMesaSide
 	lda		#cliff_room					
 	sta		room_num				  
-	jsr		ld878					
+	jsr		InitializeScreenState					
 	lda		#$05					
 	sta		indy_y					
 	lda		#$50					
 	sta		indy_x					
 	tsx								
 	cpx		#$fe					
-	bcs		ld2ef					
+	bcs		FailSafeToCollisionCheck					
 	rts								
 
-ld2ef
+FailSafeToCollisionCheck
 	jmp		ld374					
 
 
 
 ld2f2:
 	   bit	  $b3					  
-	   bmi	  ld2ef					  
+	   bmi	  FailSafeToCollisionCheck					  
 	   lda	  #$50					  
 	   sta	  $eb					  
 	   lda	  #$41					  
 	   sta	  $ec					  
 	   lda	  #$4c					  
-	   bne	  ld2d8					  
+	   bne	  SaveIndyAndThiefPosition					  
 
 ld302:
 	   ldy	  $c9					  
@@ -882,7 +882,7 @@ ld3a8
 	ldx		#starting_room					
 	cpx		room_num				  
 	bne		ld3bd					
-	jsr		ld878					
+	jsr		InitializeScreenState					
 ld3bd
 	lda		ram_b5					
 	and		#$0f					
@@ -894,10 +894,10 @@ ld3bd
 	ldx		#starting_room					
 	cpx		room_num				  
 	bne		ld3d4					
-	jsr		ld878					
+	jsr		InitializeScreenState					
 ld3d4
 	sec								
-	jsr		lda10					
+	jsr		TakeItemFromInventory					
 ld3d8
 	lda		intim					
 	bne		ld3d8					
@@ -944,7 +944,7 @@ frame_start
 	jsr		tally_score				; set score to minimum
 	lda		#ark_room				; set ark title screen 
 	sta		room_num				; to the current room
-	jsr		ld878					
+	jsr		InitializeScreenState					
 ld427
 	jmp		ld80d					
 
@@ -1198,7 +1198,7 @@ ld5ac
 ld5b1
 	ror		ram_85					
 	bcs		ld5d1					
-	jsr		ld97c					
+	jsr		CheckRoomOverrideCondition					
 	bcs		ld5db					
 	bvc		ld5d1					
 	ldy		ram_84					
@@ -1222,7 +1222,7 @@ ld5d1
 	bcs		ld5e0					
 ld5db
 	sty		room_num				  
-	jsr		ld878					
+	jsr		InitializeScreenState					
 ld5e0
 	bit		inpt4|$30				
 	bmi		ld5f5					
@@ -1232,7 +1232,7 @@ ld5e0
 	ror								
 	bcs		ld5fa					
 	sec								
-	jsr		lda10					
+	jsr		TakeItemFromInventory					
 	inc		ram_8a					
 	bne		ld5fa					
 ld5f5
@@ -1260,7 +1260,7 @@ ld60c
 	ldx		#$7f					
 	stx		ram_d0					
 ld61d
-	jsr		ldce9					
+	jsr		PlaceItemInInventory					
 ld620
 	lda		#$00					
 	sta		ram_91					
@@ -1329,7 +1329,7 @@ ld68b
 	bvc		ld6d5					
 	bit		cxm1fb|$30				
 	bmi		ld699					
-	jsr		ld2ce					
+	jsr		WarpToMesaSide					
 ld696
 	jmp		ld777					
 
@@ -1402,7 +1402,7 @@ ld6f7
 	lda		#mesa_top_room					
 	sta		ankh_used				   
 	sta		room_num				  
-	jsr		ld878					
+	jsr		InitializeScreenState					
 	lda		#$4c					
 	sta		indy_x					
 	sta		ram_cb					
@@ -1620,7 +1620,7 @@ ld873
 	sta		ram_d7					
 	rts								
 
-ld878
+InitializeScreenState
 	lda		ram_9a					
 	bpl		ld880					
 	ora		#$40					
@@ -1765,7 +1765,7 @@ ld977
 	sta		ram_df					
 	rts								
 
-ld97c
+CheckRoomOverrideCondition
 	ldy		lde00,x					
 	cpy		ram_86					
 	beq		ld986					
@@ -1861,7 +1861,7 @@ ld9fe
 	bmi		ld9f9					
 	jmp		ld98b					
 
-lda10
+TakeItemFromInventory
 	ldy		ram_c4					
 	bne		lda16					
 	clc								
@@ -1886,7 +1886,7 @@ lda1e
 	bcc		lda37					
 	tya								
 	tax								
-	jsr		ldd1b					
+	jsr		ShowItemAsNotTaken					
 	txa								
 	tay								
 lda37
@@ -1906,7 +1906,7 @@ check_key
 	ldx		current_object			; is the current object
 	cpx		#key_obj				; the key?
 	bcc		lda4f					
-	jsr		ldd1b					
+	jsr		ShowItemAsNotTaken					
 lda4f
 	txa								
 	tay								
@@ -1938,7 +1938,7 @@ lda6f:
 	   bne	  lda86					  
 	   lda	  #$03					  
 	   sta	  $81					  
-	   jsr	  ld878					  
+	   jsr	  InitializeScreenState					  
 	   lda	  #$15					  
 	   sta	  $c9					  
 	   lda	  #$1c					  
@@ -2225,12 +2225,12 @@ ldccf:
 	   .word ld374-1 ; $dcdb/dc
 	   .word ld374-1 ; $dcdd/de
 	   .word ld374-1 ; $dcdf/e0
-	   .word ld2ce-1 ; $dce1/e2
+	   .word WarpToMesaSide-1 ; $dce1/e2
 	   .word ld36f-1 ; $dce3/e4
 	   .word ld374-1 ; $dce5/e6
 	   .word ld374-1 ; $dce7/e8
 
-ldce9
+PlaceItemInInventory
 	ldx		ram_c4					
 	cpx		#$06					
 	bcc		ldcf1					
@@ -2263,14 +2263,14 @@ ldd0a
 	bcc		ldd15					
 	tya								
 	tax								
-	jsr		ldd2f					
+	jsr		ShowItemAsTaken					
 ldd15
 	lda		#$0c					
 	sta		ram_a2					
 	sec								
 	rts								
 
-ldd1b
+ShowItemAsNotTaken
 	lda		ldc64,x					
 	lsr								
 	tay								
@@ -2285,7 +2285,7 @@ ldd2a
 	sta		ram_c7					
 	rts								
 
-ldd2f
+ShowItemAsTaken
 	lda		ldc64,x					
 	lsr								
 	tax								
@@ -2300,7 +2300,7 @@ ldd3e
 	sta		ram_c7					
 	rts								
 
-ldd43:
+DetermineIfItemAlreadyTaken:
 	   lda	  ldc64,x				  
 	   lsr							  
 	   tay							  
@@ -2367,7 +2367,7 @@ clear_zp
 	sta		room_num				; as current room
 	lsr								; divide 13 by 2 (round down)
 	sta		num_bullets				; load 6 bullets
-	jsr		ld878					
+	jsr		InitializeScreenState					
 	jmp		ld3dd					
 
 reset_vars
@@ -2396,7 +2396,7 @@ reset_vars
 	lda		#starting_room					
 	sta		room_num				  
 	sta		lives_left					
-	jsr		ld878					
+	jsr		InitializeScreenState					
 	jmp		ld80d					
 
 tally_score
