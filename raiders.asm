@@ -288,105 +288,125 @@ USING_GRENADE_OR_PARACHUTE = %00000010
 	SEG.U variables
 	.org $80
 	
-scanline				ds 1							;= $80
-currentScreenId			ds 1							;= $81
-frameCount				ds 1							;= $82
-secondsTimer			ds 1							;= $83
-bankSwitchingVariables	ds 6							;= $84($84 - $89)
+scanlineCounter			ds 1						;= $80
+currentRoomId			ds 1						;= $81
+frameCount				ds 1						;= $82
+secondsTimer			ds 1						;= $83
+bankSwitchVars			ds 6						;= $84($84 - $89)
 ;--------------------------------------
-bankSwitchLDAInstruction = bankSwitchingVariables		;= $84
-bankStrobeAddress		= bankSwitchingVariables + 1	;= $85
-bankSwitchJMPInstruction = bankStrobeAddress + 2		;= $86
-bankSwitchJMPAddress	= bankSwitchJMPInstruction + 1	;= $87
+bankSwitchLDAOpcode = bankSwitchVars				;= $84
+bankSwitchAddr		= bankSwitchVars + 1			;= $85
+bankSwitchJMPOpcode = bankSwitchAddr + 2			;= $86
+bankSwitchJMPAddr	= bankSwitchJMPOpcode + 1		;= $87
 ;--------------------------------------
-loopCount				= bankSwitchingVariables		;= $84
-tempCharHolder			= bankStrobeAddress				;= $85
-zp_88					= $88							;= $88
-zp_89					= $89							;= $89
-playerInput					ds 1							;= $8A
-zp_8B					= $8B							;= $89
-zp_8C					= $8C							;= $89
-zp_8D					= $8D							;= $89
-zp_8E					= $8E							;= $89
-
-bulletOrWhipStatus		= $8F
-
-playfieldControl		= $94
-pickupStatusFlags 		= $95
-
-grenadeDetinationTime	= $9B
-resetEnableFlag					= $9C
-majorEventFlag			= $9D
-adventurePoints			= $9E
-lives					= $9F
-numberOfBullets			= $A0
-
-grenadeOpeningPenalty	= $A5
-escapedShiningLightPenalty = $A6
-findingArkBonus			= $A7
-usingParachuteBonus		= $A8
-
-skipToMesaFieldBonus	= $A9
-findingYarEasterEggBonus = $AA
-usingHeadOfRaInMapRoomBonus = $AB
-shootingThiefPenalty	= $AC
-landingInMesaBonus		= $AD
-
-entranceRoomState		= $B1
-blackMarketState		= $B2
-
-inventoryGraphicPointers = $B7		; $B7 - $C2
-selectedInventoryIndex	= $C3
-numberOfInventoryItems	= $C4
-selectedInventoryId		= $C5
-basketItemsStatus		= $C6
-pickupItemsStatus		= $C7
-objectHorizPositions	= $C8
+loopCounter				= bankSwitchVars			;= $84
+tempGfxHolder			= bankSwitchAddr			;= $85
+thiefHorizPosCoarse		ds 1						;= $88
+thiefHorizPosFine		ds 1						;= $89
+playerInputState		ds 1						;= $8A
+indyHorizPosTemp		ds 1						;= $8B
+arkRoomState			ds 1						;= $8C
+eventState				ds 1						;= $8D
+m0VertPosShadow	ds 1						;= $8E
+weaponStatus			ds 1						;= $8F
+itemPickupQueue			ds 1						;= $90
+movementDirection		ds 1   						;= $91
+inputFlags				ds 1  						;= $92
+screenEventState		ds 1 						;= $93
+playfieldControlFlags	ds 1 						;= $94
+pickupStatusFlags 		ds 1 						;= $95
+diggingState			ds 1 						;= $96
+digAttemptCounter		ds 1 						;= $97
+roomEventStateOffset	ds 1 						;= $98
+screenInitFlag			ds 1						;= $99
+grenadeState			ds 1 						;= $9A
+grenadeDetinationTime	ds 1 						;= $9B
+resetEnableFlag			ds 1 						;= $9C
+majorEventFlag			ds 1 						;= $9D
+adventurePoints			ds 1 						;= $9E
+lives					ds 1 						;= $9F
+bulletCount				ds 1 						;= $A0
+snakeTimer				ds 1 						;= $A1
+indyState				ds 1 						;= $A2
+whipEffectTimer			ds 1 						;= $A3
+soundEffectTimer		ds 1 						;= $A4
+grenadeOpeningPenalty	ds 1 						;= $A5
+shiningLightPenalty 	ds 1 						;= $A6
+findingArkBonus			ds 1 						;= $A7
+usingParachuteBonus		ds 1 						;= $A8
+skipToMesaFieldBonus	ds 1 						;= $A9
+yarEasterEggBonus 		ds 1 						;= $AA
+headOfRaMapRoomBonus 	ds 1 						;= $AB
+shootingThiefPenalty	ds 1 						;= $AC
+landingInMesaBonus		ds 1 						;= $AD
+unknownPenalty			ds 1 						;= $AE
+treasureIndex			ds 1 						;= $AF
+zp_B0					ds 1 						;= $B0
+entranceRoomState		ds 1 						;= $B1
+blackMarketState		ds 1 						;= $B2
+mapRoomState			ds 1 						;= $B3
+mesaSideState			ds 1 						;= $B4
+entranceRoomEventState	ds 1 						;= $B5
+spiderRoomState			ds 1 						;= $B6
+inventoryGfxPtrs 		ds 12						;= $B7 - $C2
+selectedInventorySlot	ds 1						;= $C3	
+inventoryItemCount		ds 1						;= $C4
+selectedInventoryId		ds 1						;= $C5
+basketItemsStatus		ds 1						;= $C6
+pickupItemsStatus		ds 1						;= $C7
+objectHorizPositions	ds 4						;= $C8
 ;--------------------------------------
+p0HorizPos				= objectHorizPositions		;= $C8
+indyHorizPos			= objectHorizPositions + 1 	;= $C9
+m0HorizPos				= objectHorizPositions + 2	;= $CA
+weaponHorizPos			= objectHorizPositions + 3 	;= $CB
+;--------------------------------------
+indyHorizPosForced		ds 1 						;= $CC
+p0VertPosTemp			ds 1 						;= $CD
 
-indyHorizPos			= objectHorizPositions + 1 ;$C9
-
-bulletOrWhipHorizPos	= objectHorizPositions + 3 ;$CB
-
-objectVertPositions		= $CE
+objectVertPositions		ds 8						;= $CE - $D5
 ;--------------------------------------
-topObjectVertPos		= objectVertPositions
+p0VertPos				= objectVertPositions		;= $CE	
+indyVertPos				= objectVertPositions + 1 	;= $CF
+m0VertPos				= objectVertPositions + 2 	;= $D0
+weaponVertPos			= objectVertPositions + 3 	;= $D1
+snakeDungeonY			ds 1 						;= $D2
+p0VertPosTemp2			ds 1 						;= $D3
+snakeDungeonState		ds 1 						;= $D4
+snakeVertPos			= objectVertPositions + 7 	;= $D5
+timepieceGfxPtrs		ds 2 						;= $D6 - $D7
 ;--------------------------------------
-shiningLightVertPos		= objectVertPositions
-indyVertPos				= objectVertPositions + 1 ;$CF
-missile0VertPos			= objectVertPositions + 2 ;$D0
-bulletOrWhipVertPos		= objectVertPositions + 3; $D1
-
-snakeVertPos			= objectVertPositions + 7 ;$D5
-timePieceGraphicPointers = $D6		; $D6 - D7
+p0ColorPtrs	= timepieceGfxPtrs			;= $D6
+timepieceSpriteDataPtr	ds 1						;= $D8
 ;--------------------------------------
-player0ColorPointers	= timePieceGraphicPointers
-
-indyGraphicPointers		= $D9		; $D9 - $DA
-indySpriteHeight		= $DB
-player0SpriteHeight		= $DC
-player0GraphicPointers	= $DD		; $DD - $DE
-thievesDirectionAndSize = $DF		; $DF - $E2
+indyGfxPtrs				ds 2						;= $D9 - $DA
+indySpriteHeight		ds 1						;= $DB
+p0SpriteHeight			ds 1						;= $DC
+p0GfxPtrs				ds 2						;= $DD - $DE
+thiefState				ds 4						;= $DF - $E2
 ;--------------------------------------
-bottomObjectVertPos		= thievesDirectionAndSize
+objectVertOffset		= thiefState				;= $DF
+p0GfxData				= thiefState + 1			;= $E0
+p0TiaPtrs				= thiefState + 2			;= $E1 - $E4
 ;--------------------------------------
-whipVertPos				= bottomObjectVertPos
+whipVertPos				= objectVertOffset			;= $DF
 ;--------------------------------------
-shovelVertPos			= whipVertPos
-player0TIAPointers		= $E1		; $E1 - $E4
+shovelVertPos			= whipVertPos				;= $DF
 ;--------------------------------------
-player0ColorPointer		= player0TIAPointers
-player0FineMotionPointer = player0ColorPointer + 2
+p0ColorPtr				= p0TiaPtrs					;= $E1
+pf1GfxPtrs				= p0ColorPtr				;= $E1 - $E2
+p0FineMotionPtr 		= p0ColorPtr + 2			;= $E3
+pf2GfxPtrs				= p0FineMotionPtr			;= $E3 - $E4
 ;--------------------------------------
-pf1GraphicPointers		= player0ColorPointer; $E1 - $E2
-pf2GraphicPointers		= player0FineMotionPointer; $E3 - $E4
-thievesHMOVEIndex		= $E5		; $E5 - $E8
+thiefHmoveIndices		ds 6						; $E5 - $EA			
 ;--------------------------------------
-dungeonGraphics			= thievesHMOVEIndex ; $E5 - $EA
+dungeonGfxData			= thiefHmoveIndices 		; $E5 - $EA
+topOfDungeonGfx			= dungeonGfxData			; $E5
 ;--------------------------------------
-topOfDungeonGraphic		= dungeonGraphics
-
-thievesHorizPositions	= $EE		; $EE - $F1
+savedThiefVertPos		ds 1						;= $EB
+savedIndyVertPos		ds 1						;= $EC
+savedIndyHorizPos		ds 1						;= $ED
+thiefHorizPositions		ds 4						;= $EE - $F1
 
 	echo "***",(*-$80 - 2)d, "BYTES OF RAM USED", ($100 - * + 2)d, "BYTES FREE"
 	
@@ -424,11 +444,11 @@ HorizontallyPositionObjects
 CheckObjectCollisions
 	bit CXM1P						; check player collision with Indy bullet
 	bpl .checkPlayfieldCollisionWithBulletOrWhip; branch if no player collision
-	ldx currentScreenId				; get the current screen id
+	ldx currentRoomId				; get the current screen id
 	cpx #ID_VALLEY_OF_POISON
 	bcc .checkPlayfieldCollisionWithBulletOrWhip
 	beq .indyShootHitThief			; branch if Indy in the Valley of Poison
-	lda bulletOrWhipVertPos			; Indy in Theives Den or Well of Souls
+	lda weaponVertPos			; Indy in Theives Den or Well of Souls
 	adc #2 - 1						; carry set here
 	lsr								; divide value by 16 (i.e. H_THIEF)
 	lsr
@@ -436,13 +456,13 @@ CheckObjectCollisions
 	lsr
 	tax
 	lda #REFLECT
-	eor thievesDirectionAndSize,x	; change the direction of the Thief
-	sta thievesDirectionAndSize,x
+	eor thiefState,x	; change the direction of the Thief
+	sta thiefState,x
 .indyShootHitThief
-	lda bulletOrWhipStatus			; get bullet or whip status
+	lda weaponStatus			; get bullet or whip status
 	bpl .setPenaltyForShootingThief	; branch if bullet or whip not active
 	and #~BULLET_OR_WHIP_ACTIVE		;
-	sta bulletOrWhipStatus			; clear BULLET_OR_WHIP_ACTIVE bit
+	sta weaponStatus			; clear BULLET_OR_WHIP_ACTIVE bit
 	lda pickupStatusFlags 
 	and #%00011111		  			;if 0,32,64,96,128,160,192,224 
 	beq FinalizeItemPickup	  		;skip adding to inventory 
@@ -453,13 +473,13 @@ FinalizeItemPickup:
 	sta pickupStatusFlags 
 .setPenaltyForShootingThief
 	lda #~BULLET_OR_WHIP_ACTIVE		;
-	sta bulletOrWhipVertPos			; clear BULLET_OR_WHIP_ACTIVE bit
+	sta weaponVertPos			; clear BULLET_OR_WHIP_ACTIVE bit
 	lda #PENALTY_SHOOTING_THIEF
 	sta shootingThiefPenalty		; penalize player for shooting a thief
 .checkPlayfieldCollisionWithBulletOrWhip
 	bit CXM1FB						; check missile 1 and playfield collisions
 	bpl CheckIfIndyShotSnake			; branch if no missile and playfield collision
-	ldx currentScreenId				; get the current screen id
+	ldx currentRoomId				; get the current screen id
 	cpx #ID_MESA_FIELD
 	beq CheckIndyCollisionWithSnakeOrTimePiece; branch if in the Mesa field
 	cpx #ID_TEMPLE_ENTRANCE
@@ -467,23 +487,23 @@ FinalizeItemPickup:
 	cpx #ID_ROOM_OF_SHINING_LIGHT
 	bne CheckIfIndyShotSnake
 impactOnDungeonWall:
-	lda bulletOrWhipVertPos			; get bullet or whip vertical position
-	sbc $D4							; subtract snake/dungeon Y
+	lda weaponVertPos			; get bullet or whip vertical position
+	sbc snakeDungeonState							; subtract snake/dungeon Y
 	lsr								; divide by 4 total
 	lsr
 	beq HandleWallImpactLeftSide	; branch if result is zero
 	tax
-	ldy bulletOrWhipHorizPos		; get bullet or whip horizontal position
+	ldy weaponHorizPos		; get bullet or whip horizontal position
 	cpy #$12
 	bcc ClearWhipBulletState						; branch if too far left
 	cpy #141
 	bcs ClearWhipBulletState						; branch if too far right
 	lda #$00		
-	sta thievesHMOVEIndex,x			; zero out thief movement
+	sta thiefHmoveIndices,x			; zero out thief movement
 	beq ClearWhipBulletState						; unconditional branch
 	
 HandleWallImpactLeftSide:
-	lda bulletOrWhipHorizPos	; get bullet or whip horizontal position
+	lda weaponHorizPos	; get bullet or whip horizontal position
 	cmp #48 					; Compare it to 48 (left side boundary threshold)
 	bcs HandleWallImpactRighttSide					; If bullet is at or beyond 48, branch to right-side logic)
 	sbc #16 					; Subtract 16 from position (adjusting to fit into the masking table index range)
@@ -494,8 +514,8 @@ MaskOutDungeonWallSegment:
 	lsr			  ;
 	tax			  ; Move result to X to use as index into mask table
 	lda ItemStatusClearMaskTable,x	  ; Load a mask value from the ItemStatusClearMaskTable table (mask used to disable a wall segment)
-	and topOfDungeonGraphic ; Apply the mask to the current dungeon graphic state (clear bits to "erase" part of it)
-	sta topOfDungeonGraphic ; Store the updated graphic state back (modifying visual representation of the wall)
+	and topOfDungeonGfx ; Apply the mask to the current dungeon graphic state (clear bits to "erase" part of it)
+	sta topOfDungeonGfx ; Store the updated graphic state back (modifying visual representation of the wall)
 	jmp ClearWhipBulletState
 	
 HandleWallImpactRighttSide:
@@ -504,33 +524,33 @@ HandleWallImpactRighttSide:
 	bcc MaskOutDungeonWallSegment 	;apply wall mask
 ClearWhipBulletState:
 	ldy #~BULLET_OR_WHIP_ACTIVE		; Invert BULLET_OR_WHIP_ACTIVE	
-	sty bulletOrWhipStatus			; clear BULLET_OR_WHIP_ACTIVE status
-	sty bulletOrWhipVertPos			; set vertical position out of range
+	sty weaponStatus			; clear BULLET_OR_WHIP_ACTIVE status
+	sty weaponVertPos			; set vertical position out of range
 CheckIfIndyShotSnake
 	bit CXM1FB						; check if snake hit with bullet or whip
 	bvc CheckIndyCollisionWithSnakeOrTimePiece; branch if snake not hit
-	bit $93		  ;3
+	bit screenEventState		  ;3
 	bvc CheckIndyCollisionWithSnakeOrTimePiece
 	lda #$5A		  ;2
-	sta $D2		  ;3
+	sta snakeDungeonY		  ;3
 	sta $DC		  ;3
-	sta bulletOrWhipStatus			; clear BULLET_OR_WHIP_ACTIVE status
-	sta bulletOrWhipVertPos
+	sta weaponStatus			; clear BULLET_OR_WHIP_ACTIVE status
+	sta weaponVertPos
 CheckIndyCollisionWithSnakeOrTimePiece
 	bit CXP1FB						; check Indy collision with ball
 	bvc CheckIfIndyEnteringWellOfSouls; branch if Indy didn't collide with ball
-	ldx currentScreenId				; get the current screen id
+	ldx currentRoomId				; get the current screen id
 	cpx #ID_TEMPLE_ENTRANCE
 	beq .indyTouchingTimePiece
 	lda selectedInventoryId			; get the current selected inventory id
 	cmp #ID_INVENTORY_FLUTE
 	beq CheckIfIndyEnteringWellOfSouls; branch if the Flute is selected
-	bit $93		  ;3
+	bit screenEventState		  ;3
 	bpl SetWellOfSoulsEntryFlag	  ;2
 	lda secondsTimer			;3
 	and #$07		  ;2
 	ora #$80		  ;2
-	sta $A1		  ;3
+	sta snakeTimer		  ;3
 	bne CheckIfIndyEnteringWellOfSouls; unconditional branch
 	
 SetWellOfSoulsEntryFlag:
@@ -540,20 +560,20 @@ SetWellOfSoulsEntryFlag:
 	bne CheckIfIndyEnteringWellOfSouls; unconditional branch
 	
 .indyTouchingTimePiece
-	lda timePieceGraphicPointers
+	lda timepieceGfxPtrs
 	cmp #<TimeSprite
 	bne CheckIfIndyEnteringWellOfSouls
 	lda #ID_INVENTORY_TIME_PIECE
 	jsr PlaceItemInInventory
 CheckIfIndyEnteringWellOfSouls
 	ldx #ID_MESA_SIDE
-	cpx currentScreenId
+	cpx currentRoomId
 	bne CheckAndDispatchCollisions						; branch if Indy not in MESA_SIDE
 	bit CXM0P						; check missile 0 and player collisions
 	bpl CheckIfIndyFallsIntoValley						; branch if Indy not entering WELL_OF_SOULS
 	stx indyVertPos					; set Indy vertical position (i.e. x = 5)
 	lda #ID_WELL_OF_SOULS
-	sta currentScreenId				; move Indy to the Well of Souls
+	sta currentRoomId				; move Indy to the Well of Souls
 	jsr InitializeScreenState
 	lda #(XMAX / 2) - 4
 	sta indyHorizPos					; place Indy in horizontal middle
@@ -564,17 +584,17 @@ CheckIfIndyFallsIntoValley:
 	cpx #$4F		  ; Compare it to 0x4F (79 in decimal)
 	bcc CheckAndDispatchCollisions	 ; If Indy is above this threshold, branch to CheckAndDispatchCollisions (don't fall)
 	lda #ID_VALLEY_OF_POISON ; Otherwise, load the screen ID for the Valley of Poison
-	sta currentScreenId ; Set the current screen to Valley of Poison
+	sta currentRoomId ; Set the current screen to Valley of Poison
 	jsr InitializeScreenState ; Initialize that screen's data (graphics, objects, etc.)
-	lda $EB		  ; Load saved vertical position? (context-dependent, possibly return point)
-	sta $DF		  ; Save it as object vertical state? Possibly thief state
-	lda $EC		  ; Load saved vertical position (likely for Indy)
+	lda savedThiefVertPos		  ; Load saved vertical position? (context-dependent, possibly return point)
+	sta objectVertOffset		  ; Save it as object vertical state? Possibly thief state
+	lda savedIndyVertPos		  ; Load saved vertical position (likely for Indy)
 	sta indyVertPos		  ; Set Indy's vertical position
-	lda $ED		  ; Load saved horizontal position
+	lda savedIndyHorizPos		  ; Load saved horizontal position
 	sta indyHorizPos			; Set Indy's horizontal position
 	lda #$FD		  ; Load bitmask value
-	and $B4		  ; Apply bitmask to a status/control flag
-	sta $B4		  ; Store the result back
+	and mesaSideState		  ; Apply bitmask to a status/control flag
+	sta mesaSideState		  ; Store the result back
 	bmi .clearCollisionRegisters ; If the result has bit 7 set, skip setting major event flag
 	lda #$80		  ; Otherwise, set major event flag
 	sta majorEventFlag 	  ;3
@@ -584,9 +604,9 @@ CheckAndDispatchCollisions:
 	bit CXPPMM						; check player / missile collisions
 	bmi .branchToPlayerCollisionRoutine			;branch if players collided
 	ldx #$00		  ;2
-	stx $91		  ; Clear temporary state or flags at $91
+	stx movementDirection		  ; Clear temporary state or flags at movementDirection
 	dex			  ; X = $FF
-	stx $97		  ; Set $97 to $FF
+	stx digAttemptCounter		  ; Set digAttemptCounter to $FF
 	rol pickupStatusFlags 
 	clc			  ;2
 	ror pickupStatusFlags 
@@ -594,16 +614,16 @@ ContinueToCollisionDispatch:
 	jmp	 HandleScreenCollisions	  ;3
 	
 .branchToPlayerCollisionRoutine
-	lda currentScreenId				; get the current screen id
+	lda currentRoomId				; get the current screen id
 	bne .jmpToPlayerCollisionRoutine ; branch if not Treasure Room
-	lda $AF		  ;3
+	lda treasureIndex		  ;3
 	and #7
 	tax
 	lda MarketBasketItems,x			; get items from market basket
 	jsr PlaceItemInInventory			; place basket item in inventory
 	bcc ContinueToCollisionDispatch	  ;2
 	lda #$01		  ;2
-	sta $DF		  ;3
+	sta objectVertOffset		  ;3
 	bne ContinueToCollisionDispatch						; unconditional branch
 	
 .jmpToPlayerCollisionRoutine
@@ -619,18 +639,18 @@ PlayerCollisionsInWellOfSouls
 	lda indyVertPos					; get Indy's vertical position
 	cmp #63   ; Compare it to 63
 	bcc .takeAwayShovel				; If Indy is above this threshold, he hasn't reached the Ark yet � take away shovel
-	lda $96		  ; Load ??? (likely object Y or frame state)
+	lda diggingState		  ; Load ??? (likely object Y or frame state)
 	cmp #$54		  ; Compare to $54 (possibly a specific animation frame or position)
 	bne ResumeCollisionDispatch	  ; If not equal, nothing special happens
-	lda $8C		  ; Load value at $8C (possibly Ark X position)
-	cmp $8B		  ; Compare to Indy's X position (presumed)
+	lda arkRoomState	  ; Load value at $8C (possibly Ark X position)
+	cmp indyHorizPosTemp	  ; Compare to Indy's X position (presumed)
 	bne .arkNotFound   ; If not lined up with the Ark, skip the win logic
 	lda #INIT_SCORE - 12   ; Load final score (INIT_SCORE minus penalty or adjustment)
 	sta resetEnableFlag   ; Store it to temp score storage
 	sta adventurePoints   ; Set the player�s final adventure score
 	jsr DetermineFinalScore  ; Calculate ranking/title based on score
 	lda #ID_ARK_ROOM  ; Set up transition to Ark Room
-	sta currentScreenId
+	sta currentRoomId
 	jsr InitializeScreenState   ; Load new screen data for the Ark Room
 	jmp VerticalSync   ; Finish frame cleanly and transition visually
 	
@@ -672,7 +692,7 @@ SetPickupProcessedFlag:
 	
 PlayerCollisionsInSpiderRoom
 	ldx #$00		  ; Set X to 0
-	stx $B6		  ; Clear memory location $B6 � likely a state tracker or script phase
+	stx spiderRoomState		  ; Clear memory location spiderRoomState � likely a state tracker or script phase
 	lda #$80		  ; Load A with 0x80 (10000000 binary)
 	sta majorEventFlag 	  ; Set major event flag � likely triggers spider cutscene or scripted logic
 
@@ -680,7 +700,7 @@ ResumeCollisionDispatch:
 	jmp	 HandleScreenCollisions	  ; Resume standard game logic by dispatching screen-specific behavior
 	
 PlayerCollisionsInMesaSide
-	bit $B4		  ;Check event state flags
+	bit mesaSideState		  ;Check event state flags
 	bvs ContinueGameAfterParachute	  ;If bit 6 is set, skip parachute logic and resume normal game loop
 	bpl ContinueGameAfterParachute	  ; If bit 7 is clear, also skip parachute logic
 	lda indyHorizPos			; Get Indy's horizontal position
@@ -692,8 +712,8 @@ PlayerCollisionsInMesaSide
 	cpx #43 ; Check if he is too low
 	bcs RemoveParachuteAfterLanding	  ; If so, remove parachute and exit 
 	lda #$40		  ; Bitmask to clear parachute state
-	ora $B4		  ; Set that bit in event flag
-	sta $B4		  ;  Store it back
+	ora mesaSideState		  ; Set that bit in event flag
+	sta mesaSideState		  ;  Store it back
 	bne ContinueGameAfterParachute						; Unconditionally resume normal flow
 RemoveParachuteAfterLanding:
 	lda #ID_INVENTORY_PARACHUTE
@@ -709,9 +729,9 @@ PlayerCollisionsInMarketplace
 	cpy #$3A		  ; Is Indy above vertical threshold (row $3A)? 
 	bcc CheckIndyVerticalForMarketplaceFlags	  ; If so, skip basket logic and jump to CheckIndyVerticalForMarketplaceFlags
 	lda #$E0		  ;2
-	and $91		  ; Mask $91 to clear bits 0�4 (preserve upper 3 bits)
+	and movementDirection		  ; Mask movementDirection to clear bits 0�4 (preserve upper 3 bits)
 	ora #$43		   ; Set bits 6, 1, and 0 (binary: 01000011)
-	sta $91		  ; Update $91 with masked and set bits
+	sta movementDirection		  ; Update movementDirection with masked and set bits
 	jmp	 HandleScreenCollisions	  ;3
 	
 CheckIndyVerticalForMarketplaceFlags:
@@ -719,16 +739,16 @@ CheckIndyVerticalForMarketplaceFlags:
 	bcc SetMarketplaceFlagsIfInRange	  ; If Y < $20, jump to SetMarketplaceFlagsIfInRange (top of screen zone)
 ClearMarketplaceFlags:
 	lda #$00		  
-	sta $91		   ; Clear all bits in status/control byte at $91
+	sta movementDirection		   ; Clear all bits in status/control byte at movementDirection
 	jmp	 HandleScreenCollisions	  ; Resume main collision logic
 	
 SetMarketplaceFlagsIfInRange:
 	cpy #$09		   ; Compare Indy's vertical position to $09
-	bcc ClearMarketplaceFlags	  ; If Y < $09, also clear $91 and exit
+	bcc ClearMarketplaceFlags	  ; If Y < $09, also clear movementDirection and exit
 	lda #$E0		  ;2
-	and $91		  ; Mask out lower bits of $91 (preserve only top 3 bits)
+	and movementDirection		  ; Mask out lower bits of movementDirection (preserve only top 3 bits)
 	ora #$42		  ; Set bits 6 and 1 (binary 01000010)
-	sta $91		  ; Write the updated value back to $91
+	sta movementDirection		  ; Write the updated value back to movementDirection
 	jmp	 HandleScreenCollisions	  ; Resume main collision logic
 	
 .indyTouchingMarketplaceBaskets
@@ -749,7 +769,7 @@ SetMarketplaceFlagsIfInRange:
 	ldx #ID_INVENTORY_REVOLVER
 AttemptToAwardHeadOfRa:
 	lda #$40		  ;2
-	sta $93		  ; Set $93 to $40 � likely a flag for screen-specific event (e.g. "Ra beam active")
+	sta screenEventState		  ; Set screenEventState to $40 � likely a flag for screen-specific event (e.g. "Ra beam active")
 	lda secondsTimer					; get the seconds timer value
 	and #$1F		; Mask to 5 bits (mod 32) � repeat every 32 seconds
 	cmp #2  ; Compare with 2 (trigger window)
@@ -775,7 +795,7 @@ PlayerCollisionsInBlackMarket
 	ror blackMarketState				; rotate right to show Indy carrying coins
 ResetScreenInteractionFlags:
 	lda #$00		  ;2
-	sta $91		  ;3
+	sta movementDirection		  ;3
 ResumeScreenLogic:
 	jmp	 HandleScreenCollisions	  ;3
 	
@@ -792,10 +812,10 @@ CheckIndyPositionForMarketFlags:
 	cpy #68
 	bcc CheckMiddleMarketZone	  ; If Indy is above row 68, jump to alternate logic
 	lda #$E0		  ;2
-	and $91		  ; Mask $91 to preserve top 3 bits 
+	and movementDirection		  ; Mask movementDirection to preserve top 3 bits 
 	ora #$0B		  ; Set bits 0, 1, and 3 (00001011) 
 ApplyBlackMarketInteractionFlags:
-	sta $91		  ; Store the updated value back into $91
+	sta movementDirection		  ; Store the updated value back into movementDirection
 	bne ResumeScreenLogic						 ; Always branch to resume game logic
 	
 CheckMiddleMarketZone:
@@ -804,7 +824,7 @@ CheckMiddleMarketZone:
 	cpy #11
 	bcc ResetScreenInteractionFlags	  ; If Y < 11, exit via reset logic
 	lda #$E0		  ;2
-	and $91		  ;3
+	and movementDirection		  ;3
 	ora #$41		   ; Set bits 6 and 0 (01000001)
 	bne ApplyBlackMarketInteractionFlags						; Go apply and resume logic
 	
@@ -834,7 +854,7 @@ CheckVerticalTriggerRange:
 PushIndyLeftOutOfTriggerZone:
 	dec indyHorizPos					; move Indy to the left one pixel
 HandleScreenCollisions:
-	lda currentScreenId				; get the current screen id
+	lda currentRoomId				; get the current screen id
 	asl								; multiply screen id by 2 (since each jump table entry is 2 bytes: low byte, high byte)
 	tax  ; Move the result to X � now X is the index into a jump table
 	bit CXP1FB						; check Indy collision with playfield
@@ -853,16 +873,16 @@ DispatchScreenIdleHandler:
 	rts			  ; Indirect jump to it (no collision case)
 
 WarpToMesaSide:
-	lda $DF		  ; Load vertical position of an object (likely thief or Indy)
-	sta $EB		  ; Store it to temp variable $EB (could be thief vertical position)
+	lda objectVertOffset		  ; Load vertical position of an object (likely thief or Indy)
+	sta savedThiefVertPos		  ; Store it to temp variable savedThiefVertPos (could be thief vertical position)
 	lda indyVertPos					; get Indy's vertical position
-	sta $EC		  ; Store to temp variable $EC
+	sta savedIndyVertPos		  ; Store to temp variable savedIndyVertPos
 	lda indyHorizPos			;3
 SaveIndyAndThiefPosition:
-	sta $ED		  ; Store to temp variable $ED 
+	sta savedIndyHorizPos		  ; Store to temp variable savedIndyHorizPos 
 PlaceIndyInMesaSide
 	lda #ID_MESA_SIDE ; Change screen to Mesa Side
-	sta currentScreenId
+	sta currentRoomId
 	jsr InitializeScreenState
 	lda #$05		  ;2
 	sta indyVertPos		  ; Set Indy's vertical position on entry to Mesa Side
@@ -877,12 +897,12 @@ FailSafeToCollisionCheck:
 	jmp CheckIfIndyShotOrTouchedByTsetseFlies
 	
 InitFallbackEntryPosition:
-	bit $B3		  ; Check status bits � unknown purpose, possibly related to event or room state
-	bmi FailSafeToCollisionCheck	  ; If bit 7 of $B3 is set, jump to collision handler (fail-safe)
+	bit mapRoomState		  ; Check status bits � unknown purpose, possibly related to event or room state
+	bmi FailSafeToCollisionCheck	  ; If bit 7 of mapRoomState is set, jump to collision handler (fail-safe)
 	lda #$50		  ;2
-	sta $EB		  ; Store a fixed vertical position into $EB (likely a respawn or object Y pos)
+	sta savedThiefVertPos		  ; Store a fixed vertical position into savedThiefVertPos (likely a respawn or object Y pos)
 	lda #$41		  ;2
-	sta $EC		 ; Store a fixed vertical position for Indy
+	sta savedIndyVertPos		 ; Store a fixed vertical position for Indy
 	lda #$4C		  ;2
 	bne SaveIndyAndThiefPosition						; Store fixed horizontal position and continue to position saving logic
 	
@@ -934,17 +954,17 @@ PlayerCollisionsInRoomOfShiningLight
 	ldx #64
 	stx indyVertPos					; set Indy vertical position
 	ldx #$FF
-	stx topOfDungeonGraphic			; restore dungeon graphics
+	stx topOfDungeonGfx			; restore dungeon graphics
 	ldx #1
-	stx dungeonGraphics + 1
-	stx dungeonGraphics + 2
-	stx dungeonGraphics + 3
-	stx dungeonGraphics + 4
-	stx dungeonGraphics + 5
+	stx dungeonGfxData + 1
+	stx dungeonGfxData + 2
+	stx dungeonGfxData + 3
+	stx dungeonGfxData + 4
+	stx dungeonGfxData + 5
 	bne SetIndyToNormalMovementState						; unconditional branch
 	
 MoveIndyBasedOnInput:
-	lda $92		  ; Load movement direction from input flags
+	lda inputFlags		  ; Load movement direction from input flags
 	and #$0F		   ; Isolate lower 4 bits (D-pad direction)
 	tay			  ; Use as index
 	lda IndyMovementDeltaTable,y	   ; Get movement delta from direction lookup table
@@ -952,23 +972,23 @@ MoveIndyBasedOnInput:
 	jsr DetermineDirectionToMoveObject ; Move Indy accordingly
 SetIndyToNormalMovementState:
 	lda #$05		  
-	sta $A2		  ; Likely sets a status or mode flag
+	sta indyState		  ; Likely sets a status or mode flag
 	bne CheckIfIndyShotOrTouchedByTsetseFlies; unconditional branch
 	
 SlowDownIndyMovement
-	rol playerInput
+	rol playerInputState
 	sec
 	bcs UndoInputBitShift						; unconditional branch
 	
 SetIndyToTriggeredState:
-	rol playerInput
+	rol playerInputState
 	clc			  ;2
 UndoInputBitShift:
-	ror playerInput
+	ror playerInputState
 CheckIfIndyShotOrTouchedByTsetseFlies
 	bit CXM0P						; check player collisions with missile0
 	bpl CheckGrenadeDetonation						; branch if didn't collide with Indy
-	ldx currentScreenId				; get the current screen id
+	ldx currentRoomId				; get the current screen id
 	cpx #ID_SPIDER_ROOM ; Are we in the Spider Room?
 	beq ClearInputBit0ForSpiderRoom	  ; Yes,  go to ClearInputBit0ForSpiderRoom
 	bcc CheckGrenadeDetonation	   ; If screen ID is lower than Spider Room, skip 
@@ -977,47 +997,47 @@ CheckIfIndyShotOrTouchedByTsetseFlies
 	bne DespawnMissile0						; unconditional branch
 	
 ClearInputBit0ForSpiderRoom:
-	rol playerInput  ; Rotate input left, bit 7 ? carry
+	rol playerInputState  ; Rotate input left, bit 7 ? carry
 	sec			  ; Set carry (overrides carry from rol)
-	ror playerInput  ; Rotate right, carry -> bit 7 (bit 0 lost)
-	rol $B6		  ; Rotate a status byte left (bit 7 ? carry)
+	ror playerInputState  ; Rotate right, carry -> bit 7 (bit 0 lost)
+	rol spiderRoomState		  ; Rotate a status byte left (bit 7 ? carry)
 	sec			  ; Set carry (again overrides whatever came before)
-	ror $B6		  ; Rotate right, carry -> bit 7 (bit 0 lost)
+	ror spiderRoomState		  ; Rotate right, carry -> bit 7 (bit 0 lost)
 DespawnMissile0:
 	lda #$7F		 
-	sta $8E		  ; Possibly related state or shadow position
-	sta missile0VertPos; Move missile0 offscreen (to y=127)
+	sta m0VertPosShadow		  ; Possibly related state or shadow position
+	sta m0VertPos; Move missile0 offscreen (to y=127)
 CheckGrenadeDetonation:
-	bit $9A		 ; Check status flags
+	bit grenadeState		 ; Check status flags
 	bpl VerticalSync  ; If bit 7 is clear, skip (no grenade active?)
 	bvs ApplyGrenadeWallEffect	  ; If bit 6 is set, jump (special case, maybe already exploded)
 	lda secondsTimer					; get seconds time value
 	cmp grenadeDetinationTime		; compare with grenade detination time
 	bne VerticalSync					; branch if not time to detinate grenade
 	lda #$A0		  ;2
-	sta bulletOrWhipVertPos    ; Move bullet/whip offscreen (simulate detonation?)
+	sta weaponVertPos    ; Move bullet/whip offscreen (simulate detonation?)
 	sta majorEventFlag 	   ; Trigger major event (explosion happened?)
 ApplyGrenadeWallEffect:
-	lsr $9A		   ; Logical shift right: bit 0 -> carry
+	lsr grenadeState		   ; Logical shift right: bit 0 -> carry
 	bcc SkipUpdate	  ; If bit 0 was clear, skip this (grenade effect not triggered)
 	lda #GRENADE_OPENING_IN_WALL
 	sta grenadeOpeningPenalty		; Apply penalty (e.g., reduce score)
 	ora entranceRoomState
 	sta entranceRoomState    ; Mark the entrance room as having the grenade opening
 	ldx #ID_ENTRANCE_ROOM
-	cpx currentScreenId
+	cpx currentRoomId
 	bne UpdateEntranceRoomEventState		; branch if not in the ENTRANCE_ROOM
 	jsr InitializeScreenState   ; Update visuals/state to reflect the wall opening
 UpdateEntranceRoomEventState:
-	lda $B5		  ;3
+	lda entranceRoomEventState		  ;3
 	and #$0F		  
 	beq SkipUpdate	  ; If no condition active, exit
-	lda $B5		   
+	lda entranceRoomEventState		   
 	and #$F0		  ; Clear lower nibble
 	ora #$01		   ; Set bit 0 (indicate some triggered state)
-	sta $B5		  ; Store updated state
+	sta entranceRoomEventState		  ; Store updated state
 	ldx #ID_ENTRANCE_ROOM
-	cpx currentScreenId
+	cpx currentRoomId
 	bne SkipUpdate						; branch if not in the ENTRANCE_ROOM
 	jsr InitializeScreenState		; Refresh screen visuals
 SkipUpdate:
@@ -1032,20 +1052,20 @@ StartNewFrame
 	sta WSYNC						; wait for next scan line
 	sta VSYNC						; start vertical sync (D1 = 1)
 	lda #$50
-	cmp bulletOrWhipVertPos
+	cmp weaponVertPos
 	bcs UpdateFrameAndSecondsTimer
-	sta bulletOrWhipHorizPos
+	sta weaponHorizPos
 UpdateFrameAndSecondsTimer:
 	inc frameCount					; increment frame count
 	lda #$3F
 	and frameCount
 	bne .firstLineOfVerticalSync		; branch if roughly 60 frames haven't passed
 	inc secondsTimer					; increment every second
-	lda $A1								; If $A1 is positive, skip
+	lda snakeTimer								; If snakeTimer is positive, skip
 	bpl .firstLineOfVerticalSync
-	dec $A1								; Else, decrement it
+	dec snakeTimer								; Else, decrement it
 .firstLineOfVerticalSync
-	sta WSYNC							; Wait for start of next scanline
+	sta WSYNC							; Wait for start of next scanlineCounter
 	bit resetEnableFlag
 	bpl .continueVerticalSync
 	ror SWCHB						; rotate RESET to carry
@@ -1053,7 +1073,7 @@ UpdateFrameAndSecondsTimer:
 	jmp Start						 ; If RESET was pressed, restart the game
 	
 .continueVerticalSync
-	sta WSYNC						 ; Sync with scanline (safely time video registers)
+	sta WSYNC						 ; Sync with scanlineCounter (safely time video registers)
 	lda #STOP_VERT_SYNC
 	ldx #VBLANK_TIME
 	sta WSYNC						; last line of vertical sync
@@ -1065,28 +1085,28 @@ UpdateFrameAndSecondsTimer:
 	stx majorEventFlag 	  ; Overflowed: zero -> set majorEventFlag to 0
 	jsr DetermineFinalScore  ; Call final score calculation
 	lda #ID_ARK_ROOM
-	sta currentScreenId
+	sta currentRoomId
 	jsr InitializeScreenState ; Transition to Ark Room
 GotoArkRoomLogic:
 	jmp	 SetupScreenVisualsAndObjects	  ;3
 	
 CheckToShowDeveloperInitials
-	lda currentScreenId				; get the current screen id
+	lda currentRoomId				; get the current screen id
 	cmp #ID_ARK_ROOM
 	bne HandlePostEasterEggFlow						; branch if not in ID_ARK_ROOM
 	lda #$9C		  
-	sta $A3		  ; Likely sets a display timer or animation state
-	ldy findingYarEasterEggBonus
+	sta whipEffectTimer		  ; Likely sets a display timer or animation state
+	ldy yarEasterEggBonus
 	beq CheckArkRoomEasterEggFailConditions	  ; If not in Yar's Easter Egg mode, skip
 	bit resetEnableFlag
 	bmi CheckArkRoomEasterEggFailConditions	  ; If resetEnableFlag has bit 7 set, skip
 	ldx #>HSWInitials_00
-	stx inventoryGraphicPointers + 1
-	stx inventoryGraphicPointers + 3
+	stx inventoryGfxPtrs + 1
+	stx inventoryGfxPtrs + 3
 	lda #<HSWInitials_00
-	sta inventoryGraphicPointers
+	sta inventoryGfxPtrs
 	lda #<HSWInitials_01
-	sta inventoryGraphicPointers + 2
+	sta inventoryGfxPtrs + 2
 CheckArkRoomEasterEggFailConditions:
 	ldy indyVertPos					; get Indy's vertical position
 	cpy #$7C		  ;124 dev
@@ -1109,7 +1129,7 @@ SetIndyToArkDescentState:
 	bit resetEnableFlag			; Check bit 7 of resetEnableFlag
 	bmi EnableResetAndCheckArkInput	  ; If bit 7 is set, skip (reset enabled)
 	lda #$0E		  
-	sta $A2		   ; Set Indy�s state to 0E
+	sta indyState		   ; Set Indy�s state to 0E
 EnableResetAndCheckArkInput:
 	lda #$80		  
 	sta resetEnableFlag				; Set bit 7 to enable reset logic
@@ -1120,11 +1140,11 @@ EnableResetAndCheckArkInput:
 	bne StoreArkActionCode	   ; If not at correct frame, skip
 	lda #$05		  
 StoreArkActionCode:
-	sta $8C		 ; Store action/state code
+	sta arkRoomState	 ; Store action/state code
 	jmp	 InitializeGameStartState	  ; Handle command
 	
 HandlePostEasterEggFlow:
-	bit $93		  
+	bit screenEventState		  
 	bvs AdvanceArkEntranceSequence	  ; If bit 6 set, jump to alternate path
 ContinueArkSequence:
 	jmp	 CheckMajorEventComplete	  ; Continue Ark Room or endgame logic
@@ -1144,7 +1164,7 @@ AdvanceArkEntranceSequence:
 	bcs StoreArkEntrancePosition				; If Indy is right of x=$20, skip
 	lda #$20		  ;2
 StoreArkEntrancePosition:
-	sta $CC		  ; Store Indy�s forced horizontal position?
+	sta indyHorizPos		  ; Store Indy�s forced horizontal position?
 IncrementArkSequenceStep:
 	inx			  ;2
 	stx $DC		   ; Increment and store progression step or counter
@@ -1154,15 +1174,15 @@ IncrementArkSequenceStep:
 	bpl ControlSnakeBasedOnIndy	  ; If result = 0, continue
 	lda #$00		 ; Otherwise, reset A to 0
 ControlSnakeBasedOnIndy:
-	sta $D2		  ; Store A (probably from LD4A5) into $D2 � possibly temporary Y position
+	sta snakeDungeonY		  ; Store A (probably from LD4A5) into snakeDungeonY � possibly temporary Y position
 	and #$F8		  ;2
 	cmp snakeVertPos			;3
 	beq ConfigureSnakeGraphicsAndMovement	  ; If vertical alignment hasn�t changed, skip update
 	sta snakeVertPos			; Update snake�s vertical position
-	lda $D4		  ;3
+	lda snakeDungeonState		  ;3
 	and #$03		  ;2
 	tax			  ;2
-	lda $D4		  ;3
+	lda snakeDungeonState		  ;3
 	lsr			  ;2
 	lsr			  ;2
 	tay			  ;2
@@ -1170,7 +1190,7 @@ ControlSnakeBasedOnIndy:
 	clc			  ;2
 	adc SnakeHorizontalOffsetTable,y	  ; Add two offset values from table at SnakeHorizontalOffsetTable
 	clc			  ;2
-	adc $CC		  ; Add forced Indy X position
+	adc indyHorizPos		  ; Add forced Indy X position
 	ldx #$00		  
 	cmp #$87		  ; Apply Horizontal Constraints
 	bcs AdjustSnakeBehaviorByDistance	  ; If = $87, skip update
@@ -1192,41 +1212,41 @@ UpdateSnakeMotionState:
 	asl			  ;2
 	asl			  ;2
 	sta $84		  ; Multiply X by 4 -> store as upper bits of state
-	lda $D4		  ;3
+	lda snakeDungeonState		  ;3
 	and #$03		  ;2
 	tax			  ;2
 	lda SnakeHorizontalOffsetTable,x	  ;4
 	clc			  ;2
-	adc $CC		  ;3
-	sta $CC		  ; Refine target horizontal position
-	lda $D4		  ;3
+	adc indyHorizPos		  ;3
+	sta indyHorizPos		  ; Refine target horizontal position
+	lda snakeDungeonState		  ;3
 	lsr			  ;2
 	lsr			  ;2
 	ora $84		  ;3
-	sta $D4		  ; Store new composite motion/state byte
+	sta snakeDungeonState		  ; Store new composite motion/state byte
 ConfigureSnakeGraphicsAndMovement:
-	lda $D4		  ;3
+	lda snakeDungeonState		  ;3
 	and #$03		  ;2
 	tax			  ;2
 	lda SnakeMotionTableLSB,x	  ;4
-	sta $D6		  ; Store horizontal movement/frame data
+	sta timepieceGfxPtrs		  ; Store horizontal movement/frame data
 	lda #>SnakeMotionTable_0
 	sta $D7		  ; Store high byte of graphics or pointer address
-	lda $D4		  ;3
+	lda snakeDungeonState		  ;3
 	lsr			  ;2
 	lsr			  ;2
 	tax			  ;2
 	lda SnakeMotionTableLSB,x	  ;4
 	sec			  ;2
 	sbc #$08		  ;2
-	sta $D8		  ; Store vertical offset (with adjustment)
+	sta timepieceSpriteDataPtr		  ; Store vertical offset (with adjustment)
 CheckMajorEventComplete:
 	bit majorEventFlag 	  ;3
 	bpl CheckGameScriptTimer	  ; If major event not complete, continue sequence
 	jmp	 SwitchToBank1AndContinue	   ;Else, jump to end/cutscene logic
 	
 CheckGameScriptTimer:
-	bit $A1		  ;3
+	bit snakeTimer		  ;3
 	bpl BranchOnFrameParity	  ; If timer still counting or inactive, proceed
 	jmp	 SetIndyStationarySprite	   ; Else, jump to alternate script path (failure/end?)
 	
@@ -1237,12 +1257,12 @@ BranchOnFrameParity:
 	jmp	 ClearItemUseOnButtonRelease	   ; If odd, do something else
 	
 GatePlayerTriggeredEvent:
-	ldx currentScreenId				; get the current screen id
+	ldx currentRoomId				; get the current screen id
 	cpx #ID_MESA_SIDE
 	beq AbortProjectileDrivenEvent						; If on Mesa Side, use a different handler
-	bit $8D
+	bit eventState
 	bvc CheckInputAndStateForEvent						; If no event/collision flag set, skip
-	ldx bulletOrWhipHorizPos			; get bullet or whip horizontal position
+	ldx weaponHorizPos			; get bullet or whip horizontal position
 	txa			  ;2
 	sec			  ;2
 	sbc indyHorizPos			;3
@@ -1262,7 +1282,7 @@ NudgeProjectileRight:
 NudgeProjectileLeft:
 	dex			  ;2
 StoreProjectilePosition:
-	stx bulletOrWhipHorizPos
+	stx weaponHorizPos
 	bne AbortProjectileDrivenEvent	   ; Exit if projectile has nonzero position
 ValidateProjectileRangeAndDirection:
 	cpx #$75		  ;2
@@ -1278,9 +1298,9 @@ ValidateProjectileRangeAndDirection:
 	bmi NudgeProjectileLeft			 ; Else, nudge left
 	
 CheckInputAndStateForEvent:
-	bit $B4		  ;3
+	bit mesaSideState		  ;3
 	bmi AbortProjectileDrivenEvent	  ; If flag set, skip
-	bit playerInput
+	bit playerInputState
 	bpl HandleIndyMovementAndStartEventScan	   ; If no button, skip
 	ror			  ;2
 	bcc HandleIndyMovementAndStartEventScan	  ; If wrong button, skip
@@ -1294,9 +1314,9 @@ HandleIndyMovementAndStartEventScan:
 	and #P1_NO_MOVE
 	cmp #P1_NO_MOVE
 	beq AbortProjectileDrivenEvent	  ; Skip if no movement
-	sta $92		  ;3
+	sta inputFlags		  ;3
 	jsr DetermineDirectionToMoveObject  ; Move Indy according to input
-	ldx currentScreenId				; get the current screen id
+	ldx currentRoomId				; get the current screen id
 	ldy #$00		  ;2
 	sty $84		  ; Reset scan index/counter 
 	beq StoreIndyPositionForEvent	  ; Unconditional (Y=0, so BNE not taken)
@@ -1347,34 +1367,34 @@ CheckScanBoundaryOrContinue:
 	bcs HandleInventoryButtonPress						; Else, exit
 	
 TriggerScreenTransition:
-	sty currentScreenId		  ; Set new screen based on event result
+	sty currentRoomId		  ; Set new screen based on event result
 	jsr InitializeScreenState ; Load new room or area
 HandleInventoryButtonPress:
 	bit INPT4						; read action button from left controller
-	bmi NormalizePlayerInput						; branch if action button not pressed
-	bit $9A		  ;3
+	bmi NormalizeplayerInputState						; branch if action button not pressed
+	bit grenadeState		  ;3
 	bmi ExitItemHandler	  ; If game state prevents interaction, skip
-	lda playerInput
+	lda playerInputState
 	ror			   ; Check bit 0 of input
 	bcs HandleItemPickupAndInventoryUpdate	  ; If set, already mid-action, skip
 	sec				 ; Prepare to take item
 	jsr TakeItemFromInventory		; carry set...take away selected item
-	inc playerInput					;  Advance to next inventory slot
+	inc playerInputState					;  Advance to next inventory slot
 	bne HandleItemPickupAndInventoryUpdate						; Always branch
 	
-NormalizePlayerInput:
-	ror playerInput
+NormalizeplayerInputState:
+	ror playerInputState
 	clc			  ;2
-	rol playerInput
+	rol playerInputState
 HandleItemPickupAndInventoryUpdate:
-	lda $91		  ;3
+	lda movementDirection		  ;3
 	bpl ExitItemHandler	  ; If no item queued, exit
 	and #$1F		  ; Mask to get item ID
 	cmp #$01		  ;2
 	bne CheckShovelPickup	  ;2
-	inc numberOfBullets		; Give Indy 3 bullets
-	inc numberOfBullets
-	inc numberOfBullets
+	inc bulletCount		; Give Indy 3 bullets
+	inc bulletCount
+	inc bulletCount
 	bne ClearItemUseFlag						; unconditional branch
 	
 CheckShovelPickup:
@@ -1386,31 +1406,31 @@ CheckShovelPickup:
 	ldx #$45		  ;2
 	stx shovelVertPos				 ; Set Y-pos for shovel on screen
 	ldx #$7F		  ;2
-	stx missile0VertPos
+	stx m0VertPos
 PlaceGenericItem:
 	jsr PlaceItemInInventory
 ClearItemUseFlag:
 	lda #$00		  ;2
-	sta $91		   ; Clear item pickup/use state
+	sta movementDirection		   ; Clear item pickup/use state
 ExitItemHandler:
 	jmp	 UpdateIndySpriteForParachute	  ;; Return from event handle
 	
 ClearItemUseOnButtonRelease:
-	bit $9A		   ; Test game state flags
+	bit grenadeState		   ; Test game state flags
 	bmi ExitItemHandler	  ; If bit 7 is set (N = 1), then a grenade or parachute event is in progress.
 	bit INPT5						; read action button from right controller
 	bpl HandleItemUseOnButtonPress						; branch if action button pressed
 	lda #~USING_GRENADE_OR_PARACHUTE  ; Load inverse of USING_GRENADE_OR_PARACHUTE (i.e., clear bit 1)
-	and playerInput ;; Clear the USING_GRENADE_OR_PARACHUTE bit from the player input state
-	sta playerInput  ; Store the updated input state
+	and playerInputState ;; Clear the USING_GRENADE_OR_PARACHUTE bit from the player input state
+	sta playerInputState  ; Store the updated input state
 	jmp	 UpdateIndySpriteForParachute	 
 	
 HandleItemUseOnButtonPress:
 	lda #USING_GRENADE_OR_PARACHUTE ; Load the flag indicating item use (grenade/parachute)
-	bit playerInput    ; Check if the flag is already set in player input
+	bit playerInputState    ; Check if the flag is already set in player input
 	bne ExitItemUseHandler	   ; If it's already set, skip re-setting (item already active)
-	ora playerInput  ; Otherwise, set the USING_GRENADE_OR_PARACHUTE bit
-	sta playerInput   ; Save the updated input state
+	ora playerInputState  ; Otherwise, set the USING_GRENADE_OR_PARACHUTE bit
+	sta playerInputState   ; Save the updated input state
 	ldx selectedInventoryId			; get the current selected inventory id
 	cpx #ID_MARKETPLACE_GRENADE  ; Is the selected item the marketplace grenade?
 	beq StartGrenadeThrow	   ; If yes, jump to grenade activation logic
@@ -1418,33 +1438,33 @@ HandleItemUseOnButtonPress:
 	bne CheckToActivateParachute  ; If neither, check if it's a parachute
 StartGrenadeThrow:
 	ldx indyVertPos					; get Indy's vertical position
-	stx bulletOrWhipVertPos		; Set grenade's starting vertical position
+	stx weaponVertPos		; Set grenade's starting vertical position
 	ldy indyHorizPos					; get Indy horizontal position
-	sty bulletOrWhipHorizPos			; Set grenade's starting horizontal position
+	sty weaponHorizPos			; Set grenade's starting horizontal position
 	lda secondsTimer					; get the seconds timer
 	adc #5 - 1						; increment value by 5...carry set
 	sta grenadeDetinationTime		; detinate grenade 5 seconds from now
 	lda #$80		   ; Prepare base grenade state value (bit 7 set)
 	cpx #ENTRANCE_ROOM_ROCK_VERT_POS  ; Is Indy below the rock's vertical line?
-	bcs StoreGrenadeState						; branch if Indy is under rock scanline
+	bcs StoreGrenadeState						; branch if Indy is under rock scanlineCounter
 	cpy #$64		  ; Is Indy too far left?
 	bcc StoreGrenadeState	 
-	ldx currentScreenId				; get the current screen id
+	ldx currentRoomId				; get the current screen id
 	cpx #ID_ENTRANCE_ROOM				; Are we in the Entrance Room?
 	bne StoreGrenadeState						; branch if not in the ENTRANCE_ROOM
 	ora #$01		  ; Set bit 0 to trigger wall explosion effect
 StoreGrenadeState:
-	sta $9A		  ; Store the grenade state flags: Bit 7 set: grenade is active - Bit 0 optionally set: triggers wall explosion if conditions were met
+	sta grenadeState		  ; Store the grenade state flags: Bit 7 set: grenade is active - Bit 0 optionally set: triggers wall explosion if conditions were met
 	jmp	 UpdateIndySpriteForParachute	  
 	
 CheckToActivateParachute
 	cpx #ID_INVENTORY_PARACHUTE  ; Is the selected item the parachute?
 	bne HandleSpecialItemUseCases	  ; If not, branch to other item handling
 	stx usingParachuteBonus  ; Store the parachute usage flag for scoring bonus
-	lda $B4		   ; Load major event and state flags
+	lda mesaSideState		   ; Load major event and state flags
 	bmi ExitItemUseHandler	   ; If bit 7 is set (already parachuting), skip reactivation
 	ora #$80		   ; Set bit 7 to indicate parachute is now active
-	sta $B4		  ; Save the updated event flags
+	sta mesaSideState		  ; Save the updated event flags
 	lda indyVertPos					; get Indy's vertical position
 	sbc #6							; Subtract 6 (carry is set by default), to move him slightly up
 	bpl SetAdjustedParachuteStartY	 ; If the result is positive, keep it
@@ -1454,7 +1474,7 @@ SetAdjustedParachuteStartY:
 	bpl FinalizeImpactEffect						; unconditional branch
 	
 HandleSpecialItemUseCases:
-	bit $8D		  ; Check special state flags (likely related to scripted events)
+	bit eventState	  ; Check special state flags (likely related to scripted events)
 	bvc AttemptDiggingForArk	  ; If bit 6 is clear (no vertical event active), skip to further checks
 	bit CXM1FB	  ; Check collision between missile 1 and playfield
 	bmi CalculateImpactRegionIndex	   ; If collision occurred (bit 7 set), go to handle collision impact
@@ -1463,14 +1483,14 @@ ExitItemUseHandler:
 	jmp	 UpdateIndySpriteForParachute	  ;3
 	
 CalculateImpactRegionIndex:
-	lda bulletOrWhipVertPos			; get bullet or whip vertical position
+	lda weaponVertPos			; get bullet or whip vertical position
 	lsr			  ; Divide by 2 (fine-tune for tile mapping)
 	sec			  ; Set carry for subtraction
 	sbc #$06		  ; Subtract 6 (offset to align to tile grid)
 	clc			  ; Clear carry before next addition
-	adc $DF		  ; Add reference vertical offset (likely floor or map tile start)
+	adc objectVertOffset		  ; Add reference vertical offset (likely floor or map tile start)
 	lsr			  ; Divide by 16 total:
-	lsr			  ; Effectively: (Y - 6 + $DF) / 16
+	lsr			  ; Effectively: (Y - 6 + objectVertOffset) / 16
 	lsr			  
 	lsr			  
 	cmp #$08		  ; Check if the result fits within bounds (max 7)
@@ -1478,7 +1498,7 @@ CalculateImpactRegionIndex:
 	lda #$07		  ; Clamp to max value (7) if out of bounds
 ApplyImpactEffectsAndAdjustPlayer:
 	sta $84		  ; Store the region index calculated from vertical position
-	lda bulletOrWhipHorizPos			; get bullet or whip horizontal position
+	lda weaponHorizPos			; get bullet or whip horizontal position
 	sec			  ;2
 	sbc #$10		  ; Adjust for impact zone alignment
 	and #$60		   ; Mask to relevant bits (coarse horizontal zone)
@@ -1487,18 +1507,18 @@ ApplyImpactEffectsAndAdjustPlayer:
 	adc $84		   ; Combine with vertical region index to form a unique map zone index
 	tay			  ; Move index to Y
 	lda ArkRoomImpactResponseTable,y	   ; Load impact response from lookup table
-	sta $8B		   ; Store result � likely affects state or visual of game field
-	ldx bulletOrWhipVertPos			; get bullet or whip vertical position
+	sta indyHorizPosTemp	   ; Store result � likely affects state or visual of game field
+	ldx weaponVertPos			; get bullet or whip vertical position
 	dex			  ; Decrease projectile X by 2 � simulate impact offset
-	stx bulletOrWhipVertPos
+	stx weaponVertPos
 	stx indyVertPos		  ; Sync Indy's horizontal position to projectile�s new position
-	ldx bulletOrWhipHorizPos			
+	ldx weaponHorizPos			
 	dex			  ; Decrease projectile X by 2 � simulate impact offset
 	dex			  
-	stx bulletOrWhipHorizPos
+	stx weaponHorizPos
 	stx indyHorizPos			; Sync Indy's horizontal position to projectile�s new position
 	lda #$46		  ; Set special state value
-	sta $8D		    ; Likely a flag used by event logic
+	sta eventState	    ; Likely a flag used by event logic
 FinalizeImpactEffect:
 	jmp	 TriggerWhipEffect	  ; Jump to item-use or input continuation logic
 	
@@ -1510,15 +1530,15 @@ AttemptDiggingForArk:
 	bcc ExitItemUseHandler	  ; If not, exit (can't dig here)
 	bit CXPPMM						; check player / missile collisions (probably shovel sprite contact with dig site)
 	bpl ExitItemUseHandler						; branch if players didn't collide
-	inc $97		  ; Increment dig attempt counter
+	inc digAttemptCounter		  ; Increment dig attempt counter
 	bne ExitItemUseHandler	  ; If not the first dig attempt, exit
-	ldy $96		  ; Load current dig depth or animation frame
+	ldy diggingState		  ; Load current dig depth or animation frame
 	dey			  ; Decrease depth
 	cpy #$54		  ; Is it still within range?
 	bcs ClampDigDepth	  ; If at or beyond max depth, cap it
 	iny			  ; Otherwise restore it back (prevent negative values)
 ClampDigDepth:
-	sty $96		  ; Save the clamped or unchanged dig depth value
+	sty diggingState		  ; Save the clamped or unchanged dig depth value
 	lda #BONUS_FINDING_ARK
 	sta findingArkBonus			; Set the bonus for having found the Ark
 	bne ExitItemUseHandler						; unconditional branch
@@ -1526,23 +1546,23 @@ ClampDigDepth:
 UseAnkhToWarpToMesaField:
 	cpx #ID_INVENTORY_ANKH		; Is the selected item the Ankh?
 	bne HandleWeaponUseOnMove	  ; If not, skip to next item handling
-	ldx currentScreenId				; get the current screen id
+	ldx currentRoomId				; get the current screen id
 	cpx #ID_TREASURE_ROOM		; Is Indy in the Treasure Room?
 	beq ExitItemUseHandler						; If so, don't allow Ankh warp from here
 	lda #ID_MESA_FIELD			; Mark this warp use (likely applies 9-point score penalty)
 	sta skipToMesaFieldBonus			; set to reduce score by 9 points
-	sta currentScreenId		  ; Change current screen to Mesa Field
+	sta currentRoomId		  ; Change current screen to Mesa Field
 	jsr InitializeScreenState ; Load the data for the new screen
 	lda #$4C		  ; Prepare a flag or state value for later use (e.g., warp effect)
 WarpPlayerToMesaFieldStart:
 	sta indyHorizPos			; Set Indy's horizontal position
-	sta bulletOrWhipHorizPos			; Set projectile's horizontal position (same as Indy)
+	sta weaponHorizPos			; Set projectile's horizontal position (same as Indy)
 	lda #$46		  ; Fixed vertical position value (start of Mesa Field?)
 	sta indyVertPos		  ; Set Indy's vertical position
-	sta bulletOrWhipVertPos		 ; Set projectile's vertical position
-	sta $8D		  ; Set event/state flag (used later to indicate transition or animation)
+	sta weaponVertPos		 ; Set projectile's vertical position
+	sta eventState	  ; Set event/state flag (used later to indicate transition or animation)
 	lda #$1D		  ; Set initial vertical scroll or map offset?
-	sta $DF		  ; Likely adjusts tile map base Y
+	sta objectVertOffset		  ; Likely adjusts tile map base Y
 	bne UpdateIndySpriteForParachute						; Unconditional jump to common handler
 	
 HandleWeaponUseOnMove:
@@ -1552,26 +1572,26 @@ HandleWeaponUseOnMove:
 	beq UpdateIndySpriteForParachute						; branch if right joystick not moved
 	cpx #ID_INVENTORY_REVOLVER
 	bne .checkForIndyUsingWhip		; check for Indy using whip
-	bit bulletOrWhipStatus			; check bullet or whip status
+	bit weaponStatus			; check bullet or whip status
 	bmi UpdateIndySpriteForParachute						; branch if bullet active
-	ldy numberOfBullets				; get number of bullets remaining
+	ldy bulletCount				; get number of bullets remaining
 	bmi UpdateIndySpriteForParachute						; branch if no more bullets
-	dec numberOfBullets				; reduce number of bullets
+	dec bulletCount				; reduce number of bullets
 	ora #BULLET_OR_WHIP_ACTIVE
-	sta bulletOrWhipStatus			; set BULLET_OR_WHIP_ACTIVE bit
+	sta weaponStatus			; set BULLET_OR_WHIP_ACTIVE bit
 	lda indyVertPos					; get Indy's vertical position
 	adc #4							; Offset to spawn bullet slightly above Indy
-	sta bulletOrWhipVertPos			; Set bullet Y position
+	sta weaponVertPos			; Set bullet Y position
 	lda indyHorizPos				
 	adc #4							; Offset to spawn bullet slightly ahead of Indy
-	sta bulletOrWhipHorizPos		 ; Set bullet X position
+	sta weaponHorizPos		 ; Set bullet X position
 	bne TriggerWhipEffect						; unconditional branch
 	
 .checkForIndyUsingWhip
 	cpx #ID_INVENTORY_WHIP			; Is Indy using the whip?
 	bne UpdateIndySpriteForParachute						; branch if Indy not using whip
 	ora #$80		  ; Set a status bit (probably to indicate whip action)
-	sta $8D		  ; Store it in the game state/event flags
+	sta eventState		  ; Store it in the game state/event flags
 	ldy #4		; Default vertical offset (X)
 	ldx #5		; Default horizontal offset (Y)
 	ror								; shift MOVE_UP to carry
@@ -1593,19 +1613,19 @@ ApplyWhipStrikePosition:
 	tya								; Move horizontal offset (Y) into A
 	clc
 	adc indyHorizPos
-	sta bulletOrWhipHorizPos		; Add to Indy�s current horizontal position
+	sta weaponHorizPos		; Add to Indy�s current horizontal position
 	txa			  ;2				 ; Move vertical offset (X) into A
 	clc			  ;2
 	adc indyVertPos		  ; Add to Indy�s current vertical position
-	sta bulletOrWhipVertPos ; Set whip strike vertical position
+	sta weaponVertPos ; Set whip strike vertical position
 TriggerWhipEffect:
 	lda #$0F		  ; Set effect timer or flag for whip (e.g., 15 frames)
-	sta $A3		  ; Likely used to animate or time whip visibility/effect
+	sta whipEffectTimer		  ; Likely used to animate or time whip visibility/effect
 UpdateIndySpriteForParachute:
-	bit $B4		  ; Check game status flags
+	bit mesaSideState		  ; Check game status flags
 	bpl SetIndySpriteIfStationary	  ; If parachute bit (bit 7) is clear, skip parachute rendering
 	lda #<ParachutingIndySprite		; Load low byte of parachute sprite address
-	sta indyGraphicPointers			; Set Indy's sprite pointer
+	sta indyGfxPtrs			; Set Indy's sprite pointer
 	lda #H_PARACHUTE_INDY_SPRITE	; Load height for parachuting sprite
 	bne .setIndySpriteHeight			; unconditional branch
 	
@@ -1617,7 +1637,7 @@ SetIndySpriteIfStationary:
 SetIndyStationarySprite:
 	lda #<IndyStationarySprite		; Load low byte of pointer to stationary sprite
 .setIndySpriteLSBValue
-	sta indyGraphicPointers				  ; Store sprite pointer (low byte)
+	sta indyGfxPtrs				  ; Store sprite pointer (low byte)
 	lda #H_INDY_SPRITE					 ; Load height for standard Indy sprite
 .setIndySpriteHeight
 	sta indySpriteHeight				 ; Store sprite height
@@ -1625,7 +1645,7 @@ SetIndyStationarySprite:
 	
 UpdateIndyWalkingAnimation:
 	lda #$03		   ; Mask to isolate movement input flags (e.g., up/down/left/right)
-	bit playerInput
+	bit playerInputState
 	bmi CheckAnimationTiming	  ; If bit 7 (UP) is set, skip right shift
 	lsr			  ; Shift movement bits (to vary animation speed/direction)
 CheckAnimationTiming:
@@ -1633,76 +1653,76 @@ CheckAnimationTiming:
 	bne HandleEnvironmentalSinkingEffect			 ; If result is non-zero, skip sprite update this frame
 	lda #H_INDY_SPRITE		; Load base sprite height
 	clc			  		
-	adc indyGraphicPointers					; Advance to next sprite frame
+	adc indyGfxPtrs					; Advance to next sprite frame
 	cmp #<IndyStationarySprite				 ; Check if we've reached the end of walking frames
 	bcc .setIndySpriteLSBValue				; If not yet at stationary, update sprite pointer
 	lda #$02								; Set a short animation timer
-	sta $A3		  ;3
+	sta whipEffectTimer		  ;3
 	lda #<Indy_0						;; Reset animation back to first walking frame
 	bcs .setIndySpriteLSBValue		; Unconditional jump to store new sprite pointer
 HandleEnvironmentalSinkingEffect:
-	ldx currentScreenId				; get the current screen id
+	ldx currentRoomId				; get the current screen id
 	cpx #ID_MESA_FIELD				 ; Load current screen ID
 	beq CheckSinkingEligibility			; If yes, check sinking conditions
 	cpx #ID_VALLEY_OF_POISON			; If yes, check sinking conditions
 	bne SwitchToBank1AndContinue	 					 ; If neither, skip this routine
 CheckSinkingEligibility:
 	lda frameCount					; get current frame count
-	bit playerInput
-	bpl ApplySinkingIfInZone	   ; If bit 7 of playerInput is clear (not pushing up?), apply shift
+	bit playerInputState
+	bpl ApplySinkingIfInZone	   ; If bit 7 of playerInputState is clear (not pushing up?), apply shift
 	lsr			   					; Adjust animation or action pacing
 ApplySinkingIfInZone:
 	ldy indyVertPos					; get Indy's vertical position
 	cpy #$27		  				; Is he at the sinking zone Y-level?
 	beq SwitchToBank1AndContinue	  					; If so, skip (already sunk enough)
-	ldx $DF		  					; Load terrain deformation or sink offset?
+	ldx objectVertOffset		  					; Load terrain deformation or sink offset?
 	bcs ReverseSinkingEffectIfApplicable						; If carry is set from earlier BIT, go to advanced sink
-	beq SwitchToBank1AndContinue						; If $DF is 0, no further sinking
+	beq SwitchToBank1AndContinue						; If objectVertOffset is 0, no further sinking
 	inc indyVertPos					; Sink Indy vertically
-	inc bulletOrWhipVertPos			; Sink the projectile too
+	inc weaponVertPos			; Sink the projectile too
 	and #$02						; Control sinking frequency
 	bne SwitchToBank1AndContinue						; Skip if odd/even frame constraint not me
-	dec $DF							; Reduce sink counter
+	dec objectVertOffset							; Reduce sink counter
 	inc $CE							; Possibly animation or game state flag
-	inc missile0VertPos				; Sink a visible element (perhaps parachute/missile sprite)
-	inc $D2							; Another state tracker
+	inc m0VertPos				; Sink a visible element (perhaps parachute/missile sprite)
+	inc snakeDungeonY							; Another state tracker
 	inc $CE		
-	inc missile0VertPos				; Repeated to simulate multi-phase sinking
-	inc $D2		  ;5
+	inc m0VertPos				; Repeated to simulate multi-phase sinking
+	inc snakeDungeonY		  ;5
 	jmp	 SwitchToBank1AndContinue	  					; Continue normal processing
 	
 ReverseSinkingEffectIfApplicable:
 	cpx #$50		  ; Check if Indy has reached the upper bound for rising
 	bcs SwitchToBank1AndContinue	  ; If Indy is already high enough, skip
 	dec indyVertPos		  			; Move Indy upward
-	dec bulletOrWhipVertPos			; Move projectile upward as well
+	dec weaponVertPos			; Move projectile upward as well
 	and #$02		 				 ; Use timing mask to control frame-based rise rate
 	bne SwitchToBank1AndContinue	  ; If not aligned, skip this update
-	inc $DF		  ; Increase sink offset counter (reversing descent)
+	inc objectVertOffset		  ; Increase sink offset counter (reversing descent)
 	dec $CE		  ; Adjust state/animation back
-	dec missile0VertPos				; Move visible missile/sprite upward
-	dec $D2		  ; Update related state
+	dec m0VertPos				; Move visible missile/sprite upward
+	dec snakeDungeonY		  ; Update related state
 	dec $CE		  
-	dec missile0VertPos
-	dec $D2		  ; Mirror the changes made in the sinking routine
+	dec m0VertPos
+	dec snakeDungeonY		  ; Mirror the changes made in the sinking routine
 SwitchToBank1AndContinue:
 	lda #<JumpToScreenHandlerFromBank1						; Load low byte of destination routine in Bank 1
-	sta bankSwitchJMPAddress
+	sta bankSwitchJMPAddr
 	lda #>JumpToScreenHandlerFromBank1						; Load high byte of destination
-	sta bankSwitchJMPAddress + 1
+	sta bankSwitchJMPAddr + 1
 	jmp JumpToBank1					; Perform the bank switch and jump to new code
 	
 SetupScreenVisualsAndObjects:
-	lda $99		  ; Check status flag (likely screen initialization)
+	lda screenInitFlag		  ; Check status flag (likely screen initialization)
 	beq SetScreenControlsAndColor	  ; If zero, skip subroutine
 	jsr	 UpdateRoomEventState	  ; Run special screen setup routine (e.g., reset state or clear screen)
 	lda #$00		  ; Clear the flag afterward
 SetScreenControlsAndColor:
-	sta $99		  ; Store the updated flag
-	ldx currentScreenId				; get the current screen id
+	sta screenInitFlag		  ; Store the updated flag
+	ldx currentRoomId				; get the current screen id
 	lda HMOVETable,x				
 	sta NUSIZ0						; Set object sizing/horizontal motion control
-	lda playfieldControl
+	lda  playfieldControlFlags
 	sta CTRLPF						; Set playfield control flags
 	lda BackgroundColorTable,x
 	sta COLUBK						; set current screen background color
@@ -1715,12 +1735,12 @@ SetScreenControlsAndColor:
 	cpx #ID_THIEVES_DEN
 	bcc .HorizontallyPositionObjects
 	lda #$20
-	sta $D4							; Possibly enemy counter, timer, or position marker
+	sta snakeDungeonState							; Possibly enemy counter, timer, or position marker
 	ldx #4
 SetupThievesDenObjects:
-	ldy thievesHMOVEIndex,x
+	ldy thiefHmoveIndices,x
 	lda HMOVETable,y
-	sta thievesHorizPositions,x
+	sta thiefHorizPositions,x
 	dex
 	bpl SetupThievesDenObjects		 ; Loop through all Thieves' Den enemy positions
 .HorizontallyPositionObjects
@@ -1730,7 +1750,7 @@ SetupThievesDenObjects:
 	lda #$4D		  ; Set Indy's horizontal position in the Ark Room
 	sta indyHorizPos			;3
 	lda #$48		  ;2
-	sta $C8		  ; Unknown, likely related to screen offset or trigger state
+	sta p0HorizPos		  ; Unknown, likely related to screen offset or trigger state
 	lda #$1F		  ;2
 	sta indyVertPos		  ; Set Indy's vertical position in the Ark Room
 	rts			  ; Return from subroutine
@@ -1739,9 +1759,9 @@ ClearGameStateMemory:
 	ldx #$00		  ; Start at index 0
 	txa			  ; A = 0 (will be used to clear memory)
 WriteToStateMemoryLoop:
-	sta $DF,x		; Clear/reset memory at $DF�$E4
-	sta $E0,x	  
-	sta $E1,x	  
+	sta objectVertOffset,x		; Clear/reset memory at objectVertOffset�$E4
+	sta p0GfxData,x	  
+	sta p0TiaPtrs,x	  
 	sta $E2,x	  
 	sta $E3,x	  
 	sta $E4,x	  
@@ -1757,27 +1777,27 @@ ExitMemoryClearRoutine:
 	rts			  ; Return from subroutine
 
 InitializeScreenState
-	lda $9A		   ; Load player item state / status flags
+	lda grenadeState		   ; Load player item state / status flags
 	bpl ResetRoomFlags	  ; If bit 7 is clear (no grenade/parachute active), skip flag set
 	ora #$40		  ; Set bit 6: possibly "re-entering room" or "just warped"
-	sta $9A		   ; Save updated status
+	sta grenadeState		   ; Save updated status
 ResetRoomFlags:
 	lda #$5C		  ; Likely a vertical offset or a default Y-position baseline
-	sta $96		  ; Used for digging or vertical alignment mechanics
+	sta diggingState		  ; Used for digging or vertical alignment mechanics
 	ldx #$00		  ; Clear various status bytes
-	stx $93		  ; Could be a cutscene or transition state
-	stx $B6		  ; Possibly enemy or item slot usage
-	stx $8E		   ; May control animation phase or enemy flags
+	stx screenEventState		  ; Could be a cutscene or transition state
+	stx spiderRoomState		  ; Possibly enemy or item slot usage
+	stx m0VertPosShadow		   ; May control animation phase or enemy flags
 	stx $90		  ; Could be Indy or enemy action lock
 	lda pickupStatusFlags			; Read item collection flags
 	stx pickupStatusFlags 			; Clear them all (reset pickups for new screen)
 	jsr	 UpdateRoomEventState	  ; General-purpose screen initialization/reset routine
-	rol playerInput			; Rotate input flags � possibly to mask off an "item use" bit
+	rol playerInputState			; Rotate input flags � possibly to mask off an "item use" bit
 	clc			  ;2
-	ror playerInput					 ; Reverse the bit rotation; keeps input state consistent
-	ldx currentScreenId				; Load which room Indy is in
+	ror playerInputState					 ; Reverse the bit rotation; keeps input state consistent
+	ldx currentRoomId				; Load which room Indy is in
 	lda PlayfieldControlTable,x
-	sta playfieldControl				 ; Set up playfield reflection, score display, priorities
+	sta  playfieldControlFlags				 ; Set up playfield reflection, score display, priorities
 	cpx #ID_ARK_ROOM
 	beq .SetArkRoomInitialPositions			; Setup special Ark Room spawn point
 	cpx #ID_MESA_SIDE
@@ -1785,35 +1805,35 @@ ResetRoomFlags:
 	cpx #ID_WELL_OF_SOULS
 	beq LoadPlayerGraphicsForRoom
 	lda #$00
-	sta $8B									; General-purpose flag for room state, cleared by default
+	sta indyHorizPosTemp								; General-purpose flag for room state, cleared by default
 LoadPlayerGraphicsForRoom:
 	lda RoomPlayer0LSBGraphicData,x	  ;4
-	sta player0GraphicPointers					; Set low byte of sprite pointer for P0 (non-Indy)
+	sta p0GfxPtrs					; Set low byte of sprite pointer for P0 (non-Indy)
 	lda RoomPlayer0MSBGraphicData,x	  ;4
-	sta player0GraphicPointers + 1				; Set high byte of sprite pointer for P0
+	sta p0GfxPtrs + 1				; Set high byte of sprite pointer for P0
 	lda RoomPlayer0Height,x	  ;4
-	sta player0SpriteHeight						; Set height of the sprite (e.g., enemy size)
+	sta p0SpriteHeight						; Set height of the sprite (e.g., enemy size)
 	lda RoomTypeTable,x	  ;4
-	sta $C8		  							; Likely a screen property (enemy group type, warp flag)
-	lda RoomMissile0VertPosTable,x	  ;4
-	sta $CA		  							 ; Possibly related to object spawning
+	sta p0HorizPos		  							; Likely a screen property (enemy group type, warp flag)
+	lda Roomm0VertPosTable,x	  ;4
+	sta m0HorizPos		  							 ; Possibly related to object spawning
 	lda RoomMissile0InitVertPosTable,x	  ;4
-	sta missile0VertPos						; Position for environmental object (missile0 = visual fx)
+	sta m0VertPos						; Position for environmental object (missile0 = visual fx)
 	cpx #ID_THIEVES_DEN
 	bcs ClearGameStateMemory	   ; If this is Thieves Den or later, clear additional state
 	adc RoomSpecialBehaviorTable,x	  ;4
-	sta $E0		  ;3					; Special room behavior index or environmental parameter
+	sta p0GfxData		  ;3					; Special room behavior index or environmental parameter
 	lda RoomPF1GraphicLSBTable,x	  ;4
-	sta pf1GraphicPointers				; PF1 low byte
+	sta pf1GfxPtrs				; PF1 low byte
 	lda RoomPF1GraphicMSBTable,x	  ;4
-	sta pf1GraphicPointers + 1				; PF1 high byte
+	sta pf1GfxPtrs + 1				; PF1 high byte
 	lda RoomPF2GraphicLSBTable,x	  ;4
-	sta pf2GraphicPointers					; PF2 low byte
+	sta pf2GfxPtrs					; PF2 low byte
 	lda RoomPF2GraphicMSBTable,x	  ;4
-	sta pf2GraphicPointers + 1					; PF2 high byte
+	sta pf2GfxPtrs + 1					; PF2 high byte
 	lda #$55		  ;2
-	sta $D2		  ; Likely a default animation frame or sound cue value
-	sta bulletOrWhipVertPos			; Default vertical position for bullets/whips
+	sta snakeDungeonY		  ; Likely a default animation frame or sound cue value
+	sta weaponVertPos			; Default vertical position for bullets/whips
 	cpx #ID_TEMPLE_ENTRANCE
 	bcs InitializeTempleAndShiningLightRooms	  							; Jump past object position logic if in later screens
 	lda #$00		 						; Clear out default vertical offset value
@@ -1826,26 +1846,26 @@ FinalizeScreenInitialization:
 	ldy #$4F		 ; Default environmental sink or vertical state
 	cpx #ID_ENTRANCE_ROOM
 	bcc FinishScreenInitAndReturn	   ; If before Entrance Room, use default Y
-	lda $AF,x	  ;4
+	lda treasureIndex,x	  ;4
 	ror			   ; Check a control bit from table (could enable falling)
 	bcc FinishScreenInitAndReturn	  ; If not set, use default
 	ldy RoomObjectVertOffsetTable,x	  ;4					; Load alternate vertical offset from table
 	cpx #ID_BLACK_MARKET
 	bne FinishScreenInitAndReturn	   ; Only override object height if in Black Market
 	lda #$FF		  ;2
-	sta missile0VertPos					; Hide missile object by placing it off-screen
+	sta m0VertPos					; Hide missile object by placing it off-screen
 FinishScreenInitAndReturn:
-	sty $DF		  					 ; Finalize vertical object/environment state
+	sty objectVertOffset		  					 ; Finalize vertical object/environment state
 	rts			  						 ; Return from screen initialization
 
 .setTreasureRoomObjectVertPos
-	lda $AF		   ; Load screen control byte
+	lda treasureIndex		   ; Load screen control byte
 	and #$78		  ; Mask off all but bits 3�6 (preserve mid flags, clear others)
-	sta $AF		  ; Save the updated control state
+	sta treasureIndex		  ; Save the updated control state
 	lda #$1A		
-	sta topObjectVertPos			 ; Set vertical position for the top object
+	sta p0VertPos			 ; Set vertical position for the top object
 	lda #$26		  ;2
-	sta bottomObjectVertPos			 ; Set vertical position for the bottom object
+	sta objectVertOffset			 ; Set vertical position for the bottom object
 	rts			   ; Return 
 	
 .setEntranceRoomTopObjectVertPos
@@ -1854,11 +1874,11 @@ FinishScreenInitAndReturn:
 	lsr								; shift value right
 	bne SetEntranceRoomTopObjectPosition						; branch if wall opening present in Entrance Room
 	ldy #$FF		  ;2
-	sty missile0VertPos
+	sty m0VertPos
 SetEntranceRoomTopObjectPosition:
 	tay												; Transfer A (index) to Y
 	lda EntranceRoomTopObjectVertPos,y				; Look up Y-position for Entrance Room's top object
-	sta topObjectVertPos							; Set the object's vertical position
+	sta p0VertPos							; Set the object's vertical position
 	jmp FinalizeScreenInitialization				; Continue the screen setup process
 	
 InitializeTempleAndShiningLightRooms:
@@ -1867,25 +1887,25 @@ InitializeTempleAndShiningLightRooms:
 	cpx #ID_TEMPLE_ENTRANCE						; If not, is it the Temple Entrance?
 	bne InitMesaFieldSinkingState									; If neither, skip this routine
 	ldy #$00		  ;2
-	sty $D8										; Clear some dungeon-related state variable
+	sty timepieceSpriteDataPtr										; Clear some dungeon-related state variable
 	ldy #$40		  ;2
-	sty topOfDungeonGraphic						 ; Set visual reference for top-of-dungeon graphics
+	sty topOfDungeonGfx						 ; Set visual reference for top-of-dungeon graphics
 	bne ConfigureTempleOrShiningLightGraphics	   								;Always taken
 	
 InitRoomOfShiningLight:
 	ldy #$FF		  ;2
-	sty topOfDungeonGraphic						; Top of dungeon should render with full brightness/effect
+	sty topOfDungeonGfx						; Top of dungeon should render with full brightness/effect
 	iny								; y = 0
-	sty $D8										; Possibly clear temple or environmental state
+	sty timepieceSpriteDataPtr										; Possibly clear temple or environmental state
 	iny								; y = 1
 ConfigureTempleOrShiningLightGraphics:
-	sty dungeonGraphics + 1						; Set dungeon tiles to base values
-	sty dungeonGraphics + 2
-	sty dungeonGraphics + 3
-	sty dungeonGraphics + 4
-	sty dungeonGraphics + 5
+	sty dungeonGfxData + 1						; Set dungeon tiles to base values
+	sty dungeonGfxData + 2
+	sty dungeonGfxData + 3
+	sty dungeonGfxData + 4
+	sty dungeonGfxData + 5
 	ldy #$39		  ;2
-	sty $D4										; Likely a counter or timer
+	sty snakeDungeonState										; Likely a counter or timer
 	sty snakeVertPos							; Set snake enemy Y-position baseline
 InitMesaFieldSinkingState:
 	cpx #ID_MESA_FIELD
@@ -1894,12 +1914,12 @@ InitMesaFieldSinkingState:
 	cpy #$49		  ;2
 	bcc ReturnFromRoomSpecificInit 	   ; If Indy is above threshold, no sinking
 	lda #$50		  ;2
-	sta $DF		  ; Set environmental sink value � starts Indy sinking
+	sta objectVertOffset		  ; Set environmental sink value � starts Indy sinking
 	rts			  ; return
 
 ReturnFromRoomSpecificInit:
 	lda #$00		 
-	sta $DF		  ; Clear the environmental sink value (Indy won't sink)
+	sta objectVertOffset		  ; Clear the environmental sink value (Indy won't sink)
 	rts			  ; Return to caller (completes screen init)
 
 CheckRoomOverrideCondition:
@@ -1964,7 +1984,7 @@ CheckFlagOrApplyFixedVertical:
 	bmi ConditionalOverrideBasedOnB5_0                    ; If negative, special flag check
 
 	ldy #$08                         ; Use a fixed override value
-	bit $AF                          ; Check room flag register
+	bit treasureIndex                          ; Check room flag register
 	bpl CheckVerticalOverride        ; If bit 7 is clear, proceed
 
 	lda #$41
@@ -1973,7 +1993,7 @@ CheckFlagOrApplyFixedVertical:
 ConditionalOverrideBasedOnB5_0:
 	iny			  ;2
 	bne ConditionalOverrideIfB5LessThan0A	  ; Always taken unless overflowed
-	lda $B5		  ;3
+	lda entranceRoomEventState		  ;3
 	and #$0F		  ; Mask to lower nibble
 	bne ReturnNoOverrideWithSideEffect	  ; If any bits set, don't override
 	ldy #$06		  ;2
@@ -1982,7 +2002,7 @@ ConditionalOverrideBasedOnB5_0:
 ConditionalOverrideIfB5LessThan0A:
 	iny			  ;2
 	bne CheckInputForFinalOverride	  ; Continue check chain
-	lda $B5		  ;3
+	lda entranceRoomEventState		  ;3
 	and #$0F		  ;2
 	cmp #$0A		  ;2
 	bcs ReturnNoOverrideWithSideEffect	  ;2
@@ -1993,7 +2013,7 @@ CheckInputForFinalOverride:
 	iny			  ;2
 	bne CheckHeadOfRaAlignment	  ; Continue to final check
 	ldy #$01		  ;2
-	bit playerInput
+	bit playerInputState
 	bmi CheckVerticalOverride	  ; If fire button pressed, allow override
 	
 ReturnNoOverrideWithSideEffect:
@@ -2014,7 +2034,7 @@ CheckHeadOfRaAlignment:
 	jmp CheckVerticalOverride			 ; All conditions met: apply vertical override
 	
 TakeItemFromInventory SUBROUTINE
-	ldy numberOfInventoryItems		; get number of inventory items
+	ldy inventoryItemCount		; get number of inventory items
 	bne .takeItemFromInventory		; branch if Indy carrying items
 	clc				; Otherwise, clear carry (indicates no item removed)
 	rts				; Return (nothing to do)
@@ -2027,13 +2047,13 @@ TakeItemFromInventory SUBROUTINE
 	asl
 	ldx #10							; Start from the last inventory slot (there are 6 slots, each 2 bytes)
 .takeItemFromInventoryLoop
-	cmp inventoryGraphicPointers,x	; Compare target LSB value to current inventory slot
+	cmp inventoryGfxPtrs,x	; Compare target LSB value to current inventory slot
 	bne .checkNextItem				; If not a match, try the next slot
-	cpx selectedInventoryIndex
+	cpx selectedInventorySlot
 	beq .checkNextItem
-	dec numberOfInventoryItems		; reduce number of inventory items
+	dec inventoryItemCount		; reduce number of inventory items
 	lda #<EmptySprite
-	sta inventoryGraphicPointers,x	; place empty sprite in inventory
+	sta inventoryGfxPtrs,x	; place empty sprite in inventory
 	cpy #$05						; If item index is less than 5, skip clearing pickup flag
 	bcc FinalizeInventoryRemoval	  ;2
 	; Remove pickup status bit if this is a non-basket item
@@ -2054,8 +2074,8 @@ FinalizeInventoryRemoval:
 
 .takeSelectedItemFromInventory
 	lda #ID_INVENTORY_EMPTY
-	ldx selectedInventoryIndex
-	sta inventoryGraphicPointers,x	; remove selected item from inventory
+	ldx selectedInventorySlot
+	sta inventoryGfxPtrs,x	; remove selected item from inventory
 	ldx selectedInventoryId			; get current selected inventory id
 	cpx #ID_INVENTORY_KEY
 	bcc JumpToItemRemovalHandler	  ;2
@@ -2069,30 +2089,30 @@ JumpToItemRemovalHandler:
 	pha								; push MSB to stack
 	lda RemoveItemFromInventoryJumpTable - 2,x
 	pha								; push LSB to stack
-	ldx currentScreenId				; get the current screen id
+	ldx currentRoomId				; get the current screen id
 	rts								; jump to Remove Item strategy
 
 RemoveParachuteFromInventory
 	lda #$3F		  ; Mask to clear bit 6 (parachute active flag)
-	and $B4		  ; Remove parachute bit from game state flags
-	sta $B4		  ; Store updated flags
+	and mesaSideState		  ; Remove parachute bit from game state flags
+	sta mesaSideState		  ; Store updated flags
 FinalizeItemRemoval:
 	jmp RemoveItemFromInventory		; Go to general item removal cleanup
 	
 RemoveAnkhOrHourGlassFromInventory
-	stx $8D		   ; Store current screen ID (context-specific logic)
+	stx eventState	   ; Store current screen ID (context-specific logic)
 	lda #$70		  ; Set vertical position offscreen or special
-	sta bulletOrWhipVertPos			; Move bullet/whip Y position (could represent effect trigger)
+	sta weaponVertPos			; Move bullet/whip Y position (could represent effect trigger)
 	bne FinalizeItemRemoval			; Unconditional jump to finalize removal
 	
 RemoveChaiFromInventory
-	lda #$42		  ; Check for a specific condition in status byte $91
-	cmp $91		  ;3
+	lda #$42		  ; Check for a specific condition in status byte movementDirection
+	cmp movementDirection		  ;3
 	bne checkMarketplaceYarEasterEgg	  ;2
 	
-	; If $91 == $42, warp Indy to Black Market and reset position
+	; If movementDirection == $42, warp Indy to Black Market and reset position
 	lda #ID_BLACK_MARKET				; Set screen to Black Market
-	sta currentScreenId		  ;3
+	sta currentRoomId		  ;3
 	jsr InitializeScreenState			 ; Initialize Black Market screen
 	lda #$15		  ; Set Indy X position (entry point)
 	sta indyHorizPos			;3
@@ -2104,15 +2124,15 @@ checkMarketplaceYarEasterEgg:
 	cpx #ID_MARKETPLACE_GRENADE			; Are we removing the Marketplace Grenade?
 	bne RemoveItemFromInventory			; If not, do normal cleanup
 	lda #BONUS_FINDING_YAR				; Check if we're triggering Yar Easter Egg bonus
-	cmp $8B		  ;3
+	cmp indyHorizPosTemp	  ;3
 	bne RemoveItemFromInventory			; If not already triggered, exit
 	; Award Yar Easter Egg bonus
-	sta findingYarEasterEggBonus
+	sta yarEasterEggBonus
 	lda #$00		  ;2
 	sta $CE		  						; Possibly clears a sprite or collision state
 	lda #$02		  ;2
-	ora $B4								; Set bit 1 in status flags
-	sta $B4		  ;3
+	ora mesaSideState								; Set bit 1 in status flags
+	sta mesaSideState		  ;3
 	bne RemoveItemFromInventory		 ; Always branch to final cleanup
 	
 RemoveWhipFromInventory
@@ -2136,12 +2156,12 @@ RemoveShovelFromInventory
 	lda #$4F
 	sta shovelVertPos
 	lda #$4B
-	sta missile0VertPos
+	sta m0VertPos
 .removeShovelFromInventory
 	bne RemoveItemFromInventory		; Unconditionally jump to finalize item removal
 	
 RemoveCoinsFromInventory
-	ldx currentScreenId				; get the current screen id
+	ldx currentRoomId				; get the current screen id
 	cpx #ID_BLACK_MARKET
 	bne FinalizeCoinRemovalFlags						; branch if not in Black Market
 	lda indyHorizPos					; get Indy's horizontal position
@@ -2151,19 +2171,19 @@ RemoveCoinsFromInventory
 	sec								; set carry
 	ror blackMarketState				; rotate right to show Indy not carry coins
 FinalizeCoinRemovalFlags:
-	lda $91		  ;3
+	lda movementDirection		  ;3
 	clc			  ;2
 	adc #$40		  ; Update UI/event state (e.g. to reflect coin removal)
-	sta $91		  ;3
+	sta movementDirection		  ;3
 RemoveItemFromInventory
-	dec numberOfInventoryItems		; reduce number of inventory items
+	dec inventoryItemCount		; reduce number of inventory items
 	bne .selectNextAvailableInventoryItem; branch if Indy has remaining items
 	lda #ID_INVENTORY_EMPTY
 	sta selectedInventoryId			; clear the current selected invendory id
 	beq FinalizeInventorySelection						; unconditional branch
 	
 .selectNextAvailableInventoryItem
-	ldx selectedInventoryIndex		; get selected inventory index
+	ldx selectedInventorySlot		; get selected inventory index
 .nextInventoryIndex
 	inx								; increment by 2 to compensate for word pointer
 	inx
@@ -2171,16 +2191,16 @@ RemoveItemFromInventory
 	bcc SelectNextInventoryItem
 	ldx #0							; wrap around to the beginning
 SelectNextInventoryItem:
-	lda inventoryGraphicPointers,x	; get inventory graphic LSB value
+	lda inventoryGfxPtrs,x	; get inventory graphic LSB value
 	beq .nextInventoryIndex			; branch if nothing in the inventory location
-	stx selectedInventoryIndex		; set inventory index
+	stx selectedInventorySlot		; set inventory index
 	lsr								; divide valye by 8 to set the inventory id
 	lsr
 	lsr
 	sta selectedInventoryId			; set inventory id
 FinalizeInventorySelection:
 	lda #$0D		  ; Possibly sets UI state or inventory mode
-	sta $A2		  ;3
+	sta indyState		  ;3
 	sec			  ; Set carry to indicate success
 	rts			  ;6
 
@@ -2342,7 +2362,7 @@ SnakeHorizontalOffsetTable:
 RoomSpecialBehaviorTable:
 	.byte $00,$00,$18,$04,$03,$03,$85,$85,$3B,$85,$85
 	
-RoomMissile0VertPosTable:
+Roomm0VertPosTable:
 	.byte $20,$78,$85,$4D,$62,$17,$50,$50,$50,$50,$50,$12,$12
 	
 RoomMissile0InitVertPosTable:
@@ -2485,7 +2505,7 @@ RoomIdleHandlerJumpTable:
 	.word CheckIfIndyShotOrTouchedByTsetseFlies - 1
 	
 PlaceItemInInventory
-	ldx numberOfInventoryItems		; get number of inventory items
+	ldx inventoryItemCount		; get number of inventory items
 	cpx #MAX_INVENTORY_ITEMS			; see if Indy carrying maximum number of items
 	bcc .spaceAvailableForItem		; branch if Indy has room to carry more items
 	clc
@@ -2494,7 +2514,7 @@ PlaceItemInInventory
 .spaceAvailableForItem
 	ldx #10
 .searchForEmptySpaceLoop
-	ldy inventoryGraphicPointers,x	; get the LSB for the inventory graphic
+	ldy inventoryGfxPtrs,x	; get the LSB for the inventory graphic
 	beq .addInventoryItem		; branch if nothing is in the inventory slot
 	dex
 	dex
@@ -2505,13 +2525,13 @@ PlaceItemInInventory
 	asl								; mutliply item number by 8 for graphic LSB
 	asl
 	asl
-	sta inventoryGraphicPointers,x	; place graphic LSB in inventory
-	lda numberOfInventoryItems		; get number of inventory items
+	sta inventoryGfxPtrs,x	; place graphic LSB in inventory
+	lda inventoryItemCount		; get number of inventory items
 	bne UpdateInventoryAfterPickup						; branch if Indy carrying items
-	stx selectedInventoryIndex		; set index to newly picked up item
+	stx selectedInventorySlot		; set index to newly picked up item
 	sty selectedInventoryId			; set the current selected inventory id
 UpdateInventoryAfterPickup:
-	inc numberOfInventoryItems		; increment number of inventory items
+	inc inventoryItemCount		; increment number of inventory items
 	cpy #ID_INVENTORY_COINS
 	bcc FinalizeInventoryAddition	  ;2
 	tya								; move item number to accumulator
@@ -2519,7 +2539,7 @@ UpdateInventoryAfterPickup:
 	jsr ShowItemAsTaken
 FinalizeInventoryAddition:
 	lda #$0C
-	sta $A2
+	sta indyState
 	sec
 	rts
 
@@ -2574,11 +2594,11 @@ DetermineIfItemAlreadyTaken
 UpdateRoomEventState:
 	and #$1F		  ;2
 	tax			  ;2
-	lda $98		  ;3
+	lda roomEventStateOffset		  ;3
 	cpx #$0C		  ;2
 	bcs .doneUpdateRoomEventState	  ;2
 	adc RoomEventStateOffsetTable,x	  ;4
-	sta $98		  ;3
+	sta roomEventStateOffset		  ;3
 .doneUpdateRoomEventState:
 	rts			  ;6
 	
@@ -2599,54 +2619,54 @@ Start
 	dex								; x = -1
 	stx adventurePoints
 	lda #>InventorySprites
-	sta inventoryGraphicPointers + 1
-	sta inventoryGraphicPointers + 3
-	sta inventoryGraphicPointers + 5
-	sta inventoryGraphicPointers + 7
-	sta inventoryGraphicPointers + 9
-	sta inventoryGraphicPointers + 11
+	sta inventoryGfxPtrs + 1
+	sta inventoryGfxPtrs + 3
+	sta inventoryGfxPtrs + 5
+	sta inventoryGfxPtrs + 7
+	sta inventoryGfxPtrs + 9
+	sta inventoryGfxPtrs + 11
 	lda #<Copyright_0
-	sta inventoryGraphicPointers
+	sta inventoryGfxPtrs
 	lda #<Copyright_1
-	sta inventoryGraphicPointers + 2
+	sta inventoryGfxPtrs + 2
 	lda #<Copyright_2
-	sta inventoryGraphicPointers + 6
+	sta inventoryGfxPtrs + 6
 	lda #<Copyright_3
-	sta inventoryGraphicPointers + 4
+	sta inventoryGfxPtrs + 4
 	lda #<Copyright_4
-	sta inventoryGraphicPointers + 8
+	sta inventoryGfxPtrs + 8
 	lda #ID_ARK_ROOM
-	sta currentScreenId
+	sta currentRoomId
 	lsr
-	sta numberOfBullets
+	sta bulletCount
 	jsr InitializeScreenState
 	jmp StartNewFrame
 	
 InitializeGameStartState:
 	lda #<InventoryCoinsSprite
-	sta inventoryGraphicPointers		; place coins in Indy's inventory
+	sta inventoryGfxPtrs		; place coins in Indy's inventory
 	lsr								; divide value by 8 to get the inventory id
 	lsr
 	lsr
 	sta selectedInventoryId			; set the current selected inventory id
-	inc numberOfInventoryItems		; increment number of inventory items
+	inc inventoryItemCount		; increment number of inventory items
 	lda #<EmptySprite
-	sta inventoryGraphicPointers + 2 ; clear the remainder of Indy's inventory
-	sta inventoryGraphicPointers + 4
-	sta inventoryGraphicPointers + 6
-	sta inventoryGraphicPointers + 8
+	sta inventoryGfxPtrs + 2 ; clear the remainder of Indy's inventory
+	sta inventoryGfxPtrs + 4
+	sta inventoryGfxPtrs + 6
+	sta inventoryGfxPtrs + 8
 	lda #INIT_SCORE
 	sta adventurePoints
 	lda #<IndyStationarySprite
-	sta indyGraphicPointers
+	sta indyGfxPtrs
 	lda #>IndySprites
-	sta indyGraphicPointers + 1
+	sta indyGfxPtrs + 1
 	lda #$4C		  ;2
 	sta indyHorizPos			;3
 	lda #$0F		  ;2
 	sta indyVertPos		  ;3
 	lda #ID_ENTRANCE_ROOM
-	sta currentScreenId
+	sta currentRoomId
 	sta lives
 	jsr InitializeScreenState
 	jmp	 SetupScreenVisualsAndObjects	  ;3
@@ -2663,14 +2683,14 @@ DetermineFinalScore
 	sbc findingArkBonus				; reduce for finding the Ark of the Covenant
 	sbc usingParachuteBonus			; reduce for using the parachute
 	sbc skipToMesaFieldBonus			; reduce if player skipped the Mesa field
-	sbc findingYarEasterEggBonus		; reduce if player found Yar
+	sbc yarEasterEggBonus		; reduce if player found Yar
 	sbc lives						; reduce by remaining lives
-	sbc usingHeadOfRaInMapRoomBonus	; reduce if player used the Head of Ra
+	sbc headOfRaMapRoomBonus	; reduce if player used the Head of Ra
 	sbc landingInMesaBonus			; reduce if player landed in Mesa
-	sbc $AE		  ;3
+	sbc unknownPenalty		  ;3
 	clc
 	adc grenadeOpeningPenalty		; add 2 if Entrance Room opening activated
-	adc escapedShiningLightPenalty	; add 13 if escaped from Shining Light prison
+	adc shiningLightPenalty	; add 13 if escaped from Shining Light prison
 	adc shootingThiefPenalty			; add 4 if shot a thief
 	sta adventurePoints
 	rts
@@ -2737,19 +2757,19 @@ JumpToDisplayKernel SUBROUTINE
 	sta WSYNC
 	sta WSYNC
 	lda #<DisplayKernel
-	sta bankSwitchJMPAddress
+	sta bankSwitchJMPAddr
 	lda #>DisplayKernel
-	sta bankSwitchJMPAddress + 1
+	sta bankSwitchJMPAddr + 1
 JumpToBank1
 	lda #LDA_ABS
-	sta bankSwitchLDAInstruction
+	sta bankSwitchLDAOpcode
 	lda #<BANK1STROBE
-	sta bankStrobeAddress
+	sta bankSwitchAddr
 	lda #>BANK1STROBE
-	sta bankStrobeAddress + 1
+	sta bankSwitchAddr + 1
 	lda #JMP_ABS
-	sta bankSwitchJMPInstruction
-	jmp.w bankSwitchingVariables
+	sta bankSwitchJMPOpcode
+	jmp.w bankSwitchVars
 	
 DetermineDirectionToMoveObject
 	ror
@@ -2808,22 +2828,22 @@ BANK1Start
 	lda BANK0STROBE
 	
 DrawPlayfieldKernel
-	cmp $E0		  ;3
+	cmp p0GfxData		  ;3
 	bcs DungeonWallScanlineHandler	  ;2
 	lsr			  ;2
 	clc			  ;2
-	adc $DF		  ;3
+	adc objectVertOffset		  ;3
 	tay			  ;2
 	sta WSYNC
 ;--------------------------------------
 	sta HMOVE				  ; 3 = @03
-	lda (pf1GraphicPointers),y ; 5
+	lda (pf1GfxPtrs),y ; 5
 	sta PF1					  ; 3 = @11
-	lda (pf2GraphicPointers),y ; 5
+	lda (pf2GfxPtrs),y ; 5
 	sta PF2					  ; 3 = @19
 	bcc .drawPlayerSprites	  ; 2�
 DungeonWallScanlineHandler:
-	sbc $D4		  ;3
+	sbc snakeDungeonState		  ;3
 	lsr			  ;2
 	lsr			  ;2
 	sta WSYNC
@@ -2832,57 +2852,57 @@ DungeonWallScanlineHandler:
 	tax						  ; 2
 	cpx snakeVertPos			  ; 3
 	bcc DrawDungeonWallScanline	  ;2
-	ldx $D8		  ;3
+	ldx timepieceSpriteDataPtr		  ;3
 	lda #$00		  ;2
 	beq StoreDungeonWallScanline				  ; 3
 	
 DrawDungeonWallScanline:
-	lda dungeonGraphics,x	  ; 4
-	ldx $D8		  ;3
+	lda dungeonGfxData,x	  ; 4
+	ldx timepieceSpriteDataPtr		  ;3
 StoreDungeonWallScanline:
 	sta PF1,x	  ;4
 .drawPlayerSprites
 	ldx #<ENAM1				  ; 2
 	txs						  ; 2
-	lda scanline				  ; 3
+	lda scanlineCounter				  ; 3
 	sec						  ; 2
 	sbc indyVertPos			  ; 3
 	cmp indySpriteHeight		  ; 3
 	bcs .skipIndyDraw		  ; 2�
 	tay						  ; 2
-	lda (indyGraphicPointers),y;5
+	lda (indyGfxPtrs),y;5
 	tax						  ; 2
 DrawPlayer0Sprite:
-	lda scanline				  ; 3
+	lda scanlineCounter				  ; 3
 	sec						  ; 2
-	sbc topObjectVertPos		  ; 3
-	cmp player0SpriteHeight	  ; 3
+	sbc p0VertPos		  ; 3
+	cmp p0SpriteHeight	  ; 3
 	bcs .skipDrawingPlayer0	  ; 2�
 	tay						  ; 2
-	lda (player0GraphicPointers),y;5
+	lda (p0GfxPtrs),y;5
 	tay						  ; 2
 .nextPlayfieldScanline
-	lda scanline				  ; 3
+	lda scanlineCounter				  ; 3
 	sta WSYNC
 ;--------------------------------------
 	sta HMOVE				  ; 3
-	cmp bulletOrWhipVertPos	  ; 3
+	cmp weaponVertPos	  ; 3
 	php						  ; 3 = @09	  enable / disable M1
-	cmp missile0VertPos		  ; 3
+	cmp m0VertPos		  ; 3
 	php						  ; 3 = @15	  enable / disable M0
 	stx GRP1					  ; 3 = @18
 	sty GRP0					  ; 3 = @21
 	sec						  ; 2
-	sbc $D2		  ;3
+	sbc snakeDungeonY		  ;3
 	cmp #$08		  ;2
 	bcs AdvanceToNextPlayfieldScanline	  ;2
 	tay						  ; 2
-	lda (timePieceGraphicPointers),y;5
+	lda (timepieceGfxPtrs),y;5
 	sta ENABL				  ; 3 = @40
 	sta HMBL					  ; 3 = @43
 AdvanceToNextPlayfieldScanline:
-	inc scanline				  ; 5		  increment scanline
-	lda scanline				  ; 3
+	inc scanlineCounter				  ; 5		  increment scanlineCounter
+	lda scanlineCounter				  ; 3
 	cmp #(H_KERNEL / 2)		  ; 2
 	bcc DrawPlayfieldKernel	  ; 2�
 	jmp InventoryKernel		  ; 3
@@ -2906,11 +2926,11 @@ DrawStationaryPlayerKernel SUBROUTINE
 	beq .nextStationaryPlayerScanline;3	  unconditional branch
 	
 DrawStationaryPlayer0Sprite:
-	lda (player0GraphicPointers),y;5
+	lda (p0GfxPtrs),y;5
 	bmi .setPlayer0Values	  ; 2�
-	cpy bottomObjectVertPos	  ; 3
+	cpy objectVertOffset	  ; 3
 	bcs .checkToEndKernel	  ; 2�
-	cpy topObjectVertPos		  ; 3
+	cpy p0VertPos		  ; 3
 	bcc .skipDrawingPlayer0	  ; 2�
 	sta GRP0					  ; 3
 	bcs .nextStationaryPlayerScanline;3	  unconditional branch
@@ -2921,14 +2941,14 @@ DrawStationaryPlayer0Sprite:
 	and #2					  ; 2		  value 0 || 2
 	tax						  ; 2		  set for correct pointer index
 	tya						  ; 2		  move value to accumulator
-	sta (player0TIAPointers,x) ; 6		  set player 0 color or fine motion
+	sta (p0TiaPtrs,x) ; 6		  set player 0 color or fine motion
 .nextStationaryPlayerScanline
-	inc scanline				  ; 5		  increment scan line
-	ldx scanline				  ; 3		  get current scan line
+	inc scanlineCounter				  ; 5		  increment scan line
+	ldx scanlineCounter				  ; 3		  get current scan line
 	lda #ENABLE_BM			  ; 2
-	cpx missile0VertPos		  ; 3
+	cpx m0VertPos		  ; 3
 	bcc .skipDrawingMissile0	  ; 2�		 branch if not time to draw missile
-	cpx $E0		  ;3
+	cpx p0GfxData		  ;3
 	bcc .setEnableMissileValue ; 2�
 .skipDrawingMissile0
 	ror						  ; 2		  shift ENABLE_BM right
@@ -2946,15 +2966,15 @@ JumpIntoStationaryPlayerKernel
 	tay						  ; 2
 	cmp #8					  ; 2
 	bcc .waste05Cycles		  ; 2�
-	lda $D8					  ; 3
-	sta timePieceGraphicPointers;3
+	lda timepieceSpriteDataPtr					  ; 3
+	sta timepieceGfxPtrs;3
 DrawTimepieceOrBallSprite:
-	lda (timePieceGraphicPointers),y;5
+	lda (timepieceGfxPtrs),y;5
 	sta HMBL					  ; 3 = @34
 SetMissile1EnableForScanline:
 	ldy #DISABLE_BM			  ; 2
-	txa						  ; 2		  move scanline count to accumulator
-	cmp bulletOrWhipVertPos	  ; 3
+	txa						  ; 2		  move scanlineCounter count to accumulator
+	cmp weaponVertPos	  ; 3
 	bne UpdateMissile1EnableForScanline				  ; 2�
 	dey						  ; 2		  y = -1
 UpdateMissile1EnableForScanline:
@@ -2964,15 +2984,15 @@ UpdateMissile1EnableForScanline:
 	cmp indySpriteHeight		  ;	 3
 	bcs SkipDrawingStationaryPlayer1Sprite				  ; 2�+1
 	tay						  ; 2
-	lda (indyGraphicPointers),y; 5
+	lda (indyGfxPtrs),y; 5
 DrawStationaryPlayer1Sprite:
-	ldy scanline				  ; 3
+	ldy scanlineCounter				  ; 3
 	sta GRP1					  ; 3 = @71
 	sta WSYNC
 ;--------------------------------------
 	sta HMOVE				  ; 3
 	lda #ENABLE_BM			  ; 2
-	cpx $D2					  ; 3
+	cpx snakeDungeonY					  ; 3
 	bcc SkipDrawingBall				  ; 2�
 	cpx $DC					  ; 3
 	bcc SetBallEnableForScanline				  ; 2�
@@ -3002,7 +3022,7 @@ SkipDrawingStationaryPlayer1Sprite:
 	beq DrawStationaryPlayer1Sprite				  ; 3+1		  unconditional branch
 	
 AdvanceStationaryKernelScanline:
-	inx						  ; 2		  increment scanline
+	inx						  ; 2		  increment scanlineCounter
 	sta HMCLR				  ; 3		  clear horizontal movement registers
 	cpx #H_KERNEL			  ; 2
 	bcc ThievesDenWellOfSoulsScanlineHandler				  ; 2�
@@ -3012,7 +3032,7 @@ ThievesDenOrWellOfTheSoulsKernel
 	sta WSYNC
 ;--------------------------------------
 	sta HMOVE				  ; 3
-	inx						  ; 2		  increment scanline
+	inx						  ; 2		  increment scanlineCounter
 	lda $84					  ; 3
 	sta GRP0					  ; 3 = @11
 	lda $85					  ; 3
@@ -3020,32 +3040,32 @@ ThievesDenOrWellOfTheSoulsKernel
 	txa						  ; 2		  move canline to accumulator
 	ldx #<ENABL				  ; 2
 	txs						  ; 2
-	tax						  ; 2		  move scanline to x
-	lsr						  ; 2		  divide scanline by 2
-	cmp $D2					  ; 3
+	tax						  ; 2		  move scanlineCounter to x
+	lsr						  ; 2		  divide scanlineCounter by 2
+	cmp snakeDungeonY					  ; 3
 	php						  ; 3 = @33	  enable / disable BALL
-	cmp bulletOrWhipVertPos	  ; 3
+	cmp weaponVertPos	  ; 3
 	php						  ; 3 = @39	  enable / disable M1
-	cmp missile0VertPos		  ; 3
+	cmp m0VertPos		  ; 3
 	php						  ; 3 = @45	  enable / disable M0
 	sec						  ; 2
 	sbc indyVertPos			  ; 3
 	cmp indySpriteHeight		  ; 3
 	bcs AdvanceStationaryKernelScanline				  ; 2�
-	tay						  ; 2		  move scanline value to y
-	lda (indyGraphicPointers),y; 5		  get Indy graphic data
+	tay						  ; 2		  move scanlineCounter value to y
+	lda (indyGfxPtrs),y; 5		  get Indy graphic data
 	sta HMCLR				  ; 3 = @65	  clear horizontal movement registers
-	inx						  ; 2		  increment scanline
+	inx						  ; 2		  increment scanlineCounter
 	sta GRP1					  ; 3 = @70
 ThievesDenWellOfSoulsScanlineHandler:
 	sta WSYNC
 ;--------------------------------------
 	sta HMOVE				  ; 3
-	bit $D4					  ; 3
+	bit snakeDungeonState					  ; 3
 	bpl ThiefSpriteDrawAndAnimationHandler				  ; 2�
-	ldy $89					  ; 3
-	lda $88					  ; 3
-	lsr $D4					  ; 5
+	ldy thiefHorizPosFine					  ; 3
+	lda thiefHorizPosCoarse				  ; 3
+	lsr snakeDungeonState					  ; 5
 ThiefSpritePositionTimingLoop:
 	dey						  ; 2
 	bpl ThiefSpritePositionTimingLoop				  ; 2�
@@ -3058,24 +3078,24 @@ ThiefSpriteDrawAndAnimationHandler:
 	txa						  ; 2
 	and #$0F					  ; 2
 	tay						  ; 2
-	lda (player0GraphicPointers),y;5
+	lda (p0GfxPtrs),y;5
 	sta GRP0					  ; 3 = @25
-	lda (player0ColorPointers),y;5
+	lda (p0ColorPtrs),y;5
 	sta COLUP0				  ; 3 = @33
 	iny						  ; 2
-	lda (player0GraphicPointers),y;5
+	lda (p0GfxPtrs),y;5
 	sta $84					  ; 3
-	lda (player0ColorPointers),y;5
+	lda (p0ColorPtrs),y;5
 	sta $85					  ; 3
-	cpy player0SpriteHeight	  ; 3
+	cpy p0SpriteHeight	  ; 3
 	bcc ReturnToThievesDenKernel				  ; 2�
-	lsr $D4					  ; 5
+	lsr snakeDungeonState					  ; 5
 ReturnToThievesDenKernel:
 	jmp ThievesDenOrWellOfTheSoulsKernel;3
 	
 ThiefSpriteStateUpdateHandler:
 	lda #$20		  ;2
-	bit $D4		  ;3
+	bit snakeDungeonState		  ;3
 	beq ThiefSpriteAnimationFrameSetup	  ;2
 	txa			  ;2
 	lsr			  ;2
@@ -3086,26 +3106,26 @@ ThiefSpriteStateUpdateHandler:
 	bcs ThievesDenOrWellOfTheSoulsKernel;2�
 	tay			  ;2
 	sty $87		  ;3
-	lda thievesDirectionAndSize,y;4
+	lda thiefState,y;4
 	sta REFP0	  ;3
 	sta NUSIZ0	  ;3
 	sta $86		  ;3
 	bpl LF1A2	  ;2
-	lda $96		  ;3
-	sta player0GraphicPointers;3
+	lda diggingState		  ;3
+	sta p0GfxPtrs;3
 	lda #$65		  ;2
-	sta player0ColorPointers
+	sta p0ColorPtrs
 	lda #$00		  ;2
-	sta $D4		  ;3
+	sta snakeDungeonState		  ;3
 	jmp ThievesDenOrWellOfTheSoulsKernel;3
 	
 LF1A2:
-	lsr $D4		  ;5
+	lsr snakeDungeonState		  ;5
 	jmp ThievesDenOrWellOfTheSoulsKernel;3
 	
 ThiefSpriteAnimationFrameSetup:
 	lsr			  ;2
-	bit $D4		  ;3
+	bit snakeDungeonState		  ;3
 	beq ThiefSpriteAnimationFrameSpecialCase	  ;2
 	ldy $87		  ;3
 	lda #$08		  ;2
@@ -3113,16 +3133,16 @@ ThiefSpriteAnimationFrameSetup:
 	beq ThiefSpriteAnimationFrameSelect	  ;2
 	lda #$03		  ;2
 ThiefSpriteAnimationFrameSelect:
-	eor thievesHMOVEIndex,y
+	eor thiefHmoveIndices,y
 	and #3							; 4 frames of animation for the Thief
 	tay
 	lda ThiefSpriteLSBValues,y
-	sta player0GraphicPointers		; set Thief graphic LSB value
+	sta p0GfxPtrs		; set Thief graphic LSB value
 	lda #<ThiefColors
-	sta player0ColorPointers
+	sta p0ColorPtrs
 	lda #H_THIEF - 1
-	sta player0SpriteHeight	  ; 3
-	lsr $D4		  ;5
+	sta p0SpriteHeight	  ; 3
+	lsr snakeDungeonState		  ;5
 	jmp ThievesDenOrWellOfTheSoulsKernel;3
 	
 ThiefSpriteAnimationFrameSpecialCase:
@@ -3134,12 +3154,12 @@ ThiefSpriteAnimationFrameSpecialCase:
 	
 ThiefSpriteSpecialFrameHandler:
 	ldy $87		  ;3
-	lda thievesHorizPositions,y; 4
-	sta $88		  ;3
+	lda thiefHorizPositions,y; 4
+	sta thiefHorizPosCoarse	  ;3
 	and #$0F		  ;2
-	sta $89		  ;3
+	sta thiefHorizPosFine	  ;3
 	lda #$80		  ;2
-	sta $D4		  ;3
+	sta snakeDungeonState		  ;3
 	jmp ThievesDenOrWellOfTheSoulsKernel;3
 	
 InventoryKernel
@@ -3182,7 +3202,7 @@ InventoryKernel
 	lda #YELLOW + 10			  ; 2
 	sta COLUP0				  ; 3 = @08
 	sta COLUP1				  ; 3 = @11
-	lda selectedInventoryIndex ; 3		  get selected inventory index
+	lda selectedInventorySlot ; 3		  get selected inventory index
 	lsr						  ; 2		  divide value by 2
 	tay						  ; 2
 	lda InventoryIndexHorizValues,y;4
@@ -3211,12 +3231,12 @@ InventoryKernel
 	lda #$3F		  ;2
 	and secondsTimer			;3
 	bne UpdateInventoryDisplay	  ;2
-	lda $B5		  ;3
+	lda entranceRoomEventState		  ;3
 	and #$0F		  ;2
 	beq UpdateInventoryDisplay	  ;2
 	cmp #$0F		  ;2
 	beq UpdateInventoryDisplay	  ;2
-	inc $B5		  ;5
+	inc entranceRoomEventState		  ;5
 UpdateInventoryDisplay:
 	sta WSYNC
 ;--------------------------------------
@@ -3231,29 +3251,29 @@ UpdateInventoryDisplay:
 	sta WSYNC
 ;--------------------------------------
 	lda #H_INVENTORY_SPRITES - 1;2
-	sta loopCount			  ; 3
+	sta loopCounter			  ; 3
 .drawInventorySprites
-	ldy loopCount			  ; 3
-	lda (inventoryGraphicPointers),y;5
+	ldy loopCounter			  ; 3
+	lda (inventoryGfxPtrs),y;5
 	sta GRP0					  ; 3
 	sta WSYNC
 ;--------------------------------------
-	lda (inventoryGraphicPointers + 2),y;5
+	lda (inventoryGfxPtrs + 2),y;5
 	sta GRP1					  ; 3 = @08
-	lda (inventoryGraphicPointers + 4),y;5
+	lda (inventoryGfxPtrs + 4),y;5
 	sta GRP0					  ; 3 = @16
-	lda (inventoryGraphicPointers + 6),y;5
-	sta tempCharHolder		  ; 3
-	lda (inventoryGraphicPointers + 8),y;5
+	lda (inventoryGfxPtrs + 6),y;5
+	sta tempGfxHolder		  ; 3
+	lda (inventoryGfxPtrs + 8),y;5
 	tax						  ; 2
-	lda (inventoryGraphicPointers + 10),y;5
+	lda (inventoryGfxPtrs + 10),y;5
 	tay						  ; 2
-	lda tempCharHolder		  ; 3
+	lda tempGfxHolder		  ; 3
 	sta GRP1					  ; 3 = @44
 	stx GRP0					  ; 3 = @47
 	sty GRP1					  ; 3 = @50
 	sty GRP0					  ; 3 = @53
-	dec loopCount			  ; 5
+	dec loopCounter			  ; 5
 	bpl .drawInventorySprites  ; 2�
 	lda #0					  ; 2
 	sta WSYNC
@@ -3271,7 +3291,7 @@ UpdateInventoryDisplay:
 	sta WSYNC
 ;--------------------------------------
 	ldy #ENABLE_BM			  ; 2
-	lda numberOfInventoryItems ; 3		  get number of inventory items
+	lda inventoryItemCount ; 3		  get number of inventory items
 	bne UpdateInventoryBallAndPlayfield				  ; 2�		 branch if Indy carry items
 	dey						  ; 2		  y = 1
 UpdateInventoryBallAndPlayfield:
@@ -3299,12 +3319,12 @@ Overscan
 	txs								; point stack to the beginning
 	ldx #$01		  ;2
 UpdateSoundRegistersDuringOverscan:
-	lda $A2,x	  ;4
+	lda indyState,x	  ;4
 	sta AUDC0,x	  ;4
 	sta AUDV0,x	  ;4
 	bmi UpdateSpecialSoundEffectDuringOverscan	  ;2
 	ldy #$00		  ;2
-	sty $A2,x	  ;4
+	sty indyState,x	  ;4
 UpdateSoundFrequencyDuringOverscan:
 	sta AUDF0,x	  ;4
 	dex			  ;2
@@ -3317,12 +3337,12 @@ UpdateSpecialSoundEffectDuringOverscan:
 	lda #$0F		  ;2
 	and frameCount		 ;3
 	bne UpdateSoundEffectTimerDuringOverscan	  ;2
-	dec $A4		  ;5
+	dec soundEffectTimer		  ;5
 	bpl UpdateSoundEffectTimerDuringOverscan	  ;2
 	lda #$17		  ;2
-	sta $A4		  ;3
+	sta soundEffectTimer		  ;3
 UpdateSoundEffectTimerDuringOverscan:
-	ldy $A4		  ;3
+	ldy soundEffectTimer		  ;3
 	lda OverscanSpecialSoundEffectTable,y	  ;4
 	bne UpdateSoundFrequencyDuringOverscan	  ;2
 UpdateSoundEffectFromFrameCount:
@@ -3341,7 +3361,7 @@ OverscanSoundUpdateDone:
 	cmp #ID_INVENTORY_FLUTE
 	bne ResetInventoryDisplayState	  ;2
 	lda #$84		  ;2
-	sta $A3		  ;3
+	sta whipEffectTimer		  ;3
 	bne UpdateInventoryAndEventStateAfterReset						; unconditional branch
 	
 UpdateInventoryTimepieceDisplay:
@@ -3357,13 +3377,13 @@ UpdateTimepieceInventorySprite:
 	lsr			  ;2
 	adc #<Inventory12_00
 StoreTimepieceInventorySprite:
-	ldx selectedInventoryIndex
-	sta inventoryGraphicPointers,x		;4
+	ldx selectedInventorySlot
+	sta inventoryGfxPtrs,x		;4
 ResetInventoryDisplayState:
 	lda #$00		  ;2
-	sta $A3		  ;3
+	sta whipEffectTimer		  ;3
 UpdateInventoryAndEventStateAfterReset:
-	bit $93		  ;3
+	bit screenEventState		  ;3
 	bpl UpdateInventoryObjectPositions	  ;2
 	lda frameCount					; get current frame count
 	and #$07		  ;2
@@ -3373,7 +3393,7 @@ UpdateInventoryAndEventStateAfterReset:
 	ldy #$01		  ;2
 	bit majorEventFlag 	  ;3
 	bmi SetInventoryEventStateY03	  ;2
-	bit $A1		  ;3
+	bit snakeTimer		  ;3
 	bpl UpdateInventoryEventStateAfterYSet	  ;2
 SetInventoryEventStateY03:
 	ldy #$03		  ;2
@@ -3384,7 +3404,7 @@ UpdateInventoryEventAnimationState:
 	and #$06		  ;2
 	asl			  ;2
 	asl			  ;2
-	sta $D6		  ;3
+	sta timepieceGfxPtrs		  ;3
 	lda #$FD		  ;2
 	sta $D7		  ;3
 UpdateInventoryObjectPositions:
@@ -3402,11 +3422,11 @@ UpdateInventoryObjectPositionsLoop:
 	bne SwitchToVerticalSync	  ;2
 	ldx indySpriteHeight			;3
 	dex			  ;2
-	stx $A3		  ;3
+	stx whipEffectTimer		  ;3
 	cpx #$03		  ;2
 	bcc UpdateInventoryEventFrameCount	  ;2
 	lda #$8F		  ;2
-	sta bulletOrWhipVertPos
+	sta weaponVertPos
 	stx indySpriteHeight			;3
 	bcs SwitchToVerticalSync						; unconditional branch
 	
@@ -3418,7 +3438,7 @@ UpdateInventoryEventStateAfterFrameCount:
 	cmp #$3C		  ;2
 	bcc UpdateIndySpriteHeightAndEventState	  ;2
 	bne ResetIndySpriteHeight	  ;2
-	sta $A3		  ;3
+	sta whipEffectTimer		  ;3
 ResetIndySpriteHeight:
 	ldy #$00		  ;2
 	sty indySpriteHeight
@@ -3427,7 +3447,7 @@ UpdateIndySpriteHeightAndEventState:
 	bcc SwitchToVerticalSync	  ;2
 	lda #H_INDY_SPRITE
 	sta indySpriteHeight
-	sta $A3		  ;3
+	sta whipEffectTimer		  ;3
 	sta majorEventFlag 	  ;3
 	dec lives
 	bpl SwitchToVerticalSync	  ;2
@@ -3436,38 +3456,38 @@ UpdateIndySpriteHeightAndEventState:
 	bne SwitchToVerticalSync						; unconditional branch
 	
 HandleInventorySelectionCycling:
-	lda currentScreenId				; get the current screen id
+	lda currentRoomId				; get the current screen id
 	cmp #ID_ARK_ROOM
 	bne CheckForCyclingInventorySelection; branch if not in ID_ARK_ROOM
 SwitchToVerticalSync:
 	lda #<VerticalSync
-	sta bankSwitchJMPAddress
+	sta bankSwitchJMPAddr
 	lda #>VerticalSync
-	sta bankSwitchJMPAddress + 1
+	sta bankSwitchJMPAddr + 1
 	jmp JumpToBank0
 	
 CheckForCyclingInventorySelection
-	bit $8D		  ;3
+	bit eventState	  ;3
 	bvs .doneCyclingInventorySelection
-	bit $B4		  ;3
+	bit mesaSideState		  ;3
 	bmi .doneCyclingInventorySelection
-	bit $9A		  ;3
+	bit grenadeState		  ;3
 	bmi .doneCyclingInventorySelection
 	lda #7
 	and frameCount
 	bne .doneCyclingInventorySelection;check to move inventory selector ~8 frames
-	lda numberOfInventoryItems		; get number of inventory items
+	lda inventoryItemCount		; get number of inventory items
 	and #MAX_INVENTORY_ITEMS
 	beq .doneCyclingInventorySelection; branch if Indy not carrying items
-	ldx selectedInventoryIndex
-	lda inventoryGraphicPointers,x	; get inventory graphic LSB value
+	ldx selectedInventorySlot
+	lda inventoryGfxPtrs,x	; get inventory graphic LSB value
 	cmp #<Inventory12_00
 	bcc CheckForChoosingInventoryItem; branch if the item is not a clock sprite
 	lda #<InventoryTimepieceSprite	; reset inventory item to the time piece
 CheckForChoosingInventoryItem
 	bit SWCHA						; check joystick values
 	bmi .checkForCyclingLeftThroughInventory;branch if left joystick not pushed right
-	sta inventoryGraphicPointers,x	; set inventory graphic LSB value
+	sta inventoryGfxPtrs,x	; set inventory graphic LSB value
 .cycleThroughInventoryRight
 	inx
 	inx
@@ -3475,23 +3495,23 @@ CheckForChoosingInventoryItem
 	bcc .continueCycleInventoryRight
 	ldx #0
 .continueCycleInventoryRight
-	ldy inventoryGraphicPointers,x	; get inventory graphic LSB value
+	ldy inventoryGfxPtrs,x	; get inventory graphic LSB value
 	beq .cycleThroughInventoryRight	; branch if no item present (i.e. Blank)
-	bne .setSelectedInventoryIndex	; unconditional branch
+	bne .setselectedInventorySlot	; unconditional branch
 	
 .checkForCyclingLeftThroughInventory
 	bvs .doneCyclingInventorySelection; branch if left joystick not pushed left
-	sta inventoryGraphicPointers,x
+	sta inventoryGfxPtrs,x
 .cycleThroughInventoryLeft
 	dex
 	dex
 	bpl .continueCycleInventoryLeft
 	ldx #10
 .continueCycleInventoryLeft
-	ldy inventoryGraphicPointers,x
+	ldy inventoryGfxPtrs,x
 	beq .cycleThroughInventoryLeft	; branch if no item present (i.e. Blank)
-.setSelectedInventoryIndex
-	stx selectedInventoryIndex
+.setselectedInventorySlot
+	stx selectedInventorySlot
 	tya								; move inventory graphic LSB to accumulator
 	lsr								; divide value by 8 (i.e. H_INVENTORY_SPRITES)
 	lsr
@@ -3500,40 +3520,40 @@ CheckForChoosingInventoryItem
 	cpy #<InventoryHourGlassSprite
 	bne .doneCyclingInventorySelection; branch if the Hour Glass not selected
 	ldy #ID_MESA_FIELD
-	cpy currentScreenId
+	cpy currentRoomId
 	bne .doneCyclingInventorySelection; branch if not in Mesa Field
 	lda #$49		  ;2
-	sta $8D		  ;3
+	sta eventState	  ;3
 	lda indyVertPos					; get Indy's vertical position
 	adc #9
-	sta bulletOrWhipVertPos
+	sta weaponVertPos
 	lda indyHorizPos
 	adc #9
-	sta bulletOrWhipHorizPos
+	sta weaponHorizPos
 .doneCyclingInventorySelection
-	lda $8D		  ;3
+	lda eventState	  ;3
 	bpl HandleInventorySelectionAdjustment	  ;2
 	cmp #$BF		  ;2
 	bcs HandleInventorySelectionEdgeCase	  ;2
 	adc #$10		  ;2
-	sta $8D		  ;3
+	sta eventState	  ;3
 	ldx #$03		  ;2
 	jsr	 InventorySelectionAdjustmentHandler	  ;6
 	jmp	 ReturnToObjectCollisionHandler	  ;3
 	
 HandleInventorySelectionEdgeCase:
 	lda #$70		  ;2
-	sta bulletOrWhipVertPos
+	sta weaponVertPos
 	lsr			  ;2
-	sta $8D		  ;3
+	sta eventState	  ;3
 	bne ReturnToObjectCollisionHandler	  ;2
 	
 HandleInventorySelectionAdjustment:
-	bit $8D		  ;3
+	bit eventState	  ;3
 	bvc ReturnToObjectCollisionHandler	  ;2
 	ldx #$03		  ;2
 	jsr	 InventorySelectionAdjustmentHandler	  ;6
-	lda bulletOrWhipHorizPos			; get bullet or whip horizontal position
+	lda weaponHorizPos			; get bullet or whip horizontal position
 	sec			  ;2
 	sbc #$04		  ;2
 	cmp indyHorizPos			;3
@@ -3551,34 +3571,34 @@ HandleInventorySelectionSpecialValue:
 	bne HandleInventorySelectionBitwiseUpdate						; unconditional branch
 	
 HandleInventorySelectionVerticalCheck:
-	lda bulletOrWhipVertPos			; get bullet or whip vertical position
+	lda weaponVertPos			; get bullet or whip vertical position
 	sec			  ;2
 	sbc #$05		  ;2
 	cmp indyVertPos		  ;3
 	bne HandleInventorySelectionBoundaryCheck	  ;2
 	lda #$0C		  ;2
 HandleInventorySelectionBitwiseUpdate:
-	eor $8D		  ;3
-	sta $8D		  ;3
+	eor eventState	  ;3
+	sta eventState	  ;3
 	bne ReturnToObjectCollisionHandler	  ;2
 HandleInventorySelectionBoundaryCheck:
 	cmp #$4A		  ;2
 	bcs HandleInventorySelectionSpecialValue	  ;2
 ReturnToObjectCollisionHandler:
 	lda #<CheckObjectCollisions
-	sta bankSwitchJMPAddress
+	sta bankSwitchJMPAddr
 	lda #>CheckObjectCollisions
-	sta bankSwitchJMPAddress + 1
+	sta bankSwitchJMPAddr + 1
 JumpToBank0
 	lda #LDA_ABS
-	sta bankSwitchLDAInstruction
+	sta bankSwitchLDAOpcode
 	lda #<BANK0STROBE
-	sta bankStrobeAddress
+	sta bankSwitchAddr
 	lda #>BANK0STROBE
-	sta bankStrobeAddress + 1
+	sta bankSwitchAddr + 1
 	lda #JMP_ABS
-	sta bankSwitchJMPInstruction
-	jmp.w bankSwitchingVariables
+	sta bankSwitchJMPOpcode
+	jmp.w bankSwitchVars
 
 ArkRoomKernel
 .arkRoomKernelLoop
@@ -3586,7 +3606,7 @@ ArkRoomKernel
 ;--------------------------------------
 	cpx #18					  ; 2
 	bcc .checkToDrawArk		  ; 2�
-	txa						  ; 2		  move scanline to accumulator
+	txa						  ; 2		  move scanlineCounter to accumulator
 	sbc indyVertPos			  ; 3
 	bmi AdvanceArkRoomKernelScanline				  ; 2�
 	cmp #(H_INDY_SPRITE - 1) * 2;2
@@ -3605,7 +3625,7 @@ ArkRoomKernel
 	lda indyVertPos			  ; 3		  get Indy's vertical position
 	sta COLUP1				  ; 3 = @33
 AdvanceArkRoomKernelScanline:
-	inx						  ; 2		  increment scanline count
+	inx						  ; 2		  increment scanlineCounter count
 	cpx #144					  ; 2
 	bcs ArkRoomPedestalAndPlayer0ScanlineHandler				  ; 2�
 	bcc .arkRoomKernelLoop	  ; 3		  unconditional branch
@@ -3613,13 +3633,13 @@ AdvanceArkRoomKernelScanline:
 .checkToDrawArk
 	bit resetEnableFlag				  ; 3
 	bmi .skipDrawingArk		  ; 2�
-	txa						  ; 2		  move scanline to accumulator
+	txa						  ; 2		  move scanlineCounter to accumulator
 	sbc #H_ARK_OF_THE_COVENANT ; 2
 	bmi .skipDrawingArk		  ; 2�
 	tay						  ; 2
 	lda ArkOfTheCovenantSprite,y;4
 	sta GRP1					  ; 3
-	txa						  ; 2		  move scanline to accumulator
+	txa						  ; 2		  move scanlineCounter to accumulator
 	adc frameCount			  ; 3		  increase value by current frame count
 	asl						  ; 2		  multiply value by 2
 	sta COLUP1				  ; 3		  color Ark of the Covenant sprite
@@ -3634,7 +3654,7 @@ ArkRoomPedestalAndPlayer0ScanlineHandler:
 	bcs .checkToDrawPedestal	  ; 2�+1
 	bit resetEnableFlag				  ; 3
 	bmi ArkRoomPedestalScanlineLoop	  ;2
-	txa						  ; 2		  move scanline to accumulator
+	txa						  ; 2		  move scanlineCounter to accumulator
 	ldy #%01111110			  ; 2
 	and #$0E		  ;2
 	bne .drawPlayer0Sprite	  ; 2�
@@ -3671,7 +3691,7 @@ ArkRoomPedestalScanlineLoop:
 	bne ArkRoomPedestalAndPlayer0ScanlineHandler				  ; 3		  unconditional branch
 	
 JumpToScreenHandlerFromBank1:
-	lda currentScreenId				; get the current screen id
+	lda currentRoomId				; get the current screen id
 	asl								; multiply screen id by 2
 	tax
 	lda ScreenHandlerJumpTable + 1,x
@@ -3683,8 +3703,8 @@ JumpToScreenHandlerFromBank1:
 MesaFieldScreenHandler:
 	lda #$7F		  ;2
 	sta $CE		  ;3
-	sta missile0VertPos
-	sta $D2		  ;3
+	sta m0VertPos
+	sta snakeDungeonY		  ;3
 	bne ReturnToScreenHandlerFromSpiderRoom						; unconditional branch
 	
 SpiderRoomScreenHandler:
@@ -3692,57 +3712,57 @@ SpiderRoomScreenHandler:
 	ldy #<indyVertPos - objectVertPositions
 	bit CXP1FB						; check Indy collision with playfield
 	bmi SpiderRoomObjectPositionHandler						; branch if Indy collided with playfield
-	bit $B6		  ;3
+	bit spiderRoomState		  ;3
 	bmi SpiderRoomObjectPositionHandler	  ;2
 	lda frameCount					; get the current frame count
 	and #$07		  ;2
 	bne SpiderRoomSpriteAndStateHandler	  ;2
 	ldy #$05		  ;2
 	lda #$4C		  ;2
-	sta $CD		  ;3
+	sta p0VertPosTemp		  ;3
 	lda #$23		  ;2
-	sta $D3		  ;3
+	sta p0VertPosTemp2		  ;3
 SpiderRoomObjectPositionHandler:
 	jsr	 UpdateObjectPositionHandler	  ;6
 SpiderRoomSpriteAndStateHandler:
 	lda #$80		  ;2
-	sta $93		  ;3
+	sta screenEventState		  ;3
 	lda $CE		  ;3
 	and #$01		  ;2
-	ror $C8		  ;5
+	ror p0HorizPos		  ;5
 	rol			  ;2
 	tay			  ;2
 	ror			  ;2
-	rol $C8		  ;5
+	rol p0HorizPos		  ;5
 	lda SpiderRoomPlayer0SpriteTable,y	  ;4
-	sta player0GraphicPointers;3
+	sta p0GfxPtrs;3
 	lda #$FC		  ;2
-	sta player0GraphicPointers + 1;3
-	lda $8E		  ;3
+	sta p0GfxPtrs + 1;3
+	lda m0VertPosShadow		  ;3
 	bmi ReturnToScreenHandlerFromSpiderRoom	  ;2
 	ldx #$50		  ;2
-	stx $CA		  ;3
+	stx m0HorizPos		  ;3
 	ldx #$26		  ;2
-	stx missile0VertPos
-	lda $B6		  ;3
+	stx m0VertPos
+	lda spiderRoomState		  ;3
 	bmi ReturnToScreenHandlerFromSpiderRoom	  ;2
 	bit majorEventFlag 	  ;3
 	bmi ReturnToScreenHandlerFromSpiderRoom	  ;2
 	and #$07		  ;2
 	bne SpiderRoomSpriteStateUpdate	  ;2
 	ldy #$06		  ;2
-	sty $B6		  ;3
+	sty spiderRoomState		  ;3
 SpiderRoomSpriteStateUpdate:
 	tax			  ;2
 	lda TreasureRoomPlayer0SpriteStateTable,x	  ;4
-	sta $8E		  ;3
-	dec $B6		  ;5
+	sta m0VertPosShadow		  ;3
+	dec spiderRoomState		  ;5
 ReturnToScreenHandlerFromSpiderRoom:
 	jmp	 ReturnToScreenHandlerFromBank1	  ;3
 	
 ValleyOfPoisonScreenHandler:
 	lda #$80		  ;2
-	sta $93		  ;3
+	sta screenEventState		  ;3
 	ldx #$00		  ;2
 	bit majorEventFlag 	  ;3
 	bmi ValleyOfPoisonObjectSetup	  ;2
@@ -3751,8 +3771,8 @@ ValleyOfPoisonScreenHandler:
 ValleyOfPoisonObjectSetup:
 	ldy #$05		  ;2
 	lda #$55		  ;2
-	sta $CD		  ;3
-	sta $D3		  ;3
+	sta p0VertPosTemp		  ;3
+	sta p0VertPosTemp2		  ;3
 	lda #$01		  ;2
 	bne ValleyOfPoisonObjectUpdateLoop						; unconditional branch
 	
@@ -3775,11 +3795,11 @@ ValleyOfPoisonObjectBoundaryHandler:
 	cmp #$51		  ;2
 	bcc ValleyOfPoisonObjectSpriteAndStateHandler	  ;2
 	lda pickupStatusFlags 
-	sta $99		  ;3
+	sta screenInitFlag		  ;3
 	lda #$00		  ;2
 	sta pickupStatusFlags 
 ValleyOfPoisonObjectSpriteAndStateHandler:
-	lda $C8		  ;3
+	lda p0HorizPos		  ;3
 	cmp indyHorizPos			;3
 	bcs ValleyOfPoisonPlayer0SpriteUpdate	  ;2
 	dex			  ;2
@@ -3791,38 +3811,38 @@ ValleyOfPoisonPlayer0SpriteUpdate:
 	asl			  ;2
 	asl			  ;2
 	asl			  ;2
-	sta player0GraphicPointers;3
+	sta p0GfxPtrs;3
 	lda frameCount					; get current frame count
 	and #$7F		  ;2
 	bne ValleyOfPoisonPlayer0SpriteBoundaryUpdate	  ;2
 	lda $CE		  ;3
 	cmp #$4A		  ;2
 	bcs ValleyOfPoisonPlayer0SpriteBoundaryUpdate	  ;2
-	ldy $98		  ;3
+	ldy roomEventStateOffset		  ;3
 	beq ValleyOfPoisonPlayer0SpriteBoundaryUpdate	  ;2
 	dey			  ;2
-	sty $98		  ;3
+	sty roomEventStateOffset		  ;3
 	ldy #$8E		  ;2
 	adc #$03		  ;2
-	sta missile0VertPos
+	sta m0VertPos
 	cmp indyVertPos		  ;3
 	bcs ValleyOfPoisonPlayer0SpriteMotionUpdate	  ;2
 	dey			  ;2
 ValleyOfPoisonPlayer0SpriteMotionUpdate:
-	lda $C8		  ;3
+	lda p0HorizPos		  ;3
 	adc #$04		  ;2
-	sta $CA		  ;3
-	sty $8E		  ;3
+	sta m0HorizPos		  ;3
+	sty m0VertPosShadow		  ;3
 ValleyOfPoisonPlayer0SpriteBoundaryUpdate:
 	ldy #$7F		  ;2
-	lda $8E		  ;3
+	lda m0VertPosShadow	  ;3
 	bmi ValleyOfPoisonBulletOrWhipBoundaryUpdate	  ;2
-	sty missile0VertPos
+	sty m0VertPos
 ValleyOfPoisonBulletOrWhipBoundaryUpdate:
-	lda bulletOrWhipVertPos			; get bullet or whip vertical position
+	lda weaponVertPos			; get bullet or whip vertical position
 	cmp #$52		  ;2
 	bcc ReturnToScreenHandlerFromValleyOfPoison	  ;2
-	sty bulletOrWhipVertPos
+	sty weaponVertPos
 ReturnToScreenHandlerFromValleyOfPoison:
 	jmp	 ReturnToScreenHandlerFromBank1	  ;3
 	
@@ -3841,19 +3861,19 @@ ThievesDenScreenHandler:
 	lda ThiefMovementFrameDelayValues,x
 	and frameCount
 	bne .moveNextThief				; branch if not time to move
-	ldy thievesHMOVEIndex,x			; get thief HMOVE index value
+	ldy thiefHmoveIndices,x			; get thief HMOVE index value
 	lda #REFLECT
-	and thievesDirectionAndSize,x
+	and thiefState,x
 	bne ThievesDenThiefHMOVEIndexUpdate						; branch if thief not reflected
 	dey								; reduce thief HMOVE index value
 	cpy #20
 	bcs .setThiefHMOVEIndexValue
 .changeThiefDirection
 	lda #REFLECT
-	eor thievesDirectionAndSize,x
-	sta thievesDirectionAndSize,x
+	eor thiefState,x
+	sta thiefState,x
 .setThiefHMOVEIndexValue
-	sty thievesHMOVEIndex,x
+	sty thiefHmoveIndices,x
 .moveNextThief
 	dex
 	bpl .checkToMoveThieves
@@ -3866,7 +3886,7 @@ ThievesDenThiefHMOVEIndexUpdate:
 	bcc .setThiefHMOVEIndexValue		; unconditional branch
 	
 ThievesDenScreenIdleHandler:
-	bit $B4		  ;3
+	bit mesaSideState		  ;3
 	bpl ThievesDenScreenUpdateState	  ;2
 	bvc ThievesDenScreenInputHandler	  ;2
 	dec indyHorizPos			;5
@@ -3877,7 +3897,7 @@ ThievesDenScreenInputHandler:
 	ror								; shift D0 to carry
 	bcc ThievesDenScreenUpdateState						; branch on even frame
 	lda SWCHA						; read joystick values
-	sta $92
+	sta inputFlags
 	ror
 	ror
 	ror
@@ -3891,15 +3911,15 @@ ThievesDenScreenRightInputHandler:
 	inc indyHorizPos
 ThievesDenScreenUpdateState:
 	lda #$02		  ;2
-	and $B4		  ;3
+	and mesaSideState		  ;3
 	bne ThievesDenScreenVerticalStateHandler	  ;2
-	sta $8D		  ;3
+	sta eventState	  ;3
 	lda #$0B		  ;2
 	sta $CE		  ;3
 ThievesDenScreenVerticalStateHandler:
 	ldx indyVertPos					; get Indy's vertical position
 	lda frameCount					; get current frame count
-	bit $B4		  ;3
+	bit mesaSideState		  ;3
 	bmi ThievesDenScreenVerticalStateUpdate	  ;2
 	cpx #$15		  ;2
 	bcc ThievesDenScreenVerticalStateUpdate	  ;2
@@ -3932,16 +3952,16 @@ BlackMarketScreenSpecialPositionHandler:
 	cmp #$2C		  ;2
 	beq BlackMarketScreenSpecialStateHandler	  ;2
 	lda #$7F		  ;2
-	sta $D2		  ;3
+	sta snakeDungeonY		  ;3
 	bne ReturnToScreenHandlerFromBlackMarket						; unconditional branch
 	
 BlackMarketScreenSpecialStateHandler:
 	bit blackMarketState				; check Black Market state
 	bmi ReturnToScreenHandlerFromBlackMarket						; branch if Indy not carrying coins
 	lda #$30		  ;2
-	sta $CC		  ;3
+	sta indyHorizPos		  ;3
 	ldy #$00		  ;2
-	sty $D2		  ;3
+	sty snakeDungeonY		  ;3
 	ldy #$7F		  ;2
 	sty $DC		  ;3
 	sty snakeVertPos			;3
@@ -3952,14 +3972,14 @@ ReturnToScreenHandlerFromBlackMarket:
 	jmp	 ReturnToScreenHandlerFromBank1	  ;3
 	
 TreasureRoomScreenHandler:
-	ldy $DF		  ;3
+	ldy objectVertOffset		  ;3
 	dey			  ;2
 	bne ReturnToScreenHandlerFromBlackMarket	  ;2
-	lda $AF		  ;3
+	lda treasureIndex		  ;3
 	and #$07		  ;2
 	bne TreasureRoomScreenStateFinalize	  ;2
 	lda #$40		  ;2
-	sta $93		  ;3
+	sta screenEventState		  ;3
 	lda secondsTimer			;3
 	lsr			  ;2
 	lsr			  ;2
@@ -3973,35 +3993,35 @@ TreasureRoomScreenHandler:
 	jsr	 TreasureRoomBasketItemAwardHandler	  ;6
 	bcc TreasureRoomScreenStateUpdate	  ;2
 TreasureRoomScreenAdvanceState:
-	inc $DF		  ;5
+	inc objectVertOffset		  ;5
 	bne ReturnToScreenHandlerFromBlackMarket	  ;2
 	brk			  ;7
 TreasureRoomScreenStateUpdate:
 	ldy $84		  ;3
 	tya			  ;2
-	ora $AF		  ;3
-	sta $AF		  ;3
+	ora treasureIndex		  ;3
+	sta treasureIndex		  ;3
 	lda TreasureRoomScreenStateCEValues,y	  ;4
 	sta $CE		  ;3
 	lda TreasureRoomScreenStateDFValues,y	  ;4
-	sta $DF		  ;3
+	sta objectVertOffset		  ;3
 	bne ReturnToScreenHandlerFromBlackMarket	  ;2
 TreasureRoomScreenStateFinalize:
 	cmp #$04		  ;2
 	bcs TreasureRoomScreenAdvanceState	  ;2
-	rol $AF		  ;5
+	rol treasureIndex		  ;5
 	sec			  ;2
-	ror $AF		  ;5
+	ror treasureIndex		  ;5
 	bmi TreasureRoomScreenAdvanceState						; unconditional branch
 	
 MapRoomScreenHandler:
 	ldy #$00		  ;2
-	sty $D2		  ;3
+	sty snakeDungeonY		  ;3
 	ldy #$7F		  ;2
 	sty $DC		  ;3
 	sty snakeVertPos			;3
 	lda #$71		  ;2
-	sta $CC		  ;3
+	sta indyHorizPos		  ;3
 	ldy #$4F		  ;2
 	lda #$3A		  ;2
 	cmp indyVertPos		  ;3
@@ -4015,7 +4035,7 @@ MapRoomScreenHandler:
 MapRoomScreenSpecialStateHandler:
 	ldy #$0D		  ;2
 MapRoomScreenFinalizeState:
-	sty $DF		  ;3
+	sty objectVertOffset		  ;3
 	lda secondsTimer			;3
 	sec			  ;2
 	sbc #$10		  ;2
@@ -4029,31 +4049,31 @@ MapRoomScreenSecondsTimerHandler:
 	lda #$0B		  ;2
 MapRoomScreenFinalizeTimer:
 	sta $CE		  ;3
-	bit $B3		  ;3
+	bit mapRoomState		  ;3
 	bpl MapRoomScreenFinalizePositionState	  ;2
 	cmp #$08		  ;2
 	bcs MapRoomScreenFinalizeTimerValue	  ;2
 	ldx selectedInventoryId
 	cpx #ID_INVENTORY_HEAD_OF_RA
 	bne MapRoomScreenFinalizeTimerValue	  ;2
-	stx usingHeadOfRaInMapRoomBonus
+	stx headOfRaMapRoomBonus
 	lda #$04		  ;2
 	and frameCount		 ;3
 	bne MapRoomScreenFinalizeTimerValue	  ;2
-	lda $8C		  ;3
+	lda arkRoomState	  ;3
 	and #$0F		  ;2
 	tax			  ;2
-	lda MapRoomBulletOrWhipHorizPosTable,x	  ;4
-	sta bulletOrWhipHorizPos
-	lda MapRoomBulletOrWhipVertPosTable,x	  ;4
+	lda MapRoomweaponHorizPosTable,x	  ;4
+	sta weaponHorizPos
+	lda MapRoomweaponVertPosTable,x	  ;4
 	bne MapRoomScreenFinalizeBulletOrWhipPosition						; unconditional branch
 	
 MapRoomScreenFinalizeTimerValue:
 	lda #$70		  ;2
 MapRoomScreenFinalizeBulletOrWhipPosition:
-	sta bulletOrWhipVertPos
+	sta weaponVertPos
 MapRoomScreenFinalizePositionState:
-	rol $B3		  ;5
+	rol mapRoomState		  ;5
 	lda #$3A		  ;2
 	cmp indyVertPos
 	bne MapRoomScreenFinalizePositionFlags	  ;2
@@ -4064,12 +4084,12 @@ MapRoomScreenFinalizePositionState:
 	bne MapRoomScreenFinalizePositionFlags	  ;2
 MapRoomScreenFinalizePositionBoundary:
 	sec			  ;2
-	ror $B3		  ;5
+	ror mapRoomState		  ;5
 	bmi ReturnToScreenHandlerFromMapRoom						; unconditional branch
 	
 MapRoomScreenFinalizePositionFlags:
 	clc			  ;2
-	ror $B3		  ;5
+	ror mapRoomState		  ;5
 ReturnToScreenHandlerFromMapRoom:
 	jmp	 ReturnToScreenHandlerFromBank1	  ;3
 	
@@ -4078,44 +4098,44 @@ TempleEntranceScreenHandler:
 	and pickupItemsStatus
 	bne TempleEntranceScreenTimePieceTakenHandler						; branch if Time Piece taken
 	lda #$4C		  ;2
-	sta $CC		  ;3
+	sta indyHorizPos		  ;3
 	lda #$2A		  ;2
-	sta $D2		  ;3
+	sta snakeDungeonY		  ;3
 	lda #<TimeSprite
-	sta timePieceGraphicPointers
+	sta timepieceGfxPtrs
 	lda #>TimeSprite
-	sta timePieceGraphicPointers + 1
+	sta timepieceGfxPtrs + 1
 	bne TempleEntranceScreenFinalizeState	  ;2
 	
 TempleEntranceScreenTimePieceTakenHandler:
 	lda #$F0		  ;2
-	sta $D2		  ;3
+	sta snakeDungeonY		  ;3
 TempleEntranceScreenFinalizeState:
-	lda $B5		  ;3
+	lda entranceRoomEventState		  ;3
 	and #$0F		  ;2
 	beq ReturnToScreenHandlerFromBank1	  ;2
 	sta $DC		  ;3
 	ldy #$14		  ;2
 	sty $CE		  ;3
 	ldy #$3B		  ;2
-	sty $E0		  ;3
+	sty p0GfxData		  ;3
 	iny			  ;2
-	sty $D4		  ;3
+	sty snakeDungeonState		  ;3
 	lda #$C1		  ;2
 	sec			  ;2
 	sbc $DC		  ;3
-	sta player0GraphicPointers;3
+	sta p0GfxPtrs;3
 	bne ReturnToScreenHandlerFromBank1						; unconditional branch
 	
 RoomOfShiningLightScreenHandler:
 	lda frameCount					; get current frame count
 	and #$18							; update every 8 frames
 	adc #<ShiningLightSprites
-	sta player0GraphicPointers		; set Shining Light graphic LSB value
+	sta p0GfxPtrs		; set Shining Light graphic LSB value
 	lda frameCount					; get current frame count
 	and #7
 	bne RoomOfShiningLightScreenFinalizeInput	  ;2
-	ldx #<shiningLightVertPos - objectVertPositions
+	ldx #<p0VertPos - objectVertPositions
 	ldy #<indyVertPos - objectVertPositions
 	lda indyVertPos					; get Indy's vertical position
 	cmp #58
@@ -4128,9 +4148,9 @@ RoomOfShiningLightScreenHandler:
 RoomOfShiningLightScreenSpecialStateHandler:
 	ldy #$05		  ;2
 	lda #$4C		  ;2
-	sta $CD		  ;3
+	sta p0VertPosTemp		  ;3
 	lda #$0B		  ;2
-	sta $D3		  ;3
+	sta p0VertPosTemp2		  ;3
 RoomOfShiningLightScreenFinalizeState:
 	jsr	 UpdateObjectPositionHandler	  ;6
 RoomOfShiningLightScreenFinalizeInput:
@@ -4147,22 +4167,22 @@ RoomOfShiningLightScreenFinalizePenalty:
 	and #P1_NO_MOVE
 	cmp #(MOVE_DOWN >> 4)
 	bne ReturnToScreenHandlerFromBank1						; branch if right joystick not pushed down
-	sta escapedShiningLightPenalty	; place 13 in Shining Light penalty
+	sta shiningLightPenalty	; place 13 in Shining Light penalty
 	lda #$4C		  ;2
 	sta indyHorizPos			;3
-	ror $B5		  ;5
+	ror entranceRoomEventState		  ;5
 	sec			  ;2
-	rol $B5		  ;5
+	rol entranceRoomEventState		  ;5
 ReturnToScreenHandlerFromBank1:
 	lda #<SetupScreenVisualsAndObjects
-	sta bankSwitchJMPAddress
+	sta bankSwitchJMPAddr
 	lda #>SetupScreenVisualsAndObjects
-	sta bankSwitchJMPAddress + 1
+	sta bankSwitchJMPAddr + 1
 	jmp JumpToBank0
 	
 EntranceRoomScreenHandler:	 
 	lda #$40		  ;2
-	sta $93		  ;3
+	sta screenEventState		  ;3
 	bne ReturnToScreenHandlerFromBank1	  ;2
 	
 DisplayKernel
@@ -4173,7 +4193,7 @@ DisplayKernel
 	ldy #$FF					  ; 2
 	sty PF1					  ; 3 = @11
 	sty PF2					  ; 3 = @14
-	ldx currentScreenId		  ; 3		  get the current screen id
+	ldx currentRoomId		  ; 3		  get the current screen id
 	lda RoomPF0GraphicData,x	  ; 4
 	sta PF0					  ; 3 = @24
 	iny						  ; 2		  y = 0
@@ -4181,7 +4201,7 @@ DisplayKernel
 ;--------------------------------------
 	sta HMOVE				  ; 3
 	sty VBLANK				  ; 3 = @06	  enable TIA (D1 = 0)
-	sty scanline				  ; 3
+	sty scanlineCounter				  ; 3
 	cpx #ID_MAP_ROOM			  ; 2
 	bne DisplayKernelMapRoomHandler				  ; 2�		 branch if not in Map Room
 	dey						  ; 2		  y = -1
@@ -4200,7 +4220,7 @@ DisplayKernelArkRoomHandler:
 	sta WSYNC
 ;--------------------------------------
 	sta HMOVE				  ; 3
-	ldy currentScreenId		  ; 3		  get the current screen id
+	ldy currentRoomId		  ; 3		  get the current screen id
 	sta WSYNC
 ;--------------------------------------
 	sta HMOVE				  ; 3
@@ -4274,9 +4294,9 @@ UpdateObjectPositionBoundaryHandler:
 	cmp #$53		  ;2
 	bcc UpdateObjectPositionBoundaryClamp	  ;2
 UpdateObjectPositionBoundaryClampHandler:
-	rol $8C,x	  ;6
+	rol arkRoomState,x	  ;6
 	clc			  ;2
-	ror $8C,x	  ;6
+	ror arkRoomState,x	  ;6
 	lda #$78		  ;2
 	sta objectVertPositions,x	  ;4
 	rts			  ;6
@@ -4764,10 +4784,10 @@ TimeSprite:
 	.byte HMOVE_L3 | 7
 	.byte HMOVE_0  | 0
 	
-MapRoomBulletOrWhipHorizPosTable:
+MapRoomweaponHorizPosTable:
 	.byte $63,$62,$6B,$5B,$6A,$5F,$5A,$5A,$6B,$5E,$67,$5A,$62,$6B,$5A,$6B
 	
-MapRoomBulletOrWhipVertPosTable:
+MapRoomweaponVertPosTable:
 	.byte $22,$13,$13,$18,$18,$1E,$21,$13,$21,$26,$26,$2B,$2A,$2B,$31,$31
 	
 KernelJumpTable
@@ -5799,7 +5819,7 @@ PedestalSprite
 	.byte $FF ; |XXXXXXXX| $FEF3
 	
 UpdateInventoryObjectPositionHandler:
-	lda $8C,x	  ;4
+	lda arkRoomState,x	  ;4
 	bmi UpdateInventoryObjectPositionBoundaryHandler	  ;2
 	rts			  ;6
 
