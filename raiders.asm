@@ -493,7 +493,7 @@ MaskOutDungeonWallSegment:
 	lsr			  ; Divide by 4 Total
 	lsr			  ;
 	tax			  ; Move result to X to use as index into mask table
-	lda LDC5C,x	  ; Load a mask value from the LDC5C table (mask used to disable a wall segment)
+	lda ItemStatusClearMaskTable,x	  ; Load a mask value from the ItemStatusClearMaskTable table (mask used to disable a wall segment)
 	and topOfDungeonGraphic ; Apply the mask to the current dungeon graphic state (clear bits to "erase" part of it)
 	sta topOfDungeonGraphic ; Store the updated graphic state back (modifying visual representation of the wall)
 	jmp ClearWhipBulletState
@@ -664,7 +664,7 @@ UpdateStateAfterItemRemoval:
 	rol blackMarketState				; rotate left to show Indy not carrying Shovel
 SetPickupProcessedFlag:
 	lda pickupStatusFlags 
-	jsr	 LDD59	  ;6
+	jsr	 UpdateRoomEventState	  ;6
 	tya			  ;2
 	ora #$C0		  ;2
 	sta pickupStatusFlags 
@@ -846,9 +846,9 @@ HandleScreenCollisions:
 	rts								; jump to Player / Playfield collision strategy
 
 DispatchScreenIdleHandler:
-	lda LDCCF+1,x	; Load high byte of default screen behavior routine
+	lda RoomIdleHandlerJumpTable+1,x	; Load high byte of default screen behavior routine
 	pha			  
-	lda LDCCF,x	  ; Load low byte of default screen behavior routine
+	lda RoomIdleHandlerJumpTable,x	  ; Load low byte of default screen behavior routine
 	pha			  ;3
 	rts			  ; Indirect jump to it (no collision case)
 
@@ -947,7 +947,7 @@ MoveIndyBasedOnInput:
 	lda $92		  ; Load movement direction from input flags
 	and #$0F		   ; Isolate lower 4 bits (D-pad direction)
 	tay			  ; Use as index
-	lda LDFD5,y	   ; Get movement delta from direction lookup table
+	lda IndyMovementDeltaTable,y	   ; Get movement delta from direction lookup table
 	ldx #<indyVertPos - objectVertPositions ; X = offset to Indy in object array
 	jsr DetermineDirectionToMoveObject ; Move Indy accordingly
 SetIndyToNormalMovementState:
@@ -1121,7 +1121,7 @@ EnableResetAndCheckArkInput:
 	lda #$05		  
 StoreArkActionCode:
 	sta $8C		 ; Store action/state code
-	jmp	 LDDA6	  ; Handle command
+	jmp	 InitializeGameStartState	  ; Handle command
 	
 HandlePostEasterEggFlow:
 	bit $93		  
@@ -1166,9 +1166,9 @@ ControlSnakeBasedOnIndy:
 	lsr			  ;2
 	lsr			  ;2
 	tay			  ;2
-	lda LDBFF,x	  ;4
+	lda SnakeHorizontalOffsetTable,x	  ;4
 	clc			  ;2
-	adc LDBFF,y	  ; Add two offset values from table at LDBFF
+	adc SnakeHorizontalOffsetTable,y	  ; Add two offset values from table at SnakeHorizontalOffsetTable
 	clc			  ;2
 	adc $CC		  ; Add forced Indy X position
 	ldx #$00		  
@@ -1195,7 +1195,7 @@ UpdateSnakeMotionState:
 	lda $D4		  ;3
 	and #$03		  ;2
 	tax			  ;2
-	lda LDBFF,x	  ;4
+	lda SnakeHorizontalOffsetTable,x	  ;4
 	clc			  ;2
 	adc $CC		  ;3
 	sta $CC		  ; Refine target horizontal position
@@ -1208,7 +1208,7 @@ ConfigureSnakeGraphicsAndMovement:
 	lda $D4		  ;3
 	and #$03		  ;2
 	tax			  ;2
-	lda LDBFB,x	  ;4
+	lda SnakeMotionTableLSB,x	  ;4
 	sta $D6		  ; Store horizontal movement/frame data
 	lda #>LFA72
 	sta $D7		  ; Store high byte of graphics or pointer address
@@ -1216,7 +1216,7 @@ ConfigureSnakeGraphicsAndMovement:
 	lsr			  ;2
 	lsr			  ;2
 	tax			  ;2
-	lda LDBFB,x	  ;4
+	lda SnakeMotionTableLSB,x	  ;4
 	sec			  ;2
 	sbc #$08		  ;2
 	sta $D8		  ; Store vertical offset (with adjustment)
@@ -1327,7 +1327,7 @@ ApplyEventOffsetToIndy:
 	bcs TriggerScreenTransition	  ; If failed/blocked, exit
 	bvc CheckScanBoundaryOrContinue	  ; If no vertical/horizontal event flag, skip
 	ldy $84		   ; Event index
-	lda LDF6C,y	  ; Get movement offset from table
+	lda RoomEventOffsetTable,y	  ; Get movement offset from table
 	cpy #$02		  ;2
 	bcs ApplyHorizontalOffset	 ; If index = 2, move horizontally
 	adc indyVertPos		  ;3
@@ -1486,7 +1486,7 @@ ApplyImpactEffectsAndAdjustPlayer:
 	lsr			  ; Divide by 4 � convert to tile region
 	adc $84		   ; Combine with vertical region index to form a unique map zone index
 	tay			  ; Move index to Y
-	lda LDF7C,y	   ; Load impact response from lookup table
+	lda ArkRoomImpactResponseTable,y	   ; Load impact response from lookup table
 	sta $8B		   ; Store result � likely affects state or visual of game field
 	ldx bulletOrWhipVertPos			; get bullet or whip vertical position
 	dex			  ; Decrease projectile X by 2 � simulate impact offset
@@ -1695,7 +1695,7 @@ SwitchToBank1AndContinue:
 SetupScreenVisualsAndObjects:
 	lda $99		  ; Check status flag (likely screen initialization)
 	beq SetScreenControlsAndColor	  ; If zero, skip subroutine
-	jsr	 LDD59	  ; Run special screen setup routine (e.g., reset state or clear screen)
+	jsr	 UpdateRoomEventState	  ; Run special screen setup routine (e.g., reset state or clear screen)
 	lda #$00		  ; Clear the flag afterward
 SetScreenControlsAndColor:
 	sta $99		  ; Store the updated flag
@@ -1771,7 +1771,7 @@ ResetRoomFlags:
 	stx $90		  ; Could be Indy or enemy action lock
 	lda pickupStatusFlags			; Read item collection flags
 	stx pickupStatusFlags 			; Clear them all (reset pickups for new screen)
-	jsr	 LDD59	  ; General-purpose screen initialization/reset routine
+	jsr	 UpdateRoomEventState	  ; General-purpose screen initialization/reset routine
 	rol playerInput			; Rotate input flags � possibly to mask off an "item use" bit
 	clc			  ;2
 	ror playerInput					 ; Reverse the bit rotation; keeps input state consistent
@@ -1793,23 +1793,23 @@ LoadPlayerGraphicsForRoom:
 	sta player0GraphicPointers + 1				; Set high byte of sprite pointer for P0
 	lda RoomPlayer0Height,x	  ;4
 	sta player0SpriteHeight						; Set height of the sprite (e.g., enemy size)
-	lda LDBD4,x	  ;4
+	lda RoomTypeTable,x	  ;4
 	sta $C8		  							; Likely a screen property (enemy group type, warp flag)
-	lda LDC0E,x	  ;4
+	lda RoomMissile0VertPosTable,x	  ;4
 	sta $CA		  							 ; Possibly related to object spawning
-	lda LDC1B,x	  ;4
+	lda RoomMissile0InitVertPosTable,x	  ;4
 	sta missile0VertPos						; Position for environmental object (missile0 = visual fx)
 	cpx #ID_THIEVES_DEN
 	bcs ClearGameStateMemory	   ; If this is Thieves Den or later, clear additional state
-	adc LDC03,x	  ;4
+	adc RoomSpecialBehaviorTable,x	  ;4
 	sta $E0		  ;3					; Special room behavior index or environmental parameter
-	lda LDC28,x	  ;4
+	lda RoomPF1GraphicLSBTable,x	  ;4
 	sta pf1GraphicPointers				; PF1 low byte
-	lda LDC33,x	  ;4
+	lda RoomPF1GraphicMSBTable,x	  ;4
 	sta pf1GraphicPointers + 1				; PF1 high byte
-	lda LDC3E,x	  ;4
+	lda RoomPF2GraphicLSBTable,x	  ;4
 	sta pf2GraphicPointers					; PF2 low byte
-	lda LDC49,x	  ;4
+	lda RoomPF2GraphicMSBTable,x	  ;4
 	sta pf2GraphicPointers + 1					; PF2 high byte
 	lda #$55		  ;2
 	sta $D2		  ; Likely a default animation frame or sound cue value
@@ -1829,7 +1829,7 @@ FinalizeScreenInitialization:
 	lda $AF,x	  ;4
 	ror			   ; Check a control bit from table (could enable falling)
 	bcc FinishScreenInitAndReturn	  ; If not set, use default
-	ldy LDF72,x	  ;4					; Load alternate vertical offset from table
+	ldy RoomObjectVertOffsetTable,x	  ;4					; Load alternate vertical offset from table
 	cpx #ID_BLACK_MARKET
 	bne FinishScreenInitAndReturn	   ; Only override object height if in Black Market
 	lda #$FF		  ;2
@@ -1903,7 +1903,7 @@ ReturnFromRoomSpecificInit:
 	rts			  ; Return to caller (completes screen init)
 
 CheckRoomOverrideCondition:
-	ldy LDE00,x	  ; Load room override index based on current screen ID
+	ldy RoomOverrideKeyTable,x	  ; Load room override index based on current screen ID
 	cpy $86		  ; Compare with current override key or control flag
 	beq ApplyRoomOverridesIfMatched	  ; If it matches, apply special overrides
 	clc			   ; Clear carry (no override occurred)
@@ -1911,15 +1911,15 @@ CheckRoomOverrideCondition:
 	rts			  ; Exit with no overrides
 
 ApplyRoomOverridesIfMatched:
-	ldy LDE34,x	  ; Load vertical override flag
+	ldy RoomVerticalOverrideFlagTable,x	  ; Load vertical override flag
 	bmi CheckAdvancedOverrideConditions	  ; If negative, skip overrides and return with SEC
 CheckVerticalOverride:
-	lda LDF04,x	  ; Load vertical position override (if any)
+	lda RoomVerticalPositionOverrideTable,x	  ; Load vertical position override (if any)
 	beq ApplyHorizontalOverride	  ; If zero, skip vertical positioning
 ApplyVerticalOverride:
 	sta indyVertPos		  ; Apply vertical override to Indy
 ApplyHorizontalOverride:
-	lda LDF38,x	  ; Load horizontal position override (if any)
+	lda RoomHorizontalPositionOverrideTable,x	  ; Load horizontal position override (if any)
 	beq ReturnFromOverrideWithSEC	 ; If zero, skip horizontal positioning
 	sta indyHorizPos			; Apply horizontal override to Indy
 ReturnFromOverrideWithSEC:
@@ -1927,36 +1927,36 @@ ReturnFromOverrideWithSEC:
 	rts			  ; Return to caller
 
 CheckAdvancedOverrideConditions:
-	iny                              ; Bump Y from previous LDE34 value
+	iny                              ; Bump Y from previous RoomVerticalOverrideFlagTable value
 	beq ReturnNoOverrideWithSideEffect  ; If it was $FF, return early
 
 	iny
 	bne EvaluateRangeBasedVerticalOverride  ; If not $FE, jump to advanced evaluation
 
 	; Case where Y = $FE
-	ldy LDE68,x                      ; Load lower horizontal boundary
+	ldy RoomOverrideLowerHorizBoundaryTable,x                      ; Load lower horizontal boundary
 	cpy $87                          ; Compare with current horizontal state
 	bcc CompareWithExtendedRoomThresholds ; If below lower limit, use another check
 
-	ldy LDE9C,x                      ; Load upper horizontal boundary
+	ldy RoomOverrideUpperHorizBoundaryTable,x                      ; Load upper horizontal boundary
 	bmi CheckFlagOrApplyFixedVertical ; If negative, apply default vertical
 
 	bpl CheckVerticalOverride        ; Always taken � go check vertical override normally
 	
 CompareWithExtendedRoomThresholds:
-	ldy LDED0,x                      ; Load alternate override flag
+	ldy RoomAdvancedOverrideControlTable,x                      ; Load alternate override flag
 	bmi CheckFlagOrApplyFixedVertical ; If negative, jump to handle special override
 	bpl CheckVerticalOverride        ; Always taken
 	
 EvaluateRangeBasedVerticalOverride:
 	lda $87                          ; Load current horizontal position
-	cmp LDE68,x                      ; Compare with lower limit
+	cmp RoomOverrideLowerHorizBoundaryTable,x                      ; Compare with lower limit
 	bcc ReturnNoOverrideWithSideEffect
 
-	cmp LDE9C,x                      ; Compare with upper limit
+	cmp RoomOverrideUpperHorizBoundaryTable,x                      ; Compare with upper limit
 	bcs ReturnNoOverrideWithSideEffect
 
-	ldy LDED0,x                      ; Load override control byte
+	ldy RoomAdvancedOverrideControlTable,x                      ; Load override control byte
 	bpl CheckVerticalOverride        ; If positive, allow override
 
 CheckFlagOrApplyFixedVertical:
@@ -2300,7 +2300,7 @@ RoomPlayer0Height
 	.byte $01						; Mesa Field
 	.byte $10						; Valley of Poison
 
-LDBD4:
+RoomTypeTable:
 	.byte $78,$4C,$5D,$4C,$4
 	
 RoomPlayer0MSBGraphicData
@@ -2333,31 +2333,31 @@ RoomPlayer0LSBGraphicData
 	.byte <ThiefSprites
 	.byte <ThiefSprites
 	
-LDBFB:
+SnakeMotionTableLSB:
 	.byte <LFA72,<LFA7A,<LFA8A,<LFA82
 	
-LDBFF:
+SnakeHorizontalOffsetTable:
 	.byte $FE,$FA,$02,$06
 	
-LDC03:
+RoomSpecialBehaviorTable:
 	.byte $00,$00,$18,$04,$03,$03,$85,$85,$3B,$85,$85
 	
-LDC0E:
+RoomMissile0VertPosTable:
 	.byte $20,$78,$85,$4D,$62,$17,$50,$50,$50,$50,$50,$12,$12
 	
-LDC1B:
+RoomMissile0InitVertPosTable:
 	.byte $FF,$FF,$14,$4B,$4A,$44,$FF,$27,$FF,$FF,$FF,$F0,$F0
 	
-LDC28:
+RoomPF1GraphicLSBTable:
 	.byte <COLUP0,<COLUP0,<COLUP0,<COLUP0,<COLUP0,<COLUP0,<LFD48,<LFD68,<LFD89,<LFE00,<LFE00
 	
-LDC33:
+RoomPF1GraphicMSBTable:
 	.byte >COLUP0,>COLUP0,>COLUP0,>COLUP0,>COLUP0,>COLUP0,>LFD48,>LFD68,>LFD89,>LFE00,>LFE00
 	
-LDC3E:
+RoomPF2GraphicLSBTable:
 	.byte <HMP0,<HMP0,<HMP0,<HMP0,<HMP0,<HMP0,<LFD20,<LFDB7,<LFD9B,<LFE78,<LFE78
 	
-LDC49:
+RoomPF2GraphicMSBTable:
 	.byte >HMP0,>HMP0,>HMP0,>HMP0,>HMP0,>HMP0,>LFD20,>LFDB7,>LFD9B,>LFE78,>LFE78
 	
 ItemStatusBitValues
@@ -2370,7 +2370,7 @@ ItemStatusBitValues
 	.byte PICKUP_ITEM_STATUS_ANKH
 	.byte PICKUP_ITEM_STATUS_CHAI
 	
-LDC5C:
+ItemStatusClearMaskTable:
 	.byte ~(BASKET_STATUS_MARKET_GRENADE | PICKUP_ITEM_STATUS_WHIP);$FE
 	.byte ~(BASKET_STATUS_BLACK_MARKET_GRENADE | PICKUP_ITEM_STATUS_SHOVEL);$FD
 	.byte ~PICKUP_ITEM_STATUS_HEAD_OF_RA;$FB
@@ -2469,7 +2469,7 @@ PlayerPlayfieldCollisionJumpTable
 	.word CheckIfIndyShotOrTouchedByTsetseFlies - 1 ; Thieves Den
 	.word CheckIfIndyShotOrTouchedByTsetseFlies - 1 ; Well of Souls
 
-LDCCF:
+RoomIdleHandlerJumpTable:
 	.word CheckIfIndyShotOrTouchedByTsetseFlies - 1
 	.word CheckIfIndyShotOrTouchedByTsetseFlies - 1
 	.word SetIndyToTriggeredState - 1
@@ -2507,17 +2507,17 @@ PlaceItemInInventory
 	asl
 	sta inventoryGraphicPointers,x	; place graphic LSB in inventory
 	lda numberOfInventoryItems		; get number of inventory items
-	bne LDD0A						; branch if Indy carrying items
+	bne UpdateInventoryAfterPickup						; branch if Indy carrying items
 	stx selectedInventoryIndex		; set index to newly picked up item
 	sty selectedInventoryId			; set the current selected inventory id
-LDD0A:
+UpdateInventoryAfterPickup:
 	inc numberOfInventoryItems		; increment number of inventory items
 	cpy #ID_INVENTORY_COINS
-	bcc LDD15	  ;2
+	bcc FinalizeInventoryAddition	  ;2
 	tya								; move item number to accumulator
 	tax								; move item number to x
 	jsr ShowItemAsTaken
-LDD15:
+FinalizeInventoryAddition:
 	lda #$0C
 	sta $A2
 	sec
@@ -2527,7 +2527,7 @@ ShowItemAsNotTaken
 	lda ItemIndexTable,x				; get the item index value
 	lsr								; shift D0 to carry
 	tay
-	lda LDC5C,y
+	lda ItemStatusClearMaskTable,y
 	bcs .showPickUpItemAsNotTaken	; branch if item not a basket item
 	and basketItemsStatus
 	sta basketItemsStatus			; clear status bit showing item not taken
@@ -2571,15 +2571,15 @@ DetermineIfItemAlreadyTaken
 	clc								; clear carry for item not taken already
 	rts
 
-LDD59:
+UpdateRoomEventState:
 	and #$1F		  ;2
 	tax			  ;2
 	lda $98		  ;3
 	cpx #$0C		  ;2
-	bcs LDD67	  ;2
-	adc LDFE5,x	  ;4
+	bcs .doneUpdateRoomEventState	  ;2
+	adc RoomEventStateOffsetTable,x	  ;4
 	sta $98		  ;3
-LDD67:
+.doneUpdateRoomEventState:
 	rts			  ;6
 	
 Start
@@ -2622,7 +2622,7 @@ Start
 	jsr InitializeScreenState
 	jmp StartNewFrame
 	
-LDDA6:
+InitializeGameStartState:
 	lda #<InventoryCoinsSprite
 	sta inventoryGraphicPointers		; place coins in Indy's inventory
 	lsr								; divide value by 8 to get the inventory id
@@ -2675,58 +2675,58 @@ DetermineFinalScore
 	sta adventurePoints
 	rts
 
-LDDF8:
+RoomScratchpadTable:
 	.byte $00,$00,$00,$00,$00,$00,$00,$00
-LDE00:
+RoomOverrideKeyTable:
 	.byte $FF,$FF,$FF,$FF,$FF,$FF,$FF,$F8,$FF,$FF,$FF,$FF,$FF,$4F,$4F,$4F
 	.byte $4F,$4F,$4F,$4F,$4F,$4F,$4F,$4F,$44,$44,$0F,$0F,$1C,$0F,$0F,$18
 	.byte $0F,$0F,$0F,$0F,$0F,$12,$12,$89,$89,$8C,$89,$89,$86,$89,$89,$89
 	.byte $89,$89,$86,$86
-LDE34:
+RoomVerticalOverrideFlagTable:
 	.byte $FF,$FD,$FF,$FF,$FD,$FF,$FF,$FF,$FD,$01,$FD,$04,$FD,$FF,$FD,$01
 	.byte $FF,$0B,$0A,$FF,$FF,$FF,$04,$FF,$FD,$FF,$FD,$FF,$FF,$FF,$FF,$FF
 	.byte $FE,$FD,$FD,$FF,$FF,$FF,$FF,$FF,$FD,$FD,$FE,$FF,$FF,$FE,$FD,$FD
 	.byte $FF,$FF,$FF,$FF
-LDE68:
+RoomOverrideLowerHorizBoundaryTable:
 	.byte $00,$1E,$00,$00,$11,$00,$00,$00,$11,$00,$10,$00,$60,$00,$11,$00
 	.byte $00,$00,$00,$00,$00,$00,$00,$00,$70,$00,$12,$00,$00,$00,$00,$00
 	.byte $30,$15,$24,$00,$00,$00,$00,$00,$18,$03,$27,$00,$00,$30,$20,$12
 	.byte $00,$00,$00,$00
-LDE9C:
+RoomOverrideUpperHorizBoundaryTable:
 	.byte $00,$7A,$00,$00,$88,$00,$00,$00,$88,$00,$80,$00,$65,$00,$88,$00
 	.byte $00,$00,$00,$00,$00,$00,$00,$00,$72,$00,$16,$00,$00,$00,$00,$00
 	.byte $02,$1F,$2F,$00,$00,$00,$00,$00,$1C,$40,$01,$00,$00,$07,$27,$16
 	.byte $00,$00,$00,$00
-LDED0:
+RoomAdvancedOverrideControlTable:
 	.byte $00,$02,$00,$00,$09,$00,$00,$00,$07,$00,$FC,$00,$05,$00,$09,$00
 	.byte $00,$00,$00,$00,$00,$00,$00,$00,$03,$00,$FF,$00,$00,$00,$00,$00
 	.byte $01,$06,$FE,$00,$00,$00,$00,$00,$FB,$FD,$0B,$00,$00,$08,$08,$00
 	.byte $00,$00,$00,$00
-LDF04:
+RoomVerticalPositionOverrideTable:
 	.byte $00,$4E,$00,$00,$4E,$00,$00,$00,$4D,$4E,$4E,$4E,$04,$01,$03,$01
 	.byte $01,$01,$01,$01,$01,$01,$01,$01,$40,$00,$23,$00,$00,$00,$00,$00
 	.byte $00,$00,$41,$00,$00,$00,$00,$00,$45,$00,$42,$00,$00,$00,$42,$23
 	.byte $28,$00,$00,$00
-LDF38:
+RoomHorizontalPositionOverrideTable:
 	.byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$4C,$00,$00,$00
 	.byte $00,$00,$00,$00,$00,$00,$00,$00,$80,$00,$86,$00,$00,$00,$00,$00
 	.byte $80,$86,$80,$00,$00,$00,$00,$00,$12,$12,$4C,$00,$00,$16,$80,$12
 	.byte $50,$00,$00,$00
-LDF6C:
+RoomEventOffsetTable:
 	.byte $01,$FF,$01,$FF
 	
 EntranceRoomTopObjectVertPos
 	.byte ENTRANCE_ROOM_ROCK_VERT_POS
 	.byte ENTRANCE_ROOM_CAVE_VERT_POS
 	
-LDF72:
+RoomObjectVertOffsetTable:
 	.byte $00,$00,$42,$45,$0C,$20
 	
 MarketBasketItems
 	.byte ID_INVENTORY_COINS, ID_INVENTORY_CHAI
 	.byte ID_INVENTORY_ANKH, ID_INVENTORY_HOUR_GLASS
 	
-LDF7C:
+ArkRoomImpactResponseTable:
 	.byte $07,$03,$05,$06,$09,$0B,$0E,$00,$01,$03,$05,$00,$09,$0C,$0E,$00
 	.byte $01,$04,$05,$00,$0A,$0C,$0F,$00,$02,$04,$05,$08,$0A,$0D,$0F,$00
 	
@@ -2770,7 +2770,7 @@ DetermineDirectionToMoveObject
 .doneDetermineDirectionToMoveObject
 	rts
 
-LDFD5:
+IndyMovementDeltaTable:
 	.byte $00
 	.byte $00
 	.byte $00
@@ -2788,7 +2788,7 @@ LDFD5:
 	.byte $0D
 	.byte $0F
 	
-LDFE5:
+RoomEventStateOffsetTable:
 	.byte $00,$06,$03,$03,$03,$00,$00,$06,$00,$00,$00,$06
 	
 	  .org BANK0TOP + 4096 - 6, 0
