@@ -206,8 +206,8 @@ ID_ROOM_OF_SHINING_LIGHT = 8; | -- DrawPlayfieldKernel
 ID_MESA_FIELD			= 9 ; |
 ID_VALLEY_OF_POISON		= 10;--
 
-ID_THIEVES_DEN			= 11;-- LF140
-ID_WELL_OF_SOULS		= 12;-- LF140
+ID_THIEVES_DEN			= 11;-- ThievesDenWellOfSoulsScanlineHandler
+ID_WELL_OF_SOULS		= 12;-- ThievesDenWellOfSoulsScanlineHandler
 ID_ARK_ROOM				= 13
 
 H_ARK_OF_THE_COVENANT	= 7
@@ -541,7 +541,7 @@ SetWellOfSoulsEntryFlag:
 	
 .indyTouchingTimePiece
 	lda timePieceGraphicPointers
-	cmp #<LFABA
+	cmp #<TimeSprite
 	bne CheckIfIndyEnteringWellOfSouls
 	lda #ID_INVENTORY_TIME_PIECE
 	jsr PlaceItemInInventory
@@ -1210,7 +1210,7 @@ ConfigureSnakeGraphicsAndMovement:
 	tax			  ;2
 	lda SnakeMotionTableLSB,x	  ;4
 	sta $D6		  ; Store horizontal movement/frame data
-	lda #>LFA72
+	lda #>SnakeMotionTable_0
 	sta $D7		  ; Store high byte of graphics or pointer address
 	lda $D4		  ;3
 	lsr			  ;2
@@ -1686,9 +1686,9 @@ ReverseSinkingEffectIfApplicable:
 	dec missile0VertPos
 	dec $D2		  ; Mirror the changes made in the sinking routine
 SwitchToBank1AndContinue:
-	lda #<LF528						; Load low byte of destination routine in Bank 1
+	lda #<JumpToScreenHandlerFromBank1						; Load low byte of destination routine in Bank 1
 	sta bankSwitchJMPAddress
-	lda #>LF528						; Load high byte of destination
+	lda #>JumpToScreenHandlerFromBank1						; Load high byte of destination
 	sta bankSwitchJMPAddress + 1
 	jmp JumpToBank1					; Perform the bank switch and jump to new code
 	
@@ -2334,7 +2334,7 @@ RoomPlayer0LSBGraphicData
 	.byte <ThiefSprites
 	
 SnakeMotionTableLSB:
-	.byte <LFA72,<LFA7A,<LFA8A,<LFA82
+	.byte <SnakeMotionTable_0,<SnakeMotionTable_1,<SnakeMotionTable_3,<SnakeMotionTable_2
 	
 SnakeHorizontalOffsetTable:
 	.byte $FE,$FA,$02,$06
@@ -2349,16 +2349,16 @@ RoomMissile0InitVertPosTable:
 	.byte $FF,$FF,$14,$4B,$4A,$44,$FF,$27,$FF,$FF,$FF,$F0,$F0
 	
 RoomPF1GraphicLSBTable:
-	.byte <COLUP0,<COLUP0,<COLUP0,<COLUP0,<COLUP0,<COLUP0,<LFD48,<LFD68,<LFD89,<LFE00,<LFE00
+	.byte <COLUP0,<COLUP0,<COLUP0,<COLUP0,<COLUP0,<COLUP0,<RoomPF1GraphicData_7,<RoomPF1GraphicData_8,<RoomPF1GraphicData_9,<RoomPF1GraphicData_10,<RoomPF1GraphicData_10
 	
 RoomPF1GraphicMSBTable:
-	.byte >COLUP0,>COLUP0,>COLUP0,>COLUP0,>COLUP0,>COLUP0,>LFD48,>LFD68,>LFD89,>LFE00,>LFE00
+	.byte >COLUP0,>COLUP0,>COLUP0,>COLUP0,>COLUP0,>COLUP0,>RoomPF1GraphicData_7,>RoomPF1GraphicData_8,>RoomPF1GraphicData_9,>RoomPF1GraphicData_10,>RoomPF1GraphicData_10
 	
 RoomPF2GraphicLSBTable:
-	.byte <HMP0,<HMP0,<HMP0,<HMP0,<HMP0,<HMP0,<LFD20,<LFDB7,<LFD9B,<LFE78,<LFE78
+	.byte <HMP0,<HMP0,<HMP0,<HMP0,<HMP0,<HMP0,<RoomPF1GraphicData_6,<RoomPF2GraphicData_7,<RoomPF2GraphicData_6,<RoomPF2GraphicData_9,<RoomPF2GraphicData_9
 	
 RoomPF2GraphicMSBTable:
-	.byte >HMP0,>HMP0,>HMP0,>HMP0,>HMP0,>HMP0,>LFD20,>LFDB7,>LFD9B,>LFE78,>LFE78
+	.byte >HMP0,>HMP0,>HMP0,>HMP0,>HMP0,>HMP0,>RoomPF1GraphicData_6,>RoomPF2GraphicData_7,>RoomPF2GraphicData_6,>RoomPF2GraphicData_9,>RoomPF2GraphicData_9
 	
 ItemStatusBitValues
 	.byte BASKET_STATUS_MARKET_GRENADE | PICKUP_ITEM_STATUS_WHIP
@@ -2449,8 +2449,8 @@ ID_ROOM_OF_SHINING_LIGHT = 8; | -- DrawPlayfieldKernel
 ID_MESA_FIELD			= 9 ; |
 ID_VALLEY_OF_POISON		= 10;--
 
-ID_THIEVES_DEN			= 11;-- LF140
-ID_WELL_OF_SOULS		= 12;-- LF140
+ID_THIEVES_DEN			= 11;-- ThievesDenWellOfSoulsScanlineHandler
+ID_WELL_OF_SOULS		= 12;-- ThievesDenWellOfSoulsScanlineHandler
 
 ID_ARK_ROOM				= 13
 	
@@ -2809,7 +2809,7 @@ BANK1Start
 	
 DrawPlayfieldKernel
 	cmp $E0		  ;3
-	bcs LF01A	  ;2
+	bcs DungeonWallScanlineHandler	  ;2
 	lsr			  ;2
 	clc			  ;2
 	adc $DF		  ;3
@@ -2822,7 +2822,7 @@ DrawPlayfieldKernel
 	lda (pf2GraphicPointers),y ; 5
 	sta PF2					  ; 3 = @19
 	bcc .drawPlayerSprites	  ; 2�
-LF01A:
+DungeonWallScanlineHandler:
 	sbc $D4		  ;3
 	lsr			  ;2
 	lsr			  ;2
@@ -2831,15 +2831,15 @@ LF01A:
 	sta HMOVE				  ; 3 = @03
 	tax						  ; 2
 	cpx snakeVertPos			  ; 3
-	bcc LF02D	  ;2
+	bcc DrawDungeonWallScanline	  ;2
 	ldx $D8		  ;3
 	lda #$00		  ;2
-	beq LF031				  ; 3
+	beq StoreDungeonWallScanline				  ; 3
 	
-LF02D:
+DrawDungeonWallScanline:
 	lda dungeonGraphics,x	  ; 4
 	ldx $D8		  ;3
-LF031:
+StoreDungeonWallScanline:
 	sta PF1,x	  ;4
 .drawPlayerSprites
 	ldx #<ENAM1				  ; 2
@@ -2852,7 +2852,7 @@ LF031:
 	tay						  ; 2
 	lda (indyGraphicPointers),y;5
 	tax						  ; 2
-LF043:
+DrawPlayer0Sprite:
 	lda scanline				  ; 3
 	sec						  ; 2
 	sbc topObjectVertPos		  ; 3
@@ -2875,12 +2875,12 @@ LF043:
 	sec						  ; 2
 	sbc $D2		  ;3
 	cmp #$08		  ;2
-	bcs LF06E	  ;2
+	bcs AdvanceToNextPlayfieldScanline	  ;2
 	tay						  ; 2
 	lda (timePieceGraphicPointers),y;5
 	sta ENABL				  ; 3 = @40
 	sta HMBL					  ; 3 = @43
-LF06E:
+AdvanceToNextPlayfieldScanline:
 	inc scanline				  ; 5		  increment scanline
 	lda scanline				  ; 3
 	cmp #(H_KERNEL / 2)		  ; 2
@@ -2889,7 +2889,7 @@ LF06E:
 	
 .skipIndyDraw
 	ldx #0					  ; 2
-	beq LF043	  ;2
+	beq DrawPlayer0Sprite	  ;2
 	
 .skipDrawingPlayer0
 	ldy #0					  ; 2
@@ -2905,7 +2905,7 @@ DrawStationaryPlayerKernel SUBROUTINE
 	lda #0					  ; 2
 	beq .nextStationaryPlayerScanline;3	  unconditional branch
 	
-LF08C:
+DrawStationaryPlayer0Sprite:
 	lda (player0GraphicPointers),y;5
 	bmi .setPlayer0Values	  ; 2�
 	cpy bottomObjectVertPos	  ; 3
@@ -2948,24 +2948,24 @@ JumpIntoStationaryPlayerKernel
 	bcc .waste05Cycles		  ; 2�
 	lda $D8					  ; 3
 	sta timePieceGraphicPointers;3
-LF0CA:
+DrawTimepieceOrBallSprite:
 	lda (timePieceGraphicPointers),y;5
 	sta HMBL					  ; 3 = @34
-LF0CE:
+SetMissile1EnableForScanline:
 	ldy #DISABLE_BM			  ; 2
 	txa						  ; 2		  move scanline count to accumulator
 	cmp bulletOrWhipVertPos	  ; 3
-	bne LF0D6				  ; 2�
+	bne UpdateMissile1EnableForScanline				  ; 2�
 	dey						  ; 2		  y = -1
-LF0D6:
+UpdateMissile1EnableForScanline:
 	sty ENAM1				  ; 3 = @48
 	sec						  ; 2
 	sbc indyVertPos			  ; 3
 	cmp indySpriteHeight		  ;	 3
-	bcs LF107				  ; 2�+1
+	bcs SkipDrawingStationaryPlayer1Sprite				  ; 2�+1
 	tay						  ; 2
 	lda (indyGraphicPointers),y; 5
-LF0E2:
+DrawStationaryPlayer1Sprite:
 	ldy scanline				  ; 3
 	sta GRP1					  ; 3 = @71
 	sta WSYNC
@@ -2973,21 +2973,21 @@ LF0E2:
 	sta HMOVE				  ; 3
 	lda #ENABLE_BM			  ; 2
 	cpx $D2					  ; 3
-	bcc LF0F9				  ; 2�
+	bcc SkipDrawingBall				  ; 2�
 	cpx $DC					  ; 3
-	bcc LF0F5				  ; 2�
+	bcc SetBallEnableForScanline				  ; 2�
 .skipDrawingBall
 	ror						  ; 2
-LF0F5:
+SetBallEnableForScanline:
 	sta ENABL				  ; 3 = @20
-	bcc LF08C				  ; 3		  unconditional branch
+	bcc DrawStationaryPlayer0Sprite				  ; 3		  unconditional branch
 	
-LF0F9:
+SkipDrawingBall:
 	bcc .skipDrawingBall		  ; 3		  unconditional branch
 	
 .waste05Cycles
 	SLEEP 2					  ; 2
-	jmp LF0CA				  ; 3
+	jmp DrawTimepieceOrBallSprite				  ; 3
 	
 .waste19Cycles
 	pha						  ; 3
@@ -2995,17 +2995,17 @@ LF0F9:
 	pha						  ; 3
 	pla						  ; 4
 	SLEEP 2					  ; 2
-	jmp LF0CE				  ; 3
+	jmp SetMissile1EnableForScanline				  ; 3
 	
-LF107:
+SkipDrawingStationaryPlayer1Sprite:
 	lda #0					  ; 2
-	beq LF0E2				  ; 3+1		  unconditional branch
+	beq DrawStationaryPlayer1Sprite				  ; 3+1		  unconditional branch
 	
-LF10B:
+AdvanceStationaryKernelScanline:
 	inx						  ; 2		  increment scanline
 	sta HMCLR				  ; 3		  clear horizontal movement registers
 	cpx #H_KERNEL			  ; 2
-	bcc LF140				  ; 2�
+	bcc ThievesDenWellOfSoulsScanlineHandler				  ; 2�
 	jmp InventoryKernel		  ; 3
 	
 ThievesDenOrWellOfTheSoulsKernel
@@ -3031,30 +3031,30 @@ ThievesDenOrWellOfTheSoulsKernel
 	sec						  ; 2
 	sbc indyVertPos			  ; 3
 	cmp indySpriteHeight		  ; 3
-	bcs LF10B				  ; 2�
+	bcs AdvanceStationaryKernelScanline				  ; 2�
 	tay						  ; 2		  move scanline value to y
 	lda (indyGraphicPointers),y; 5		  get Indy graphic data
 	sta HMCLR				  ; 3 = @65	  clear horizontal movement registers
 	inx						  ; 2		  increment scanline
 	sta GRP1					  ; 3 = @70
-LF140:
+ThievesDenWellOfSoulsScanlineHandler:
 	sta WSYNC
 ;--------------------------------------
 	sta HMOVE				  ; 3
 	bit $D4					  ; 3
-	bpl LF157				  ; 2�
+	bpl ThiefSpriteDrawAndAnimationHandler				  ; 2�
 	ldy $89					  ; 3
 	lda $88					  ; 3
 	lsr $D4					  ; 5
-LF14E:
+ThiefSpritePositionTimingLoop:
 	dey						  ; 2
-	bpl LF14E				  ; 2�
+	bpl ThiefSpritePositionTimingLoop				  ; 2�
 	sta RESP0				  ; 3
 	sta HMP0					  ; 3
 	bmi ThievesDenOrWellOfTheSoulsKernel;3 unconditional branch
 	
-LF157:
-	bvc LF177				  ; 2�
+ThiefSpriteDrawAndAnimationHandler:
+	bvc ThiefSpriteStateUpdateHandler				  ; 2�
 	txa						  ; 2
 	and #$0F					  ; 2
 	tay						  ; 2
@@ -3068,15 +3068,15 @@ LF157:
 	lda (player0ColorPointers),y;5
 	sta $85					  ; 3
 	cpy player0SpriteHeight	  ; 3
-	bcc LF174				  ; 2�
+	bcc ReturnToThievesDenKernel				  ; 2�
 	lsr $D4					  ; 5
-LF174:
+ReturnToThievesDenKernel:
 	jmp ThievesDenOrWellOfTheSoulsKernel;3
 	
-LF177:
+ThiefSpriteStateUpdateHandler:
 	lda #$20		  ;2
 	bit $D4		  ;3
-	beq LF1A7	  ;2
+	beq ThiefSpriteAnimationFrameSetup	  ;2
 	txa			  ;2
 	lsr			  ;2
 	lsr			  ;2
@@ -3103,16 +3103,16 @@ LF1A2:
 	lsr $D4		  ;5
 	jmp ThievesDenOrWellOfTheSoulsKernel;3
 	
-LF1A7:
+ThiefSpriteAnimationFrameSetup:
 	lsr			  ;2
 	bit $D4		  ;3
-	beq LF1CE	  ;2
+	beq ThiefSpriteAnimationFrameSpecialCase	  ;2
 	ldy $87		  ;3
 	lda #$08		  ;2
 	and $86		  ;3
-	beq LF1B6	  ;2
+	beq ThiefSpriteAnimationFrameSelect	  ;2
 	lda #$03		  ;2
-LF1B6:
+ThiefSpriteAnimationFrameSelect:
 	eor thievesHMOVEIndex,y
 	and #3							; 4 frames of animation for the Thief
 	tay
@@ -3125,14 +3125,14 @@ LF1B6:
 	lsr $D4		  ;5
 	jmp ThievesDenOrWellOfTheSoulsKernel;3
 	
-LF1CE:
+ThiefSpriteAnimationFrameSpecialCase:
 	txa			  ;2
 	and #$1F		  ;2
 	cmp #$0C		  ;2
-	beq LF1D8	  ;2
+	beq ThiefSpriteSpecialFrameHandler	  ;2
 	jmp ThievesDenOrWellOfTheSoulsKernel;3
 	
-LF1D8:
+ThiefSpriteSpecialFrameHandler:
 	ldy $87		  ;3
 	lda thievesHorizPositions,y; 4
 	sta $88		  ;3
@@ -3207,17 +3207,17 @@ InventoryKernel
 	sta HMOVE				  ; 3
 	lda #$3F					  ; 2
 	and frameCount			  ; 3
-	bne LF26D	  ;2
+	bne UpdateInventoryDisplay	  ;2
 	lda #$3F		  ;2
 	and secondsTimer			;3
-	bne LF26D	  ;2
+	bne UpdateInventoryDisplay	  ;2
 	lda $B5		  ;3
 	and #$0F		  ;2
-	beq LF26D	  ;2
+	beq UpdateInventoryDisplay	  ;2
 	cmp #$0F		  ;2
-	beq LF26D	  ;2
+	beq UpdateInventoryDisplay	  ;2
 	inc $B5		  ;5
-LF26D:
+UpdateInventoryDisplay:
 	sta WSYNC
 ;--------------------------------------
 	lda #ORANGE + 2			  ; 2
@@ -3272,9 +3272,9 @@ LF26D:
 ;--------------------------------------
 	ldy #ENABLE_BM			  ; 2
 	lda numberOfInventoryItems ; 3		  get number of inventory items
-	bne LF2C6				  ; 2�		 branch if Indy carry items
+	bne UpdateInventoryBallAndPlayfield				  ; 2�		 branch if Indy carry items
 	dey						  ; 2		  y = 1
-LF2C6:
+UpdateInventoryBallAndPlayfield:
 	sty ENABL				  ; 3 = @12
 	ldy #BLACK + 8			  ; 2
 	sty COLUPF				  ; 3 = @17
@@ -3298,88 +3298,88 @@ Overscan
 	ldx #$FF
 	txs								; point stack to the beginning
 	ldx #$01		  ;2
-LF2E8:
+UpdateSoundRegistersDuringOverscan:
 	lda $A2,x	  ;4
 	sta AUDC0,x	  ;4
 	sta AUDV0,x	  ;4
-	bmi LF2FB	  ;2
+	bmi UpdateSpecialSoundEffectDuringOverscan	  ;2
 	ldy #$00		  ;2
 	sty $A2,x	  ;4
-LF2F4:
+UpdateSoundFrequencyDuringOverscan:
 	sta AUDF0,x	  ;4
 	dex			  ;2
-	bpl LF2E8	  ;2
-	bmi LF320						; unconditional branch
+	bpl UpdateSoundRegistersDuringOverscan	  ;2
+	bmi OverscanSoundUpdateDone						; unconditional branch
 	
-LF2FB:
+UpdateSpecialSoundEffectDuringOverscan:
 	cmp #$9C		  ;2
-	bne LF314	  ;2
+	bne UpdateSoundEffectFromFrameCount	  ;2
 	lda #$0F		  ;2
 	and frameCount		 ;3
-	bne LF30D	  ;2
+	bne UpdateSoundEffectTimerDuringOverscan	  ;2
 	dec $A4		  ;5
-	bpl LF30D	  ;2
+	bpl UpdateSoundEffectTimerDuringOverscan	  ;2
 	lda #$17		  ;2
 	sta $A4		  ;3
-LF30D:
+UpdateSoundEffectTimerDuringOverscan:
 	ldy $A4		  ;3
-	lda LFBE8,y	  ;4
-	bne LF2F4	  ;2
-LF314:
+	lda OverscanSpecialSoundEffectTable,y	  ;4
+	bne UpdateSoundFrequencyDuringOverscan	  ;2
+UpdateSoundEffectFromFrameCount:
 	lda frameCount					; get current frame count
 	lsr			  ;2
 	lsr			  ;2
 	lsr			  ;2
 	lsr			  ;2
 	tay			  ;2
-	lda LFAEE,y	  ;4
-	bne LF2F4	  ;2
-LF320:
+	lda OverscanSoundEffectTable,y	  ;4
+	bne UpdateSoundFrequencyDuringOverscan	  ;2
+OverscanSoundUpdateDone:
 	lda selectedInventoryId			; get current selected inventory id
 	cmp #ID_INVENTORY_TIME_PIECE
-	beq LF330	  ;2
+	beq UpdateInventoryTimepieceDisplay	  ;2
 	cmp #ID_INVENTORY_FLUTE
-	bne LF344	  ;2
+	bne ResetInventoryDisplayState	  ;2
 	lda #$84		  ;2
 	sta $A3		  ;3
-	bne LF348						; unconditional branch
+	bne UpdateInventoryAndEventStateAfterReset						; unconditional branch
 	
-LF330:
+UpdateInventoryTimepieceDisplay:
 	bit INPT5						; read action button from right controller
-	bpl LF338						; branch if action button pressed
+	bpl UpdateTimepieceInventorySprite						; branch if action button pressed
 	lda #<InventoryTimepieceSprite
-	bne LF340						; unconditional branch
+	bne StoreTimepieceInventorySprite						; unconditional branch
 	
-LF338:
+UpdateTimepieceInventorySprite:
 	lda secondsTimer			;3
 	and #$E0		  ;2
 	lsr			  ;2
 	lsr			  ;2
 	adc #<Inventory12_00
-LF340:
+StoreTimepieceInventorySprite:
 	ldx selectedInventoryIndex
 	sta inventoryGraphicPointers,x		;4
-LF344:
+ResetInventoryDisplayState:
 	lda #$00		  ;2
 	sta $A3		  ;3
-LF348:
+UpdateInventoryAndEventStateAfterReset:
 	bit $93		  ;3
-	bpl LF371	  ;2
+	bpl UpdateInventoryObjectPositions	  ;2
 	lda frameCount					; get current frame count
 	and #$07		  ;2
 	cmp #$05		  ;2
-	bcc LF365	  ;2
+	bcc UpdateInventoryEventAnimationState	  ;2
 	ldx #$04		  ;2
 	ldy #$01		  ;2
 	bit majorEventFlag 	  ;3
-	bmi LF360	  ;2
+	bmi SetInventoryEventStateY03	  ;2
 	bit $A1		  ;3
-	bpl LF362	  ;2
-LF360:
+	bpl UpdateInventoryEventStateAfterYSet	  ;2
+SetInventoryEventStateY03:
 	ldy #$03		  ;2
-LF362:
-	jsr	 LF8B3	  ;6
-LF365:
+UpdateInventoryEventStateAfterYSet:
+	jsr	 UpdateObjectPositionHandler	  ;6
+UpdateInventoryEventAnimationState:
 	lda frameCount					; get current frame count
 	and #$06		  ;2
 	asl			  ;2
@@ -3387,59 +3387,59 @@ LF365:
 	sta $D6		  ;3
 	lda #$FD		  ;2
 	sta $D7		  ;3
-LF371:
+UpdateInventoryObjectPositions:
 	ldx #$02		  ;2
-LF373:
-	jsr	 LFEF4	  ;6
+UpdateInventoryObjectPositionsLoop:
+	jsr	 UpdateInventoryObjectPositionHandler	  ;6
 	inx			  ;2
 	cpx #$05		  ;2
-	bcc LF373	  ;2
+	bcc UpdateInventoryObjectPositionsLoop	  ;2
 	bit majorEventFlag 	  ;3
-	bpl LF3BF	  ;2
+	bpl HandleInventorySelectionCycling	  ;2
 	lda frameCount					; get current frame count
-	bvs LF39D	  ;2
+	bvs UpdateInventoryEventStateAfterFrameCount	  ;2
 	and #$0F		  ;2
-	bne LF3C5	  ;2
+	bne SwitchToVerticalSync	  ;2
 	ldx indySpriteHeight			;3
 	dex			  ;2
 	stx $A3		  ;3
 	cpx #$03		  ;2
-	bcc LF398	  ;2
+	bcc UpdateInventoryEventFrameCount	  ;2
 	lda #$8F		  ;2
 	sta bulletOrWhipVertPos
 	stx indySpriteHeight			;3
-	bcs LF3C5						; unconditional branch
+	bcs SwitchToVerticalSync						; unconditional branch
 	
-LF398:
+UpdateInventoryEventFrameCount:
 	sta frameCount		 ;3
 	sec			  ;2
 	ror majorEventFlag 	  ;5
-LF39D:
+UpdateInventoryEventStateAfterFrameCount:
 	cmp #$3C		  ;2
-	bcc LF3A9	  ;2
-	bne LF3A5	  ;2
+	bcc UpdateIndySpriteHeightAndEventState	  ;2
+	bne ResetIndySpriteHeight	  ;2
 	sta $A3		  ;3
-LF3A5:
+ResetIndySpriteHeight:
 	ldy #$00		  ;2
 	sty indySpriteHeight
-LF3A9:
+UpdateIndySpriteHeightAndEventState:
 	cmp #$78		  ;2
-	bcc LF3C5	  ;2
+	bcc SwitchToVerticalSync	  ;2
 	lda #H_INDY_SPRITE
 	sta indySpriteHeight
 	sta $A3		  ;3
 	sta majorEventFlag 	  ;3
 	dec lives
-	bpl LF3C5	  ;2
+	bpl SwitchToVerticalSync	  ;2
 	lda #$FF		  ;2
 	sta majorEventFlag 	  ;3
-	bne LF3C5						; unconditional branch
+	bne SwitchToVerticalSync						; unconditional branch
 	
-LF3BF:
+HandleInventorySelectionCycling:
 	lda currentScreenId				; get the current screen id
 	cmp #ID_ARK_ROOM
 	bne CheckForCyclingInventorySelection; branch if not in ID_ARK_ROOM
-LF3C5:
+SwitchToVerticalSync:
 	lda #<VerticalSync
 	sta bankSwitchJMPAddress
 	lda #>VerticalSync
@@ -3512,59 +3512,59 @@ CheckForChoosingInventoryItem
 	sta bulletOrWhipHorizPos
 .doneCyclingInventorySelection
 	lda $8D		  ;3
-	bpl LF454	  ;2
+	bpl HandleInventorySelectionAdjustment	  ;2
 	cmp #$BF		  ;2
-	bcs LF44B	  ;2
+	bcs HandleInventorySelectionEdgeCase	  ;2
 	adc #$10		  ;2
 	sta $8D		  ;3
 	ldx #$03		  ;2
-	jsr	 LFCEA	  ;6
-	jmp	 LF48B	  ;3
+	jsr	 InventorySelectionAdjustmentHandler	  ;6
+	jmp	 ReturnToObjectCollisionHandler	  ;3
 	
-LF44B:
+HandleInventorySelectionEdgeCase:
 	lda #$70		  ;2
 	sta bulletOrWhipVertPos
 	lsr			  ;2
 	sta $8D		  ;3
-	bne LF48B	  ;2
+	bne ReturnToObjectCollisionHandler	  ;2
 	
-LF454:
+HandleInventorySelectionAdjustment:
 	bit $8D		  ;3
-	bvc LF48B	  ;2
+	bvc ReturnToObjectCollisionHandler	  ;2
 	ldx #$03		  ;2
-	jsr	 LFCEA	  ;6
+	jsr	 InventorySelectionAdjustmentHandler	  ;6
 	lda bulletOrWhipHorizPos			; get bullet or whip horizontal position
 	sec			  ;2
 	sbc #$04		  ;2
 	cmp indyHorizPos			;3
-	bne LF46A	  ;2
+	bne HandleInventorySelectionPositionCheck	  ;2
 	lda #$03		  ;2
-	bne LF481						; unconditional branch
+	bne HandleInventorySelectionBitwiseUpdate						; unconditional branch
 	
-LF46A:
+HandleInventorySelectionPositionCheck:
 	cmp #$11		  ;2
-	beq LF472	  ;2
+	beq HandleInventorySelectionSpecialValue	  ;2
 	cmp #$84		  ;2
-	bne LF476	  ;2
-LF472:
+	bne HandleInventorySelectionVerticalCheck	  ;2
+HandleInventorySelectionSpecialValue:
 	lda #$0F		  ;2
-	bne LF481						; unconditional branch
+	bne HandleInventorySelectionBitwiseUpdate						; unconditional branch
 	
-LF476:
+HandleInventorySelectionVerticalCheck:
 	lda bulletOrWhipVertPos			; get bullet or whip vertical position
 	sec			  ;2
 	sbc #$05		  ;2
 	cmp indyVertPos		  ;3
-	bne LF487	  ;2
+	bne HandleInventorySelectionBoundaryCheck	  ;2
 	lda #$0C		  ;2
-LF481:
+HandleInventorySelectionBitwiseUpdate:
 	eor $8D		  ;3
 	sta $8D		  ;3
-	bne LF48B	  ;2
-LF487:
+	bne ReturnToObjectCollisionHandler	  ;2
+HandleInventorySelectionBoundaryCheck:
 	cmp #$4A		  ;2
-	bcs LF472	  ;2
-LF48B:
+	bcs HandleInventorySelectionSpecialValue	  ;2
+ReturnToObjectCollisionHandler:
 	lda #<CheckObjectCollisions
 	sta bankSwitchJMPAddress
 	lda #>CheckObjectCollisions
@@ -3588,7 +3588,7 @@ ArkRoomKernel
 	bcc .checkToDrawArk		  ; 2�
 	txa						  ; 2		  move scanline to accumulator
 	sbc indyVertPos			  ; 3
-	bmi LF4C9				  ; 2�
+	bmi AdvanceArkRoomKernelScanline				  ; 2�
 	cmp #(H_INDY_SPRITE - 1) * 2;2
 	bcs .drawLiftingPedestal	  ; 2�
 	lsr						  ; 2
@@ -3604,10 +3604,10 @@ ArkRoomKernel
 	sta GRP1					  ; 3 = @27
 	lda indyVertPos			  ; 3		  get Indy's vertical position
 	sta COLUP1				  ; 3 = @33
-LF4C9:
+AdvanceArkRoomKernelScanline:
 	inx						  ; 2		  increment scanline count
 	cpx #144					  ; 2
-	bcs LF4EA				  ; 2�
+	bcs ArkRoomPedestalAndPlayer0ScanlineHandler				  ; 2�
 	bcc .arkRoomKernelLoop	  ; 3		  unconditional branch
 	
 .checkToDrawArk
@@ -3627,13 +3627,13 @@ LF4C9:
 	inx						  ; 2
 	cpx #15					  ; 2
 	bcc .arkRoomKernelLoop	  ; 2�
-LF4EA:
+ArkRoomPedestalAndPlayer0ScanlineHandler:
 	sta WSYNC
 ;--------------------------------------
 	cpx #32					  ; 2
 	bcs .checkToDrawPedestal	  ; 2�+1
 	bit resetEnableFlag				  ; 3
-	bmi LF504	  ;2
+	bmi ArkRoomPedestalScanlineLoop	  ;2
 	txa						  ; 2		  move scanline to accumulator
 	ldy #%01111110			  ; 2
 	and #$0E		  ;2
@@ -3644,10 +3644,10 @@ LF4EA:
 	txa						  ; 2
 	eor #$FF		  ;2
 	sta COLUP0	  ;3
-LF504:
+ArkRoomPedestalScanlineLoop:
 	inx			  ;2
 	cpx #29					  ;2
-	bcc LF4EA	  ;2
+	bcc ArkRoomPedestalAndPlayer0ScanlineHandler	  ;2
 	lda #0					  ; 2
 	sta GRP0					  ; 3
 	sta GRP1					  ; 3
@@ -3668,43 +3668,43 @@ LF504:
 	sta GRP0					  ; 3 = @28
 	stx COLUP0				  ; 3 = @31
 	inx						  ; 2
-	bne LF4EA				  ; 3		  unconditional branch
+	bne ArkRoomPedestalAndPlayer0ScanlineHandler				  ; 3		  unconditional branch
 	
-LF528:
+JumpToScreenHandlerFromBank1:
 	lda currentScreenId				; get the current screen id
 	asl								; multiply screen id by 2
 	tax
-	lda LFC88 + 1,x
+	lda ScreenHandlerJumpTable + 1,x
 	pha
-	lda LFC88,x
+	lda ScreenHandlerJumpTable,x
 	pha
 	rts
 
-LF535:
+MesaFieldScreenHandler:
 	lda #$7F		  ;2
 	sta $CE		  ;3
 	sta missile0VertPos
 	sta $D2		  ;3
-	bne LF59A						; unconditional branch
+	bne ReturnToScreenHandlerFromSpiderRoom						; unconditional branch
 	
-LF53F:
+SpiderRoomScreenHandler:
 	ldx #$00		  ;2
 	ldy #<indyVertPos - objectVertPositions
 	bit CXP1FB						; check Indy collision with playfield
-	bmi LF55B						; branch if Indy collided with playfield
+	bmi SpiderRoomObjectPositionHandler						; branch if Indy collided with playfield
 	bit $B6		  ;3
-	bmi LF55B	  ;2
+	bmi SpiderRoomObjectPositionHandler	  ;2
 	lda frameCount					; get the current frame count
 	and #$07		  ;2
-	bne LF55E	  ;2
+	bne SpiderRoomSpriteAndStateHandler	  ;2
 	ldy #$05		  ;2
 	lda #$4C		  ;2
 	sta $CD		  ;3
 	lda #$23		  ;2
 	sta $D3		  ;3
-LF55B:
-	jsr	 LF8B3	  ;6
-LF55E:
+SpiderRoomObjectPositionHandler:
+	jsr	 UpdateObjectPositionHandler	  ;6
+SpiderRoomSpriteAndStateHandler:
 	lda #$80		  ;2
 	sta $93		  ;3
 	lda $CE		  ;3
@@ -3714,77 +3714,77 @@ LF55E:
 	tay			  ;2
 	ror			  ;2
 	rol $C8		  ;5
-	lda LFAEA,y	  ;4
+	lda SpiderRoomPlayer0SpriteTable,y	  ;4
 	sta player0GraphicPointers;3
 	lda #$FC		  ;2
 	sta player0GraphicPointers + 1;3
 	lda $8E		  ;3
-	bmi LF59A	  ;2
+	bmi ReturnToScreenHandlerFromSpiderRoom	  ;2
 	ldx #$50		  ;2
 	stx $CA		  ;3
 	ldx #$26		  ;2
 	stx missile0VertPos
 	lda $B6		  ;3
-	bmi LF59A	  ;2
+	bmi ReturnToScreenHandlerFromSpiderRoom	  ;2
 	bit majorEventFlag 	  ;3
-	bmi LF59A	  ;2
+	bmi ReturnToScreenHandlerFromSpiderRoom	  ;2
 	and #$07		  ;2
-	bne LF592	  ;2
+	bne SpiderRoomSpriteStateUpdate	  ;2
 	ldy #$06		  ;2
 	sty $B6		  ;3
-LF592:
+SpiderRoomSpriteStateUpdate:
 	tax			  ;2
-	lda LFCD2,x	  ;4
+	lda TreasureRoomPlayer0SpriteStateTable,x	  ;4
 	sta $8E		  ;3
 	dec $B6		  ;5
-LF59A:
-	jmp	 LF833	  ;3
+ReturnToScreenHandlerFromSpiderRoom:
+	jmp	 ReturnToScreenHandlerFromBank1	  ;3
 	
-LF59D:
+ValleyOfPoisonScreenHandler:
 	lda #$80		  ;2
 	sta $93		  ;3
 	ldx #$00		  ;2
 	bit majorEventFlag 	  ;3
-	bmi LF5AB	  ;2
+	bmi ValleyOfPoisonObjectSetup	  ;2
 	bit pickupStatusFlags 
-	bvc LF5B7	  ;2
-LF5AB:
+	bvc ValleyOfPoisonObjectUpdateHandler	  ;2
+ValleyOfPoisonObjectSetup:
 	ldy #$05		  ;2
 	lda #$55		  ;2
 	sta $CD		  ;3
 	sta $D3		  ;3
 	lda #$01		  ;2
-	bne LF5BB						; unconditional branch
+	bne ValleyOfPoisonObjectUpdateLoop						; unconditional branch
 	
-LF5B7:
+ValleyOfPoisonObjectUpdateHandler:
 	ldy #<indyVertPos - objectVertPositions
 	lda #$03		  ;2
-LF5BB:
+ValleyOfPoisonObjectUpdateLoop:
 	and frameCount		 ;3
-	bne LF5CE	  ;2
-	jsr	 LF8B3	  ;6
+	bne ValleyOfPoisonObjectBoundaryHandler	  ;2
+	jsr	 UpdateObjectPositionHandler	  ;6
 	lda $CE		  ;3
-	bpl LF5CE	  ;2
+	bpl ValleyOfPoisonObjectBoundaryHandler	  ;2
 	cmp #$A0		  ;2
-	bcc LF5CE	  ;2
+	bcc ValleyOfPoisonObjectBoundaryHandler	  ;2
 	inc $CE		  ;5
 	inc $CE		  ;5
-LF5CE:
-	bvc LF5DE	  ;2
+ValleyOfPoisonObjectBoundaryHandler:
+	bvc ValleyOfPoisonObjectSpriteAndStateHandler	  ;2
 	lda $CE		  ;3
 	cmp #$51		  ;2
-	bcc LF5DE	  ;2
+	bcc ValleyOfPoisonObjectSpriteAndStateHandler	  ;2
 	lda pickupStatusFlags 
 	sta $99		  ;3
 	lda #$00		  ;2
 	sta pickupStatusFlags 
-LF5DE:
+ValleyOfPoisonObjectSpriteAndStateHandler:
 	lda $C8		  ;3
 	cmp indyHorizPos			;3
-	bcs LF5E7	  ;2
+	bcs ValleyOfPoisonPlayer0SpriteUpdate	  ;2
 	dex			  ;2
 	eor #$03		  ;2
-LF5E7:
+ValleyOfPoisonPlayer0SpriteUpdate:
 	stx REFP0	  ;3
 	and #$03		  ;2
 	asl			  ;2
@@ -3794,39 +3794,39 @@ LF5E7:
 	sta player0GraphicPointers;3
 	lda frameCount					; get current frame count
 	and #$7F		  ;2
-	bne LF617	  ;2
+	bne ValleyOfPoisonPlayer0SpriteBoundaryUpdate	  ;2
 	lda $CE		  ;3
 	cmp #$4A		  ;2
-	bcs LF617	  ;2
+	bcs ValleyOfPoisonPlayer0SpriteBoundaryUpdate	  ;2
 	ldy $98		  ;3
-	beq LF617	  ;2
+	beq ValleyOfPoisonPlayer0SpriteBoundaryUpdate	  ;2
 	dey			  ;2
 	sty $98		  ;3
 	ldy #$8E		  ;2
 	adc #$03		  ;2
 	sta missile0VertPos
 	cmp indyVertPos		  ;3
-	bcs LF60F	  ;2
+	bcs ValleyOfPoisonPlayer0SpriteMotionUpdate	  ;2
 	dey			  ;2
-LF60F:
+ValleyOfPoisonPlayer0SpriteMotionUpdate:
 	lda $C8		  ;3
 	adc #$04		  ;2
 	sta $CA		  ;3
 	sty $8E		  ;3
-LF617:
+ValleyOfPoisonPlayer0SpriteBoundaryUpdate:
 	ldy #$7F		  ;2
 	lda $8E		  ;3
-	bmi LF61F	  ;2
+	bmi ValleyOfPoisonBulletOrWhipBoundaryUpdate	  ;2
 	sty missile0VertPos
-LF61F:
+ValleyOfPoisonBulletOrWhipBoundaryUpdate:
 	lda bulletOrWhipVertPos			; get bullet or whip vertical position
 	cmp #$52		  ;2
-	bcc LF627	  ;2
+	bcc ReturnToScreenHandlerFromValleyOfPoison	  ;2
 	sty bulletOrWhipVertPos
-LF627:
-	jmp	 LF833	  ;3
+ReturnToScreenHandlerFromValleyOfPoison:
+	jmp	 ReturnToScreenHandlerFromBank1	  ;3
 	
-LF62A:
+WellOfSoulsScreenHandler:
 	ldx #$3A		  ;2
 	stx $E9		  ;3
 	ldx #$85		  ;2
@@ -3835,7 +3835,7 @@ LF62A:
 	stx landingInMesaBonus
 	bne .checkToMoveThieves			; unconditional branch
 	
-LF638:
+ThievesDenScreenHandler:
 	ldx #4		;2
 .checkToMoveThieves
 	lda ThiefMovementFrameDelayValues,x
@@ -3844,7 +3844,7 @@ LF638:
 	ldy thievesHMOVEIndex,x			; get thief HMOVE index value
 	lda #REFLECT
 	and thievesDirectionAndSize,x
-	bne LF65C						; branch if thief not reflected
+	bne ThievesDenThiefHMOVEIndexUpdate						; branch if thief not reflected
 	dey								; reduce thief HMOVE index value
 	cpy #20
 	bcs .setThiefHMOVEIndexValue
@@ -3857,87 +3857,87 @@ LF638:
 .moveNextThief
 	dex
 	bpl .checkToMoveThieves
-	jmp	 LF833	  ;3
+	jmp	 ReturnToScreenHandlerFromBank1	  ;3
 	
-LF65C:
+ThievesDenThiefHMOVEIndexUpdate:
 	iny								; increment thief HMOVE index value
 	cpy #133
 	bcs .changeThiefDirection
 	bcc .setThiefHMOVEIndexValue		; unconditional branch
 	
-LF663:
+ThievesDenScreenIdleHandler:
 	bit $B4		  ;3
-	bpl LF685	  ;2
-	bvc LF66D	  ;2
+	bpl ThievesDenScreenUpdateState	  ;2
+	bvc ThievesDenScreenInputHandler	  ;2
 	dec indyHorizPos			;5
-	bne LF685						; unconditional branch
+	bne ThievesDenScreenUpdateState						; unconditional branch
 	
-LF66D:
+ThievesDenScreenInputHandler:
 	lda frameCount					; get current frame count
 	ror								; shift D0 to carry
-	bcc LF685						; branch on even frame
+	bcc ThievesDenScreenUpdateState						; branch on even frame
 	lda SWCHA						; read joystick values
 	sta $92
 	ror
 	ror
 	ror
-	bcs LF680						; branch if right joystick not pushed left
+	bcs ThievesDenScreenRightInputHandler						; branch if right joystick not pushed left
 	dec indyHorizPos
-	bne LF685						; unconditional branch
+	bne ThievesDenScreenUpdateState						; unconditional branch
 	
-LF680:
+ThievesDenScreenRightInputHandler:
 	ror
-	bcs LF685						; branch if right joystick not pushed right
+	bcs ThievesDenScreenUpdateState						; branch if right joystick not pushed right
 	inc indyHorizPos
-LF685:
+ThievesDenScreenUpdateState:
 	lda #$02		  ;2
 	and $B4		  ;3
-	bne LF691	  ;2
+	bne ThievesDenScreenVerticalStateHandler	  ;2
 	sta $8D		  ;3
 	lda #$0B		  ;2
 	sta $CE		  ;3
-LF691:
+ThievesDenScreenVerticalStateHandler:
 	ldx indyVertPos					; get Indy's vertical position
 	lda frameCount					; get current frame count
 	bit $B4		  ;3
-	bmi LF6A3	  ;2
+	bmi ThievesDenScreenVerticalStateUpdate	  ;2
 	cpx #$15		  ;2
-	bcc LF6A3	  ;2
+	bcc ThievesDenScreenVerticalStateUpdate	  ;2
 	cpx #$30		  ;2
-	bcc LF6AA	  ;2
-	bcs LF6A9						; unconditional branch
+	bcc ThievesDenScreenVerticalPositionFinalize	  ;2
+	bcs ThievesDenScreenVerticalPositionIncrement						; unconditional branch
 	
-LF6A3:
+ThievesDenScreenVerticalStateUpdate:
 	ror			  ;2
-	bcc LF6AA	  ;2
-LF6A6:
-	jmp	 LF833	  ;3
+	bcc ThievesDenScreenVerticalPositionFinalize	  ;2
+ReturnToScreenHandlerFromThievesDen:
+	jmp	 ReturnToScreenHandlerFromBank1	  ;3
 	
-LF6A9:
+ThievesDenScreenVerticalPositionIncrement:
 	inx			  ;2
-LF6AA:
+ThievesDenScreenVerticalPositionFinalize:
 	inx			  ;2
 	stx indyVertPos		  ;3
-	bne LF6A6	  ;2
-LF6AF:
+	bne ReturnToScreenHandlerFromThievesDen	  ;2
+BlackMarketScreenHandler:
 	lda indyHorizPos			;3
 	cmp #$64		  ;2
-	bcc LF6BC	  ;2
+	bcc BlackMarketScreenSpecialPositionHandler	  ;2
 	rol blackMarketState				; rotate Black Market state left
 	clc								; clear carry
 	ror blackMarketState				; rotate right to show Indy carrying coins
-	bpl LF6DE						; unconditional branch
+	bpl ReturnToScreenHandlerFromBlackMarket						; unconditional branch
 	
-LF6BC:
+BlackMarketScreenSpecialPositionHandler:
 	cmp #$2C		  ;2
-	beq LF6C6	  ;2
+	beq BlackMarketScreenSpecialStateHandler	  ;2
 	lda #$7F		  ;2
 	sta $D2		  ;3
-	bne LF6DE						; unconditional branch
+	bne ReturnToScreenHandlerFromBlackMarket						; unconditional branch
 	
-LF6C6:
+BlackMarketScreenSpecialStateHandler:
 	bit blackMarketState				; check Black Market state
-	bmi LF6DE						; branch if Indy not carrying coins
+	bmi ReturnToScreenHandlerFromBlackMarket						; branch if Indy not carrying coins
 	lda #$30		  ;2
 	sta $CC		  ;3
 	ldy #$00		  ;2
@@ -3948,16 +3948,16 @@ LF6C6:
 	inc indyHorizPos			;5
 	lda #$80		  ;2
 	sta majorEventFlag 	  ;3
-LF6DE:
-	jmp	 LF833	  ;3
+ReturnToScreenHandlerFromBlackMarket:
+	jmp	 ReturnToScreenHandlerFromBank1	  ;3
 	
-LF6E1:
+TreasureRoomScreenHandler:
 	ldy $DF		  ;3
 	dey			  ;2
-	bne LF6DE	  ;2
+	bne ReturnToScreenHandlerFromBlackMarket	  ;2
 	lda $AF		  ;3
 	and #$07		  ;2
-	bne LF71D	  ;2
+	bne TreasureRoomScreenStateFinalize	  ;2
 	lda #$40		  ;2
 	sta $93		  ;3
 	lda secondsTimer			;3
@@ -3967,34 +3967,34 @@ LF6E1:
 	lsr			  ;2
 	lsr			  ;2
 	tax			  ;2
-	ldy LFCDC,x	  ;4
-	ldx LFCAA,y	  ;4
+	ldy TreasureRoomScreenStateIndexLFCDC,x	  ;4
+	ldx TreasureRoomScreenStateIndexTable,y	  ;4
 	sty $84		  ;3
-	jsr	 LF89D	  ;6
-	bcc LF70A	  ;2
-LF705:
+	jsr	 TreasureRoomBasketItemAwardHandler	  ;6
+	bcc TreasureRoomScreenStateUpdate	  ;2
+TreasureRoomScreenAdvanceState:
 	inc $DF		  ;5
-	bne LF6DE	  ;2
+	bne ReturnToScreenHandlerFromBlackMarket	  ;2
 	brk			  ;7
-LF70A:
+TreasureRoomScreenStateUpdate:
 	ldy $84		  ;3
 	tya			  ;2
 	ora $AF		  ;3
 	sta $AF		  ;3
-	lda LFCA2,y	  ;4
+	lda TreasureRoomScreenStateCEValues,y	  ;4
 	sta $CE		  ;3
-	lda LFCA6,y	  ;4
+	lda TreasureRoomScreenStateDFValues,y	  ;4
 	sta $DF		  ;3
-	bne LF6DE	  ;2
-LF71D:
+	bne ReturnToScreenHandlerFromBlackMarket	  ;2
+TreasureRoomScreenStateFinalize:
 	cmp #$04		  ;2
-	bcs LF705	  ;2
+	bcs TreasureRoomScreenAdvanceState	  ;2
 	rol $AF		  ;5
 	sec			  ;2
 	ror $AF		  ;5
-	bmi LF705						; unconditional branch
+	bmi TreasureRoomScreenAdvanceState						; unconditional branch
 	
-LF728:
+MapRoomScreenHandler:
 	ldy #$00		  ;2
 	sty $D2		  ;3
 	ldy #$7F		  ;2
@@ -4005,95 +4005,95 @@ LF728:
 	ldy #$4F		  ;2
 	lda #$3A		  ;2
 	cmp indyVertPos		  ;3
-	bne LF74A	  ;2
+	bne MapRoomScreenSpecialStateHandler	  ;2
 	lda selectedInventoryId
 	cmp #ID_INVENTORY_KEY
-	beq LF74C	  ;2
+	beq MapRoomScreenFinalizeState	  ;2
 	lda #$5E		  ;2
 	cmp indyHorizPos			;3
-	beq LF74C	  ;2
-LF74A:
+	beq MapRoomScreenFinalizeState	  ;2
+MapRoomScreenSpecialStateHandler:
 	ldy #$0D		  ;2
-LF74C:
+MapRoomScreenFinalizeState:
 	sty $DF		  ;3
 	lda secondsTimer			;3
 	sec			  ;2
 	sbc #$10		  ;2
-	bpl LF75A	  ;2
+	bpl MapRoomScreenSecondsTimerHandler	  ;2
 	eor #$FF		  ;2
 	sec			  ;2
 	adc #$00		  ;2
-LF75A:
+MapRoomScreenSecondsTimerHandler:
 	cmp #$0B		  ;2
-	bcc LF760	  ;2
+	bcc MapRoomScreenFinalizeTimer	  ;2
 	lda #$0B		  ;2
-LF760:
+MapRoomScreenFinalizeTimer:
 	sta $CE		  ;3
 	bit $B3		  ;3
-	bpl LF78B	  ;2
+	bpl MapRoomScreenFinalizePositionState	  ;2
 	cmp #$08		  ;2
-	bcs LF787	  ;2
+	bcs MapRoomScreenFinalizeTimerValue	  ;2
 	ldx selectedInventoryId
 	cpx #ID_INVENTORY_HEAD_OF_RA
-	bne LF787	  ;2
+	bne MapRoomScreenFinalizeTimerValue	  ;2
 	stx usingHeadOfRaInMapRoomBonus
 	lda #$04		  ;2
 	and frameCount		 ;3
-	bne LF787	  ;2
+	bne MapRoomScreenFinalizeTimerValue	  ;2
 	lda $8C		  ;3
 	and #$0F		  ;2
 	tax			  ;2
-	lda LFAC2,x	  ;4
+	lda MapRoomBulletOrWhipHorizPosTable,x	  ;4
 	sta bulletOrWhipHorizPos
-	lda LFAD2,x	  ;4
-	bne LF789						; unconditional branch
+	lda MapRoomBulletOrWhipVertPosTable,x	  ;4
+	bne MapRoomScreenFinalizeBulletOrWhipPosition						; unconditional branch
 	
-LF787:
+MapRoomScreenFinalizeTimerValue:
 	lda #$70		  ;2
-LF789:
+MapRoomScreenFinalizeBulletOrWhipPosition:
 	sta bulletOrWhipVertPos
-LF78B:
+MapRoomScreenFinalizePositionState:
 	rol $B3		  ;5
 	lda #$3A		  ;2
 	cmp indyVertPos
-	bne LF7A2	  ;2
+	bne MapRoomScreenFinalizePositionFlags	  ;2
 	cpy #$4F		  ;2
-	beq LF79D	  ;2
+	beq MapRoomScreenFinalizePositionBoundary	  ;2
 	lda #$5E		  ;2
 	cmp indyHorizPos			;3
-	bne LF7A2	  ;2
-LF79D:
+	bne MapRoomScreenFinalizePositionFlags	  ;2
+MapRoomScreenFinalizePositionBoundary:
 	sec			  ;2
 	ror $B3		  ;5
-	bmi LF7A5						; unconditional branch
+	bmi ReturnToScreenHandlerFromMapRoom						; unconditional branch
 	
-LF7A2:
+MapRoomScreenFinalizePositionFlags:
 	clc			  ;2
 	ror $B3		  ;5
-LF7A5:
-	jmp	 LF833	  ;3
+ReturnToScreenHandlerFromMapRoom:
+	jmp	 ReturnToScreenHandlerFromBank1	  ;3
 	
-LF7A8:
+TempleEntranceScreenHandler:
 	lda #PICKUP_ITEM_STATUS_TIME_PIECE
 	and pickupItemsStatus
-	bne LF7C0						; branch if Time Piece taken
+	bne TempleEntranceScreenTimePieceTakenHandler						; branch if Time Piece taken
 	lda #$4C		  ;2
 	sta $CC		  ;3
 	lda #$2A		  ;2
 	sta $D2		  ;3
-	lda #<LFABA
+	lda #<TimeSprite
 	sta timePieceGraphicPointers
-	lda #>LFABA
+	lda #>TimeSprite
 	sta timePieceGraphicPointers + 1
-	bne LF7C4	  ;2
+	bne TempleEntranceScreenFinalizeState	  ;2
 	
-LF7C0:
+TempleEntranceScreenTimePieceTakenHandler:
 	lda #$F0		  ;2
 	sta $D2		  ;3
-LF7C4:
+TempleEntranceScreenFinalizeState:
 	lda $B5		  ;3
 	and #$0F		  ;2
-	beq LF833	  ;2
+	beq ReturnToScreenHandlerFromBank1	  ;2
 	sta $DC		  ;3
 	ldy #$14		  ;2
 	sty $CE		  ;3
@@ -4105,65 +4105,65 @@ LF7C4:
 	sec			  ;2
 	sbc $DC		  ;3
 	sta player0GraphicPointers;3
-	bne LF833						; unconditional branch
+	bne ReturnToScreenHandlerFromBank1						; unconditional branch
 	
-LF7E0:
+RoomOfShiningLightScreenHandler:
 	lda frameCount					; get current frame count
 	and #$18							; update every 8 frames
 	adc #<ShiningLightSprites
 	sta player0GraphicPointers		; set Shining Light graphic LSB value
 	lda frameCount					; get current frame count
 	and #7
-	bne LF80F	  ;2
+	bne RoomOfShiningLightScreenFinalizeInput	  ;2
 	ldx #<shiningLightVertPos - objectVertPositions
 	ldy #<indyVertPos - objectVertPositions
 	lda indyVertPos					; get Indy's vertical position
 	cmp #58
-	bcc LF80C
+	bcc RoomOfShiningLightScreenFinalizeState
 	lda indyHorizPos					; get Indy's horizontal position
 	cmp #$2B		  ;2
-	bcc LF802	  ;2
+	bcc RoomOfShiningLightScreenSpecialStateHandler	  ;2
 	cmp #$6D		  ;2
-	bcc LF80C	  ;2
-LF802:
+	bcc RoomOfShiningLightScreenFinalizeState	  ;2
+RoomOfShiningLightScreenSpecialStateHandler:
 	ldy #$05		  ;2
 	lda #$4C		  ;2
 	sta $CD		  ;3
 	lda #$0B		  ;2
 	sta $D3		  ;3
-LF80C:
-	jsr	 LF8B3	  ;6
-LF80F:
+RoomOfShiningLightScreenFinalizeState:
+	jsr	 UpdateObjectPositionHandler	  ;6
+RoomOfShiningLightScreenFinalizeInput:
 	ldx #$4E		  ;2
 	cpx indyVertPos		  ;3
-	bne LF833	  ;2
+	bne ReturnToScreenHandlerFromBank1	  ;2
 	ldx indyHorizPos			;3
 	cpx #$76		  ;2
-	beq LF81F	  ;2
+	beq RoomOfShiningLightScreenFinalizePenalty	  ;2
 	cpx #$14		  ;2
-	bne LF833	  ;2
-LF81F:
+	bne ReturnToScreenHandlerFromBank1	  ;2
+RoomOfShiningLightScreenFinalizePenalty:
 	lda SWCHA						; read joystick values
 	and #P1_NO_MOVE
 	cmp #(MOVE_DOWN >> 4)
-	bne LF833						; branch if right joystick not pushed down
+	bne ReturnToScreenHandlerFromBank1						; branch if right joystick not pushed down
 	sta escapedShiningLightPenalty	; place 13 in Shining Light penalty
 	lda #$4C		  ;2
 	sta indyHorizPos			;3
 	ror $B5		  ;5
 	sec			  ;2
 	rol $B5		  ;5
-LF833:
+ReturnToScreenHandlerFromBank1:
 	lda #<SetupScreenVisualsAndObjects
 	sta bankSwitchJMPAddress
 	lda #>SetupScreenVisualsAndObjects
 	sta bankSwitchJMPAddress + 1
 	jmp JumpToBank0
 	
-LF83E:	 
+EntranceRoomScreenHandler:	 
 	lda #$40		  ;2
 	sta $93		  ;3
-	bne LF833	  ;2
+	bne ReturnToScreenHandlerFromBank1	  ;2
 	
 DisplayKernel
 	sta WSYNC
@@ -4183,17 +4183,17 @@ DisplayKernel
 	sty VBLANK				  ; 3 = @06	  enable TIA (D1 = 0)
 	sty scanline				  ; 3
 	cpx #ID_MAP_ROOM			  ; 2
-	bne LF865				  ; 2�		 branch if not in Map Room
+	bne DisplayKernelMapRoomHandler				  ; 2�		 branch if not in Map Room
 	dey						  ; 2		  y = -1
-LF865:
+DisplayKernelMapRoomHandler:
 	sty ENABL				  ; 3 = @18
 	cpx #ID_ARK_ROOM			  ; 2
-	beq LF874				  ; 2�		 branch if in Ark Room
+	beq DisplayKernelArkRoomHandler				  ; 2�		 branch if in Ark Room
 	bit majorEventFlag 				  ; 3
-	bmi LF874				  ; 2�
+	bmi DisplayKernelArkRoomHandler				  ; 2�
 	ldy SWCHA				  ; 4		  read joystick values
 	sty REFP1				  ; 3 = @34
-LF874:
+DisplayKernelArkRoomHandler:
 	sta WSYNC
 ;--------------------------------------
 	sta HMOVE				  ; 3
@@ -4218,62 +4218,62 @@ LF874:
 	sta $84					  ; 3
 	rts						  ; 6		  jump to specified kernel
 
-LF89D:
-	lda LFC75,x	  ;4
+TreasureRoomBasketItemAwardHandler:
+	lda TreasureRoomBasketItemAwardTable,x	  ;4
 	lsr			  ;2
 	tay			  ;2
-	lda LFCE2,y	  ;4
-	bcs LF8AD	  ;2
+	lda TreasureRoomBasketItemAwardBitMaskTable,y	  ;4
+	bcs TreasureRoomBasketItemAwardPickupHandler	  ;2
 	and basketItemsStatus
-	beq LF8AC	  ;2
+	beq TreasureRoomBasketItemAwardReturn	  ;2
 	sec			  ;2
-LF8AC:
+TreasureRoomBasketItemAwardReturn:
 	rts			  ;6
 
-LF8AD:
+TreasureRoomBasketItemAwardPickupHandler:
 	and pickupItemsStatus
-	bne LF8AC	  ;2
+	bne TreasureRoomBasketItemAwardReturn	  ;2
 	clc			  ;2
 	rts			  ;6
 
-LF8B3:
+UpdateObjectPositionHandler:
 	cpy #<indyVertPos - objectVertPositions
-	bne LF8BB	  ;2
+	bne UpdateObjectVerticalPositionHandler	  ;2
 	lda indyVertPos					; get Indy's vertical position
-	bmi LF8CC	  ;2
-LF8BB:
+	bmi UpdateObjectVerticalPositionDecrementHandler	  ;2
+UpdateObjectVerticalPositionHandler:
 	lda objectVertPositions,x	  ;4
 	cmp objectVertPositions,y	;4
-	bne LF8C6	  ;2
+	bne UpdateObjectVerticalPositionIncrementHandler	  ;2
 	cpy #$05		  ;2
-	bcs LF8CE	  ;2
-LF8C6:
-	bcs LF8CC	  ;2
+	bcs UpdateObjectHorizontalPositionHandler	  ;2
+UpdateObjectVerticalPositionIncrementHandler:
+	bcs UpdateObjectVerticalPositionDecrementHandler	  ;2
 	inc objectVertPositions,x	  ;6
-	bne LF8CE	  ;2
-LF8CC:
+	bne UpdateObjectHorizontalPositionHandler	  ;2
+UpdateObjectVerticalPositionDecrementHandler:
 	dec objectVertPositions,x	  ;6
-LF8CE:
+UpdateObjectHorizontalPositionHandler:
 	lda objectHorizPositions,x		;4
 	cmp objectHorizPositions,y	 ;4
-	bne LF8D9	  ;2
+	bne UpdateObjectHorizontalPositionIncrementHandler	  ;2
 	cpy #$05		  ;2
-	bcs LF8DD	  ;2
-LF8D9:
-	bcs LF8DE	  ;2
+	bcs UpdateObjectHorizontalPositionReturn	  ;2
+UpdateObjectHorizontalPositionIncrementHandler:
+	bcs UpdateObjectHorizontalPositionDecrementHandler	  ;2
 	inc objectHorizPositions,x		;6
-LF8DD:
+UpdateObjectHorizontalPositionReturn:
 	rts			  ;6
 
-LF8DE:
+UpdateObjectHorizontalPositionDecrementHandler:
 	dec objectHorizPositions,x		;6
 	rts			  ;6
 
-LF8E1:
+UpdateObjectPositionBoundaryHandler:
 	lda objectVertPositions,x	  ;4
 	cmp #$53		  ;2
-	bcc LF8F1	  ;2
-LF8E7:
+	bcc UpdateObjectPositionBoundaryClamp	  ;2
+UpdateObjectPositionBoundaryClampHandler:
 	rol $8C,x	  ;6
 	clc			  ;2
 	ror $8C,x	  ;6
@@ -4281,12 +4281,12 @@ LF8E7:
 	sta objectVertPositions,x	  ;4
 	rts			  ;6
 
-LF8F1:
+UpdateObjectPositionBoundaryClamp:
 	lda objectHorizPositions,x		;4
 	cmp #$10		  ;2
-	bcc LF8E7	  ;2
+	bcc UpdateObjectPositionBoundaryClampHandler	  ;2
 	cmp #$8E		  ;2
-	bcs LF8E7	  ;2
+	bcs UpdateObjectPositionBoundaryClampHandler	  ;2
 	rts			  ;6
 
 	BOUNDARY 0
@@ -4670,7 +4670,7 @@ ParachutingIndySprite
 	.byte $18 ; |...XX...| $FA70
 	.byte $00 ; |........| $FA71
 	
-LFA72:
+SnakeMotionTable_0:
 	.byte HMOVE_L1
 	.byte HMOVE_L1
 	.byte HMOVE_0
@@ -4679,7 +4679,7 @@ LFA72:
 	.byte HMOVE_0
 	.byte HMOVE_L1
 	.byte HMOVE_0
-LFA7A:
+SnakeMotionTable_1:
 	.byte HMOVE_L1
 	.byte HMOVE_L1
 	.byte HMOVE_0
@@ -4688,7 +4688,7 @@ LFA7A:
 	.byte HMOVE_L1
 	.byte HMOVE_L1
 	.byte HMOVE_0
-LFA82:
+SnakeMotionTable_2:
 	.byte HMOVE_L1
 	.byte HMOVE_0
 	.byte HMOVE_R1
@@ -4697,7 +4697,7 @@ LFA82:
 	.byte HMOVE_R1
 	.byte HMOVE_R1
 	.byte HMOVE_0
-LFA8A:
+SnakeMotionTable_3:
 	.byte HMOVE_R1
 	.byte HMOVE_R1
 	.byte HMOVE_0
@@ -4754,7 +4754,7 @@ RoomPF0GraphicData
 	.byte $F0 ; |XXXX....| $FAB8
 	.byte $C0 ; |XX......| $FAB9
 	
-LFABA:
+TimeSprite:
 	.byte HMOVE_R1 | 7
 	.byte HMOVE_R1 | 7
 	.byte HMOVE_R1 | 7
@@ -4764,27 +4764,27 @@ LFABA:
 	.byte HMOVE_L3 | 7
 	.byte HMOVE_0  | 0
 	
-LFAC2:
+MapRoomBulletOrWhipHorizPosTable:
 	.byte $63,$62,$6B,$5B,$6A,$5F,$5A,$5A,$6B,$5E,$67,$5A,$62,$6B,$5A,$6B
 	
-LFAD2:
+MapRoomBulletOrWhipVertPosTable:
 	.byte $22,$13,$13,$18,$18,$1E,$21,$13,$21,$26,$26,$2B,$2A,$2B,$31,$31
 	
 KernelJumpTable
 	.word JumpIntoStationaryPlayerKernel - 1
 	.word DrawPlayfieldKernel - 1
-	.word LF140 - 1
+	.word ThievesDenWellOfSoulsScanlineHandler - 1
 	.word ArkRoomKernel - 1
 	
-LFAEA:
+SpiderRoomPlayer0SpriteTable:
 	.byte $AE,$C0,$B7,$C9
 	
-LFAEE:
+OverscanSoundEffectTable:
 	.byte $1B,$18,$17,$17,$18,$18,$1B,$1B,$1D,$18,$17,$12,$18,$17,$1B,$1D
 	.byte $00,$00
 	
 InventorySprites
-LFB00:
+
 EmptySprite
 	.byte $00 ; |........|
 	.byte $00 ; |........|
@@ -4803,7 +4803,7 @@ Copyright_3
 	.byte $51 ; |.X.X...X|
 	.byte $70 ; |.XXX....|
 	.byte $00 ; |........|
-LFB10:
+
 InventoryFluteSprite
 	.byte $00 ; |........|
 	.byte $01 ; |.......X|
@@ -4813,7 +4813,7 @@ InventoryFluteSprite
 	.byte $01 ; |.......X|
 	.byte $00 ; |........|
 	.byte $00 ; |........|
-LFB18:
+
 InventoryParachuteSprite
 	.byte $77 ; |.XXX.XXX|
 	.byte $77 ; |.XXX.XXX|
@@ -4823,7 +4823,7 @@ InventoryParachuteSprite
 	.byte $77 ; |.XXX.XXX|
 	.byte $77 ; |.XXX.XXX|
 	.byte $77 ; |.XXX.XXX|
-LFB20:
+
 InventoryCoinsSprite
 	.byte $1C ; |...XXX..|
 	.byte $2A ; |..X.X.X.|
@@ -4833,7 +4833,7 @@ InventoryCoinsSprite
 	.byte $2A ; |..X.X.X.|
 	.byte $1C ; |...XXX..|
 	.byte $3E ; |..XXXXX.|
-LFB28:
+
 MarketplaceGrenadeSprite
 	.byte $3A ; |..XXX.X.|
 	.byte $01 ; |.......X|
@@ -4843,7 +4843,7 @@ MarketplaceGrenadeSprite
 	.byte $02 ; |......X.|
 	.byte $3C ; |..XXXX..|
 	.byte $30 ; |..XX....|
-LFB30:
+
 BlackMarketGrenadeSprite
 	.byte $2E ; |..X.XXX.|
 	.byte $40 ; |.X......|
@@ -4853,7 +4853,7 @@ BlackMarketGrenadeSprite
 	.byte $20 ; |..X.....|
 	.byte $1E ; |...XXXX.|
 	.byte $06 ; |.....XX.|
-LFB38:
+
 InventoryKeySprite
 	.byte $00 ; |........|
 	.byte $25 ; |..X..X.X|
@@ -5054,7 +5054,7 @@ Copyright_4
 	.byte $99 ; |X..XX..X| $FBE6
 	.byte $00 ; |........| $FBE7
 	
-LFBE8:
+OverscanSpecialSoundEffectTable:
 	.byte $14 ; |...X.X..|
 	.byte $14 ; |...X.X..|
 	.byte $14 ; |...X.X..|
@@ -5194,7 +5194,7 @@ ThiefColors
 	.byte $32 ; |..XX..X.| $FC72
 	.byte $20 ; |..X.....| $FC73
 	.byte $10 ; |...X....| $FC74
-LFC75:
+TreasureRoomBasketItemAwardTable:
 	.byte $00 ; |........| $FC75
 	.byte $00 ; |........| $FC76
 	.byte $00 ; |........| $FC77
@@ -5215,61 +5215,61 @@ LFC75:
 	.byte $0F ; |....XXXX| $FC86
 	.byte $0B ; |....X.XX| $FC87
 	
-LFC88:
-	.word LF6E1 - 1			  ; Treasure Room
-	.word LF833 - 1			  ; Marketplace
-	.word LF83E - 1			  ; Entrance Room
-	.word LF6AF - 1			  ; Black Market
-	.word LF728 - 1			  ; Map room
-	.word LF663 - 1			  ; mesa side
-	.word LF7A8 - 1			  ; temple entrance
-	.word LF53F - 1			  ; spider room
-	.word LF7E0 - 1			  ; room of shining light
-	.word LF535 - 1			  ; mesa field
-	.word LF59D - 1			  ; valley of poison
-	.word LF638 - 1			  ; thieves den
-	.word LF62A - 1			  ; well of souls
+ScreenHandlerJumpTable:
+	.word TreasureRoomScreenHandler - 1			  ; Treasure Room
+	.word ReturnToScreenHandlerFromBank1 - 1			  ; Marketplace
+	.word EntranceRoomScreenHandler - 1			  ; Entrance Room
+	.word BlackMarketScreenHandler - 1			  ; Black Market
+	.word MapRoomScreenHandler - 1			  ; Map room
+	.word ThievesDenScreenIdleHandler - 1			  ; mesa side
+	.word TempleEntranceScreenHandler - 1			  ; temple entrance
+	.word SpiderRoomScreenHandler - 1			  ; spider room
+	.word RoomOfShiningLightScreenHandler - 1			  ; room of shining light
+	.word MesaFieldScreenHandler - 1			  ; mesa field
+	.word ValleyOfPoisonScreenHandler - 1			  ; valley of poison
+	.word ThievesDenScreenHandler - 1			  ; thieves den
+	.word WellOfSoulsScreenHandler - 1			  ; well of souls
 	
-LFCA2:
+TreasureRoomScreenStateCEValues:
 	.byte $1A,$38,$09,$26
 	
-LFCA6:
+TreasureRoomScreenStateDFValues:
 	.byte $26,$46,$1A,$38
 	
-LFCAA:
+TreasureRoomScreenStateIndexTable:
 	.byte $04,$11,$10,$12,$54,$FC,$5F,$FE,$7F,$FA,$3F,$2A,$00,$54,$5F,$FC
 	.byte $7F,$FE,$3F,$FA,$2A,$00,$2A,$FA,$3F,$FE,$7F,$FA,$5F,$54,$00,$2A
 	.byte $3F,$FA,$7F,$FE,$5F,$FC,$54,$00
 	
-LFCD2:
+TreasureRoomPlayer0SpriteStateTable:
 	.byte $8B,$8A,$86,$87,$85,$89
 	
 ThiefMovementFrameDelayValues
 	.byte $03,$01,$00,$01
 	
-LFCDC:
+TreasureRoomScreenStateIndexLFCDC:
 	.byte $03,$02,$01,$03,$02,$03
 	
-LFCE2:
+TreasureRoomBasketItemAwardBitMaskTable:
 	.byte $01,$02,$04,$08,$10,$20,$40,$80
 	
-LFCEA:
+InventorySelectionAdjustmentHandler:
 	ror			  ;2
-	bcs LFCEF	  ;2
+	bcs InventorySelectionAdjustmentIncrementVertHandler	  ;2
 	dec objectVertPositions,x	  ;6
-LFCEF:
+InventorySelectionAdjustmentIncrementVertHandler:
 	ror			  ;2
-	bcs LFCF4	  ;2
+	bcs InventorySelectionAdjustmentDecrementHorizHandler	  ;2
 	inc objectVertPositions,x	  ;6
-LFCF4:
+InventorySelectionAdjustmentDecrementHorizHandler:
 	ror			  ;2
-	bcs LFCF9	  ;2
+	bcs InventorySelectionAdjustmentIncrementHorizHandler	  ;2
 	dec objectHorizPositions,x		;6
-LFCF9:
+InventorySelectionAdjustmentIncrementHorizHandler:
 	ror			  ;2
-	bcs LFCFE	  ;2
+	bcs InventorySelectionAdjustmentReturn	  ;2
 	inc objectHorizPositions,x		;6
-LFCFE:
+InventorySelectionAdjustmentReturn:
 	rts			  ;6
 
 	.byte $00 ; |........| $FCFF
@@ -5306,7 +5306,7 @@ LFCFE:
 	.byte $12 ; |...X..X.| $FD1E
 	.byte $00 ; |........| $FD1F
 	
-LFD20:
+RoomPF1GraphicData_6:
 	.byte $FF ; |XXXXXXXX| $FD20
 	.byte $FF ; |XXXXXXXX| $FD21
 	.byte $FC ; |XXXXXX..| $FD22
@@ -5348,7 +5348,7 @@ LFD20:
 	.byte $F0 ; |XXXX....| $FD46
 	.byte $FE ; |XXXXXXX.| $FD47
 	
-LFD48:
+RoomPF1GraphicData_7:
 	.byte $FF ; |XXXXXXXX| $FD48
 	.byte $FF ; |XXXXXXXX| $FD49
 	.byte $FF ; |XXXXXXXX| $FD4A
@@ -5382,7 +5382,7 @@ LFD48:
 	.byte $80 ; |X.......| $FD66
 	.byte $00 ; |........| $FD67
 	
-LFD68:
+RoomPF1GraphicData_8:
 	.byte $00 ; |........| $FD68
 	.byte $00 ; |........| $FD69
 	.byte $00 ; |........| $FD6A
@@ -5417,7 +5417,7 @@ LFD68:
 	.byte $00 ; |........| $FD87
 	.byte $00 ; |........| $FD88
 	
-LFD89:
+RoomPF1GraphicData_9:
 	.byte $00 ; |........| $FD89
 	.byte $00 ; |........| $FD8A
 	.byte $00 ; |........| $FD8B
@@ -5437,7 +5437,7 @@ LFD89:
 	.byte $02 ; |......X.| $FD99
 	.byte $00 ; |........| $FD9A
 	
-LFD9B:
+RoomPF2GraphicData_6:
 	.byte $00 ; |........| $FD9B
 	.byte $00 ; |........| $FD9C
 	.byte $00 ; |........| $FD9D
@@ -5467,7 +5467,7 @@ LFD9B:
 	.byte $80 ; |X.......| $FDB5
 	.byte $80 ; |X.......| $FDB6
 	
-LFDB7:
+RoomPF2GraphicData_7:
 	.byte $00 ; |........| $FDB7
 	.byte $00 ; |........| $FDB8
 	.byte $00 ; |........| $FDB9
@@ -5548,7 +5548,7 @@ ShiningLight_03
 	.byte $14 ; |...X.X..| $FDFE
 	.byte $00 ; |........| $FDFF
 	
-LFE00:
+RoomPF1GraphicData_10:
 	.byte $07 ; |.....XXX| $FE00
 	.byte $07 ; |.....XXX| $FE01
 	.byte $07 ; |.....XXX| $FE02
@@ -5670,7 +5670,7 @@ LFE00:
 	.byte $00 ; |........| $FE76
 	.byte $00 ; |........| $FE77
 	
-LFE78:
+RoomPF2GraphicData_9:
 	.byte $07 ; |.....XXX| $FE78
 	.byte $07 ; |.....XXX| $FE79
 	.byte $07 ; |.....XXX| $FE7A
@@ -5798,14 +5798,14 @@ PedestalSprite
 	.byte $7E ; |.XXXXXX.| $FEF2
 	.byte $FF ; |XXXXXXXX| $FEF3
 	
-LFEF4:
+UpdateInventoryObjectPositionHandler:
 	lda $8C,x	  ;4
-	bmi LFEF9	  ;2
+	bmi UpdateInventoryObjectPositionBoundaryHandler	  ;2
 	rts			  ;6
 
-LFEF9:
-	jsr	 LFCEA	  ;6
-	jsr	 LF8E1	  ;6
+UpdateInventoryObjectPositionBoundaryHandler:
+	jsr	 InventorySelectionAdjustmentHandler	  ;6
+	jsr	 UpdateObjectPositionBoundaryHandler	  ;6
 	rts			  ;6
 
 TreasureRoomPlayerGraphics
