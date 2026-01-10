@@ -1,0 +1,639 @@
+RAIDERS OF THE LOST ARK (ATARI 2600) FAQ
+
+Version 1.0
+Last Updated on 9/19/00
+Written By Kristine Roper
+E-Mail Address: Kathara @ AOL.COM
+
+- Introduction
+- Game Overview
+- The Controls
+- The Rooms
+- The Items
+- Bad Guys and Other Folks
+- The Solution
+- Frequently Asked Questions
+- Map
+
+xxxxxxxxxxxx
+INTRODUCTION
+xxxxxxxxxxxx
+
+Hi, thanks for taking the time to check out my Raiders FAQ. My name's Kristine 
+and, like you, I love classic video games. I've written this because I've 
+noticed that a real FAQ (not to mention the solution) doesn't exist for this 
+game anywhere on the web (well, not on Gamefaqs at least ;)  ). So I figured, 
+what the heck, let's give it a shot. If you happen to notice any major mistakes 
+or omissions please e-mail me and let me know about it. 
+
+Oh, and as for all that copyright stuff, feel free to include this faq anywhere 
+you like, as long as it's fully intact, you give me credit for it, and you don't 
+try to sell it without getting ahold of me first.  There, that wasn't so bad, 
+now was it? :)
+
+xxxxxxxxxxxxxx
+GAME OVERVIEW
+xxxxxxxxxxxxxx
+
+Raiders of the Lost Ark was one of the first true adventure console games. Other 
+games had the player finding objects and using them for some purpose, but 
+Raiders allowed the player to carry several items and to figure out when and 
+where to use them. It also featured some puzzle elements not seen before, 
+especially not in a 2600 game.  Whether you loved it or you thought it was the 
+biggest piece of video game garbage in existance, you can't deny that it holds a 
+place of importance in video game history. 
+
+The game's plot basically follows the plot of the movie. You are Indiana Jones, 
+and it's your mission to discover the lost Ark of the Covenant. You will use 
+several objects, travel through several rooms, and solve a few puzzles along the 
+way. (And if you're really lucky, you can do this all in one shot.) The Ark is 
+located in a different place for every game, so it has some replay value.
+
+Indy has three lives to accomplish his goal. When all three of his lives are 
+spent, the game ends (and the easiest way to die is by falling, so watch your 
+step). The game also ends when the Ark is found.
+
+Points are earned by succeeding in certain tasks, and are taken away when you 
+fail (like, oh, when you die).  When your game ends you'll see Indy standing on 
+a pedastal. The closer Indy is to the top of your screen, the higher your score 
+is. If your score is high enough, you'll see Howard Scott Warsaw's initials 
+appear in your inventory. I'll explain how to get it later.
+
+xxxxxxxxxxxxx
+THE CONTROLS
+xxxxxxxxxxxxx
+
+If you picked up this game at a garage sale without any instructions you're 
+probably wondering if you got a busted game because you can't make Indy move. 
+Well, that's because Raiders is a screwy game, control-wise. You need to plug in 
+two joysticks. The right joystick (instead of the left one) controls Indy's 
+movement and uses objects. The left joystick selects objects to be used and 
+drops them.  Look at the list below for more details.
+
+MOVE INDY: Use right joystick
+
+SELECT AN ITEM: Push left joystick left or right - a small dot will appear under 
+each object.  Move the dot under the object you wish to use.
+
+DROP AN ITEM: Select it then push the left joystick button. Some items can be 
+found again once dropped, but others are gone forever, so be careful.
+
+USE AN ITEM: Select it and push the right joystick button.  See "The Items" for 
+descriptions on exactly how to use each item.
+
+The difficulty and game select switches do nothing. The color/b & w switch 
+changes the game from color to black & white. Reset starts the game over. 
+
+When the game is first turned on (or when reset is pushed), you'll see Indy be 
+lowered on a pedastal. Once he's at the bottom push the right joystick button to 
+start the game.
+
+xxxxxxxxxx
+THE ROOMS
+xxxxxxxxxx
+
+Indy will travel through many rooms in the game. Some contain useful items, some 
+contain traps, and some are just, well, there. Below is a description of each of 
+the rooms and what each contains.
+
+ENTRANCE ROOM: This is the room you begin the game in. You'll see a rock, a 
+snake, and Indy's whip (yep, that's the big red thing under the rock.)
+
+MARKETPLACE: Here you can buy a few items for your journey, including a flute 
+and a parachute. Three baskets are also here, but touching a basket sends a 
+snake after you. (The flute is near the top and the parachute is near the bottom 
+of the screen). 
+
+TEMPLE ENTRANCE: This is a green room with four doorways. The timepiece is 
+located right in the middle (it's that green thing that looks like a lopsided 
+"L").
+
+SPIDER ROOM: A big spider and a swarm of tsetse flies are located here. The 
+spider shoots webs at you and the flies try to attack you too. Not a good room 
+to be in. No items here either.
+
+ROOM OF THE SHINING LIGHT: This is a very annoying room. It has blue walls and 
+two "dungeons" in the bottom corners. A pulsating light is in the center of the 
+room. When you first enter you'll be put into one of the dungeons, and you'll 
+need to use your whip or gun to shoot the walls and escape. But once you're out, 
+you have to avoid touching the walls or the light or else you'll be sent back 
+into a dungeon and start again.
+
+TREASURE ROOM: This room is solid black except for some gold sitting in the 
+middle. Grabbing the gold sends a snake after you, but one of three treasures 
+also appears. You can either take the treasure or leave it. You can also keep 
+grabbing gold by exiting the room and reentering. NOTE: If you take a treasure, 
+when you leave the room you'll be sent into a dungeon, so don't drop the whip or 
+gun if you're being greedy for gold. (Of course, you can get around this...)
+
+MESA FIELD: This is a very large room (probably the largest in the game). 
+Several yellow "mesas" in various shapes dot the room, and it's probably more 
+annoying than the Room of the Shining Light. See that little dot spinning around 
+you? That's a grappling hook. Push the right joystick up and down to make its 
+arc wider or narrower. Now here's the fun part. You need to push the right 
+joystick's fire button when the dot is over a yellow mesa. Doing so will send 
+Indy directly to that mesa. If you miss, or if you happen to walk off a mesa 
+onto the blue area, you'll fall into the Valley of Poison and die. So be 
+careful, ok?
+
+VALLEY OF POISON: This is where you end up if you fall off a mesa. It has the 
+same layout as the mesa field, except the colors are icky greens and you've got 
+bad guys after you now. Tsetse flies and the Man in Black are here, so you need 
+to quickly find a way to escape. Also, the "mesas" here are actually bogs, and 
+they'll slow you down greatly if you try to walk through them.
+
+SIDE OF MESA: Oh, when you fell off the mesa, did you see that big tree branch 
+with the gaping hole underneath? Might be something interesting in there...
+
+THIEVES' DEN: There's no mention of this room in the instruction manual, so I 
+just decided to call it the Thieves' Den because, well, the room is loaded with 
+thieves. The room is solid black, with "bars" that block off your view of some 
+parts of the room. Several black thieves run back and forth in horizontal lines, 
+and if Indy touches one of them he loses an item. (And since this room appears 
+near the very end you don't want to lose ANYTHING!)
+
+MAP ROOM: This room contains a map of the mesa field in the center of the 
+screen. Two thin strips of yellow form the sides of it and walking off the strip 
+will cause you to fall just as if you fell off a mesa. Underneath the map will 
+be a box. You can enter it if you use a certain item, but once inside, be very 
+careful where you stand because if you're not in the right spot when you 
+deselect that item, you'll fall.
+
+WELL OF SOULS: This is it, the last room. At the bottom of the screen is a mound 
+of dirt, and thieves are running around here as well. Just start digging in the 
+dirt and, if you've found the correct location of the Ark, you've won the game. 
+If not, you'll fall into the Valley of Poison and have to try again.
+
+BLACK MARKET: Similar to the Marketplace but has darker colors, only one basket, 
+different items, and, as the instruction manual calls it, a Raving Lunatic on 
+the left side of the screen. You can buy bullets and a shovel here.
+
+I've included a map towards the end of this FAQ.
+
+xxxxxxxxxx
+THE ITEMS
+xxxxxxxxxx
+
+Your inventory appears at the bottom of the screen. Push the left joystick left 
+and right to highlight an object, and push the left joystick button to drop the 
+item or push the right joystick button to use it. Some items are considered to 
+be in use just by having them highlighted.  You may only carry a maximum of six 
+items at a time, so choose your gear wisely.
+
+Items are listed in this format:
+
+ITEM: The name of the item
+LOCATION: Where you can find it
+DESCRIPTION (SCREEN): What it looks like on the screen
+DESCRIPTION (INVENTORY): What it looks like in your inventory
+USE: What it's good for
+HOW TO USE: How to use it
+
+WARNING: POSSIBLE SPOILERS BELOW
+-
+-
+-
+(Don't say I didn't warn ya.)
+-
+-
+-
+ITEM: Whip
+LOCATION: Entrance Room
+DESCRIPTION (SCREEN): A long red angular line
+DESCRIPTION (INVENTORY): Slightly resembles a backwards capital "R"
+USE: Killing snakes, breaking through the walls of the dungeon
+HOW TO USE: Highlight the whip. While moving, push the right joystick button. 
+You should see a dot fly out a short distance from you.
+
+ITEM: Flute
+LOCATION: Marketplace
+DESCRIPTION (SCREEN): A yellow diagonal flute located under the black sheik
+DESCRIPTION (INVENTORY): A horizontal flute
+USE: Immunity to both snakes and tsetse flies
+HOW TO USE: You should hear music when it's highlighted. As long as the music is 
+playing, snakes won't kill you and flies won't paralyze you either.
+
+ITEM: Grenade
+LOCATION: A basket in the Marketplace, the basket in the Black Market
+DESCRIPTION (SCREEN): None
+DESCRIPTION (INVENTORY): It looks pretty much like a grenade
+USE: Gain access to the Temple Entrance
+HOW TO USE: Highlight the grenade and put Indy next to whatever you want to blow 
+up. Push the right joystick button and run like hell to the next room. If you're 
+too slow you'll get caught in the explosion and die.
+
+ITEM: Key
+LOCATION: A basket in the Marketplace
+DESCRIPTION (SCREEN): None
+DESCRIPTION (INVENTORY): Looks just like a key
+USE: Gain access to the box in the Map Room
+HOW TO USE: As long as the key is highlighted, the box in the Map Room will be 
+open for you, and you won't fall while inside.
+
+ITEM: Gun
+LOCATION: A basket in the Marketplace
+DESCRIPTION (SCREEN): None
+DESCRIPTION (INVENTORY): It's a gun
+USE: Similar to the whip, except its range covers the whole screen
+HOW TO USE: Just like the whip, highlight the gun and push the right joystick 
+button while moving. The only difference is that is has a longer range and a 
+limited amount of times it can be used (six times to be exact). Buy bullets in 
+the Black Market to refill your shots.
+
+ITEM: Medallion
+LOCATION: A basket in the Marketplace (see "The Solution" below)
+DESCRIPTION (SCREEN): None
+DESCRIPTION (INVENTORY): A diamond with a dot in the center
+USE: Use in the Map Room to reveal the location of the ark
+HOW TO USE: While in the Map Room, highlight it when the sun rises to see one of 
+the mesas flash. That flashing mesa contains the Ark.
+
+ITEM: Parachute
+LOCATION: Under the white sheik at the Marketplace
+DESCRIPTION (SCREEN): A light blue square with a white "cross" in the middle
+DESCRIPTION (INVENTORY): A square with a "cross" in the middle
+USE: To prevent killing yourself if you happen to fall off a mesa
+HOW TO USE: While falling, quickly highlight the parachute and push the right 
+joystick button. The chute will open and you'll drift to the ground. Once on 
+land, push the left joystick button to drop it so you can move again.
+
+ITEM: Timepiece
+LOCATION: Temple Entrance
+DESCRIPTION (SCREEN): A green lopsided backwards "L"
+DESCRIPTION (INVENTORY): A box with a handle on top
+USE: Shows you the current time
+HOW TO USE: Highlight the timepiece and hold the right joystick button. It'll 
+change into a clock face, showing you what time it is.
+
+ITEM: Gold
+LOCATION: Treasure Room
+DESCRIPTION (SCREEN): A group of dashes in the center of the screen
+DESCRIPTION (INVENTORY): A bag
+USE: Use to buy items at the Marketplace and Black Market
+HOW TO USE: Stand on an item and DROP (not use!) the gold. The item you want 
+should replace it.
+
+ITEM: Ankh
+LOCATION: Treasure Room
+DESCRIPTION (SCREEN): Looks like an Egyptian ankh...it's light blue and appears 
+at the northeast corner of the screen
+DESCRIPTION (INVENTORY): A wider version of what was on the screen
+USE: Gives you a grappling hook at the Mesa Field
+HOW TO USE: Highlight and use the right joystick button to transport to the Mesa 
+Field. You'll also be given a grappling hook. Push the right joystick up and 
+down to make the arc swing wider and narrower. When the dot crosses a mesa, push 
+the right fire button to swing yourself over there. Also, if you fall, push the 
+right joystick button and you'll be brought back to the Mesa Field to try again.
+
+ITEM: Hourglass
+LOCATION: Treasure Room
+DESCRIPTION (SCREEN): Kinda looks like a pink box with a hole in the middle
+DESCRIPTION (INVENTORY): A wider version of what was on the screen
+USE: Also can give a grappling hook, but functions differently. 
+HOW TO USE: Go onto the Mesa Field and highlight it. The hook will appear. 
+However, unlike the ankh, if you fall you can't use it to save your butt.
+
+ITEM: Chai
+LOCATION: Treasure Room
+DESCRIPTION (SCREEN): Um, not sure how to describe it. Kinda looks like a 
+triangle with a wing? Anyway, it's blue and appears on the bottom of the screen.
+DESCRIPTION (INVENTORY): Looks like a bunch of bananas to me
+USE: Give it to somebody to go directly to the Black Market
+HOW TO USE: What, you think I'm gonna tell you now? Go see "Frequently Asked 
+Questions!" :)
+
+ITEM: Bullets
+LOCATION: Black Market
+DESCRIPTION (SCREEN): A circle of dots
+DESCRIPTION (INVENTORY): None
+USE: Ammo for the gun
+HOW TO USE: When you buy bullets, your gun is refilled automatically with three 
+bullets. If you're completely empty, you need to buy them twice to get six. Buy 
+any more than that and you'll just waste money.
+
+ITEM: Shovel
+LOCATION: Black Market
+DESCRIPTION (SCREEN): An angular shovel
+DESCRIPTION (INVENTORY): An angular shovel
+USE: Digging in dirt
+HOW TO USE: When you're in the Well of Souls, go to the mound of dirt at the 
+bottom. Highlight the shovel and walk back and forth across the dirt, pushing 
+the right joystick button several times while doing so. You should see the dirt 
+slowly disappear.
+
+xxxxxxxxxxxxxxxxxxxxxxxxxx
+BAD GUYS AND OTHER FOLKS
+xxxxxxxxxxxxxxxxxxxxxxxxxx
+
+Indy will meet up with a lot of unsavory villains and creatures while on his 
+journey, and the following is a list of what he could meet up with. They are 
+listed in the following format:
+
+NAME: Name of villain or creature
+LOCATION: What room it's located in
+FUNCTION: What it'll do to you if it catches you
+DESCRIPTION: A general description of what it looks like
+DEFEATED BY: How to destroy it, if you can
+
+NAME: Snake
+LOCATION: Entrance Room, Marketplace, Treasure Room
+FUNCTION: Death
+DESCRIPTION: A squiggly line that seems to follow you
+DEFEATED BY: The whip or the gun. The flute gives immunity.
+
+NAME: Sheik
+LOCATION: Marketplace, Black Market
+FUNCTION: Sells you items
+DESCRIPTION: Squares with white or black stripes...they're sitting above the 
+items they're selling
+DEFEATED BY: Not applicable
+
+NAME: Tsetse Flies
+LOCATION: Spider Room, Valley of Poison
+FUNCTION: Paralyze
+DESCRIPTION: Kinda looks like a cloud of gnats
+DEFEATED BY: You can't kill them, but playing the flute gives you immunity to 
+their paralysis.
+
+NAME: Spider
+LOCATION: Spider Room
+FUNCTION: Death
+DESCRIPTION: A big white blob that shoots webs
+DEFEATED BY: You can't. 
+
+NAME: Guardian
+LOCATION: Room of the Shining Light
+FUNCTION: Transport you back to a dungeon
+DESCRIPTION: A pulsating diamond-shaped light
+DEFEATED BY: You can't. Sorry.
+
+NAME: Man in Black
+LOCATION: Valley of Poison
+FUNCTION: Steal items
+DESCRIPTION: A large, tall solid black "man" that looks like he's wearing a hat 
+and a cape. Maybe it's supposed to be Toth?
+DEFEATED BY: You can't. Just run and avoid the tsetse flies.
+
+NAME: Thief
+LOCATION: Thieves' Den, Well of Souls
+FUNCTION: Steal items
+DESCRIPTION: A short, fat box-like "man" that kinda looks like the McDonald's 
+Hamburgler to me. Anyway, one type has black and grey coloring, and the other 
+has lighter colors. Both run in horizontal lines, some fast, some slow.
+DEFEATED BY: You can't. Just dodge them.
+
+NAME: Raving Lunatic
+LOCATION: Black Market
+FUNCTION: Death
+DESCRIPTION: Um, it's on the left side, and kinda looks like a face that's been 
+smeared. Gotta love the 2600's graphics!
+DEFEATED BY: Give him a bag of gold and he'll let you pass. See "Frequently 
+Asked Questions" for more details.
+
+xxxxxxxxxxxxx
+THE SOLUTION
+xxxxxxxxxxxxx
+
+Ah, now we get to the big stuff. The following is a walkthough of one possible 
+solution. This is just a basic, step-by-step way to beat the game. No secrets 
+are included, and your final score won't be high enough for the special 
+signature to appear. You will solve it fairly quickly though, and if you've been 
+tearing your hair out trying to figure out what to do then you'll definitely 
+appreciate it. :)
+
+1. You'll start in the Entrance Room. Dodge the snake and grab the whip. Run off 
+the bottom of the screen.
+2. Now you're in the Marketplace. Search all three baskets for the key, the gun, 
+and the grenade. If you want to, you can buy a flute, but it's not necessary. 
+Don't get the parachute yet. 
+3. Once you've got all three items from the baskets, wait for about fifteen 
+seconds and check all three again (the snake will be after you so be careful). 
+The medallion should appear in one of the baskets and will be added to your 
+inventory. If not, wait another 10-15 seconds and try again. Repeat until you 
+finally get it.
+4. Go back up to the Entrance Room. Place Indy next to the right side wall, 
+about a little more than halfway up. Use the grenade here and quickly run back 
+to the Marketplace. 
+5. Once at the Marketplace, go back up and you should see a giant hole in the 
+wall. Go through the hole to the Temple Entrance.
+6. In the Temple Entrance, go to the exit in the southeast corner. You can grab 
+the timepiece on your way if you want to.
+7. You'll now be in one of the dungeons. Use the whip or the gun and get 
+yourself out. Now go to the right-side wall and hold up and right. Eventually 
+you'll pop into the Treasure Room.
+8. Now here's the tricky part...you need to eventually have three bags of gold 
+and the ankh. If there's no room in your inventory, drop the gun and the flute. 
+You don't really need those anymore. Grab the gold and see if the ankh appears. 
+If it does, grab it. If not, leave the room and go back and try again (drop gold 
+if you need more inventory space, but you MUST end up with three bags!)
+9. Once you get the ankh, leave the room and you'll end up in a dungeon. Now use 
+the ankh and you'll transport yourself to the Mesa Field.
+10. Use the hook to travel down the screen and go to the very bottom mesa (if 
+you miss and start falling, use the ankh again to teleport back to the field). 
+11. Once at the bottom mesa, drop the ankh and highlight the key. Now stand 
+right in the middle of this mesa and walk straight down. Hopefully you'll be 
+lined up correctly so you'll be walking on the strip instead of air.
+12. Once you leave the Mesa Field you should see the Map Room. With the key 
+highlighted, you can now enter that box that appears underneath. Go inside and 
+stand perfectly in the center. Once done, you can now highlight the medallion 
+and wait for the sun to rise. (Check the timepiece to see what time it is. The 
+sun rises when the clock hand is at the 12 o'clock position.)
+13. When the sun rises, you should see one of the mesas on the map start 
+flashing. This is the mesa on the Mesa Field that has the Ark. Remember it!
+14. Highlight the key again and walk back to the left-hand strip. Walk down.
+15. You'll now be in the Thieves' Den. Dodge the thieves and quickly run 
+straight down to the Black Market.
+16. Now you need to buy a shovel for two bags of gold. Don't bother with the 
+bullets or the basket.
+17. Once you've got the shovel, go to the northeast corner wall and go through 
+it to end up at the Marketplace. Now buy a parachute.
+18. Once you've got the parachute and the shovel you can basically dump any 
+other items you've got. I'd personally keep the whip because you never know if 
+you'll end up fighting snakes or getting caught in a dungeon again.
+19. Now go back to the treasure room and get the ankh again. You don't need to 
+keep any gold this time.
+20. Once you've got the ankh, leave the room and use it to transport yourself 
+back to the Mesa Field. Use the hook to go to the mesa that was flashing in the 
+Map Room. Again, if you fall just use the ankh to try again.
+21. Once you're at the mesa with the Ark, drop the ankh and highlight the 
+parachute. DON'T use it yet!
+22. Okay, here's the most difficult part of the game. You need to now drop off 
+the mesa and use the parachute while falling. Once done, you need to guide 
+yourself under the tree branch and into the hole. Basically what I do is 
+activate the chute the second I start falling and start maneuvering my way over 
+to the hole. Once you get near it it'll suck you in. However, if you touch the 
+branch your chute will break and you'll fall and die.
+23. If you made it, you'll end up in the Well of Souls. Quickly drop the 
+parachute before a thief can come near you. Dodge the thieves to the pile of 
+dirt at the bottom. Highlight the shovel and walk back and forth across the 
+dirt, pushing the right joystick button as you do so. The dirt should start to 
+disappear.
+24. Once the dirt's gone, and you've found the right mesa, the Ark appears and 
+Indy stands on a pedastal indicating your final score. Congrats! (If you picked 
+the wrong mesa, however, Indy will fall and you'll have to try again.)
+
+xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+FREQUENTLY ASKED QUESTIONS
+xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+Here's a list of questions that are probably likely to come up while playing, 
+especially if you're a new player and/or lost the instruction book.
+
+"How do I buy something at the Marketplace/Black Market?"
+
+Stand in the center of the item you wish to buy and drop (not use) a bag (or 
+two) of gold.  The item should replace the gold in your inventory.
+
+"I'm dropping the gold but I'm not getting my item."
+
+Make sure you're not touching the sheik with any part of your body when you drop 
+the gold. Otherwise he'll take it and leave you with nothing.
+
+"I'm in a dungeon in the Room of Shining Light, but I don't have a whip, a gun, 
+or an ankh. Do I have to start over?"
+
+Nope. There's a hidden exit that sometimes appears at the bottom of the dungeon. 
+Just move as far down as you can (the top of Indy's hat should be the only thing 
+showing) and keep moving left and right. Eventually you'll pop out into the 
+middle of the room. Be careful though: touch the dungeon's walls and you'll have 
+to start over. Also, sometimes the exit appears after a few seconds, sometimes 
+it won't appear for several minutes. Oh, and one more thing: If you escape using 
+this method, you can't leave the room the way you came in. You have to go 
+through the Spider Room from now until the game ends.
+
+"What the heck are these green lines that suddenly started appearing in the 
+Temple Entrance?"
+
+If you escape from a dungeon using the hidden exit as described above, you'll 
+see these lines. These block your way into and out of the Room of the Shining 
+Light, but can be destroyed by the whip or the gun. Also, during the game 
+they'll grow longer, and eventually will block your way back into the Temple. If 
+this happens, use the grenade you find in the Black Market and blow them up just 
+like you did to the wall at the start of the game (put the grenade in the same 
+place). I have no idea if these lines are a glitch or some form of clever trap.
+
+"How do you get the special signature to appear?"
+
+You first have to find the Yar (see below) and then get a decent score. I 
+finally managed to get it after finding the Yar, taking the shortcut to the 
+Black Market, using the hidden exit from the dungeon, using the hourglass as a 
+grappling hook, and finding the Ark. Of course, I also died twice, and my final 
+score wasn't even halfway to the top of the screen, so who knows what's really 
+required. The Yar is a definite though.
+
+"What's this medallion thing? It's not in the instruction book!"
+
+Who knows why it wasn't included...the Map Room and Thieves' Den aren't listed 
+either.  Not knowing about the medallion's existence sure makes the game a lot 
+more difficult though.  My guess is it's because of the whole "adventure" feel 
+of the game. Imagine the feeling you'd get if you just stumbled across it on 
+your own (or the frustration if you didn't).
+
+"Why do the items look so different on the screen and then in your inventory?"
+
+I have no idea. Sprite restrictions maybe?
+
+"What's the purpose of the Chai?"
+
+If you give the Chai to the black sheik in the Marketplace (the one with the 
+flute), you'll be transported instantly to the Black Market. Just stand on the 
+flute and drop the Chai like it was a bag of gold.
+
+"Okay, I took the shortcut to the Black Market and this Raving Lunatic keeps 
+killing me when I try to get past him."
+
+This guy's tricky to figure out. If you touch him or try to walk past him you'll 
+die. But here's how to avoid him:
+
+There's an invisible line that goes the entire vertical length of the screen 
+just at the point where the right side of his "head" is.  (You can see where it 
+is by trying to walk past him; if you take one step beyond this area you'll 
+die.) What you need to do is get as close to this invisible line as possible and 
+drop a bag of gold. The Lunatic will be happy and let you live.
+
+"I thought I was supposed to get a grenade in the Black Market's basket. Why did 
+I get a key?"
+
+Actually, that's what you usually get. I think the grenade shows up if the green 
+lines in the Temple Entrance grow long enough to block your way back inside, but 
+I'm not sure. Anyone?
+
+"What's the purpose of the hourglass?"
+
+Think of it as a poor man's ankh. If you reach the Mesa Field via the 
+Marketplace (see Map below) then you can highlight it and get a grappling hook. 
+However, unlike the ankh, if you fall you can't use it to transport yourself 
+back to the field.
+
+"Can the ankh teleport me to the Mesa Field from anywhere besides a dungeon?"
+
+Yep, sure can. Use it anywhere you want to.
+
+"Is there any way to tell when a certain treasure will appear in the Treasure 
+Room so I don't have to keep going in and out?"
+
+I'm not sure about the others, but the ankh appears when the hand on the 
+timepeace is in the 11, 12, or 1 o'clock positions.
+
+"What's this about a Yar flying around the Mesa Field?"
+
+Yep, there's a Yar out there. What you need to do is use the grappling hook to 
+get yourself to the center mesa (the big one that looks like a flying saucer). 
+Now drop off the edge and drop the Chai as you're falling. You'll see the Yar at 
+the top of the screen.
+
+"Why can't I move Indy?!"
+
+Are you using the right joystick instead of the left? Has he been paralyzed by 
+tsetse flies? Is his parachute still open?
+
+"A thief stole my ____! Can I get it back?" and "I accidentally dropped my____!"
+
+In most cases, yes. Go back to where you found/bought the item and it should be 
+there waiting for you.  I think the medallion may be the only exception, though. 
+
+"How do I get out of the Valley of Poison?"
+
+Run up to the top of the screen. You should see two bogs hanging down from the 
+top. Go to the bog on the right and go up through the screen. You'll be back at 
+the Marketplace.
+
+"I finally made it to the Wall of Souls but one of the #$*@ thieves stole my 
+shovel. Now what?"
+
+You have to go back to the northeast corner of the screen to exit the room. 
+Unfortunately, you'll fall, die, and end up in the Valley of Poison.
+
+xxx
+MAP
+xxx
+
+ER = Entrance Room                MK = Marketplace
+TE = Temple Entrance              MF = Mesa Field
+VP = Valley of Poison             RS = Room of Shining Light
+SR = Spider Room                  TR = Treasure Room
+MR = Map Room                     TD = Thieves' Den
+BM = Black Market                 WS = Well of Souls
+SM = Side of Mesa
+
+                           ----- SR
+                           |     |
+            ER - TE ------ RS -- TR
+            |   /  
+            MK -----------
+            |             |
+            MF --- SM --- VP
+            |      |
+            MR     WS --- To VP
+            |
+            TD
+            |
+            BM --- To MK
+ 
+Note: Going to the Marketplace from either the Temple Entrance, the Black 
+Market, or the Valley of Poison is a one-way trip. You can't reach any of those 
+places from the Marketplace (well, you can reach the Black Market, but not in 
+the usual way.)
+
+Well, that's it for the FAQ. If you'd like to contribute to the next version, or 
+have any questions, feel free to e-mail me at the address above.

@@ -1,0 +1,530 @@
+RAIDERS OF THE LOST ARK*
+
+(c) Lucasfilm Ltd. (LFL) 1982.
+* Trademark of LUCASFILM LTD. and used by ATARI under license.
+
+NOTE: Always turn the console POWER switch OFF when inserting
+or removing an ATARI Game Program cartridge. This will protect
+the electronic components and prolong the life of your ATARI
+2600 Video Computer System game.
+
+Manual, Program, and Audivisual (c) 1982 ATARI, INC. ALL
+RIGHTS RESERVED
+
+TABLE OF CONTENTS
+
+1. WELCOME TO EGYPT, DR. JONES!                         1
+
+2. GAME PLAY                                            2
+
+3. USING THE CONTROLLERS                                3
+
+4. CONSOLE CONTROLS                                     4
+
+5. SCORING                                              5
+
+6. DESCRIPTION OF ROOMS AND OBJECTS                     6
+
+7. HELPFUL HINTS                                        15
+
+
+1. WELCOME TO EGYPT, DR. JONES!
+
+Dust off your felt hat, throw on your leather jacket, and
+uncoil your rawhide whip - you're going on the greatest
+treasure hunt of your life! Put away the glasses and
+three-piece suit of respected archeologist "Professor Jones,"
+and say hello to swashbuckling adventurer Indiana Jones* -
+Indy to your friends. Your mission: Find the fabled Lost Ark
+of the Covenant.
+
+The Lost Ark. A dazzling treasure covered by a sheet of shinig
+gold, the Ark was used by the ancient Hebrews to carry stone
+tablets inscribed with the Ten Commandments. According to the
+Bible, the Ark possesses extraordinary powers and is able to
+"level mountains" and "lay waste to entire regions." Any army
+possessing it, the Bible says, is invincible.
+
+You've been hired by the government to find the Ark before
+your country's enemies do. The only question is, where?
+
+As an expert on the Egyptian occult, you know the Ark was
+hidden inside a chamber called the Well of Souls in the year
+980 B.C. The location of the chambe is a mystery - but there
+is a way to find it. Go to the secret Map Room in the city of
+Tanis, and, if you're holding the right object at the right
+time, the location of the Well of Souls will be revealed. Of
+course, finding the Map Room is no easy task since Tanis was
+buried long ago in a sand storm that lasted over a year.
+You'll need sharp wits and courage to overcome the obstacles
+you encounter on your way to the Ark. Armed with your wit and
+steel nerves, however, you can handle anything! Anything, that
+is, except snakes - they've always given you the creeps.
+Snakes or no snakes, though, you've got to find the Ark! 
+
+You're getting closer to the Ark, now. Look out! What's that
+slithering out of the corner? It's a deadly asp! Snakes! Why
+did there have to be snakes...?! 
+
+2. GAME PLAY
+
+RAIDERS OF THE LOST ARK is an adventure game - to win, you
+must make your way past obstacles to find the Lost Ark. Along
+the you'll acquire adventure points, which will be scored at
+the end of the game inside the Well of the Souls. (For more
+about adventure points, see Section 5, SCORING).
+
+You'll start the game inside the Well of the Souls, on top of
+a high pedestal. The Ark is shining above you. Soon the
+pedestal sinks down, the Ark disappears, and your quest
+begins. The Ark of the Covenant is hidden somewhere in the
+Valley of Poison, located somewhere outside the Egyptian city
+of Cairo. The Valley of Poison is studded with towering mesas,
+one of which holds the Well of the Souls and the Ark. Each
+time you restart the game, the Well of the Souls is placed
+randomly inside one of the mesas. Therefore, the Ark will
+probably not be located in the same mesa from game to game.
+
+To reach the secret Map Room, you'll first need to enter the
+cavernous Temple of the Ancients, where you'll pick up objects
+to help you on your journey. Next, you'll need to leave the
+Temple, and search for the Map Room itself. Inside the Map
+Room is a scale model of the Mesa Field, as well as a
+heiroglyphic on the wall. The heiroglyphic shows the object
+you must hold in order to unlock the secrets of the Map Room.
+
+Your journey to the Ark is a dangerous one: you are given
+three lives to play the game. Each time you are killed, you
+will slowly disappear from the screen, feet first. If you have
+any lives remaining, you will reappear and continue playing
+the game. If no lives remain, the game ends and you must start
+the game over again by pushing the right controller button. 
+
+You'll need every ounce of skill you can muster to reach the
+mesa containing the Well of the Souls. Find your way into the
+mesa and the secret chamber, and you'll win the game and save
+you're country! Good luck, Indy!
+
+3. USING THE CONTROLLERS
+
+Use both of you're Joystick Controllers with this ATARI Game
+Program cartridge. Be sure the controller cables are firmly
+plugged into the CONTROLLER jacks at the back of you're Video
+Computer System game. Hold the Joysticks with the red
+controller buttons to you're upper left, toward the television
+screen. (See Section 3 of you're Owner's Manual for furthur
+[sic]  details.)
+STARTING THE GAME
+
+Start the game by pushing the POWER switch to the ON position.
+Indy will be lowered down on a pedestal in the middle of the
+screen. When Indy reaches the bottom of the pedestal, press
+the red button on the right controller. You'll immediately
+appear in an Entrance Room containing a rock and a whip. Watch
+out for snakes in this room - if they bite you, you're a
+goner!
+
+RIGHT CONTROLLER
+
+Use the Joystick on the right controller to move Indy on the
+screen. He moves up, down, right, left, and diagonally in the
+direction you move the Joystick. To pick yp an object, guide
+Indy over the object and it will automatically be picked up.
+Items that have been picked up will appear in the red
+inventory strip at the bottom of the screen (see Figure 1).
+You can carry a maximum of six objects; if you want to pick up
+an additional object and you already have six, one object must
+be dropped before a new one is picked up.
+
+The red fire button on the right controller makes use of any
+object placed in the red inventory strip. For example, if you
+need to defend yourself with your revolver, you can shoot
+bullets by pressing the red fire button on the right
+controller. Indy must be in motion, however, for some of your
+weapons - such as the revolver or the whip - to work.
+
+[Figure 1 - Inventory strip (shows selector dot on the red
+inventory strip)]
+
+LEFT CONTROLLER
+
+The left controller functions as your inventory control and
+can be used to select or drop objects that will help you on
+your quest. Notice the small white selector dot below the
+objects inside the strip - use it to select the article you
+want to use. You can move the dot to select an object by
+moving the Joystick to the right or left. The dot will move in
+the same direction you push the Joystick. Select the desired
+object by returning the Joystick to the neutral (center)
+position when the dot is beneath the object. To drop an
+object, move the dot beneath the object you no longer want,
+and press the red fire button on the controller. The object
+will disappear and return to the ORIGINAL place it was found.
+Don't confuse fire buttons, or you might drop an important
+object when you need it the most.
+
+4. CONSOLE CONTROLS
+
+GAME RESET SWITCH
+
+Press the GAME RESET button on the right of your Video
+Computer System console to restart a game. You'll see Indy
+descending on the pedestal in the Well of Souls, and the Lost
+Ark will disappear from the top of the screen. When Indy
+reaches the bottom of the pedestal, press the red fire button
+and Indy will be transported to the Entrance Room. You're on
+your way!
+
+TV TYPE SWITCH
+
+Set this switch to COLOR if you're playing on a color
+television set. Set it to B-W to play the game in black and
+white.
+
+DIFFICULTY SWITCHES
+
+The LEFT and RIGHT DIFFICULTY switches have no function in
+this game.
+
+GAME SELECT SWITCH
+
+The GAME SELECT switch also has no function in this game.
+
+5. SCORING
+
+Your final score is revealed after the completion of each
+game. You'll appear on top of a pedestal in the Well of the
+Souls. The height of the pedestal is a measure of your score
+in adventure points. Adventure points are earned or taken
+away, depending on your game play. Experiment to see how you
+can increase your score.
+(NOTE: A special signature will appear on the screen for
+exceptionally high scores. Will you be able to find it?)
+
+[Figure 2 - Scoring (Shows Indy on the pedestal with the Ark
+above)]
+
+6. DESCRIPTION OF ROOMS AND OBJECTS
+
+ENTRANCE ROOM
+
+This is the first room you'll enter when playing RAIDERS OF
+THE LOST ARK. In the center of the room is a rock; below the
+rock is a whip. Rumour has it that the Temple of the Ancients
+is nearby.
+
+MARKETPLACE
+
+The Marketplace is a center of activity in Egypt. Here you'll
+find three baskets, each containing a cerain object or a
+number of objects. At the top of the Marketplace is the Black
+Sheik who sells magic flutes; at the bottom is the White Sheik
+who sells parachutes. It is whispered that the Black Sheik
+will take you to the Black Market - for the right price.
+
+TEMPLE ENTRANCE
+
+Four doors lead to the temple entrance; two from outside the
+templ, and two from deep within the temple. In the center of
+the room is a timepiece.
+
+SPIDER ROOM
+
+Ever been afraid of spiders? Well, the biggest spider of them
+all is lurking in the center of the Spider Room. The spider is
+shooting out strands of web - if the web hits you while you're
+in this room, you're one dead professor. Tsetse flies will
+also attack you in this room, but they will only put you to
+sleep for a few seconds.
+
+ROOM OF THE SHINING LIGHT
+
+Cover your eyes from the blinding light radiating from the
+guardian of this room. Two dungeons are located in each of the
+bottom corners of the room. The whole room seems to be alive;
+when you bump into anythign in this room you are put back into
+one of the dungeons. The power in this room is awesome - you
+must be near the Temple Treasure Room!
+
+TREASURE ROOM
+
+Welcome to the Temple Treasure Room. The money supply in this
+room is inexhaustible, and the Temple of the Gods will allow
+you the freedom to come and go if you only take money. But
+take one of the Temple treasures, and the Gods will take steps
+to hinder your passage out. Good luck!
+
+MESA FIELD
+
+Somewhere in this vast expanse of mesas, the Lost Ark is
+hidden. The yellow shapes are mesa tops; the blue is empty
+air. You're safe while touching the mesas - but be careful not
+to fall or jump off without proper safety precautions! Certain
+objects will give you the ability to jump from mesa top to
+mesa top by use of a grappling hook. The hook is small - in
+fact it appears as a small white dot - but it will easily hold
+your weight. To use the hook, move the Joystick up on the
+right controller to let the hook out; move the Joystick down
+to bring the hook in. When the hook is over a yellow mesa top,
+press the fire button to jump to that mesa. Be sure that you
+press the red controller button the instant the hook is on the
+mesa, or you'll jump into the air and fall. Be careful about
+jumping near the sides of the mesa field, where the grappling
+hook can get hung up.
+
+There are unverified rumours of an extraterrestrial YAR flying
+near the Flying Saucer Mesa in the middle of the Mesa Field.
+
+MESA SIDE
+
+Fell off a mesa did you? On your way down, you probably saw
+the flash of the mesa side. Each mesa has a single branch
+sticking out from its side. Notice the opening below the
+branch. It may be important!
+
+VALLEY OF POSION
+
+The Valley of Poison is inhabited by the black-cloaked Thief
+who will try to steal your possessions and leave you
+defenseless. If you can shoot him before he leaves the screen,
+you'll get back whatever he snatched. If he gets away safely,
+however, he can trade your possessions for bullets. Once he
+has bullets for his revolver, watch out - he shoots to kill!
+
+The Valley is also home to a swarm of tsetse flies. The flies
+will bite you and put you to sleep for 1 to 7 seconds. If the
+flies put you to sleep while the Thief is picking your
+pockets, you have no defense until the fly poison has worn
+off. You can run through the green bogs to escape the Thief,
+but the mud in the bogs slows you down to half speed.
+
+BLACK MARKET
+
+In the Black Market you'll find a bizarre assortment of
+characters: a Raving Lunatic to the left of the Marketplace, a
+Sheik selling bullets to the top, and a Sheik peddling a
+shovel to the bottom. To the right of the Black Market is a
+basket. The Raving Lunatic will kill you if you try to cross
+his path - you must pacify him with something. Likewise, the
+two Sheiks want something to trade for their wares. Beware of
+the Sheik with the shovel - he doesn't come cheap!
+
+WELL OF THE SOULS
+
+The Well of the Souls is where you appear at the end of the
+game. If you've found the Lost Ark, it will appear at the top
+of the screen. Whether you've found the ark or not, you'll be
+raised on a pedestal in this room. Here you will be able to
+measure your score in adventure points by the height of the
+pedestal.
+
+OBJECTS                              SCREEN             INVENTORY
+
+
+MAGIC FLUTE                            ##
+Magic flutes can be bought              ##                          ##
+from the Black Sheik in the            ####               ############
+Marketplace. As long as the             #  #            ####  ##  ####
+selctor dot is on a magic                ####           ##############
+flute, you cannot be harmed by            #  #                      ##
+snakes.                                    ####
+                                            ####
+                                           ######
+
+
+COINS
+At the start of the game, you                                #####
+are given a basket of coins.            ####                  ###
+Coins can often be used to buy        ####                   # # #
+objects or favors. You can get             ####             # # # #
+baskets of coins in the Temple        ####                   # # #
+Treasure Room, which has an               ####              # # # #
+unlimited supply.                                            # # #
+                                                              ###
+
+
+GRENADE
+Grenades are occasionally                                 ###
+found in baskets and can be                               ######..
+used to blast through SOME                                #####   #
+barriers.                                               ######### #
+                                                          #####  #
+
+
+KEY                                                     ##
+Keys open doors for those who                          #  #
+know how to use them.                                  #############
+                                                       #  #     #
+                                                        ##     # #
+
+
+WHIP                                    ##
+The whip is found in the                ##                   #
+Entrance Room, and is used by            #                  # #
+pressing the button on your               ##               #   #
+right controller. You must be               #               #   #
+in motion and fairly close to                ##              #   #
+an object in order to strike                   #              #  #
+it with you whip.                               ##           #   #
+                                                  #         #    #
+
+
+PARACHUTE
+The White Sheik in the                  ##%##             ## ##
+Marketplace sells parachutes.           ##%##             ## ##
+He has an unlimited supply of           %%%%%               #
+them.                                   ##%##             ## ##
+                                        ##%##             ## ##
+
+
+TIMEPIECE                            ###                   ####
+A timepiece can be picked up          ###                   ##
+in the Temple Entrance. To             ###            ##############
+tell the time, place the                ###           ##  ######  ##
+selector dot below the                   ###          ######  ######
+timepiece and press the button           ##           ##  ######  ##
+on the right controller.               ##             ##############
+                                     ##
+
+
+REVOLVER                                                 ############
+Use your revolver to get out                           # ############
+of tight spots. You start out                           ##  #
+with six bullets, and can only                         ######
+buy more from the Sheik in the                         ###
+Black Market. Indy must be in                          ###
+motion to use the revolver.
+
+
+BULLETS                                  #
+Buy bullets in the Black               # # #
+Market. They are sold three at         #   #
+a time, and are kept track of
+automatically.                         #   #
+                                       # # #
+                                         #
+
+ANKH                                    ###              #####
+One of the Temple treasures,           ## ##            ### ###
+the Ankh, is the Egyptian               ###              #####
+symbol of life. And it just           #  #  #          #  ###  #
+might save yours!                     #######          #########
+                                      #  #  #          #  ###  #
+                                        ###              #####
+                                       #####            #######
+
+
+CHAI                                   ## #                  ##
+Another Temple treasure, the            # ####         ####  ##
+Chai, is the Hebrew symbol of             # #           #### ####
+life.                                     ##             ### ######
+                                          #                  ##  ##
+                                                           ####  ##
+                                                           ##  ####
+                                                          ## ###
+
+
+HOURGLASS                             ### ###          ######  ######
+Found in the Temple Treasure           ## ##             ####  ####
+Room, the hourglass is a                # #                ##  ##
+favourite of the Temple Gods.                            ##      ##
+But what is it used for?               ## ##             ##      ##
+                                       ## ##               ##  ##
+                                                         ####  ####
+                                        # #            ######  ######
+                                       ## ##
+                                      ### ###
+
+
+SHOVEL                                         %%%%       ######
+A shovel can be bought in the                   %%         ###
+Black Market, for the right                   %%             ##
+price. What else is a shovel                %%              #####
+good for but digging?                   ########             ####
+                                        ######                ###
+                                        ####                   ##
+                                        ##                     
+ 
+
+
+WARNING
+
+DO NOT CONTINUE READING UNLESS YOU WANT TO BE GIVEN SOLUTIONS
+TO THE RAIDERS OF THE LOST ARK ADVENTURE GAME. COMMITTED
+ADVENTURERS SHOULD SKIP THIS SECTION.
+
+7. HELPFUL HINTS
+
+This section is presented in two parts - HELPFUL HINTS and
+MORE HELPFUL HINTS. HELPFUL HINTS gives you tips on how to get
+into most of the rooms of the game, and how to find your way
+out, or around an obstacle. MORE HELPFUL HINTS will assist you
+after you've found your way around the rooms, to give you
+strategy on winning the game and finding the Ark. We can't
+give you all the clues to win the game (after all, what's an
+adventure game without surprises?), but these hints should
+give you a helping hand on your journey.
+
+HELPFUL HINTS
+
+1.   When you first start out in the Entrance Room, go
+     directly to the Marketplace and buy a flute by dropping
+     your basket of coins whie standing on the flute in front
+     of the Black Sheik. (Be careful not to touch the Sheik
+     while buying the flute, or he'll be insulted and will
+     take your money without delivering the flute to you!) The
+     flute will protect you from the snakes.
+
+2.   After you've purchased a flute, you'll need to get a
+     grenade from the blue basket on the left side of the
+     Marketplace. With the grenade you can blow a hole in the
+     wall of the blue Entrance Room (see Figure 3) which will
+     lead to other rooms in the Temple. Walk to the right side
+     of the Entrance Room, select the grenade with the left
+     controller, and use it by pressing the button on the
+     right controller. Get out ot the room quickly, or the
+     shock waves from the blast could kill you!
+
+[Figure 3 - Entrance Room After Explosion]
+
+3.   In the Room of the Shining light you will be put into one
+     of the dungeons, and to continue your journey, you must
+     find your way out. You can escape by one of two ways; If
+     you have a gun or whip, you can shoot holes in the walls
+     of the box; or if you are out of ammunition, you can slip
+     out of the secret exit located at the bottom of the box.
+     The exit only appears occasionally, so keep trying!
+
+4.   The magic flute will make you immune to tsetse flies as
+     well as snakes.
+
+5.   Once you find the Temple Treasure Room, you'll need to
+     exit and return to allow the Temple enough time to
+     replenish the coins.
+
+MORE HELPFUL HINTS
+
+1.   Use the Ankh to transport yourself onto the Mesa Field.
+
+2.   Once on top of the Mesa Fields, move the grappling hook
+     so that it crosses the broadest part of the mesa you're
+     trying to reach. Get a feel for the rhythm of the hook's
+     pathway. Jump across just before the hook crosses the
+     yellow mesa.
+
+3.   If you want an easy route to the Black Market, try
+     bribing the Black Sheik in the Marketplace. You'll have
+     to experiment to find the right object to bribe him with.
+
+4.   Cross the far end of the Mesa Field to reach the Map
+     Room. Once at the far end, drop the object that gave you
+     your grappling hook, center yourself on the mesa, and
+     walk into the next room. You'll be on a thin strip of
+     solid ground with blue "sky" all around. Don't walk off
+     the strip or you'll fall into the Valley of Poison. The
+     Map Room is nearby, but you'll need the correct object to
+     get in.
+
+5.   Use the shovel from the Black Market to dig for the Well
+     of the Souls - once you've discovered the correct mesa.
+-------------------Atari 2600 Instructions Archive-------------------
