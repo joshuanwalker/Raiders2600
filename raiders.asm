@@ -26,93 +26,94 @@
 ;	   color constants
 ;-----------------------------------------------------------
 
-;black			  = $00
-;yellow			  = $10
-;brown			  = $20
-;orange			  = $30
-;red			  = $40
-;mauve			  = $50
-;violet			  = $60
-;purple			  = $70
-;blue			  = $80
-;blue_cyan		  = $90
-;cyan			  = $a0
-;cyan_green		  = $b0
-;green			  = $c0
-;green_yellow	  = $d0
-;green_beige	  = $e0
-;beige			  = $f0
+BLACK					= $00
+WHITE					= $0E
+YELLOW					= $10
+LT_RED					= $20
+RED						= $30
+ORANGE					= $40
+DK_PINK					= $50
+DK_BLUE					= $70
+BLUE					= $80
+LT_BLUE					= $90
+GREEN_BLUE				= $A0
+GREEN					= $C0
+DK_GREEN				= $D0
+LT_BROWN				= $E0
+BROWN					= $F0
 
 
 
 
 ;-----------------------------------------------------------
-;	   tia and io constants accessed
+;	   TIA and IO constants accessed
 ;-----------------------------------------------------------
 
-cxm0p			= $30  ; (r)
-cxm1p			= $31  ; (r)
-cxp1fb			= $33  ; (r)
-cxm1fb			= $35  ; (r)
-cxppmm			= $37  ; (r)
-inpt4			= $0c  ; (r)
-inpt5			= $0d  ; (r)
 
-vsync			= $00  ; (w)
-vblank			= $01  ; (w)
-wsync			= $02  ; (w)
-nusiz0			= $04  ; (w)
-nusiz1			= $05  ; (w)
-colup0			= $06  ; (w)
-colup1			= $07  ; (w)
-colupf			= $08  ; (w)
-colubk			= $09  ; (w)
-ctrlpf			= $0a  ; (w)
-refp0			= $0b  ; (w)
-refp1			= $0c  ; (w)
-pf0				= $0d  ; (w)
-pf1				= $0e  ; (w)
-pf2				= $0f  ; (w)
-resp0			= $10  ; (w)
-resp1			= $11  ; (w)
-resm0			= $12  ; (wi)
-resm1			= $13  ; (wi)
-resbl			= $14  ; (w)
-audc0			= $15  ; (w)
-audc1			= $16  ; (wi)
-audf0			= $17  ; (w)
-audf1			= $18  ; (wi)
-audv0			= $19  ; (w)
-audv1			= $1a  ; (wi)
-grp0			= $1b  ; (w)
-grp1			= $1c  ; (w)
-enam0			= $1d  ; (w)
-enam1			= $1e  ; (w)
-enabl			= $1f  ; (w)
-hmp0			= $20  ; (w)
-hmp1			= $21  ; (w)
-hmm0			= $22  ; (wi)
-hmm1			= $23  ; (wi)
-hmbl			= $24  ; (w)
-vdelp0			= $25  ; (w)
-vdelp1			= $26  ; (w)
-hmove			= $2a  ; (w)
-hmclr			= $2b  ; (w)
-cxclr			= $2c  ; (w)
+;Write only registers
+VSYNC			= $00  ; ......1.  vertical sync set-clear
+VBLANK			= $01  ; 11....1.  vertical blank set-clear
+WSYNC			= $02  ; <strobe>  wait for leading edge of horizontal blank
+NUSIZ0			= $04  ; ..111111  number-size player-missile 0
+NUSIZ1			= $05  ; ..111111  number-size player-missile 1
+COLUP0			= $06  ; 1111111.  color-lum player 0 and missile 0
+COLUP1			= $07  ; 1111111.  color-lum player 1 and missile 1
+COLUPF			= $08  ; 1111111.  color-lum playfield and ball
+COLUBK			= $09  ; 1111111.  color-lum background
+CTRLPF			= $0a  ; ..11.111  control playfield ball size & collisions
+REFP0			= $0b  ; ....1...  reflect player 0
+REFP1			= $0c  ; ....1...  reflect player 1
+PF0				= $0d  ; 1111....  playfield register byte 0
+PF1				= $0e  ; 11111111  playfield register byte 1
+PF2				= $0f  ; 11111111  playfield register byte 2
+RESP0			= $10  ; <strobe>  reset player 0
+RESP1			= $11  ; <strobe>  reset player 1
+RESM0			= $12  ; <strobe>  reset missile 0
+RESM1			= $13  ; <strobe>  reset missile 1
+RESBL			= $14  ; <strobe>  reset ball
+AUDC0			= $15  ; ....1111  audio control 0
+AUDC1			= $16  ; ....1111  audio control 1
+AUDF0			= $17  ; ...11111  audio frequency 0
+AUDF1			= $18  ; ...11111  audio frequency 1
+AUDV0			= $19  ; ....1111  audio volume 0
+AUDV1			= $1a  ; ....1111  audio volume 1
+GRP0			= $1b  ; 11111111  graphics player 0
+GRP1			= $1c  ; 11111111  graphics player 1
+ENAM0			= $1d  ; ......1.  graphics (enable) missile 0
+ENAM1			= $1e  ; ......1.  graphics (enable) missile 1
+ENABL			= $1f  ; ......1.  graphics (enable) ball
+HMP0			= $20  ; 1111....  horizontal motion player 0
+HMP1			= $21  ; 1111....  horizontal motion player 1
+HMM0			= $22  ; 1111....  horizontal motion missile 0
+HMM1			= $23  ; 1111....  horizontal motion missile 1
+HMBL			= $24  ; 1111....  horizontal motion ball
+VDELP0			= $25  ; .......1  vertical delay player 0
+VDELP1			= $26  ; .......1  vertical delay player 1
+HMOVE			= $2a  ; <strobe>  apply horizontal motion
+HMCLR			= $2b  ; <strobe>  clear horizontal motion registers
+CXCLR			= $2c  ; <strobe>  clear collision latches
 
-swcha			= $0280
-swchb			= $0282
-intim			= $0284
-tim64t			= $0296
+CXM0P			= $30  ; 11......  read collision M0-P1, M0-P0 (Bit 7,6)
+CXM1P			= $31  ; 11......  read collision M1-P0, M1-P1
+CXP1FB			= $33  ; 11......  read collision P1-PF, P1-BL
+CXM1FB			= $35  ; 11......  read collision M1-PF, M1-BL
+CXPPMM			= $37  ; 11......  read collision P0-P1, M0-M1
+INPT4			= $0c  ; 1.......  read input 4
+INPT5			= $0d  ; 1.......  read input 5
+
+SWCHA			= $0280 ; 11111111  Port A; input or output  (read or write)
+SWCHB			= $0282 ; 11111111  Port B; console switches (read only)
+INTIM			= $0284 ; 11111111  Timer output (read only)
+TIM64T			= $0296 ; 11111111  set 64 clock interval (53.6 usec/interval)
 
 
-;-----------------------------------------------------------
-;	   riot ram (zero-page) labels
-;-----------------------------------------------------------
+;============================================================================
+; Z P - V A R I A B L E S
+;============================================================================
 
 zero_page		= $00
 scan_line		= $80
-room_num		= $81
+currentRoomId		= $81
 frame_counter	= $82
 time_of_day		= $83
 ram_84			= $84; (c)
@@ -126,13 +127,13 @@ ram_8b			= $8b
 ram_8c			= $8c
 ram_8d			= $8d
 ram_8e			= $8e
-ram_8f			= $8f
+weaponStatus			= $8f
 ram_90			= $90
 ram_91			= $91
 indy_dir		= $92
-ram_93			= $93
+screenEventState			= $93
 room_pf_cfg		= $94
-ram_95			= $95
+pickupStatusFlags			= $95
 ram_96			= $96
 ram_97			= $97
 ram_98			= $98
@@ -155,7 +156,7 @@ parachute_used	= $a8
 ankh_used		= $a9
 yar_found		= $aa
 ark_found		= $ab
-thief_shot		= $ac
+thiefShot		= $ac
 mesa_entered	= $ad
 unknown_action	= $ae
 ram_af			= $af
@@ -183,19 +184,19 @@ ram_c4			= $c4
 current_object	= $c5
 ram_c6			= $c6
 ram_c7			= $c7
-enemy_x			= $c8
+ObjectPosX			= $c8
 indy_x			= $c9
 ram_ca			= $ca
-ram_cb			= $cb
+weaponHorizPos			= $cb
 ram_cc			= $cc
 
 enemy_y			= $ce
 indy_y			= $cf
 ram_d0			= $d0
-ram_d1			= $d1
-ram_d2			= $d2
+weaponVertPos			= $d1	;Weapon vertical position (Whip or Bullet)
+objPosY			= $d2
 
-ram_d4			= $d4
+objectState			= $d4
 ram_d5			= $d5
 ram_d6			= $d6
 ram_d7			= $d7
@@ -203,16 +204,16 @@ ram_d8			= $d8
 indy_anim		= $d9
 ram_da			= $da
 indy_h			= $db
-snake_y			= $dc
+p0SpriteHeight			= $dc
 emy_anim		= $dd
 ram_de			= $de
-ram_df			= $df
+thiefState			= $df
 ram_e0			= $e0
-pf1_data		= $e1
+PF1_data		= $e1
 ram_e2			= $e2
-pf2_data		= $e3
+PF2_data		= $e3
 ram_e4			= $e4
-ram_e5			= $e5
+dungeonGfxData			= $e5
 ram_e6			= $e6
 ram_e7			= $e7
 ram_e8			= $e8
@@ -244,22 +245,32 @@ key_obj = $07
 ;rooms
 ;---------------------
 
-treasure_room = $00
-starting_room = $02
-cliff_room = $05
-spider_room = $07
-mesa_top_room = $09
-ark_room = $0d
+ID_TREASURE_ROOM		 = $00 ;--
+ID_MARKETPLACE			 = $01 ; |
+ID_ENTRANCE_ROOM		 = $02 ; |
+ID_BLACK_MARKET		   	 = $03 ; | -- JumpIntoStationaryPlayerKernel
+ID_MAP_ROOM				 = $04 ; |
+ID_MESA_SIDE			 = $05 ;--
+ID_TEMPLE_ENTRANCE		 = $06 ;--
+ID_SPIDER_ROOM			 = $07 ;  |
+ID_ROOM_OF_SHINING_LIGHT = $08 ;  | -- DrawPlayfieldKernel
+ID_MESA_FIELD			 = $09 ;  |
+ID_VALLEY_OF_POISON		 = $0A ;--
+ID_THIEVES_DEN			 = $0B ;-- ThievesDenWellOfSoulsScanlineHandler
+ID_WELL_OF_SOULS		 = $0C ;-- ThievesDenWellOfSoulsScanlineHandler
+ID_ARK_ROOM				 = $0D
 
+;===============================================================================
+; U S E R - C O N S T A N T S
+;===============================================================================
 
+BANK0STROBE				= $FFF8
+BANK0_REORG				= $D000
 
+REFLECT					= $08
+BULLET_OR_WHIP_ACTIVE 	= %10000000
 
-
-;-----------------------------------------------------------
-;	   user defined labels
-;-----------------------------------------------------------
-
-;break			 = $dd68
+PENALTY_SHOOTING_THIEF	= 4
 
 
 ;***********************************************************
@@ -268,131 +279,167 @@ ark_room = $0d
 
 	seg		code
 	org		$0000
-	rorg	$d000
+	rorg	BANK0_REORG
 
 ;note: 1st bank's vector points right at the cold start routine
-	lda	   $fff8					;trigger 1st bank
+	lda	   BANK0STROBE				;trigger 1st bank
 
-cold_start
-	jmp		game_start				;cold start
+coldStart
+	jmp		gameStart				;cold start
 
-ld006
-	ldx		#$04					
-ld008
-	sta		wsync					
-;---------------------------------------
-	lda		enemy_x,x				 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; setObjPosX
+; set object horizontal position
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+setObjPosX
+	ldx		#<RESBL - RESP0					
+.moveObjectLoop
+	sta		WSYNC					; wait for next scan line
+	lda		ObjectPosX,x			; get object's horizontal position
 	tay								
-	lda		room_miss0_size_tabl,y					
-	sta		hmp0,x					
-	and		#$0f					
-	tay								
-ld015
+	lda		HMOVETable,y	; get fine motion/coarse position value				
+	sta		HMP0,x					; set object's fine motion value
+	and		#$0f					; mask off fine motion value
+	tay								; move coarse move value to y
+.coarseMoveObj
 	dey								
-	bpl		ld015					
-	sta		resp0,x					
+	bpl		.coarseMoveObj			; set object's coarse position			
+	sta		RESP0,x					
 	dex								
-	bpl		ld008					
-	sta		wsync					
-;---------------------------------------
-	sta		hmove					
-	jmp		ldf9c					
+	bpl		.moveObjectLoop					
+	sta		WSYNC					; wait for next scan line
+	sta		HMOVE					
+	jmp		JumpToDisplayKernel					
 
-ld024:
-	   bit	  cxm1p					  
-	   bpl	  ld05c					  
-	   ldx	  $81					  
-	   cpx	  #$0a					  
-	   bcc	  ld05c					  
-	   beq	  ld03f					  
-	   lda	  $d1					  
-	   adc	  #$01					  
-	   lsr							  
-	   lsr							  
-	   lsr							  
-	   lsr							  
-	   tax							  
-	   lda	  #$08					  
-	   eor	  $df,x					  
-	   sta	  $df,x					  
-ld03f:
-	   lda	  $8f					  
-	   bpl	  ld054					  
-	   and	  #$7f					  
-	   sta	  $8f					  
-	   lda	  $95					  
-	   and	  #$1f					  
-	   beq	  ld050					  
+CheckObjectHit:
+	   bit	  CXM1P					; check player collision with Indy bullet 
+	   bpl	  .checkWeaponHit		; branch if no player collision			  
+	   ldx	  currentRoomId			; get the current screen id			  
+	   cpx	  #ID_VALLEY_OF_POISON	; are we in the valley of poison?					  
+	   bcc	  .checkWeaponHit					  
+	   beq	  weaponHitThief		; branch if Indy in the Valley of Poison
+
+	; --------------------------------------------------------------------------
+	; CALCULATE STRUCK THIEF INDEX
+	; The screen is divided vertically. We use Weapon Y to determine which thief (0-4) was hit.
+	; Formula: Index = ((WeaponY + 1) / 16)
+	; --------------------------------------------------------------------------
+
+
+	   lda	  weaponVertPos			; Load Weapon Vertical Position.			  
+	   adc	  #$01					; Adjust for offset (Carry set assumed).  
+	   lsr							; Divide by 2.  
+	   lsr							; Divide by 4. 
+	   lsr							; Divide by 8. 
+	   lsr							; Divide by 16. 
+	   tax							; Move result (Index 0-3?) to X.
+
+	; --------------------------------------------------------------------------
+	; FLIP THIEF DIRECTION
+	; Hitting a thief makes them reverse direction.
+	; --------------------------------------------------------------------------
+
+	   lda	  #REFLECT				; Load Reflect Bit.	  
+	   eor	  thiefState,x			; XOR with current state (Toggle Direction).		  
+	   sta	  thiefState,x			; Save new state.		  
+
+weaponHitThief:
+	   lda	  weaponStatus			; get bullet or whip status		  
+	   bpl	  .setThiefShotPenalty	; branch if bullet or whip not active				  
+	   and	  #~BULLET_OR_WHIP_ACTIVE					  
+	   sta	  weaponStatus			; clear BULLET_OR_WHIP_ACTIVE bit		  
+	   lda	  pickupStatusFlags					  
+	   and	  #%00011111			; Mask check.		  
+	   beq	  finishItemPickup					  
 	   jsr	  PlaceItemInInventory					  
-ld050:
-	   lda	  #$40					  
-	   sta	  $95					  
-ld054:
-	   lda	  #$7f					  
-	   sta	  $d1					  
-	   lda	  #$04					  
-	   sta	  thief_shot			  
-ld05c:
-	   bit	  cxm1fb				  
-	   bpl	  ld0aa					  
-	   ldx	  $81					  
-	   cpx	  #$09					  
-	   beq	  ld0bc					  
-	   cpx	  #$06					  
-	   beq	  ld06e					  
-	   cpx	  #$08					  
-	   bne	  ld0aa					  
-ld06e:
-	   lda	  $d1					  
-	   sbc	  $d4					  
+
+finishItemPickup:
+	   lda	  #%01000000		 	; Set Bit 6.				  
+	   sta	  pickupStatusFlags
+	   	   					  
+.setThiefShotPenalty
+	; --------------------------------------------------------------------------
+	; PENALTY FOR SHOOTING THIEF
+	; Killing a thief is dishonorable (or noise?). Deducts score.
+	; --------------------------------------------------------------------------
+	   lda    #~BULLET_OR_WHIP_ACTIVE 	; Clear Active Bit mask.					  
+	   sta	  weaponVertPos				; Invalidates weapon Y (effectively removing it).		  
+	   lda	  #PENALTY_SHOOTING_THIEF 	; Load Penalty Value.				  
+	   sta	  thiefShot					; Apply penalty.
+
+.checkWeaponHit:
+	   bit	  CXM1FB					; check missile 1 and playfield collisions
+	   bpl	  weaponObjHit				; if playfield is not hit try snake hit
+	   ldx	  currentRoomId				; get the current screen id					  
+	   cpx	  #ID_MESA_FIELD			; are we in the mesa field?
+	   beq	  handleIndyVsObjHit		; see what we hit  		  
+	   cpx	  #ID_TEMPLE_ENTRANCE		; are we in the temple entrance?					  
+	   beq	  checkDungeonWallHit		; check for dungeon wall hit			  
+	   cpx	  #ID_ROOM_OF_SHINING_LIGHT	; are we in the room of shining light?				  
+	   bne	  weaponObjHit				; did we hit the snake?
+checkDungeonWallHit:
+	   lda	  weaponVertPos				; get bullet or whip vertical position					  
+	   sbc	  objectState				; subtract dungeon wall height					  
+	   lsr							  	; divide by 4 total
 	   lsr							  
-	   lsr							  
-	   beq	  ld087					  
+	   beq	  handleLeftWall			; if zero, left wall hit
 	   tax							  
-	   ldy	  $cb					  
+	   ldy	  weaponHorizPos			; get weapon horizontal position					  
 	   cpy	  #$12					  
-	   bcc	  ld0a4					  
+	   bcc	  clearWeaponState			; branch if too far left		  
 	   cpy	  #$8d					  
-	   bcs	  ld0a4					  
+	   bcs	  clearWeaponState			; branch if too far right		  
 	   lda	  #$00					  
-	   sta	  $e5,x					  
-	   beq	  ld0a4					  
+	   sta	  dungeonGfxData,x			; zero out dungeon gfx data for wall hit		  
+	   beq	  clearWeaponState			; unconditional branch		  
 
-ld087:
-	   lda	  $cb					  
-	   cmp	  #$30					  
-	   bcs	  ld09e					  
-	   sbc	  #$10					  
-	   eor	  #$1f					  
-ld091:
-	   lsr							  
-	   lsr							  
-	   tax							  
-	   lda	  ldc5c,x				  
-	   and	  $e5					  
-	   sta	  $e5					  
-	   jmp	  ld0a4					  
+handleLeftWall:
+	   lda	  weaponHorizPos			; get bullet or whip horizontal position					  
+	   cmp	  #$30					  	; Compare it to 48 (left side boundary threshold)
+	   bcs	  handleRighrWall			; If bullet is at or beyond 48, branch to right-side logic		  
+	   sbc	  #$10						; Subtract 16 from position 
+	   									; (adjusting to fit into the masking table index range)		  
+	   eor	  #$1f					  	; XOR with 31 to mirror or normalize the range 
+	   									; (helps align to bitmask values)
 
-ld09e:
-	   sbc	  #$71					  
-	   cmp	  #$20					  
-	   bcc	  ld091					  
-ld0a4:
-	   ldy	  #$7f					  
-	   sty	  $8f					  
-	   sty	  $d1					  
-ld0aa:
-	   bit	  cxm1fb				  
-	   bvc	  ld0bc					  
-	   bit	  $93					  
-	   bvc	  ld0bc					  
-	   lda	  #$5a					  
-	   sta	  $d2					  
-	   sta	  $dc					  
-	   sta	  $8f					  
-	   sta	  $d1					  
-ld0bc:
-	   bit	  cxp1fb				  
+maskDungeonWall:
+	   lsr								; Divide by 4 Total			  
+	   lsr							  	;
+	   tax							  	; Move result to X to use as index into mask table
+	   lda	  itemStatusMaskTable,x		; Load a mask value from the 
+	   									; itemStatusMaskTable table 
+										; (mask used to disable a wall segment)	  
+	   and	  dungeonGfxData			; Apply the mask to the current
+	   									; dungeon graphic state 
+										; (clear bits to "erase" part of it)		  
+	   sta	  dungeonGfxData			; Store the updated graphic
+	   									; state back (modifying visual representation
+										; of the wall)		  
+	   jmp	  clearWeaponState			; unconditional branch		  
+
+handleRighrWall:
+	   sbc	  #$71					  	; Subtract 113 from bullet/whip horizontal position
+	   cmp	  #$20					  	; Compare result to 32
+	   bcc	  maskDungeonWall			; apply wall mask	  
+clearWeaponState:
+	   ldy    #~BULLET_OR_WHIP_ACTIVE	; Invert BULLET_OR_WHIP_ACTIVE						  
+	   sty    weaponStatus				; clear BULLET_OR_WHIP_ACTIVE status	 				  
+	   sty    weaponVertPos				; set vertical position out of range					  
+weaponObjHit:
+	   bit	  CXM1FB				  	; check if snake hit with bullet or whip
+	   bvc	  handleIndyVsObjHit		; branch if object not hit			  
+	   bit	  screenEventState								  
+	   bvc	  handleIndyVsObjHit					  
+	   lda	  #$5a					  	; set object y position high byte
+	   sta	  objPosY					; move offscreen (?)					  
+	   sta	  p0SpriteHeight						  
+	   sta    weaponStatus				; clear BULLET_OR_WHIP_ACTIVE status				  
+	   sta    weaponVertPos					  
+
+handleIndyVsObjHit:
+	   ; Handles collision with Snakes, Tsetse Flies, or Items (Time Piece).
+	   bit	  CXP1FB				  	; Check P1 (Indy) vs Playfield/Ball Collision.
 	   bvc	  ld0ed					  
 	   ldx	  $81					  
 	   cpx	  #$06					  
@@ -424,7 +471,7 @@ ld0ed:
 	   ldx	  #$05					  
 	   cpx	  $81					  
 	   bne	  ld12d					  
-	   bit	  cxm0p					  
+	   bit	  CXM0P					  
 	   bpl	  ld106					  
 	   stx	  $cf					  
 	   lda	  #$0c					  
@@ -454,9 +501,9 @@ ld106:
 	   lda	  #$80					  
 	   sta	  $9d					  
 ld12b:
-	   sta	  cxclr					  
+	   sta	  CXCLR					  
 ld12d:
-	   bit	  cxppmm				  
+	   bit	  CXPPMM				  
 	   bmi	  ld140					  
 	   ldx	  #$00					  
 	   stx	  $91					  
@@ -577,7 +624,7 @@ ld1e8:
 	   jmp	  ld2b4					  
 
 ld1eb:
-	   bit	  cxp1fb				  
+	   bit	  CXP1FB				  
 	   bpl	  ld21a					  
 	   ldy	  $cf					  
 	   cpy	  #$3a					  
@@ -638,7 +685,7 @@ ld247:
 	   jmp	  ld2b4					  
 
 ld24a:
-	   bit	  cxp1fb				  
+	   bit	  CXP1FB				  
 	   bmi	  ld26e					  
 	   lda	  $c9					  
 	   cmp	  #$50					  
@@ -710,7 +757,7 @@ ld2b4:
 	   lda	  $81					  
 	   asl							  
 	   tax							  
-	   bit	  cxp1fb				  
+	   bit	  CXP1FB				  
 	   bpl	  ld2c5					  
 	   lda	  ldcb5+1,x				  
 	   pha							  
@@ -726,7 +773,7 @@ ld2c5:
 	   rts							  
 
 WarpToMesaSide
-	lda		ram_df					
+	lda		thiefState					
 	sta		ram_eb					
 	lda		indy_y					
 	sta		ram_ec					
@@ -734,8 +781,8 @@ WarpToMesaSide
 SaveIndyAndThiefPosition
 	sta		ram_ed					
 PlaceIndyInMesaSide
-	lda		#cliff_room					
-	sta		room_num				  
+	lda		#ID_MESA_SIDE					
+	sta		currentRoomId				  
 	jsr		InitializeScreenState					
 	lda		#$05					
 	sta		indy_y					
@@ -842,10 +889,10 @@ ld372:
 	   ror	  $8a					  
 
 ld374
-	bit		cxm0p|$30				
+	bit		CXM0P|$30				
 	bpl		ld396					
-	ldx		room_num				  
-	cpx		#spider_room					
+	ldx		currentRoomId				  
+	cpx		#ID_SPIDER_ROOM					
 	beq		ld386					
 	bcc		ld396					
 	lda		#$80					
@@ -870,7 +917,7 @@ ld396
 	cmp		ram_9b					
 	bne		ld3d8					
 	lda		#$a0					
-	sta		ram_d1					
+	sta		weaponVertPos					
 	sta		ram_9d					
 ld3a8
 	lsr		ram_9a					
@@ -879,8 +926,8 @@ ld3a8
 	sta		grenade_used				  
 	ora		ram_b1					
 	sta		ram_b1					
-	ldx		#starting_room					
-	cpx		room_num				  
+	ldx		#ID_ENTRANCE_ROOM					
+	cpx		currentRoomId				  
 	bne		ld3bd					
 	jsr		InitializeScreenState					
 ld3bd
@@ -891,25 +938,25 @@ ld3bd
 	and		#$f0					
 	ora		#$01					
 	sta		ram_b5					
-	ldx		#starting_room					
-	cpx		room_num				  
+	ldx		#ID_ENTRANCE_ROOM					
+	cpx		currentRoomId				  
 	bne		ld3d4					
 	jsr		InitializeScreenState					
 ld3d4
 	sec								
 	jsr		TakeItemFromInventory					
 ld3d8
-	lda		intim					
+	lda		INTIM					
 	bne		ld3d8					
 ld3dd
 	lda		#$02					
-	sta		wsync					
+	sta		WSYNC					
 ;---------------------------------------
-	sta		vsync					
+	sta		VSYNC					
 	lda		#$50					
-	cmp		ram_d1					
+	cmp		weaponVertPos					
 	bcs		ld3eb					
-	sta		ram_cb					
+	sta		weaponHorizPos					
 ld3eb
 	inc		frame_counter			;up the frame counter by 1
 	lda		#$3f					;
@@ -920,37 +967,37 @@ ld3eb
 	bpl		ld3fb					
 	dec		ram_a1					
 ld3fb
-	sta		wsync					
+	sta		WSYNC					
 ;---------------------------------------
 	bit		ram_9c					
 	bpl		frame_start					  
-	ror		swchb					
+	ror		SWCHB					
 	bcs		frame_start					  
-	jmp		game_start					 
+	jmp		gameStart					 
 
 frame_start
-	sta		wsync					;wait for first sync
+	sta		WSYNC					;wait for first sync
 ;---------------------------------------
-	lda		#$00					;load a for vsync pause
+	lda		#$00					;load a for VSYNC pause
 	ldx		#$2c					;load timer for
-	sta		wsync					
+	sta		WSYNC					
 ;---------------------------------------
-	sta		vsync					
-	stx		tim64t					
+	sta		VSYNC					
+	stx		TIM64T					
 	ldx		ram_9d					
 	inx								
 	bne		ld42a					
 	stx		ram_9d					
 	jsr		tally_score				; set score to minimum
-	lda		#ark_room				; set ark title screen 
-	sta		room_num				; to the current room
+	lda		#ID_ARK_ROOM				; set ark title screen 
+	sta		currentRoomId				; to the current room
 	jsr		InitializeScreenState					
 ld427
 	jmp		ld80d					
 
 ld42a
-	lda		room_num				; get teh room number
-	cmp		#ark_room				; are we in the ark room? 
+	lda		currentRoomId				; get teh room number
+	cmp		#ID_ARK_ROOM				; are we in the ark room? 
 	bne		ld482					
 	lda		#$9c					
 	sta		ram_a3					
@@ -971,9 +1018,9 @@ ld44a
 	bcs		ld465					
 	cpy		score				   
 	bcc		ld45b					
-	bit		inpt5|$30				
+	bit		INPT5|$30				
 	bmi		ld427					
-	jmp		game_start					 
+	jmp		gameStart					 
 
 ld45b
 	lda		frame_counter				   
@@ -990,7 +1037,7 @@ ld465
 ld46d
 	lda		#$80					
 	sta		ram_9c					
-	bit		inpt5|$30				
+	bit		INPT5|$30				
 	bmi		ld427					
 	lda		frame_counter				   
 	and		#$0f					
@@ -1001,7 +1048,7 @@ ld47d
 	jmp		reset_vars					 
 
 ld482
-	bit		ram_93					
+	bit		screenEventState					
 	bvs		ld489					
 ld486
 	jmp		ld51c					
@@ -1010,7 +1057,7 @@ ld489
 	lda		frame_counter				   
 	and		#$03					
 	bne		ld501					
-	ldx		snake_y					 
+	ldx		p0SpriteHeight					 
 	cpx		#$60					
 	bcc		ld4a5					
 	bit		ram_9d					
@@ -1024,22 +1071,22 @@ ld4a3
 	sta		ram_cc					
 ld4a5
 	inx								
-	stx		snake_y					 
+	stx		p0SpriteHeight					 
 	txa								
 	sec								
 	sbc		#$07					
 	bpl		ld4b0					
 	lda		#$00					
 ld4b0
-	sta		ram_d2					
+	sta		objPosY					
 	and		#$f8					
 	cmp		ram_d5					
 	beq		ld501					
 	sta		ram_d5					
-	lda		ram_d4					
+	lda		objectState					
 	and		#$03					
 	tax								
-	lda		ram_d4					
+	lda		objectState					
 	lsr								
 	lsr								
 	tay								
@@ -1069,27 +1116,27 @@ ld4e7
 	asl								
 	asl								
 	sta		ram_84					
-	lda		ram_d4					
+	lda		objectState					
 	and		#$03					
 	tax								
 	lda		ldbff,x					
 	clc								
 	adc		ram_cc					
 	sta		ram_cc					
-	lda		ram_d4					
+	lda		objectState					
 	lsr								
 	lsr								
 	ora		ram_84					
-	sta		ram_d4					
+	sta		objectState					
 ld501
-	lda		ram_d4					
+	lda		objectState					
 	and		#$03					
 	tax								
 	lda		ldbfb,x					
 	sta		ram_d6					
 	lda		#$fa					
 	sta		ram_d7					
-	lda		ram_d4					
+	lda		objectState					
 	lsr								
 	lsr								
 	tax								
@@ -1114,17 +1161,17 @@ ld52a
 	jmp		ld627					
 
 ld532
-	ldx		room_num				  
-	cpx		#cliff_room					
+	ldx		currentRoomId				  
+	cpx		#ID_MESA_SIDE					
 	beq		ld579					
 	bit		ram_8d					
 	bvc		ld56e					
-	ldx		ram_cb					
+	ldx		weaponHorizPos					
 	txa								
 	sec								
 	sbc		indy_x					
 	tay								
-	lda		swcha					
+	lda		SWCHA					
 	ror								
 	bcc		ld55b					
 	ror								
@@ -1139,7 +1186,7 @@ ld553
 ld556
 	dex								
 ld557
-	stx		ram_cb					
+	stx		weaponHorizPos					
 	bne		ld579					
 ld55b
 	cpx		#$75					
@@ -1165,14 +1212,14 @@ ld579
 
 ld57c
 	ldx		#$01					
-	lda		swcha					
+	lda		SWCHA					
 	sta		ram_85					
 	and		#$0f					
 	cmp		#$0f					
 	beq		ld579					
 	sta		indy_dir				  
 	jsr		move_enemy					 
-	ldx		room_num				  
+	ldx		currentRoomId				  
 	ldy		#$00					
 	sty		ram_84					
 	beq		ld599					
@@ -1221,10 +1268,10 @@ ld5d1
 	bcc		ld596					
 	bcs		ld5e0					
 ld5db
-	sty		room_num				  
+	sty		currentRoomId				  
 	jsr		InitializeScreenState					
 ld5e0
-	bit		inpt4|$30				
+	bit		INPT4|$30				
 	bmi		ld5f5					
 	bit		ram_9a					
 	bmi		ld624					
@@ -1256,7 +1303,7 @@ ld60c
 	sec								
 	rol		ram_b2					
 	ldx		#$45					
-	stx		ram_df					
+	stx		thiefState					
 	ldx		#$7f					
 	stx		ram_d0					
 ld61d
@@ -1270,7 +1317,7 @@ ld624
 ld627
 	bit		ram_9a					
 	bmi		ld624					
-	bit		inpt5|$30				
+	bit		INPT5|$30				
 	bpl		ld638					
 	lda		#$fd					
 	and		ram_8a					
@@ -1290,9 +1337,9 @@ ld638
 	bne		ld671					
 ld64c
 	ldx		indy_y					
-	stx		ram_d1					
+	stx		weaponVertPos					
 	ldy		indy_x					
-	sty		ram_cb					
+	sty		weaponHorizPos					
 	lda		time_of_day					 
 	adc		#$04					
 	sta		ram_9b					
@@ -1301,8 +1348,8 @@ ld64c
 	bcs		ld66c					
 	cpy		#$64					
 	bcc		ld66c					
-	ldx		room_num				  
-	cpx		#starting_room					
+	ldx		currentRoomId				  
+	cpx		#ID_ENTRANCE_ROOM					
 	bne		ld66c					
 	ora		#$01					
 ld66c
@@ -1327,19 +1374,19 @@ ld687
 ld68b
 	bit		ram_8d					
 	bvc		ld6d5					
-	bit		cxm1fb|$30				
+	bit		CXM1FB|$30				
 	bmi		ld699					
 	jsr		WarpToMesaSide					
 ld696
 	jmp		ld777					
 
 ld699
-	lda		ram_d1					
+	lda		weaponVertPos					
 	lsr								
 	sec								
 	sbc		#$06					
 	clc								
-	adc		ram_df					
+	adc		thiefState					
 	lsr								
 	lsr								
 	lsr								
@@ -1349,7 +1396,7 @@ ld699
 	lda		#$07					
 ld6ac
 	sta		ram_84					
-	lda		ram_cb					
+	lda		weaponHorizPos					
 	sec								
 	sbc		#$10					
 	and		#$60					
@@ -1359,14 +1406,14 @@ ld6ac
 	tay								
 	lda		ldf7c,y					
 	sta		ram_8b					
-	ldx		ram_d1					
+	ldx		weaponVertPos					
 	dex								
-	stx		ram_d1					
+	stx		weaponVertPos					
 	stx		indy_y					
-	ldx		ram_cb					
+	ldx		weaponHorizPos					
 	dex								
 	dex								
-	stx		ram_cb					
+	stx		weaponHorizPos					
 	stx		indy_x					
 	lda		#$46					
 	sta		ram_8d					
@@ -1379,7 +1426,7 @@ ld6d5
 	lda		indy_y					
 	cmp		#$41					
 	bcc		ld696					
-	bit		cxppmm|$30				
+	bit		CXPPMM|$30				
 	bpl		ld696					
 	inc		ram_97					
 	bne		ld696					
@@ -1396,43 +1443,43 @@ ld6ef
 ld6f7
 	cpx		#$10					
 	bne		ld71e					
-	ldx		room_num				  
-	cpx		#treasure_room					
+	ldx		currentRoomId				  
+	cpx		#ID_TREASURE_ROOM					
 	beq		ld696					
-	lda		#mesa_top_room					
+	lda		#ID_MESA_FIELD					
 	sta		ankh_used				   
-	sta		room_num				  
+	sta		currentRoomId				  
 	jsr		InitializeScreenState					
 	lda		#$4c					
 	sta		indy_x					
-	sta		ram_cb					
+	sta		weaponHorizPos					
 	lda		#$46					
 	sta		indy_y					
-	sta		ram_d1					
+	sta		weaponVertPos					
 	sta		ram_8d					
 	lda		#$1d					
-	sta		ram_df					
+	sta		thiefState					
 	bne		ld777					
 ld71e
-	lda		swcha					
+	lda		SWCHA					
 	and		#$0f					
 	cmp		#$0f					
 	beq		ld777					
 	cpx		#$0d					
 	bne		ld747					
-	bit		ram_8f					
+	bit		weaponStatus					
 	bmi		ld777					
 	ldy		num_bullets					 
 	bmi		ld777					
 	dec		num_bullets					 
 	ora		#$80					
-	sta		ram_8f					
+	sta		weaponStatus					
 	lda		indy_y					
 	adc		#$04					
-	sta		ram_d1					
+	sta		weaponVertPos					
 	lda		indy_x					
 	adc		#$04					
-	sta		ram_cb					
+	sta		weaponHorizPos					
 	bne		ld773					
 ld747
 	cpx		#$0a					
@@ -1460,11 +1507,11 @@ ld767
 	tya								
 	clc								
 	adc		indy_x					
-	sta		ram_cb					
+	sta		weaponHorizPos					
 	txa								
 	clc								
 	adc		indy_y					
-	sta		ram_d1					
+	sta		weaponVertPos					
 ld773
 	lda		#$0f					
 	sta		ram_a3					
@@ -1476,7 +1523,7 @@ ld777
 	lda		#$0f					
 	bne		ld792					
 ld783
-	lda		swcha					
+	lda		SWCHA					
 	and		#$0f					
 	cmp		#$0f					
 	bne		ld796					
@@ -1506,8 +1553,8 @@ ld79d
 	lda		#$00					
 	bcs		ld78e					
 ld7b2
-	ldx		room_num				  
-	cpx		#mesa_top_room					
+	ldx		currentRoomId				  
+	cpx		#ID_MESA_FIELD					
 	beq		ld7bc					
 	cpx		#$0a					
 	bne		ld802					
@@ -1520,36 +1567,36 @@ ld7c3
 	ldy		indy_y					
 	cpy		#$27					
 	beq		ld802					
-	ldx		ram_df					
+	ldx		thiefState					
 	bcs		ld7e8					
 	beq		ld802					
 	inc		indy_y					
-	inc		ram_d1					
+	inc		weaponVertPos					
 	and		#$02					
 	bne		ld802					
-	dec		ram_df					
+	dec		thiefState					
 	inc		enemy_y					 
 	inc		ram_d0					
-	inc		ram_d2					
+	inc		objPosY					
 	inc		enemy_y					 
 	inc		ram_d0					
-	inc		ram_d2					
+	inc		objPosY					
 	jmp		ld802					
 
 ld7e8
 	cpx		#$50					
 	bcs		ld802					
 	dec		indy_y					
-	dec		ram_d1					
+	dec		weaponVertPos					
 	and		#$02					
 	bne		ld802					
-	inc		ram_df					
+	inc		thiefState					
 	dec		enemy_y					 
 	dec		ram_d0					
-	dec		ram_d2					
+	dec		objPosY					
 	dec		enemy_y					 
 	dec		ram_d0					
-	dec		ram_d2					
+	dec		objPosY					
 ld802
 	lda		#$28					
 	sta		ram_88					
@@ -1564,38 +1611,38 @@ ld80d
 	lda		#$00					
 set_room_attr
 	sta		ram_99					
-	ldx		room_num				  
-	lda		room_miss0_size_tabl,x					
-	sta		nusiz0					
+	ldx		currentRoomId				  
+	lda		HMOVETable,x					
+	sta		NUSIZ0					
 	lda		room_pf_cfg					
-	sta		ctrlpf					
+	sta		CTRLPF					
 	lda		room_bg_color_tbl,x					
-	sta		colubk					
+	sta		COLUBK					
 	lda		room_pf_color_tbl,x					
-	sta		colupf					
+	sta		COLUPF					
 	lda		room_p0_color_tbl,x					
-	sta		colup0					
+	sta		COLUP0					
 	lda		room_p1_color_tbl,x					
-	sta		colup1					
+	sta		COLUP1					
 	cpx		#$0b					
 	bcc		ld84b					
 	lda		#$20					
-	sta		ram_d4					
+	sta		objectState					
 	ldx		#$04					
 ld841
-	ldy		ram_e5,x				
-	lda		room_miss0_size_tabl,y					
+	ldy		dungeonGfxData,x				
+	lda		HMOVETable,y					
 	sta		ram_ee,x				
 	dex								
 	bpl		ld841					
 ld84b
-	jmp		ld006					
+	jmp		setObjPosX					
 
 ld84e
 	lda		#$4d					
 	sta		indy_x					
 	lda		#$48					
-	sta		enemy_x					 
+	sta		ObjectPosX					 
 	lda		#$1f					
 	sta		indy_y					
 	rts								
@@ -1604,11 +1651,11 @@ ld85b
 	ldx		#$00					
 	txa								
 ld85e
-	sta		ram_df,x				
+	sta		thiefState,x				
 	sta		ram_e0,x				
-	sta		pf1_data,x				  
+	sta		PF1_data,x				  
 	sta		ram_e2,x				
-	sta		pf2_data,x				  
+	sta		PF2_data,x				  
 	sta		ram_e4,x				
 	txa								
 	bne		ld873					
@@ -1629,17 +1676,17 @@ ld880
 	lda		#$5c					
 	sta		ram_96					
 	ldx		#$00					
-	stx		ram_93					
+	stx		screenEventState					
 	stx		ram_b6					
 	stx		ram_8e					
 	stx		ram_90					
-	lda		ram_95					
-	stx		ram_95					
+	lda		pickupStatusFlags					
+	stx		pickupStatusFlags					
 	jsr		ldd59				   
 	rol		ram_8a					
 	clc								
 	ror		ram_8a					
-	ldx		room_num				  
+	ldx		currentRoomId				  
 	lda		ldb92,x					
 	sta		room_pf_cfg					
 	cpx		#$0d					
@@ -1656,9 +1703,9 @@ ld8b1
 	lda		ldbe1,x					
 	sta		ram_de					
 	lda		ldbc9,x					
-	sta		snake_y					 
+	sta		p0SpriteHeight					 
 	lda		ldbd4,x					
-	sta		enemy_x					 
+	sta		ObjectPosX					 
 	lda		ldc0e,x					
 	sta		ram_ca					
 	lda		ldc1b,x					
@@ -1668,16 +1715,16 @@ ld8b1
 	adc		ldc03,x					
 	sta		ram_e0					
 	lda		ldc28,x					
-	sta		pf1_data				  
+	sta		PF1_data				  
 	lda		ldc33,x					
 	sta		ram_e2					
 	lda		ldc3e,x					
-	sta		pf2_data				  
+	sta		PF2_data				  
 	lda		ldc49,x					
 	sta		ram_e4					
 	lda		#$55					
-	sta		ram_d2					
-	sta		ram_d1					
+	sta		objPosY					
+	sta		weaponVertPos					
 	cpx		#$06					
 	bcs		ld93e					
 	lda		#$00					
@@ -1699,7 +1746,7 @@ ld902
 	lda		#$ff					
 	sta		ram_d0					
 ld918
-	sty		ram_df					
+	sty		thiefState					
 	rts								
 
 ld91b
@@ -1709,7 +1756,7 @@ ld91b
 	lda		#$1a					
 	sta		enemy_y					 
 	lda		#$26					
-	sta		ram_df					
+	sta		thiefState					
 	rts								
 
 ld92a
@@ -1733,11 +1780,11 @@ ld93e
 	ldy		#$00					
 	sty		ram_d8					
 	ldy		#$40					
-	sty		ram_e5					
+	sty		dungeonGfxData					
 	bne		ld958					
 ld950
 	ldy		#$ff					
-	sty		ram_e5					
+	sty		dungeonGfxData					
 	iny								
 	sty		ram_d8					
 	iny								
@@ -1748,7 +1795,7 @@ ld958
 	sty		ram_e9					
 	sty		ram_ea					
 	ldy		#$39					
-	sty		ram_d4					
+	sty		objectState					
 	sty		ram_d5					
 ld968
 	cpx		#$09					
@@ -1757,12 +1804,12 @@ ld968
 	cpy		#$49					
 	bcc		ld977					
 	lda		#$50					
-	sta		ram_df					
+	sta		thiefState					
 	rts								
 
 ld977
 	lda		#$00					
-	sta		ram_df					
+	sta		thiefState					
 	rts								
 
 CheckRoomOverrideCondition
@@ -1857,7 +1904,7 @@ ld9fe
 	lda		#$0e					
 	cmp		current_object					
 	bne		ld9f9					
-	bit		inpt5|$30				
+	bit		INPT5|$30				
 	bmi		ld9f9					
 	jmp		ld98b					
 
@@ -1916,7 +1963,7 @@ lda4f
 	pha								
 	lda		ldc75,x					
 	pha								
-	ldx		room_num				  
+	ldx		currentRoomId				  
 	rts								
 
 lda5e:
@@ -2028,7 +2075,7 @@ ldaf7
 	rts								
 
 	.byte	$00,$00,$00						; $dafd (*)
-room_miss0_size_tabl
+HMOVETable
 	.byte	$00								; $db00 (d)
 	.byte	$00,$35,$10,$17,$30,$00,$00,$00 ; $db01 (*)
 	.byte	$00,$00,$00,$00					; $db09 (*)
@@ -2151,7 +2198,7 @@ ldc49
 	.byte	$fd,$fe,$fe						; $dc51 (*)
 ldc54
 	.byte	$01,$02,$04,$08,$10,$20,$40,$80 ; $dc54 (*)
-ldc5c
+itemStatusMaskTable
 	.byte	$fe,$fd,$fb,$f7,$ef,$df,$bf,$7f ; $dc5c (*)
 ldc64
 	.byte	$00,$00,$00,$00,$08,$00,$02,$0a ; $dc64 (*)
@@ -2274,7 +2321,7 @@ ShowItemAsNotTaken
 	lda		ldc64,x					
 	lsr								
 	tay								
-	lda		ldc5c,y					
+	lda		itemStatusMaskTable,y					
 	bcs		ldd2a					
 	and		ram_c6					
 	sta		ram_c6					
@@ -2330,7 +2377,7 @@ ldd59
 ldd67
 	rts								
 
-game_start
+gameStart
 	sei								; turn off interrupts
 	cld								; clear decimal flag (no bcd)
 	ldx		#$ff					;
@@ -2363,8 +2410,8 @@ clear_zp
 	sta		inv_slot3_lo
 	lda		#<copyright_gfx_5
 	sta		inv_slot5_lo
-	lda		#ark_room				; set "ark elevator room" (room 13)
-	sta		room_num				; as current room
+	lda		#ID_ARK_ROOM				; set "ark elevator room" (room 13)
+	sta		currentRoomId				; as current room
 	lsr								; divide 13 by 2 (round down)
 	sta		num_bullets				; load 6 bullets
 	jsr		InitializeScreenState					
@@ -2393,8 +2440,8 @@ reset_vars
 	sta		indy_x					
 	lda		#$0f					
 	sta		indy_y					
-	lda		#starting_room					
-	sta		room_num				  
+	lda		#ID_ENTRANCE_ROOM					
+	sta		currentRoomId				  
 	sta		lives_left					
 	jsr		InitializeScreenState					
 	jmp		ld80d					
@@ -2413,7 +2460,7 @@ tally_score
 	clc								; negitive actions...
 	adc		grenade_used			; gernade used
 	adc		escape_hatch_used		; escape hatch used
-	adc		thief_shot				; thief shot
+	adc		thiefShot				; thief shot
 	sta		score				   	; store in final score
 	rts								; return
 
@@ -2494,12 +2541,13 @@ ldf7c
 	.byte	$01,$04,$05,$00,$0a,$0c,$0f,$00 ; $df8c (*)
 	.byte	$02,$04,$05,$08,$0a,$0d,$0f,$00 ; $df94 (*)
 
-ldf9c
-	lda		intim					
-	bne		ldf9c					
-	sta		wsync					
+JumpToDisplayKernel SUBROUTINE
+.waitTime
+	lda		INTIM					
+	bne		.waitTime				
+	sta		WSYNC					
 ;---------------------------------------
-	sta		wsync					
+	sta		WSYNC					
 ;---------------------------------------
 	lda		#$44					
 	sta		ram_88					
@@ -2527,11 +2575,11 @@ mov_emy_right
 mov_emy_down
 	ror								;rotate next bit into carry
 	bcs		mov_emy_up				;if 1 check if enemy should go up
-	dec		enemy_x,x				;move enemy down 1 unit
+	dec		ObjectPosX,x				;move enemy down 1 unit
 mov_emy_up
 	ror								;rotate next bit into carry
 	bcs		mov_emy_finish			;if 1, moves are finished
-	inc		enemy_x,x				;move enemy up 1 unit
+	inc		ObjectPosX,x				;move enemy up 1 unit
 mov_emy_finish
 	rts								;return
 
@@ -2563,23 +2611,23 @@ lf003
 	bcs		lf01a					
 	lsr								
 	clc								
-	adc		ram_df					
+	adc		thiefState					
 	tay								
-	sta		wsync					
+	sta		WSYNC					
 ;---------------------------------------
-	sta		hmove					
-	lda		(pf1_data),y			  
-	sta		pf1						
-	lda		(pf2_data),y			  
-	sta		pf2						
+	sta		HMOVE					
+	lda		(PF1_data),y			  
+	sta		PF1						
+	lda		(PF2_data),y			  
+	sta		PF2						
 	bcc		lf033					
 lf01a
-	sbc		ram_d4					
+	sbc		objectState					
 	lsr								
 	lsr								
-	sta		wsync					
+	sta		WSYNC					
 ;---------------------------------------
-	sta		hmove					
+	sta		HMOVE					
 	tax								
 	cpx		ram_d5					
 	bcc		lf02d					
@@ -2587,10 +2635,10 @@ lf01a
 	lda		#$00					
 	beq		lf031					
 lf02d
-	lda		ram_e5,x				
+	lda		dungeonGfxData,x				
 	ldx		ram_d8					
 lf031
-	sta		pf1,x					
+	sta		PF1,x					
 lf033
 	ldx		#$1e					
 	txs								
@@ -2606,30 +2654,30 @@ lf043
 	lda		scan_line				   
 	sec								
 	sbc		enemy_y					 
-	cmp		snake_y					 
+	cmp		p0SpriteHeight					 
 	bcs		lf07d					
 	tay								
 	lda		(emy_anim),y			  
 	tay								
 lf050
 	lda		scan_line				   
-	sta		wsync					
+	sta		WSYNC					
 ;---------------------------------------
-	sta		hmove					
-	cmp		ram_d1					
+	sta		HMOVE					
+	cmp		weaponVertPos					
 	php								
 	cmp		ram_d0					
 	php								
-	stx		grp1					
-	sty		grp0					
+	stx		GRP1					
+	sty		GRP0					
 	sec								
-	sbc		ram_d2					
+	sbc		objPosY					
 	cmp		#$08					
 	bcs		lf06e					
 	tay								
 	lda		(ram_d6),y				
-	sta		enabl					
-	sta		hmbl					
+	sta		ENABL					
+	sta		HMBL					
 lf06e
 	inc		scan_line				   
 	lda		scan_line				   
@@ -2654,11 +2702,11 @@ lf088
 lf08c
 	lda		(emy_anim),y			  
 	bmi		lf09c					
-	cpy		ram_df					
+	cpy		thiefState					
 	bcs		lf081					
 	cpy		enemy_y					 
 	bcc		lf088					
-	sta		grp0					
+	sta		GRP0					
 	bcs		lf0a4					
 lf09c
 	asl								
@@ -2666,7 +2714,7 @@ lf09c
 	and		#$02					
 	tax								
 	tya								
-	sta		(pf1_data,x)			  
+	sta		(PF1_data,x)			  
 lf0a4
 	inc		scan_line				   
 	ldx		scan_line				   
@@ -2678,11 +2726,11 @@ lf0a4
 lf0b2
 	ror								
 lf0b3
-	sta		enam0					
+	sta		ENAM0					
 lf0b5
-	sta		wsync					
+	sta		WSYNC					
 ;---------------------------------------
-	sta		hmove					
+	sta		HMOVE					
 	txa								
 	sec								
 	sbc		ram_d5					
@@ -2695,15 +2743,15 @@ lf0b5
 	sta		ram_d6					
 lf0ca
 	lda		(ram_d6),y				
-	sta		hmbl					
+	sta		HMBL					
 lf0ce
 	ldy		#$00					
 	txa								
-	cmp		ram_d1					
+	cmp		weaponVertPos					
 	bne		lf0d6					
 	dey								
 lf0d6
-	sty		enam1					
+	sty		ENAM1					
 	sec								
 	sbc		indy_y					
 	cmp		indy_h					
@@ -2712,19 +2760,19 @@ lf0d6
 	lda		(indy_anim),y			   
 lf0e2
 	ldy		scan_line				   
-	sta		grp1					
-	sta		wsync					
+	sta		GRP1					
+	sta		WSYNC					
 ;---------------------------------------
-	sta		hmove					
+	sta		HMOVE					
 	lda		#$02					
-	cpx		ram_d2					
+	cpx		objPosY					
 	bcc		lf0f9					
-	cpx		snake_y					 
+	cpx		p0SpriteHeight					 
 	bcc		lf0f5					
 lf0f4
 	ror								
 lf0f5
-	sta		enabl					
+	sta		ENABL					
 	bcc		lf08c					
 lf0f9
 	bcc		lf0f4					
@@ -2745,28 +2793,28 @@ lf107
 	beq		lf0e2					
 lf10b
 	inx								
-	sta		hmclr					
+	sta		HMCLR					
 	cpx		#$a0					
 	bcc		lf140					
 	jmp		lf1ea					
 
 lf115
-	sta		wsync					
+	sta		WSYNC					
 ;---------------------------------------
-	sta		hmove					
+	sta		HMOVE					
 	inx								
 	lda		ram_84					
-	sta		grp0					
+	sta		GRP0					
 	lda		ram_85					
-	sta		colup0					
+	sta		COLUP0					
 	txa								
 	ldx		#$1f					
 	txs								
 	tax								
 	lsr								
-	cmp		ram_d2					
+	cmp		objPosY					
 	php								
-	cmp		ram_d1					
+	cmp		weaponVertPos					
 	php								
 	cmp		ram_d0					
 	php								
@@ -2776,23 +2824,23 @@ lf115
 	bcs		lf10b					
 	tay								
 	lda		(indy_anim),y			   
-	sta		hmclr					
+	sta		HMCLR					
 	inx								
-	sta		grp1					
+	sta		GRP1					
 lf140
-	sta		wsync					
+	sta		WSYNC					
 ;---------------------------------------
-	sta		hmove					
-	bit		ram_d4					
+	sta		HMOVE					
+	bit		objectState					
 	bpl		lf157					
 	ldy		ram_89					
 	lda		ram_88					
-	lsr		ram_d4					
+	lsr		objectState					
 lf14e
 	dey								
 	bpl		lf14e					
-	sta		resp0					
-	sta		hmp0					
+	sta		RESP0					
+	sta		HMP0					
 	bmi		lf115					
 lf157
 	bvc		lf177					
@@ -2800,23 +2848,23 @@ lf157
 	and		#$0f					
 	tay								
 	lda		(emy_anim),y			  
-	sta		grp0					
+	sta		GRP0					
 	lda		(ram_d6),y				
-	sta		colup0					
+	sta		COLUP0					
 	iny								
 	lda		(emy_anim),y			  
 	sta		ram_84					
 	lda		(ram_d6),y				
 	sta		ram_85					
-	cpy		snake_y					 
+	cpy		p0SpriteHeight					 
 	bcc		lf174					
-	lsr		ram_d4					
+	lsr		objectState					
 lf174
 	jmp		lf115					
 
 lf177
 	lda		#$20					
-	bit		ram_d4					
+	bit		objectState					
 	beq		lf1a7					
 	txa								
 	lsr								
@@ -2827,9 +2875,9 @@ lf177
 	bcs		lf115					
 	tay								
 	sty		ram_87					
-	lda.wy	ram_df,y				
-	sta		refp0					
-	sta		nusiz0					
+	lda.wy	thiefState,y				
+	sta		REFP0					
+	sta		NUSIZ0					
 	sta		ram_86					
 	bpl		lf1a2					
 	lda		ram_96					
@@ -2837,16 +2885,16 @@ lf177
 	lda		#$65					
 	sta		ram_d6					
 	lda		#$00					
-	sta		ram_d4					
+	sta		objectState					
 	jmp		lf115					
 
 lf1a2
-	lsr		ram_d4					
+	lsr		objectState					
 	jmp		lf115					
 
 lf1a7
 	lsr								
-	bit		ram_d4					
+	bit		objectState					
 	beq		lf1ce					
 	ldy		ram_87					
 	lda		#$08					
@@ -2854,7 +2902,7 @@ lf1a7
 	beq		lf1b6					
 	lda		#$03					
 lf1b6
-	eor.wy	ram_e5,y				
+	eor.wy	dungeonGfxData,y				
 	and		#$03					
 	tay								
 	lda		lfc40,y					
@@ -2862,8 +2910,8 @@ lf1b6
 	lda		#$44					
 	sta		ram_d6					
 	lda		#$0f					
-	sta		snake_y					 
-	lsr		ram_d4					
+	sta		p0SpriteHeight					 
+	lsr		objectState					
 	jmp		lf115					
 
 lf1ce
@@ -2880,72 +2928,72 @@ lf1d8
 	and		#$0f					
 	sta		ram_89					
 	lda		#$80					
-	sta		ram_d4					
+	sta		objectState					
 	jmp		lf115					
 
 lf1ea
-	sta		wsync					
+	sta		WSYNC					
 ;---------------------------------------
-	sta		hmove					
+	sta		HMOVE					
 	ldx		#$ff					
-	stx		pf1						
-	stx		pf2						
+	stx		PF1						
+	stx		PF2						
 	inx								
-	stx		grp0					
-	stx		grp1					
-	stx		enam0					
-	stx		enam1					
-	stx		enabl					
-	sta		wsync					
+	stx		GRP0					
+	stx		GRP1					
+	stx		ENAM0					
+	stx		ENAM1					
+	stx		ENABL					
+	sta		WSYNC					
 ;---------------------------------------
-	sta		hmove					
+	sta		HMOVE					
 	lda		#$03					
 	ldy		#$00					
-	sty		refp1					
-	sta		nusiz0					
-	sta		nusiz1					
-	sta		vdelp0					
-	sta		vdelp1					
-	sty		grp0					
-	sty		grp1					
-	sty		grp0					
-	sty		grp1					
+	sty		REFP1					
+	sta		NUSIZ0					
+	sta		NUSIZ1					
+	sta		VDELP0					
+	sta		VDELP1					
+	sty		GRP0					
+	sty		GRP1					
+	sty		GRP0					
+	sty		GRP1					
 	nop								
-	sta		resp0					
-	sta		resp1					
-	sty		hmp1					
+	sta		RESP0					
+	sta		RESP1					
+	sty		HMP1					
 	lda		#$f0					
-	sta		hmp0					
-	sty		refp0					
-	sta		wsync					
+	sta		HMP0					
+	sty		REFP0					
+	sta		WSYNC					
 ;---------------------------------------
-	sta		hmove					
+	sta		HMOVE					
 	lda		#$1a					
-	sta		colup0					
-	sta		colup1					
+	sta		COLUP0					
+	sta		COLUP1					
 	lda		cursor_pos					
 	lsr								
 	tay								
 	lda		lfff2,y					
-	sta		hmbl					
+	sta		HMBL					
 	and		#$0f					
 	tay								
 	ldx		#$00					
-	stx		hmp0					
-	sta		wsync					
+	stx		HMP0					
+	sta		WSYNC					
 ;---------------------------------------
-	stx		pf0						
-	stx		colubk					
-	stx		pf1						
-	stx		pf2						
+	stx		PF0						
+	stx		COLUBK					
+	stx		PF1						
+	stx		PF2						
 lf24a
 	dey								
 	bpl		lf24a					
-	sta		resbl					
-	stx		ctrlpf					
-	sta		wsync					
+	sta		RESBL					
+	stx		CTRLPF					
+	sta		WSYNC					
 ;---------------------------------------
-	sta		hmove					
+	sta		HMOVE					
 	lda		#$3f					
 	and		frame_counter				   
 	bne		draw_menu					
@@ -2959,25 +3007,25 @@ lf24a
 	beq		draw_menu					
 	inc		ram_b5					
 draw_menu
-	sta		wsync					; draw blank line
+	sta		WSYNC					; draw blank line
 	lda		#$42					; set red...
-	sta		colubk					; ...as the background color
-	sta		wsync					; draw four more scanlines
-	sta		wsync					;
-	sta		wsync					;
-	sta		wsync					;
+	sta		COLUBK					; ...as the background color
+	sta		WSYNC					; draw four more scanlines
+	sta		WSYNC					;
+	sta		WSYNC					;
+	sta		WSYNC					;
 	lda		#$07					
 	sta		ram_84					
 draw_inventory
 	ldy		ram_84					
 	lda		(inv_slot_lo),y			  
-	sta		grp0					
-	sta		wsync					
+	sta		GRP0					
+	sta		WSYNC					
 ;---------------------------------------
 	lda		(inv_slot2_lo),y			  
-	sta		grp1					
+	sta		GRP1					
 	lda		(inv_slot3_lo),y			  
-	sta		grp0					
+	sta		GRP0					
 	lda		(inv_slot4_lo),y			  
 	sta		ram_85					
 	lda		(inv_slot5_lo),y			  
@@ -2985,63 +3033,63 @@ draw_inventory
 	lda		(inv_slot6_lo),y			  
 	tay								
 	lda		ram_85					
-	sta		grp1					
-	stx		grp0					
-	sty		grp1					
-	sty		grp0					
+	sta		GRP1					
+	stx		GRP0					
+	sty		GRP1					
+	sty		GRP0					
 	dec		ram_84					
 	bpl		draw_inventory					 
 	lda		#$00					
-	sta		wsync					
+	sta		WSYNC					
 ;---------------------------------------
-	sta		grp0					
-	sta		grp1					
-	sta		grp0					
-	sta		grp1					
-	sta		nusiz0					
-	sta		nusiz1					
-	sta		vdelp0					
-	sta		vdelp1					
-	sta		wsync					
+	sta		GRP0					
+	sta		GRP1					
+	sta		GRP0					
+	sta		GRP1					
+	sta		NUSIZ0					
+	sta		NUSIZ1					
+	sta		VDELP0					
+	sta		VDELP1					
+	sta		WSYNC					
 ;---------------------------------------
-	sta		wsync					
+	sta		WSYNC					
 ;---------------------------------------
 	ldy		#$02					
 	lda		ram_c4					
 	bne		lf2c6					
 	dey								
 lf2c6
-	sty		enabl					
+	sty		ENABL					
 	ldy		#$08					
-	sty		colupf					
-	sta		wsync					
+	sty		COLUPF					
+	sta		WSYNC					
 ;---------------------------------------
-	sta		wsync					
+	sta		WSYNC					
 ;---------------------------------------
 	ldy		#$00					
-	sty		enabl					
-	sta		wsync					
+	sty		ENABL					
+	sta		WSYNC					
 ;---------------------------------------
-	sta		wsync					
+	sta		WSYNC					
 ;---------------------------------------
-	sta		wsync					
+	sta		WSYNC					
 ;---------------------------------------
 	ldx		#$0f					
-	stx		vblank					
+	stx		VBLANK					
 	ldx		#$24					
-	stx		tim64t					
+	stx		TIM64T					
 	ldx		#$ff					
 	txs								
 	ldx		#$01					
 lf2e8
 	lda		ram_a2,x				
-	sta		audc0,x					
-	sta		audv0,x					
+	sta		AUDC0,x					
+	sta		AUDV0,x					
 	bmi		lf2fb					
 	ldy		#$00					
 	sty		ram_a2,x				
 lf2f4
-	sta		audf0,x					
+	sta		AUDF0,x					
 	dex								
 	bpl		lf2e8					
 	bmi		lf320					
@@ -3078,7 +3126,7 @@ lf320
 	sta		ram_a3					
 	bne		lf348					
 lf330
-	bit		inpt5|$30				
+	bit		INPT5|$30				
 	bpl		lf338					
 	lda		#$78					
 	bne		lf340					
@@ -3095,7 +3143,7 @@ lf344
 	lda		#$00					
 	sta		ram_a3					
 lf348
-	bit		ram_93					
+	bit		screenEventState					
 	bpl		lf371					
 	lda		frame_counter				   
 	and		#$07					
@@ -3138,7 +3186,7 @@ lf373
 	cpx		#$03					
 	bcc		lf398					
 	lda		#$8f					
-	sta		ram_d1					
+	sta		weaponVertPos					
 	stx		indy_h					
 	bcs		lf3c5					
 lf398
@@ -3166,8 +3214,8 @@ lf3a9
 	sta		ram_9d					
 	bne		lf3c5					
 lf3bf
-	lda		room_num				  
-	cmp		#ark_room					
+	lda		currentRoomId				  
+	cmp		#ID_ARK_ROOM					
 	bne		lf3d0					
 lf3c5
 	lda		#$d8					
@@ -3195,7 +3243,7 @@ lf3d0
 	bcc		lf3f2					
 	lda		#$78					
 lf3f2
-	bit		swcha					
+	bit		SWCHA					
 	bmi		lf407					
 	sta		inv_slot_lo,x				  
 lf3f9
@@ -3228,17 +3276,17 @@ lf415
 	sta		current_object					
 	cpy		#$90					
 	bne		lf437					
-	ldy		#mesa_top_room					
-	cpy		room_num				  
+	ldy		#ID_MESA_FIELD					
+	cpy		currentRoomId				  
 	bne		lf437					
 	lda		#$49					
 	sta		ram_8d					
 	lda		indy_y					
 	adc		#$09					
-	sta		ram_d1					
+	sta		weaponVertPos					
 	lda		indy_x					
 	adc		#$09					
-	sta		ram_cb					
+	sta		weaponHorizPos					
 lf437
 	lda		ram_8d					
 	bpl		lf454					
@@ -3252,7 +3300,7 @@ lf437
 
 lf44b
 	lda		#$70					
-	sta		ram_d1					
+	sta		weaponVertPos					
 	lsr								
 	sta		ram_8d					
 	bne		lf48b					
@@ -3261,7 +3309,7 @@ lf454
 	bvc		lf48b					
 	ldx		#$03					
 	jsr		lfcea					
-	lda		ram_cb					
+	lda		weaponHorizPos					
 	sec								
 	sbc		#$04					
 	cmp		indy_x					
@@ -3277,7 +3325,7 @@ lf472
 	lda		#$0f					
 	bne		lf481					
 lf476
-	lda		ram_d1					
+	lda		weaponVertPos					
 	sec								
 	sbc		#$05					
 	cmp		indy_y					
@@ -3307,7 +3355,7 @@ lf493
 	jmp.w	ram_84					
 
 lf4a6
-	sta		wsync					
+	sta		WSYNC					
 ;---------------------------------------
 	cpx		#$12					
 	bcc		lf4d0					
@@ -3326,9 +3374,9 @@ lf4bd
 	tay								
 	lda		lf9fc,y					
 lf4c3
-	sta		grp1					
+	sta		GRP1					
 	lda		indy_y					
-	sta		colup1					
+	sta		COLUP1					
 lf4c9
 	inx								
 	cpx		#$90					
@@ -3342,17 +3390,17 @@ lf4d0
 	bmi		lf4e5					
 	tay								
 	lda		lfb40,y					
-	sta		grp1					
+	sta		GRP1					
 	txa								
 	adc		frame_counter				   
 	asl								
-	sta		colup1					
+	sta		COLUP1					
 lf4e5
 	inx								
 	cpx		#$0f					
 	bcc		lf4a6					
 lf4ea
-	sta		wsync					
+	sta		WSYNC					
 ;---------------------------------------
 	cpx		#$20					
 	bcs		lf511					
@@ -3364,17 +3412,17 @@ lf4ea
 	bne		lf4fd					
 	ldy		#$ff					
 lf4fd
-	sty		grp0					
+	sty		GRP0					
 	txa								
 	eor		#$ff					
-	sta		colup0					
+	sta		COLUP0					
 lf504
 	inx								
 	cpx		#$1d					
 	bcc		lf4ea					
 	lda		#$00					
-	sta		grp0					
-	sta		grp1					
+	sta		GRP0					
+	sta		GRP1					
 	beq		lf4a6					
 lf511
 	txa								
@@ -3388,11 +3436,11 @@ lf51b
 	lsr								
 	tay								
 	lda		lfef0,y					
-	sta		grp0					
-	stx		colup0					
+	sta		GRP0					
+	stx		COLUP0					
 	inx								
 	bne		lf4ea					
-	lda		room_num				  
+	lda		currentRoomId				  
 	asl								
 	tax								
 	lda		lfc89,x					
@@ -3411,7 +3459,7 @@ lf535:
 lf53f
        ldx    #$00                    
        ldy    #$01                    
-       bit    cxp1fb                  
+       bit    CXP1FB                  
        bmi    lf55b                   
        bit    $b6                     
        bmi    lf55b                   
@@ -3506,7 +3554,7 @@ lf5de:
        dex                            
        eor    #$03                    
 lf5e7:
-       stx    refp0                   
+       stx    REFP0                   
        and    #$03                    
        asl                            
        asl                            
@@ -3596,7 +3644,7 @@ lf66d:
        lda    $82                     
        ror                            
        bcc    lf685                   
-       lda    swcha                   
+       lda    SWCHA                   
        sta    $92                     
        ror                            
        ror                            
@@ -3866,7 +3914,7 @@ lf80f:
        cpx    #$14                    
        bne    lf833                   
 lf81f:
-       lda    swcha                   
+       lda    SWCHA                   
        and    #$0f                    
        cmp    #$0d                    
        bne    lf833                   
@@ -3889,48 +3937,48 @@ lf83e
        bne    lf833                   
 
 draw_field
-	sta		wsync					
+	sta		WSYNC					
 ;---------------------------------------
-	sta		hmclr					
-	sta		cxclr					
+	sta		HMCLR					
+	sta		CXCLR					
 	ldy		#$ff					
-	sty		pf1						
-	sty		pf2						
-	ldx		room_num				  
-	lda		room_pf0_gfx,x					
-	sta		pf0						
+	sty		PF1						
+	sty		PF2						
+	ldx		currentRoomId				  
+	lda		room_PF0_gfx,x					
+	sta		PF0						
 	iny								
-	sta		wsync					
+	sta		WSYNC					
 ;---------------------------------------
-	sta		hmove					
-	sty		vblank					
+	sta		HMOVE					
+	sty		VBLANK					
 	sty		scan_line				   
 	cpx		#$04					
 	bne		lf865					
 	dey								
 lf865
-	sty		enabl					
+	sty		ENABL					
 	cpx		#$0d					
 	beq		lf874					
 	bit		ram_9d					
 	bmi		lf874					
-	ldy		swcha					
-	sty		refp1					
+	ldy		SWCHA					
+	sty		REFP1					
 lf874
-	sta		wsync					
+	sta		WSYNC					
 ;---------------------------------------
-	sta		hmove					
-	sta		wsync					
+	sta		HMOVE					
+	sta		WSYNC					
 ;---------------------------------------
-	sta		hmove					
-	ldy		room_num				  
-	sta		wsync					
+	sta		HMOVE					
+	ldy		currentRoomId				  
+	sta		WSYNC					
 ;---------------------------------------
-	sta		hmove					
-	lda		room_pf1_gfx,y					
-	sta		pf1						
-	lda		room_pf2_gfx,y					
-	sta		pf2						
+	sta		HMOVE					
+	lda		room_PF1_gfx,y					
+	sta		PF1						
+	lda		room_PF2_gfx,y					
+	sta		PF2						
 	ldx		lf9ee,y					
 	lda		lfae2+1,x				
 	pha								
@@ -3979,19 +4027,19 @@ lf8c6
 lf8cc
 	dec		enemy_y,x				 
 lf8ce
-	lda		enemy_x,x				 
-	cmp.wy	enemy_x,y				 
+	lda		ObjectPosX,x				 
+	cmp.wy	ObjectPosX,y				 
 	bne		lf8d9					
 	cpy		#$05					
 	bcs		lf8dd					
 lf8d9
 	bcs		lf8de					
-	inc		enemy_x,x				 
+	inc		ObjectPosX,x				 
 lf8dd
 	rts								
 
 lf8de
-	dec		enemy_x,x				 
+	dec		ObjectPosX,x				 
 	rts								
 
 lf8e1
@@ -4007,7 +4055,7 @@ lf8e7
 	rts								
 
 lf8f1
-	lda		enemy_x,x				 
+	lda		ObjectPosX,x				 
 	cmp		#$10					
 	bcc		lf8e7					
 	cmp		#$8e					
@@ -4277,7 +4325,7 @@ indy_sprite
 	.byte	$10,$00,$f0,$f0,$00,$f0,$f0,$00 ; $fa82 (*)
 	.byte	$f0,$f0,$00,$10,$10,$00,$f0		; $fa8a (*)
 
-room_pf1_gfx
+room_PF1_gfx
        .byte $00 ; |        | $fa91
        .byte $00 ; |        | $fa92
        .byte $e0 ; |xxx     | $fa93
@@ -4292,7 +4340,7 @@ room_pf1_gfx
        .byte $f0 ; |xxxx    | $fa9c
        .byte $f0 ; |xxxx    | $fa9d
 
-room_pf2_gfx
+room_PF2_gfx
        .byte $00 ; |        | $fa9e
        .byte $e0 ; |xxx     | $fa9f
        .byte $00 ; |        | $faa0
@@ -4308,7 +4356,7 @@ room_pf2_gfx
        .byte $00 ; |        | $faaa
        .byte $00 ; |        | $faab
 
-room_pf0_gfx
+room_PF0_gfx
        .byte $c0 ; |xx      | $faac
        .byte $f0 ; |xxxx    | $faad
        .byte $f0 ; |xxxx    | $faae
@@ -4898,11 +4946,11 @@ lfcef
 lfcf4
 	ror								
 	bcs		lfcf9					
-	dec		enemy_x,x				 
+	dec		ObjectPosX,x				 
 lfcf9
 	ror								
 	bcs		lfcfe					
-	inc		enemy_x,x				 
+	inc		ObjectPosX,x				 
 lfcfe
 	rts								
 
