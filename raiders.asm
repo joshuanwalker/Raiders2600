@@ -181,7 +181,7 @@ inv_slot6_lo	= $c1
 inv_slot6_hi	= $c2
 cursor_pos		= $c3
 ram_c4			= $c4
-current_object	= $c5
+selectedInventoryId	= $c5
 ram_c6			= $c6
 ram_c7			= $c7
 ObjectPosX			= $c8
@@ -440,34 +440,36 @@ weaponObjHit:
 handleIndyVsObjHit:
 	   ; Handles collision with Snakes, Tsetse Flies, or Items (Time Piece).
 	   bit	  CXP1FB				  	; Check P1 (Indy) vs Playfield/Ball Collision.
-	   bvc	  ld0ed					  
-	   ldx	  $81					  
-	   cpx	  #$06					  
-	   beq	  ld0e2					  
-	   lda	  current_object		  
+	   bvc	  HandleMesaSideSecretExit	; Branch if no collision (Bit 6 clear).				  
+	   ldx    currentRoomId				; Get Room ID.					  
+	   cpx    #ID_TEMPLE_ENTRANCE		; Are we in Temple Entrance?				  
+	   beq	  timePieceTouch			; If yes, handle Time Piece pickup.
+
+	   ; --- Flute Immunity Check ---
+	   lda	  selectedInventoryId		; Get currently selected item.  
 	   cmp	  #$02					  
-	   beq	  ld0ed					  
+	   beq	  HandleMesaSideSecretExit					  
 	   bit	  $93					  
 	   bpl	  ld0da					  
 	   lda	  $83					  
 	   and	  #$07					  
 	   ora	  #$80					  
 	   sta	  $a1					  
-	   bne	  ld0ed					  
+	   bne	  HandleMesaSideSecretExit					  
 
 ld0da:
-	   bvc	  ld0ed					  
+	   bvc	  HandleMesaSideSecretExit					  
 	   lda	  #$80					  
 	   sta	  $9d					  
-	   bne	  ld0ed					  
+	   bne	  HandleMesaSideSecretExit					  
 
-ld0e2:
+timePieceTouch:
 	   lda	  $d6					  
 	   cmp	  #$ba					  
-	   bne	  ld0ed					  
+	   bne	  HandleMesaSideSecretExit					  
 	   lda	  #$0f					  
 	   jsr	  PlaceItemInInventory					  
-ld0ed:
+HandleMesaSideSecretExit:
 	   ldx	  #$05					  
 	   cpx	  $81					  
 	   bne	  ld12d					  
@@ -1330,7 +1332,7 @@ ld638
 	bne		ld696					
 	ora		ram_8a					
 	sta		ram_8a					
-	ldx		current_object					
+	ldx		selectedInventoryId					
 	cpx		#$05					
 	beq		ld64c					
 	cpx		#$06					
@@ -1902,7 +1904,7 @@ ld9fe
 	bne		ld9f9					
 	ldy		#$06					
 	lda		#$0e					
-	cmp		current_object					
+	cmp		selectedInventoryId					
 	bne		ld9f9					
 	bit		INPT5|$30				
 	bmi		ld9f9					
@@ -1947,10 +1949,10 @@ lda3a
 	rts								
 
 check_key
-	lda		#<blank_gfx				; load blank space
+	lda		#<emptySprite				; load blank space
 	ldx		cursor_pos				; get at current position
 	sta		inv_slot_lo,x			; put in current slot
-	ldx		current_object			; is the current object
+	ldx		selectedInventoryId			; is the current object
 	cpx		#key_obj				; the key?
 	bcc		lda4f					
 	jsr		ShowItemAsNotTaken					
@@ -2049,7 +2051,7 @@ ldad8:
 	   dec	  $c4					  
 	   bne	  ldae2					  
 	   lda	  #$00					  
-	   sta	  current_object		  
+	   sta	  selectedInventoryId		  
 	   beq	  ldaf7					  
 
 ldae2:
@@ -2067,7 +2069,7 @@ ldaec:
 	   lsr							  
 	   lsr							  
 	   lsr							  
-	   sta	  current_object		  
+	   sta	  selectedInventoryId		  
 ldaf7
 	lda		#$0d					
 	sta		ram_a2					
@@ -2303,7 +2305,7 @@ ldcfc
 	lda		ram_c4					
 	bne		ldd0a					
 	stx		cursor_pos					
-	sty		current_object					
+	sty		selectedInventoryId					
 ldd0a
 	inc		ram_c4					
 	cpy		#$04					
@@ -2391,7 +2393,7 @@ clear_zp
 
 	dex								; x = $ff
 	stx		score					; reset score
-	lda		#>blank_gfx				; blank inventory
+	lda		#>emptySprite				; blank inventory
 	sta		inv_slot_hi				; slot 1
 	sta		inv_slot2_hi			; slot 2
 	sta		inv_slot3_hi			; slot 3
@@ -2400,15 +2402,15 @@ clear_zp
 	sta		inv_slot6_hi			; slot 6
 
 	;fill with copyright text
-	lda		#<copyright_gfx_1
+	lda		#<copyrightGfx0
 	sta		inv_slot_lo
-	lda		#<copyright_gfx_2
+	lda		#<copyrightGfx1
 	sta		inv_slot2_lo
-	lda		#<copyright_gfx_4
+	lda		#<copyrightGfx2
 	sta		inv_slot4_lo
-	lda		#<copyright_gfx_3
+	lda		#<copyrightGfx3
 	sta		inv_slot3_lo
-	lda		#<copyright_gfx_5
+	lda		#<copyrightGfx4
 	sta		inv_slot5_lo
 	lda		#ID_ARK_ROOM				; set "ark elevator room" (room 13)
 	sta		currentRoomId				; as current room
@@ -2423,7 +2425,7 @@ reset_vars
 	lsr								
 	lsr								
 	lsr								
-	sta		current_object					
+	sta		selectedInventoryId					
 	inc		ram_c4					
 	lda		#$00					
 	sta		inv_slot2_lo				  
@@ -3117,7 +3119,7 @@ lf314
 	lda		lfaee,y					
 	bne		lf2f4					
 lf320
-	lda		current_object					
+	lda		selectedInventoryId					
 	cmp		#$0f					
 	beq		lf330					
 	cmp		#$02					
@@ -3273,7 +3275,7 @@ lf415
 	lsr								
 	lsr								
 	lsr								
-	sta		current_object					
+	sta		selectedInventoryId					
 	cpy		#$90					
 	bne		lf437					
 	ldy		#ID_MESA_FIELD					
@@ -3389,7 +3391,7 @@ lf4d0
 	sbc		#$07					
 	bmi		lf4e5					
 	tay								
-	lda		lfb40,y					
+	lda		arkOfTheCovenantSprite,y					
 	sta		GRP1					
 	txa								
 	adc		frame_counter				   
@@ -3778,7 +3780,7 @@ lf728: ;map room stuff...
        lda    #$3a                    
        cmp    $cf                     
        bne    lf74a                   
-       lda    current_object          
+       lda    selectedInventoryId          
        cmp    #$07                    
        beq    lf74c                   
        lda    #$5e                    
@@ -3805,7 +3807,7 @@ lf760:
        bpl    lf78b                   
        cmp    #$08                    
        bcs    lf787                   
-       ldx    current_object          
+       ldx    selectedInventoryId          
        cpx    #$0e                    
        bne    lf787                   
        stx    ark_found               
@@ -4398,7 +4400,10 @@ lfaee
 
 
 ;inventory gfx...
-blank_gfx ; blank space
+inventorySprites
+
+
+emptySprite ; blank space
 	.byte	$00 ; |		   |			$fb00 (g)
 	.byte	$00 ; |		   |			$fb01 (g)
 	.byte	$00 ; |		   |			$fb02 (g)
@@ -4408,7 +4413,8 @@ blank_gfx ; blank space
 	.byte	$00 ; |		   |			$fb06 (g)
 	.byte	$00 ; |		   |			$fb07 (g)
 
-copyright_gfx_3: ;copyright3
+copyrightGfx3 ;copyright3
+    ; Used to display "(c) 1982 Atari" in the inventory strip
 	.byte	$71 ; | ###	  #|			$fb08 (g)
 	.byte	$41 ; | #	  #|			$fb09 (g)
 	.byte	$41 ; | #	  #|			$fb0a (g)
@@ -4418,6 +4424,7 @@ copyright_gfx_3: ;copyright3
 	.byte	$70 ; | ###	   |			$fb0e (g)
 	.byte	$00 ; |		   |			$fb0f (g)
 
+inventoryFluteSprite
 	.byte	$00 ; |		   |			$fb10 (g)
 	.byte	$01 ; |		  #|			$fb11 (g)
 	.byte	$3f ; |	 ######|			$fb12(g)
@@ -4427,6 +4434,7 @@ copyright_gfx_3: ;copyright3
 	.byte	$00 ; |		   |			$fb15 (g)
 	.byte	$00 ; |		   |			$fb16 (g)
 
+inventoryParachuteSprite
 	.byte	$77 ; | ### ###|			$fb17 (g)
 	.byte	$77 ; | ### ###|			$fb18 (g)
 	.byte	$77 ; | ### ###|			$fb19 (g)
@@ -4436,7 +4444,7 @@ copyright_gfx_3: ;copyright3
 	.byte	$77 ; | ### ###|			$fb1d (g)
 	.byte	$77 ; | ### ###|			$fb1e (g)
 
-lfb20: ;bag of gold
+inventoryCoinsSprite
 	.byte	$1c ; |	  ###  |			$fb1f (g)
 	.byte	$2a ; |	 # # # |			$fb20 (g)
 	.byte	$55 ; | # # # #|			$fb21 (g)
@@ -4446,6 +4454,7 @@ lfb20: ;bag of gold
 	.byte	$1c ; |	  ###  |			$fb25 (g)
 	.byte	$3e ; |	 ##### |			$fb26 (g)
 
+marketplaceGrenadeSprite
 	.byte	$3a ; |	 ### # |			$fb27 (g)
 	.byte	$01 ; |		  #|			$fb28 (g)
 	.byte	$7d ; | ##### #|			$fb29 (g)
@@ -4455,6 +4464,7 @@ lfb20: ;bag of gold
 	.byte	$3c ; |	 ####  |			$fb2d (g)
 	.byte	$30 ; |	 ##	   |			$fb2e (g)
 
+blackMarketGrenadeSprite
 	.byte	$2e ; |	 # ### |			$fb2f (g)
 	.byte	$40 ; | #	   |			$fb30 (g)
 	.byte	$5f ; | # #####|			$fb31 (g)
@@ -4464,6 +4474,7 @@ lfb20: ;bag of gold
 	.byte	$1e ; |	  #### |			$fb35 (g)
 	.byte	$06 ; |		## |			$fb36 (g)
 
+inventoryKeySprite
 	.byte	$00 ; |		   |			$fb37 (g)
 	.byte	$25 ; |	 #	# #|			$fb38 (g)
 	.byte	$52 ; | # #	 # |			$fb39 (g)
@@ -4473,7 +4484,7 @@ lfb20: ;bag of gold
 	.byte	$00 ; |		   |			$fb3d (g)
 	.byte	$00 ; |		   |			$fb3e (g)
 
-lfb40
+arkOfTheCovenantSprite
 	.byte	$ff ; |########|			$fb40 (g)
 	.byte	$66 ; | ##	## |			$fb41 (g)
 	.byte	$24 ; |	 #	#  |			$fb42 (g)
@@ -4483,7 +4494,7 @@ lfb40
 	.byte	$c3 ; |##	 ##|			$fb46 (g)
 	.byte	$e7 ; |###	###|			$fb47 (g)
 
-copyright_gfx_2: ;copyright2
+copyrightGfx1: ;copyright2
 	.byte	$17 ; |	  # ###|			$fb48 (g)
 	.byte	$15 ; |	  # # #|			$fb49 (g)
 	.byte	$15 ; |	  # # #|			$fb4a (g)
@@ -4493,6 +4504,7 @@ copyright_gfx_2: ;copyright2
 	.byte	$77 ; | ### ###|			$fb4e (g)
 	.byte	$00 ; |		   |			$fb4f (g)
 
+inventoryWhipSprite
 	.byte	$21 ; |	 #	  #|			$fb50 (g)
 	.byte	$11 ; |	  #	  #|			$fb51 (g)
 	.byte	$09 ; |	   #  #|			$fb52 (g)
@@ -4502,6 +4514,7 @@ copyright_gfx_2: ;copyright2
 	.byte	$28 ; |	 # #   |			$fb56 (g)
 	.byte	$10 ; |	  #	   |			$fb57 (g)
 
+inventoryShovelSprite
 	.byte	$01 ; |		  #|			$fb58 (g)
 	.byte	$03 ; |		 ##|			$fb59 (g)
 	.byte	$07 ; |		###|			$fb5a (g)
@@ -4511,7 +4524,7 @@ copyright_gfx_2: ;copyright2
 	.byte	$18 ; |	  ##   |			$fb5e (g)
 	.byte	$3c ; |	 ####  |			$fb5f (g)
 
-copyright_gfx_1: ;copyright1
+copyrightGfx0
 	.byte	$79 ; | ####  #|			$fb60 (g)
 	.byte	$85 ; |#	# #|			$fb61 (g)
 	.byte	$b5 ; |# ## # #|			$fb62 (g)
@@ -4521,6 +4534,7 @@ copyright_gfx_1: ;copyright1
 	.byte	$79 ; | ####  #|			$fb66 (g)
 	.byte	$00 ; |		   |			$fb67 (g)
 
+inventoryRevolverSprite
 	.byte	$00 ; |		   |			$fb68 (g)
 	.byte	$60 ; | ##	   |			$fb69 (g)
 	.byte	$60 ; | ##	   |			$fb6a (g)
@@ -4530,6 +4544,7 @@ copyright_gfx_1: ;copyright1
 	.byte	$5f ; | # #####|			$fb6e (g)
 	.byte	$00 ; |		   |			$fb6f (g)
 
+inventoryHeadOfRaSprite	
 	.byte	$08 ; |	   #   |			$fb70 (g)
 	.byte	$1c ; |	  ###  |			$fb71 (g)
 	.byte	$22 ; |	 #	 # |			$fb72 (g)
@@ -4539,7 +4554,7 @@ copyright_gfx_1: ;copyright1
 	.byte	$1c ; |	  ###  |			$fb76 (g)
 	.byte	$08 ; |	   #   |			$fb77 (g)
 
-lfb78: ; unopen pocket watch
+inventoryTimepieceSprite ; unopen pocket watch
 	.byte	$7f ; | #######|			$fb78 (g)
 	.byte	$5d ; | # ### #|			$fb79 (g)
 	.byte	$77 ; | ### ###|			$fb7a (g)
@@ -4549,6 +4564,7 @@ lfb78: ; unopen pocket watch
 	.byte	$08 ; |	   #   |			$fb7e (g)
 	.byte	$1c ; |	  ###  |			$fb7f (g)
 
+inventoryAnkhSprite
 	.byte	$3e ; |	 ##### |			$fb80 (g)
 	.byte	$1c ; |	  ###  |			$fb81 (g)
 	.byte	$49 ; | #  #  #|			$fb82 (g)
@@ -4558,6 +4574,7 @@ lfb78: ; unopen pocket watch
 	.byte	$36 ; |	 ## ## |			$fb86 (g)
 	.byte	$1c ; |	  ###  |			$fb87 (g)
 
+inventoryChaiSprite
 	.byte	$16 ; |	  # ## |			$fb88 (g)
 	.byte	$0b ; |	   # ##|			$fb89 (g)
 	.byte	$0d ; |	   ## #|			$fb8a (g)
@@ -4567,6 +4584,7 @@ lfb78: ; unopen pocket watch
 	.byte	$64 ; | ##	#  |			$fb8e (g)
 	.byte	$04 ; |		#  |			$fb8f (g)
 
+inventoryHourGlassSprite
 	.byte	$77 ; | ### ###|			$fb90 (g)
 	.byte	$36 ; |	 ## ## |			$fb91 (g)
 	.byte	$14 ; |	  # #  |			$fb92 (g)
@@ -4576,7 +4594,7 @@ lfb78: ; unopen pocket watch
 	.byte	$36 ; |	 ## ## |			$fb96 (g)
 	.byte	$77 ; | ### ###|			$fb97 (g)
 
-lfb98: ;timepiece bitmaps...
+inventory12_00: ;timepiece bitmaps...
 	.byte	$3e ; |	 ##### |			$fb98 (g)
 	.byte	$41 ; | #	  #|			$fb99 (g)
 	.byte	$41 ; | #	  #|			$fb9a (g)
@@ -4586,6 +4604,7 @@ lfb98: ;timepiece bitmaps...
 	.byte	$3e ; |	 ##### |			$fb9e (g)
 	.byte	$1c ; |	  ###  |			$fb9f (g)
 
+inventory01_00
 	.byte	$3e ; |	 ##### |			$fba0 (g)
 	.byte	$41 ; | #	  #|			$fba1 (g)
 	.byte	$41 ; | #	  #|			$fba2 (g)
@@ -4595,6 +4614,7 @@ lfb98: ;timepiece bitmaps...
 	.byte	$3e ; |	 ##### |			$fba6 (g)
 	.byte	$1c ; |	  ###  |			$fba7 (g)
 
+inventory03_00
 	.byte	$3e ; |	 ##### |			$fba8 (g)
 	.byte	$41 ; | #	  #|			$fba9 (g)
 	.byte	$41 ; | #	  #|			$fbaa (g)
@@ -4604,6 +4624,7 @@ lfb98: ;timepiece bitmaps...
 	.byte	$3e ; |	 ##### |			$fbae (g)
 	.byte	$1c ; |	  ###  |			$fbaf (g)
 
+inventory05_00
 	.byte	$3e ; |	 ##### |			$fbb0 (g)
 	.byte	$43 ; | #	 ##|			$fbb1 (g)
 	.byte	$45 ; | #	# #|			$fbb2 (g)
@@ -4613,6 +4634,7 @@ lfb98: ;timepiece bitmaps...
 	.byte	$3e ; |	 ##### |			$fbb6 (g)
 	.byte	$1c ; |	  ###  |			$fbb7 (g)
 
+inventory06_00
 	.byte	$3e ; |	 ##### |			$fbb8 (g)
 	.byte	$49 ; | #  #  #|			$fbb9 (g)
 	.byte	$49 ; | #  #  #|			$fbba (g)
@@ -4622,6 +4644,7 @@ lfb98: ;timepiece bitmaps...
 	.byte	$3e ; |	 ##### |			$fbbe (g)
 	.byte	$1c ; |	  ###  |			$fbbf (g)
 
+inventory07_00
 	.byte	$3e ; |	 ##### |			$fbc0 (g)
 	.byte	$61 ; | ##	  #|			$fbc1 (g)
 	.byte	$51 ; | # #	  #|			$fbc2 (g)
@@ -4631,6 +4654,7 @@ lfb98: ;timepiece bitmaps...
 	.byte	$3e ; |	 ##### |			$fbc6 (g)
 	.byte	$1c ; |	  ###  |			$fbc7 (g)
 
+inventory09_00
 	.byte	$3e ; |	 ##### |			$fbc8 (g)
 	.byte	$41 ; | #	  #|			$fbc9 (g)
 	.byte	$41 ; | #	  #|			$fbca (g)
@@ -4640,6 +4664,7 @@ lfb98: ;timepiece bitmaps...
 	.byte	$3e ; |	 ##### |			$fbce (g)
 	.byte	$1c ; |	  ###  |			$fbcf (g)
 
+inventory11_00
 	.byte	$3e ; |	 ##### |			$fbd0 (g)
 	.byte	$41 ; | #	  #|			$fbd1 (g)
 	.byte	$41 ; | #	  #|			$fbd2 (g)
@@ -4649,7 +4674,7 @@ lfb98: ;timepiece bitmaps...
 	.byte	$3e ; |	 ##### |			$fbd6 (g)
 	.byte	$1c ; |	  ###  |			$fbd7 (g)
 
-copyright_gfx_4: ;copyright4
+copyrightGfx2 ;copyright2
 	.byte	$49 ; | #  #  #|			$fbd8 (g)
 	.byte	$49 ; | #  #  #|			$fbd9 (g)
 	.byte	$49 ; | #  #  #|			$fbda (g)
@@ -4659,7 +4684,7 @@ copyright_gfx_4: ;copyright4
 	.byte	$be ; |# ##### |			$fbde (g)
 	.byte	$00 ; |		   |			$fbdf (g)
 
-copyright_gfx_5: ;copyright5
+copyrightGfx4: ;copyright5
 	.byte	$55 ; | # # # #|			$fbe0 (g)
 	.byte	$55 ; | # # # #|			$fbe1 (g)
 	.byte	$55 ; | # # # #|			$fbe2 (g)
@@ -4668,6 +4693,14 @@ copyright_gfx_5: ;copyright5
 	.byte	$55 ; | # # # #|			$fbe5 (g)
 	.byte	$99 ; |#  ##  #|			$fbe6 (g)
 	.byte	$00 ; |		   |			$fbe7 (g)
+
+;------------------------------------------------------------
+; OverscanSpecialSoundEffectTable
+;
+; Frequency data for the "Main Theme" (Raiders March).
+; Played when channel control is $9C (Pure Tone).
+; Indexed by `soundEffectTimer` (counts down from $17).
+;
 
 lfbe8
 	.byte	$14								; $fbe8 (d)
