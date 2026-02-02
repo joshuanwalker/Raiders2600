@@ -145,7 +145,7 @@ ram_89			= $89; (c)
 playerInputState			= $8a
 arkDigRegionId			= $8b
 arkLocationRegionId			= $8c
-ram_8d			= $8d
+eventState			= $8d
 m0PosYShadow			= $8e
 weaponStatus			= $8f
 ram_90			= $90
@@ -219,8 +219,8 @@ objPosY			= $d2
 objectState			= $d4
 snakePosY			= $d5
 timepieceGfxPtrs			= $d6
-ram_d7			= $d7
-ram_d8			= $d8
+snakeMotionPtr			= $d7
+timepieceSpriteDataPtr			= $d8
 indy_anim		= $d9
 ram_da			= $da
 indy_h			= $db
@@ -1180,7 +1180,7 @@ HandleEasterEgg
 	bit		screenEventState					
 	bvs		advanceArkSeq				; If bit 6 set, jump to alternate path	
 continueArkSeq
-	jmp		ld51c					
+	jmp		checkMajorEventDone					
 
 advanceArkSeq
 	lda		frameCount					; get current frame count
@@ -1280,82 +1280,89 @@ configSnake
 	lda		objectState					
 	and		#$03						; Frame 0-3
 	tax								
-	lda		snakeMoveTableLSB,x					
-	sta		timepieceGfxPtrs					
-	lda		#$fa					
-	sta		ram_d7					
+	lda		snakeMoveTableLSB,x			; Get Low Byte of Motion Table for this frame		
+	sta		timepieceGfxPtrs			; Store in Pointer (reused $D6)		
+	lda		##>snakeMotionTable0		; High Byte is fixed 			
+	sta		snakeMotionPtr				; Store High Byte
+
+	; Calculate Vertical Offset/Sprite Index	
 	lda		objectState					
 	lsr								
 	lsr								
 	tax								
-	lda		snakeMoveTableLSB,x					
+	lda		snakeMoveTableLSB,x			; Look up another table value		
 	sec								
-	sbc		#$08					
-	sta		ram_d8					
-ld51c
-	bit		majorEventFlag					
-	bpl		ld523					
-	jmp		ld802					
+	sbc		#$08						; Subtract 8 lines (Height of snake)
+	sta		timepieceSpriteDataPtr		; Store as Sprite Data Pointer			
 
-ld523
+checkMajorEventDone
+	bit		majorEventFlag				
+	bpl		checkGameScriptTimer		; If major event not complete
+										; continue sequence	
+	jmp		switchToBank1AndGo			; Else, jump to end	
+
+checkGameScriptTimer
 	bit		eventTimer					
-	bpl		ld52a					
-	jmp		ld78c					
+	bpl		branchOnFrameParity			; If timer still counting or inactive, proceed		
+	jmp		setIndyStationarySprite		; Else, jump to alternate script path			
 
-ld52a
-	lda		frameCount				
-	ror								
-	bcc		ld532					
-	jmp		ld627					
+branchOnFrameParity
+	lda		frameCount					; get current frame count
+	ror									; Test even/odd frame
+	bcc		gatePlayerTriggeredEvent	; If even, continue next step				
+	jmp		clearItemUseOnButtonRelease	; If odd, do something else				
 
-ld532
-	ldx		currentRoomId					
-	cpx		#ID_MESA_SIDE					
-	beq		ld579					
-	bit		ram_8d					
-	bvc		ld56e					
-	ldx		weaponPosX					
+gatePlayerTriggeredEvent
+	ldx		currentRoomId				; get the current screen id	
+	cpx		#ID_MESA_SIDE				
+	beq		stopWeaponEvent				; If on Mesa Side, use a different handler		
+	bit		eventState					
+	bvc		checkInputAndStateForEvent	; If no event/collision flag set, skip				
+	ldx		weaponPosX					; get bullet or whip horizontal position
 	txa								
 	sec								
 	sbc		indyPosX					
-	tay								
-	lda		SWCHA					
-	ror								
-	bcc		ld55b					
-	ror								
-	bcs		ld579					
+	tay									; Y = horizontal distance between Indy
+										; and projectile
+	lda		SWCHA						; read joystick values
+	ror									; shift right joystick UP value to carry
+	bcc		checkWeaponRangeAndDir		; branch if right joystick pushing up		
+	ror									; shift right joystick DOWN value to carry
+	bcs		stopWeaponEvent				; branch if right joystick not pushed down	
 	cpy		#$09					
-	bcc		ld579					
-	tya								
-	bpl		ld556					
-ld553
+	bcc		stopWeaponEvent				; If too close to projectile, skip	
+	tya									
+	bpl		NudgeProjectileLeft			; If projectile is to the right of Indy,
+										; continue		
+NudgeProjectileRight
 	inx								
-	bne		ld557					
-ld556
+	bne		setProjectilePos					
+NudgeProjectileLeft
 	dex								
-ld557
+setProjectilePos
 	stx		weaponPosX					
-	bne		ld579					
-ld55b
+	bne		stopWeaponEvent				; Exit if projectile has nonzero position		
+checkWeaponRangeAndDir
 	cpx		#$75					
-	bcs		ld579					
+	bcs		stopWeaponEvent				; Right bound check
 	cpx		#$1a					
-	bcc		ld579					
+	bcc		stopWeaponEvent				; Left bound check	
 	dey								
 	dey								
 	cpy		#$07					
-	bcc		ld579					
+	bcc		stopWeaponEvent				; Too close vertically	
 	tya								
-	bpl		ld553					
-	bmi		ld556					
-ld56e
+	bpl		NudgeProjectileRight		; If projectile right of Indy, nudge right			
+	bmi		NudgeProjectileLeft			; Else, nudge left
+			
+checkInputAndStateForEvent
 	bit		mesaSideState					
-	bmi		ld579					
+	bmi		stopWeaponEvent				; If flag set, skip	
 	bit		playerInputState					
 	bpl		ld57c					
 	ror								
 	bcc		ld57c					
-ld579
+stopWeaponEvent
 	jmp		ld5e0					
 
 ld57c
@@ -1364,7 +1371,7 @@ ld57c
 	sta		ram_85					
 	and		#$0f					
 	cmp		#$0f					
-	beq		ld579					
+	beq		stopWeaponEvent					
 	sta		indyDir					
 	jsr		getMoveDir					 
 	ldx		currentRoomId					
@@ -1462,7 +1469,7 @@ ld620
 ld624
 	jmp		ld777					
 
-ld627
+clearItemUseOnButtonRelease
 	bit		grenadeState					
 	bmi		ld624					
 	bit		INPT5|$30				
@@ -1520,7 +1527,7 @@ ld687
 	sta		indyPosY					
 	bpl		ld6d2					
 ld68b
-	bit		ram_8d					
+	bit		eventState					
 	bvc		ld6d5					
 	bit		CXM1FB|$30				
 	bmi		ld699					
@@ -1564,7 +1571,7 @@ ld6ac
 	stx		weaponPosX					
 	stx		indyPosX					
 	lda		#$46					
-	sta		ram_8d					
+	sta		eventState					
 ld6d2
 	jmp		ld773					
 
@@ -1604,7 +1611,7 @@ ld6f7
 	lda		#$46					
 	sta		indyPosY					
 	sta		weaponPosY					
-	sta		ram_8d					
+	sta		eventState					
 	lda		#$1d					
 	sta		objState					
 	bne		ld777					
@@ -1633,7 +1640,7 @@ ld747
 	cpx		#$0a					
 	bne		ld777					
 	ora		#$80					
-	sta		ram_8d					
+	sta		eventState					
 	ldy		#$04					
 	ldx		#$05					
 	ror								
@@ -1675,7 +1682,7 @@ ld783
 	and		#$0f					
 	cmp		#$0f					
 	bne		ld796					
-ld78c
+setIndyStationarySprite
 	lda		#$58					
 ld78e
 	sta		indy_anim				
@@ -1705,7 +1712,7 @@ ld7b2
 	cpx		#ID_MESA_FIELD					
 	beq		ld7bc					
 	cpx		#$0a					
-	bne		ld802					
+	bne		switchToBank1AndGo					
 ld7bc
 	lda		frameCount				
 	bit		playerInputState					
@@ -1714,14 +1721,14 @@ ld7bc
 ld7c3
 	ldy		indyPosY					
 	cpy		#$27					
-	beq		ld802					
+	beq		switchToBank1AndGo					
 	ldx		objState					
 	bcs		ld7e8					
-	beq		ld802					
+	beq		switchToBank1AndGo					
 	inc		indyPosY					
 	inc		weaponPosY					
 	and		#$02					
-	bne		ld802					
+	bne		switchToBank1AndGo					
 	dec		objState					
 	inc		objectPosY					 
 	inc		m0PosY				
@@ -1729,15 +1736,15 @@ ld7c3
 	inc		objectPosY					 
 	inc		m0PosY				
 	inc		objPosY					
-	jmp		ld802					
+	jmp		switchToBank1AndGo					
 
 ld7e8
 	cpx		#$50					
-	bcs		ld802					
+	bcs		switchToBank1AndGo					
 	dec		indyPosY					
 	dec		weaponPosY					
 	and		#$02					
-	bne		ld802					
+	bne		switchToBank1AndGo					
 	inc		objState					
 	dec		objectPosY					 
 	dec		m0PosY				
@@ -1745,7 +1752,7 @@ ld7e8
 	dec		objectPosY					 
 	dec		m0PosY				
 	dec		objPosY					
-ld802
+switchToBank1AndGo
 	lda		#$28					
 	sta		ram_88					
 	lda		#$f5					
@@ -1812,7 +1819,7 @@ ld85e
 	bne		ld85e					
 ld873
 	lda		#$fc					
-	sta		ram_d7					
+	sta		snakeMotionPtr					
 	rts								
 
 InitializeScreenState
@@ -1926,7 +1933,7 @@ ld93e
 	cpx		#$06					
 	bne		ld968					
 	ldy		#$00					
-	sty		ram_d8					
+	sty		timepieceSpriteDataPtr					
 	ldy		#$40					
 	sty		dungeonGfxData					
 	bne		ld958					
@@ -1934,7 +1941,7 @@ ld950
 	ldy		#$ff					
 	sty		dungeonGfxData					
 	iny								
-	sty		ram_d8					
+	sty		timepieceSpriteDataPtr					
 	iny								
 ld958
 	sty		dungeonBlock1					
@@ -2319,8 +2326,11 @@ ldbe1
 ldbee
 	.byte	$00,$51,$a1,$00,$51,$a2,$c1,$e5 ; $dbee (*)
 	.byte	$e0,$00,$00,$00,$00				; $dbf6 (*)
+
 snakeMoveTableLSB
-	.byte	$72,$7a,$8a,$82					; $dbfb (*)
+	.byte <snakeMotionTable0,<snakeMotionTable1,<snakeMotionTable3,<snakeMotionTable2
+	
+
 
 snakePosXOffsetTable:
 	.byte	$fe,$fa,$02,$06					; $dbff (*)
@@ -2802,12 +2812,12 @@ lf01a
 	tax								
 	cpx		snakePosY					
 	bcc		lf02d					
-	ldx		ram_d8					
+	ldx		timepieceSpriteDataPtr					
 	lda		#$00					
 	beq		lf031					
 lf02d
 	lda		dungeonGfxData,x				
-	ldx		ram_d8					
+	ldx		timepieceSpriteDataPtr					
 lf031
 	sta		PF1,x					
 lf033
@@ -2910,7 +2920,7 @@ lf0b5
 	tay								
 	cmp		#$08					
 	bcc		lf0fb					
-	lda		ram_d8					
+	lda		timepieceSpriteDataPtr					
 	sta		timepieceGfxPtrs					
 lf0ca
 	lda		(timepieceGfxPtrs),y				
@@ -3337,7 +3347,7 @@ lf365
 	asl								
 	sta		timepieceGfxPtrs					
 	lda		#$fd					
-	sta		ram_d7					
+	sta		snakeMotionPtr					
 lf371
 	ldx		#$02					
 lf373
@@ -3396,7 +3406,7 @@ lf3c5
 	jmp		lf493					
 
 lf3d0
-	bit		ram_8d					
+	bit		eventState					
 	bvs		lf437					
 	bit		mesaSideState					
 	bmi		lf437					
@@ -3451,7 +3461,7 @@ lf415
 	cpy		currentRoomId					
 	bne		lf437					
 	lda		#$49					
-	sta		ram_8d					
+	sta		eventState					
 	lda		indyPosY					
 	adc		#$09					
 	sta		weaponPosY					
@@ -3459,12 +3469,12 @@ lf415
 	adc		#$09					
 	sta		weaponPosX					
 lf437
-	lda		ram_8d					
+	lda		eventState					
 	bpl		lf454					
 	cmp		#$bf					
 	bcs		lf44b					
 	adc		#$10					
-	sta		ram_8d					
+	sta		eventState					
 	ldx		#$03					
 	jsr		lfcea					
 	jmp		lf48b					
@@ -3473,10 +3483,10 @@ lf44b
 	lda		#$70					
 	sta		weaponPosY					
 	lsr								
-	sta		ram_8d					
+	sta		eventState					
 	bne		lf48b					
 lf454
-	bit		ram_8d					
+	bit		eventState					
 	bvc		lf48b					
 	ldx		#$03					
 	jsr		lfcea					
@@ -3503,8 +3513,8 @@ lf476
 	bne		lf487					
 	lda		#$0c					
 lf481
-	eor		ram_8d					
-	sta		ram_8d					
+	eor		eventState					
+	sta		eventState					
 	bne		lf48b					
 lf487
 	cmp		#$4a					
@@ -4489,12 +4499,42 @@ indy_sprite
 	.byte	$18 ; |		##   |			$fa70 (g)
 	.byte	$00 ; |		|			$fa71 (g)
 
+snakeMotionTable0:
+	.byte HMOVE_L1
+	.byte HMOVE_L1
+	.byte HMOVE_0
+	.byte HMOVE_R1
+	.byte HMOVE_R1
+	.byte HMOVE_0
+	.byte HMOVE_L1
+	.byte HMOVE_0
+snakeMotionTable1:
+	.byte HMOVE_L1
+	.byte HMOVE_L1
+	.byte HMOVE_0
+	.byte HMOVE_R1
+	.byte HMOVE_0
+	.byte HMOVE_L1
+	.byte HMOVE_L1
+	.byte HMOVE_0
+snakeMotionTable2:
+	.byte HMOVE_L1
+	.byte HMOVE_0
+	.byte HMOVE_R1
+	.byte HMOVE_R1
+	.byte HMOVE_0
+	.byte HMOVE_R1
+	.byte HMOVE_R1
+	.byte HMOVE_0
+snakeMotionTable3:
+	.byte HMOVE_R1
+	.byte HMOVE_R1
+	.byte HMOVE_0
+	.byte HMOVE_L1
+	.byte HMOVE_L1
+	.byte HMOVE_0
+	.byte HMOVE_R1
 
-
-	.byte	$10,$10,$00,$f0,$f0,$00,$10,$00 ; $fa72 (*)
-	.byte	$10,$10,$00,$f0,$00,$10,$10,$00 ; $fa7a (*)
-	.byte	$10,$00,$f0,$f0,$00,$f0,$f0,$00 ; $fa82 (*)
-	.byte	$f0,$f0,$00,$10,$10,$00,$f0		; $fa8a (*)
 
 room_PF1_gfx
        .byte $00 ; |        | $fa91
