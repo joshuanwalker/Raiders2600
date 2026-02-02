@@ -310,7 +310,7 @@ eventState				ds 1						;= $8D ; General state machine for room-specific events
 m0VertPosShadow			ds 1						;= $8E ; Shadow copy of Missile 0 Vertical Position
 weaponStatus			ds 1						;= $8F ; Tracks Whip/Revolver state (Active/Inactive)
 unused_90				ds 1						;= $90 ; Unused / Padding
-movementDirection		ds 1   						;= $91 ; Current movement direction for objects (0-3 usually)
+moveDirection		ds 1   						;= $91 ; Current movement direction for objects (0-3 usually)
 inputFlags				ds 1  						;= $92 ; Processed input flags (Up/Down/Left/Right)
 screenEventState		ds 1 						;= $93 ; State for screen transitions or major visual changes
 playfieldControlFlags	ds 1 						;= $94 ; Flags controlling playfield rendering (Walls/Obstacles)
@@ -357,16 +357,16 @@ pickupItemsStatus		ds 1						;= $C7
 objectHorizPositions	ds 4						;= $C8
 ;--------------------------------------
 p0HorizPos				= objectHorizPositions		;= $C8
-indyHorizPos			= objectHorizPositions + 1 	;= $C9
+indyPosX			= objectHorizPositions + 1 	;= $C9
 m0HorizPos				= objectHorizPositions + 2	;= $CA
 weaponHorizPos			= objectHorizPositions + 3 	;= $CB
 ;--------------------------------------
 indyHorizPosForced		ds 1 						;= $CC
 unused_CD_WriteOnly		ds 1 						;= $CD
 
-objectVertPositions
+objectPosY
 p0VertPos				ds 1 		;= $CE	
-indyVertPos				ds 1 	    ;= $CF
+indyPosY				ds 1 	    ;= $CF
 m0VertPos				ds 1 	    ;= $D0
 weaponVertPos			ds 1 	    ;= $D1
 snakeDungeonY			ds 1 		;= $D2
@@ -600,16 +600,16 @@ HandleMesaSideSecretExit:
 	bne CheckAndDispatchCollisions	; branch if Indy not in MESA_SIDE
 	bit CXM0P						; check missile 0 and player collisions
 	bpl HandleMesaSideFallCheck		; branch if Indy not entering WELL_OF_SOULS
-	stx indyVertPos					; set Indy vertical position (i.e. x = 5)
+	stx indyPosY					; set Indy vertical position (i.e. x = 5)
 	lda #ID_WELL_OF_SOULS
 	sta currentRoomId				; move Indy to the Well of Souls
 	jsr InitializeScreenState
 	lda #(XMAX / 2) - 4
-	sta indyHorizPos				; place Indy in horizontal middle
+	sta indyPosX				; place Indy in horizontal middle
 	bne .clearCollisionRegisters	; unconditional branch
 
 HandleMesaSideFallCheck:
-	ldx indyVertPos					; get Indy's vertical position
+	ldx indyPosY					; get Indy's vertical position
 	cpx #$4F						; Compare it to 0x4F (79 in decimal)
 	bcc CheckAndDispatchCollisions	; If Indy is above this threshold, branch to CheckAndDispatchCollisions (don't fall)
 	lda #ID_VALLEY_OF_POISON ; Otherwise, load the screen ID for the Valley of Poison
@@ -618,9 +618,9 @@ HandleMesaSideFallCheck:
 	lda savedThiefVertPos		  ; Load saved vertical position? (context-dependent, possibly return point)
 	sta objectVertOffset		  ; Save it as object vertical state? Possibly thief state
 	lda savedIndyVertPos		  ; Load saved vertical position (likely for Indy)
-	sta indyVertPos		  ; Set Indy's vertical position
+	sta indyPosY		  ; Set Indy's vertical position
 	lda savedIndyHorizPos		  ; Load saved horizontal position
-	sta indyHorizPos			; Set Indy's horizontal position
+	sta indyPosX			; Set Indy's horizontal position
 	lda #$FD		  ; Load bitmask value
 	and mesaSideState		  ; Apply bitmask to a status/control flag
 	sta mesaSideState		  ; Store the result back
@@ -633,7 +633,7 @@ CheckAndDispatchCollisions:
 	bit CXPPMM						; check player / missile collisions
 	bmi .branchToPlayerCollisionRoutine			;branch if players collided
 	ldx #$00		  ;2
-	stx movementDirection		  ; Clear temporary state or flags at movementDirection
+	stx moveDirection		  ; Clear temporary state or flags at moveDirection
 	dex			  ; X = $FF
 	stx digAttemptCounter		  ; Set digAttemptCounter to $FF
 	rol pickupStatusFlags 
@@ -676,7 +676,7 @@ ContinueToCollisionDispatch:
 ; 4. If all true, sets resetEnableFlag to a positive value, which triggers the End Game sequence.
 ;
 PlayerCollisionsInWellOfSouls
-	lda indyVertPos					; get Indy's vertical position
+	lda indyPosY					; get Indy's vertical position
 	cmp #63   ; Compare it to 63 (Depth Threshold)
 	bcc .takeAwayShovel				; If Indy is above this threshold, he hasn't reached the Ark yet  take away shovel
 	lda diggingState		  ; Load action/state variable
@@ -746,10 +746,10 @@ PlayerCollisionsInMesaSide
 	bit mesaSideState		  ;Check event state flags
 	bvs ContinueGameAfterParachute	  ;If bit 6 is set, skip parachute logic and resume normal game loop
 	bpl ContinueGameAfterParachute	  ; If bit 7 is clear, also skip parachute logic
-	lda indyHorizPos			; Get Indy's horizontal position
+	lda indyPosX			; Get Indy's horizontal position
 	cmp #$2B		  ; Check if Indy is within parachute landing zone (left bound)
 	bcc RemoveParachuteAfterLanding	  ; If left of zone, remove parachute and exit
-	ldx indyVertPos					; get Indy's vertical position
+	ldx indyPosY					; get Indy's vertical position
 	cpx #39 ; Check if he is high enough
 	bcc RemoveParachuteAfterLanding	  ; If not, remove parachute and exit
 	cpx #43 ; Check if he is too low
@@ -774,15 +774,15 @@ PlayerCollisionsInMarketplace
 	
 	; --- Wall/Crowd Interaction Logic ---
 	; If Indy walks into the "Walls" (likely the decorative stalls or crowd):
-	ldy indyVertPos					; get Indy's vertical position
+	ldy indyPosY					; get Indy's vertical position
 	cpy #$3A		  				; Check Vertical Zone (Row $3A)
 	bcc CheckIndyVerticalForMarketplaceFlags	; If Y < $3A, Check specific "shoving" zones.
 	
 	; Zone 1: Below $3A (Bottom of screen)
 	lda #$E0		  				; Mask Top 3 bits
-	and movementDirection		  	; Preserve current movement
+	and moveDirection		  	; Preserve current movement
 	ora #$43		   				; Force bits 6, 1, and 0 ($43).
-	sta movementDirection		  	; This likely sets "Bumping/Shoving" flags or modifies movement vector.
+	sta moveDirection		  	; This likely sets "Bumping/Shoving" flags or modifies movement vector.
 	jmp	 ScreenLogicDispatcher	  	; Resume
 	
 CheckIndyVerticalForMarketplaceFlags:
@@ -792,7 +792,7 @@ CheckIndyVerticalForMarketplaceFlags:
 ClearMarketplaceFlags:
 	; Zone 2: Between $20 and $3A (Middle "Clear" path?)
 	lda #$00		  
-	sta movementDirection		   	; Clear movement modification flags.
+	sta moveDirection		   	; Clear movement modification flags.
 	jmp	 ScreenLogicDispatcher	  	; Resume
 	
 SetMarketplaceFlagsIfInRange:
@@ -801,9 +801,9 @@ SetMarketplaceFlagsIfInRange:
 	
 	; Zone 3: Between $09 and $20 (Top Stalls?)
 	lda #$E0		  				; Mask Top 3 bits
-	and movementDirection		  	
+	and moveDirection		  	
 	ora #$42		  				; Force bits 6 and 1 ($42).
-	sta movementDirection		  	; Apply "Shove" physics.
+	sta moveDirection		  	; Apply "Shove" physics.
 	jmp	 ScreenLogicDispatcher	  	; Resume
 	
 .indyTouchingMarketplaceBaskets
@@ -811,7 +811,7 @@ SetMarketplaceFlagsIfInRange:
 	; If we're not touching walls, we check which basket Indy is touching.
 	; The item received depends on WHICH basket (Position) and WHEN (Timer? for Ra).
 
-	lda indyVertPos					; get Indy's vertical position
+	lda indyPosY					; get Indy's vertical position
 	cmp #$3A		  				; Check Y-pos against Basket Row
 	bcc .indyNotTouchingBottomBasket; If Y < $3A, check Top Baskets.
 	
@@ -821,7 +821,7 @@ SetMarketplaceFlagsIfInRange:
 	
 .indyNotTouchingBottomBasket
 	; Top Row Baskets (check X position)
-	lda indyHorizPos				; get Indy's horizontal position
+	lda indyPosX				; get Indy's horizontal position
 	cmp #$4C		  				; Check Middle/Right boundary
 	bcs .indyTouchingRightBasket	; If X >= $4C, it's the Right Basket.
 	
@@ -860,16 +860,16 @@ ExitGiveItemRoutine:
 PlayerCollisionsInBlackMarket
 	bit CXP1FB						; check Indy collision with playfield
 	bmi CheckIndyPositionForMarketFlags						; branch if Indy collided with playfield
-	lda indyHorizPos					; get Indy's horizontal position
+	lda indyPosX					; get Indy's horizontal position
 	cmp #$50		  ;2
 	bcs ChooseMarketplaceItemByTime	  ;2
-	dec indyHorizPos					; move Indy left one pixel
+	dec indyPosX					; move Indy left one pixel
 	rol blackMarketState				; rotate Black Market state left
 	clc								; clear carry
 	ror blackMarketState				; rotate right to show Indy carrying coins
 ResetScreenInteractionFlags:
 	lda #$00		  ;2
-	sta movementDirection		  ;3
+	sta moveDirection		  ;3
 ResumeScreenLogic:
 	jmp	 ScreenLogicDispatcher	  ;3
 	
@@ -882,14 +882,14 @@ ChooseMarketplaceItemByTime:
 	bne .checkToAddItemToInventory	; Always branch (unconditional jump)
 	
 CheckIndyPositionForMarketFlags:
-	ldy indyVertPos					; get Indy's vertical position
+	ldy indyPosY					; get Indy's vertical position
 	cpy #68
 	bcc CheckMiddleMarketZone	  ; If Indy is above row 68, jump to alternate logic
 	lda #$E0		  ;2
-	and movementDirection		  ; Mask movementDirection to preserve top 3 bits 
+	and moveDirection		  ; Mask moveDirection to preserve top 3 bits 
 	ora #$0B		  ; Set bits 0, 1, and 3 (00001011) 
 ApplyBlackMarketInteractionFlags:
-	sta movementDirection		  ; Store the updated value back into movementDirection
+	sta moveDirection		  ; Store the updated value back into moveDirection
 	bne ResumeScreenLogic						 ; Always branch to resume game logic
 	
 CheckMiddleMarketZone:
@@ -898,12 +898,12 @@ CheckMiddleMarketZone:
 	cpy #11
 	bcc ResetScreenInteractionFlags	  ; If Y < 11, exit via reset logic
 	lda #$E0		  ;2
-	and movementDirection		  ;3
+	and moveDirection		  ;3
 	ora #$41		   ; Set bits 6 and 0 (01000001)
 	bne ApplyBlackMarketInteractionFlags						; Go apply and resume logic
 	
 PlayerCollisionsInTempleEntrance
-	inc indyHorizPos			; Push Indy right (prevent entry or simulate barrier?)
+	inc indyPosX			; Push Indy right (prevent entry or simulate barrier?)
 	bne ScreenLogicDispatcher	  ; Resume
 	
 PlayerCollisionsInEntranceRoom
@@ -912,7 +912,7 @@ PlayerCollisionsInEntranceRoom
 	; 1. A physical obstacle (Collision pushes Indy left).
 	; 2. A pedestal for the Whip (Y >= 63 triggers pickup).
 
-	lda indyVertPos					; get Indy's vertical position
+	lda indyPosY					; get Indy's vertical position
 	cmp #63							; Check Pickup Threshold (Is Indy "below" the main rock body?)
 	bcc CheckVerticalTriggerRange	; If Y < 63, treat as physical collision (Rock)
 	
@@ -943,7 +943,7 @@ CheckVerticalTriggerRange:
 	; If Y >= 31 (and < 63 from earlier check), fall through to push left.
 	
 PushIndyLeftOutOfTriggerZone:
-	dec indyHorizPos				; Push Indy Left (Oppose movement into rock from right?)
+	dec indyPosX				; Push Indy Left (Oppose movement into rock from right?)
 									; Effectively makes the rock solid.
 
 ScreenLogicDispatcher:
@@ -968,9 +968,9 @@ ScreenIdleLogicDispatcher:
 WarpToMesaSide:
 	lda objectVertOffset		  ; Load vertical position of an object (likely thief or Indy)
 	sta savedThiefVertPos		  ; Store it to temp variable savedThiefVertPos (could be thief vertical position)
-	lda indyVertPos					; get Indy's vertical position
+	lda indyPosY					; get Indy's vertical position
 	sta savedIndyVertPos		  ; Store to temp variable savedIndyVertPos
-	lda indyHorizPos			;3
+	lda indyPosX			;3
 SaveIndyAndThiefPosition:
 	sta savedIndyHorizPos		  ; Store to temp variable savedIndyHorizPos 
 PlaceIndyInMesaSide
@@ -978,9 +978,9 @@ PlaceIndyInMesaSide
 	sta currentRoomId
 	jsr InitializeScreenState
 	lda #$05		  ;2
-	sta indyVertPos		  ; Set Indy's vertical position on entry to Mesa Side
+	sta indyPosY		  ; Set Indy's vertical position on entry to Mesa Side
 	lda #$50		  ;2
-	sta indyHorizPos			; Set Indy's horizontal position on entry
+	sta indyPosX			; Set Indy's horizontal position on entry
 	tsx			  ;2
 	cpx #$FE		  ;2
 	bcs FailSafeToCollisionCheck	   ;If X = $FE, jump to FailSafeToCollisionCheck (possibly collision or restore logic)
@@ -1000,19 +1000,19 @@ InitFallbackEntryPosition:
 	bne SaveIndyAndThiefPosition						; Store fixed horizontal position and continue to position saving logic
 	
 RestrictIndyMovementInTemple:
-	ldy indyHorizPos			;3
+	ldy indyPosX			;3
 	cpy #$2C		  ; Is Indy too far left? (< 44)
 	bcc .nudgeIndyRight	  ; Yes, nudge him right
 	cpy #$6B		  ; Is Indy too far right? (= 107)
 	bcs .nudgeIndyLeft	  ; Yes, nudge him left
-	ldy indyVertPos					; get Indy's vertical position
+	ldy indyPosY					; get Indy's vertical position
 	iny			  ; Try to move Indy down 1 px
 	cpy #$1E		 ; Cap at vertical position 30
 	bcc .setRestrictedVertPos	   ; If not over, continue
 	dey			  ;2
 	dey			  ;2  ; Else, move Indy up 1 px instead
 .setRestrictedVertPos:
-	sty indyVertPos		  ; Apply vertical adjustment
+	sty indyPosY		  ; Apply vertical adjustment
 	jmp	 SetIndyToNormalMovementState	  ; Continue to Indy-snake interaction check
 	
 .nudgeIndyRight:
@@ -1020,7 +1020,7 @@ RestrictIndyMovementInTemple:
 	iny			  ; Nudge Indy right 2 px
 .nudgeIndyLeft:
 	dey			  
-	sty indyHorizPos			; Apply horizontal adjustment
+	sty indyPosX			; Apply horizontal adjustment
 	bne SetIndyToNormalMovementState						; Continue
 	
 IndyPlayfieldCollisionInEntranceRoom
@@ -1032,7 +1032,7 @@ IndyPlayfieldCollisionInEntranceRoom
 	beq .moveIndyLeftOnePixel		; If not blown, treat as solid wall (Push Left)
 
 	; Wall is Blown Open - check if Indy is passing through the hole.
-	lda indyVertPos					; get Indy's vertical position
+	lda indyPosY					; get Indy's vertical position
 	cmp #18
 	bcc .moveIndyLeftOnePixel		; If Y < 18 (Above Hole), Hit Wall.
 	cmp #36
@@ -1040,19 +1040,19 @@ IndyPlayfieldCollisionInEntranceRoom
 									; (SlowDownIndyMovement usually simulates "difficult terrain" or transition)
 
 .moveIndyLeftOnePixel
-	dec indyHorizPos				; Push Indy Left (Solid Wall)
+	dec indyPosX				; Push Indy Left (Solid Wall)
 	bne SetIndyToNormalMovementState; Resume
 
 PlayerCollisionsInRoomOfShiningLight
 	ldx #26
-	lda indyHorizPos					; get Indy horizontal position
+	lda indyPosX					; get Indy horizontal position
 	cmp #76
 	bcc .setIndyInDungeon			; branch if Indy on left of screen
 	ldx #125
 .setIndyInDungeon
-	stx indyHorizPos					; set Indy horizontal position
+	stx indyPosX					; set Indy horizontal position
 	ldx #64
-	stx indyVertPos					; set Indy vertical position
+	stx indyPosY					; set Indy vertical position
 	ldx #$FF
 	stx topOfDungeonGfx			; restore dungeon graphics
 	ldx #1
@@ -1068,8 +1068,8 @@ MoveIndyBasedOnInput:
 	and #$0F		   ; Isolate lower 4 bits (D-pad direction)
 	tay			  ; Use as index
 	lda IndyMovementDeltaTable,y	   ; Get movement delta from direction lookup table
-	ldx #<indyVertPos - objectVertPositions ; X = offset to Indy in object array
-	jsr DetermineDirectionToMoveObject ; Move Indy accordingly
+	ldx #<indyPosY - objectPosY ; X = offset to Indy in object array
+	jsr getMoveDir ; Move Indy accordingly
 SetIndyToNormalMovementState:
 	lda #$05		  
 	sta soundChan0_IndyState		  ; Likely sets a status or mode flag
@@ -1210,7 +1210,7 @@ CheckToShowDeveloperInitials
 	lda #<HSWInitials_01
 	sta inventoryGfxPtrs + 2
 CheckArkRoomEasterEggFailConditions:
-	ldy indyVertPos					; get Indy's vertical position
+	ldy indyPosY					; get Indy's vertical position
 	cpy #$7C		  ;124 dev
 	bcs SetIndyToArkDescentState	  ; If Indy is below or at Y=$7C (124), skip
 	cpy adventurePoints
@@ -1224,7 +1224,7 @@ SlowlyLowerIndy:
 	ror								; shift D0 to carry
 	bcc GotoArkRoomLogic						; branch on even frame
 	iny					; Move Indy down by 1 pixel
-	sty indyVertPos		 
+	sty indyPosY		 
 	bne GotoArkRoomLogic						; unconditional branch
 	
 SetIndyToArkDescentState:
@@ -1261,12 +1261,12 @@ AdvanceArkEntranceSequence:
 	bit majorEventFlag 	  
 	bmi ContinueArkSequence	  ; If bit 7 is set, jump to continue logic
 	ldx #$00		  ; Reset X 
-	lda indyHorizPos			;3
+	lda indyPosX			;3
 	cmp #$20		  ;2
 	bcs StoreArkEntrancePosition				; If Indy is right of x=$20, skip
 	lda #$20		  ;2
 StoreArkEntrancePosition:
-	sta indyHorizPos		  ; Store Indys forced horizontal position?
+	sta indyPosX		  ; Store Indys forced horizontal position?
 IncrementArkSequenceStep:
 	inx			  ;2
 	stx digAttemptCounter		  ; Increment and store progression step or counter (used for speed/timing)
@@ -1304,7 +1304,7 @@ SnakeMovementController:
 	clc			  
 	adc SnakeHorizontalOffsetTable,y	  ; Add Steering offset
 	clc			  
-	adc indyHorizPos		  	  ; Add Indy's X position (Snake follows Indy)
+	adc indyPosX		  	  ; Add Indy's X position (Snake follows Indy)
 	
 	; --- Check Boundaries and Distance ---
 	ldx #$00		  			  ; Default Steering Adjustment
@@ -1313,7 +1313,7 @@ SnakeMovementController:
 	cmp #$18		  			  ; Left Boundary Check
 	bcc FlipSnakeDirectionIfNeeded	  ; If < $18, force flip
 	
-	sbc indyHorizPos			; Calculate distance to Indy
+	sbc indyPosX			; Calculate distance to Indy
 	sbc #$03		  			; Minus 3 pixels
 	bpl AdjustSnakeBehaviorByDistance	  ; If positive (Snake is to the right of Indy?), skip
 	
@@ -1340,10 +1340,10 @@ UpdateSnakeMotionState:
 	tax			  
 	lda SnakeHorizontalOffsetTable,x	  
 	clc			  
-	adc indyHorizPos		  
-	sta indyHorizPos		  ; Note: This seems to modify Indy's position? 
+	adc indyPosX		  
+	sta indyPosX		  ; Note: This seems to modify Indy's position? 
 							  ; (Could be subtle nudge or actually just writing back to a temp variable 
-							  ;  misnamed indyHorizPos in previous refactors? No, it's $C9)
+							  ;  misnamed indyPosX in previous refactors? No, it's $C9)
 							  
 	; --- Resolve Final State ---
 	lda snakeDungeonState		  
@@ -1398,7 +1398,7 @@ GatePlayerTriggeredEvent:
 	ldx weaponHorizPos			; get bullet or whip horizontal position
 	txa			  ;2
 	sec			  ;2
-	sbc indyHorizPos			;3
+	sbc indyPosX			;3
 	tay			  ; Y = horizontal distance between Indy and projectile
 	lda SWCHA						; read joystick values
 	ror								; shift right joystick UP value to carry
@@ -1441,14 +1441,14 @@ AbortProjectileDrivenEvent:
 	jmp	 HandleInventoryButtonPress	  ;3
 	
 HandleIndyMovementAndStartEventScan:
-	ldx #<indyVertPos - objectVertPositions  ; Get index of Indy in object list
+	ldx #<indyPosY - objectPosY  ; Get index of Indy in object list
 	lda SWCHA						; read joystick values
 	sta $85						; Store raw joystick input
 	and #P1_NO_MOVE
 	cmp #P1_NO_MOVE
 	beq AbortProjectileDrivenEvent	  ; Skip if no movement
 	sta inputFlags		  ;3
-	jsr DetermineDirectionToMoveObject  ; Move Indy according to input
+	jsr getMoveDir  ; Move Indy according to input
 	ldx currentRoomId				; get the current screen id
 	ldy #$00		  ;2
 	sty $84		  ; Reset scan index/counter 
@@ -1458,9 +1458,9 @@ IncrementEventScanIndex:
 	tax			   ; Transfer A to X (probably to use as an object index or ID)
 	inc $84		  ; Increment $84  a general-purpose counter or index
 StoreIndyPositionForEvent:
-	lda indyHorizPos			;3
+	lda indyPosX			;3
 	pha			  ; Temporarily store horizontal position
-	lda indyVertPos					; get Indy's vertical position
+	lda indyPosY					; get Indy's vertical position
 	ldy $84		  ; Load current scan/event index
 	cpy #$02		  ;2
 	bcs ReversePositionOrder	  ; If index >= 2, store in reverse order
@@ -1483,14 +1483,14 @@ ApplyEventOffsetToIndy:
 	lda RoomEventOffsetTable,y	  ; Get movement offset from table
 	cpy #$02		  ;2
 	bcs ApplyHorizontalOffset	 ; If index = 2, move horizontally
-	adc indyVertPos		  ;3
-	sta indyVertPos		  ;3
+	adc indyPosY		  ;3
+	sta indyPosY		  ;3
 	jmp	 CheckScanBoundaryOrContinue	  ;3
 	
 ApplyHorizontalOffset:
 	clc			  ;2
-	adc indyHorizPos			;3
-	sta indyHorizPos			;3
+	adc indyPosX			;3
+	sta indyPosX			;3
 CheckScanBoundaryOrContinue:
 	txa			  ;2
 	clc			  ;2
@@ -1520,7 +1520,7 @@ NormalizeplayerInputState:
 	clc			  ;2
 	rol playerInputState
 HandleItemPickupAndInventoryUpdate:
-	lda movementDirection		  ;3
+	lda moveDirection		  ;3
 	bpl ExitItemHandler	  ; If no item queued, exit
 	and #$1F		  ; Mask to get item ID
 	cmp #$01		  ;2
@@ -1544,7 +1544,7 @@ PlaceGenericItem:
 	jsr PlaceItemInInventory
 ClearItemUseFlag:
 	lda #$00		  ;2
-	sta movementDirection		   ; Clear item pickup/use state
+	sta moveDirection		   ; Clear item pickup/use state
 ExitItemHandler:
 	jmp	 UpdateIndySpriteForParachute	  ;; Return from event handle
 	
@@ -1570,9 +1570,9 @@ HandleItemUseOnButtonPress:
 	cpx #ID_BLACK_MARKET_GRENADE   ; If not, is it the black market grenade?
 	bne CheckToActivateParachute  ; If neither, check if it's a parachute
 StartGrenadeThrow:
-	ldx indyVertPos					; get Indy's vertical position
+	ldx indyPosY					; get Indy's vertical position
 	stx weaponVertPos		; Set grenade's starting vertical position
-	ldy indyHorizPos					; get Indy horizontal position
+	ldy indyPosX					; get Indy horizontal position
 	sty weaponHorizPos			; Set grenade's starting horizontal position
 	lda secondsTimer					; get the seconds timer
 	adc #5 - 1						; increment value by 5...carry set
@@ -1598,12 +1598,12 @@ CheckToActivateParachute
 	bmi ExitItemUseHandler	   ; If bit 7 is set (already parachuting), skip reactivation
 	ora #$80		   ; Set bit 7 to indicate parachute is now active
 	sta mesaSideState		  ; Save the updated event flags
-	lda indyVertPos					; get Indy's vertical position
+	lda indyPosY					; get Indy's vertical position
 	sbc #6							; Subtract 6 (carry is set by default), to move him slightly up
 	bpl SetAdjustedParachuteStartY	 ; If the result is positive, keep it
 	lda #$01		  ; If subtraction underflows, cap position to 1
 SetAdjustedParachuteStartY:
-	sta indyVertPos		  ;3
+	sta indyPosY		  ;3
 	bpl FinalizeImpactEffect						; unconditional branch
 	
 HandleSpecialItemUseCases:
@@ -1644,12 +1644,12 @@ ApplyImpactEffectsAndAdjustPlayer:
 	ldx weaponVertPos			; get bullet or whip vertical position
 	dex			  ; Decrease projectile X by 2  simulate impact offset
 	stx weaponVertPos
-	stx indyVertPos		  ; Sync Indy's horizontal position to projectiles new position
+	stx indyPosY		  ; Sync Indy's horizontal position to projectiles new position
 	ldx weaponHorizPos			
 	dex			  ; Decrease projectile X by 2  simulate impact offset
 	dex			  
 	stx weaponHorizPos
-	stx indyHorizPos			; Sync Indy's horizontal position to projectiles new position
+	stx indyPosX			; Sync Indy's horizontal position to projectiles new position
 	lda #$46		  ; Set special state value
 	sta eventState	    ; Likely a flag used by event logic
 FinalizeImpactEffect:
@@ -1658,7 +1658,7 @@ FinalizeImpactEffect:
 AttemptDiggingForArk:
 	cpx #ID_INVENTORY_SHOVEL	; Is the selected item the shovel?
 	bne UseAnkhToWarpToMesaField	   ; If not, skip to other item handling
-	lda indyVertPos					; get Indy's vertical position
+	lda indyPosY					; get Indy's vertical position
 	cmp #$41		   ;Is Indy deep enough to dig?
 	bcc ExitItemUseHandler	  ; If not, exit (can't dig here)
 	bit CXPPMM						; check player / missile collisions (probably shovel sprite contact with dig site)
@@ -1688,10 +1688,10 @@ UseAnkhToWarpToMesaField:
 	jsr InitializeScreenState ; Load the data for the new screen
 	lda #$4C		  ; Prepare a flag or state value for later use (e.g., warp effect)
 WarpPlayerToMesaFieldStart:
-	sta indyHorizPos			; Set Indy's horizontal position
+	sta indyPosX			; Set Indy's horizontal position
 	sta weaponHorizPos			; Set projectile's horizontal position (same as Indy)
 	lda #$46		  ; Fixed vertical position value (start of Mesa Field?)
-	sta indyVertPos		  ; Set Indy's vertical position
+	sta indyPosY		  ; Set Indy's vertical position
 	sta weaponVertPos		 ; Set projectile's vertical position
 	sta eventState	  ; Set event/state flag (used later to indicate transition or animation)
 	lda #$1D		  ; Set initial vertical scroll or map offset?
@@ -1712,10 +1712,10 @@ HandleWeaponUseOnMove:
 	dec bulletCount				; reduce number of bullets
 	ora #BULLET_OR_WHIP_ACTIVE
 	sta weaponStatus			; set BULLET_OR_WHIP_ACTIVE bit
-	lda indyVertPos					; get Indy's vertical position
+	lda indyPosY					; get Indy's vertical position
 	adc #4							; Offset to spawn bullet slightly above Indy
 	sta weaponVertPos			; Set bullet Y position
-	lda indyHorizPos				
+	lda indyPosX				
 	adc #4							; Offset to spawn bullet slightly ahead of Indy
 	sta weaponHorizPos		 ; Set bullet X position
 	bne TriggerWhipEffect						; unconditional branch
@@ -1745,11 +1745,11 @@ CheckWhipRightDirection:
 ApplyWhipStrikePosition:
 	tya								; Move horizontal offset (Y) into A
 	clc
-	adc indyHorizPos
+	adc indyPosX
 	sta weaponHorizPos		; Add to Indys current horizontal position
 	txa			  ;2				 ; Move vertical offset (X) into A
 	clc			  ;2
-	adc indyVertPos		  ; Add to Indys current vertical position
+	adc indyPosY		  ; Add to Indys current vertical position
 	sta weaponVertPos ; Set whip strike vertical position
 TriggerWhipEffect:
 	lda #$0F		  ; Set effect timer or flag for whip (e.g., 15 frames)
@@ -1803,7 +1803,7 @@ HandleEnvironmentalSinkingEffect:
 	; Note on Mechanics:
 	; The Bank 1 Screen Handler (MesaFieldScreenHandler) pins key objects (M0, Snake)
 	; to center screen ($7F). This routine Modifies Indy's position relative to them.
-	; - If Sinking: Indy moves DOWN (inc indyVertPos), Objects nominally move UP relative
+	; - If Sinking: Indy moves DOWN (inc indyPosY), Objects nominally move UP relative
 	;   to him, but code here increments their variables? 
 	;   Wait, if Bank 1 force-sets them to $7F, these increments to m0VertPos might be 
 	;   for "flicker" effects or are overridden immediately in the next frame display,
@@ -1823,7 +1823,7 @@ CheckSinkingEligibility:
 	lsr			   					; If pushing Up, slow down the sink rate (by shifting frame mask capability?)
 
 ApplySinkingIfInZone:
-	ldy indyVertPos					; get Indy's vertical position
+	ldy indyPosY					; get Indy's vertical position
 	cpy #$27		  				; Check Lower Bound (Bottom of Sinking Zone)
 	beq SwitchToBank1AndContinue	  					; If at bottom, stop sinking.
 	
@@ -1833,7 +1833,7 @@ ApplySinkingIfInZone:
 	; === SINKING LOGIC (Gravity/Quicksand) ===
 	beq SwitchToBank1AndContinue						; If objectVertOffset is 0 (Solid Ground or Max Sink?), stop.
 	
-	inc indyVertPos					; Move Indy DOWN
+	inc indyPosY					; Move Indy DOWN
 	inc weaponVertPos			; Move Weapon DOWN with him
 	
 	and #$02						; Check Frame Timing (Every 2nd frame?)
@@ -1856,7 +1856,7 @@ ReverseSinkingEffectIfApplicable:
 	cpx #$50		  ; Check Upper Bound (Top of Sink Zone)
 	bcs SwitchToBank1AndContinue	  ; If at top, stop rising.
 	
-	dec indyVertPos		  			; Move Indy UP
+	dec indyPosY		  			; Move Indy UP
 	dec weaponVertPos			; Move Weapon UP
 	
 	and #$02		 				 ; Frame Timer check
@@ -1919,11 +1919,11 @@ SetupThievesDenObjects:
 	
 .SetArkRoomInitialPositions
 	lda #$4D		  ; Set Indy's horizontal position in the Ark Room
-	sta indyHorizPos			;3
+	sta indyPosX			;3
 	lda #$48		  ;2
 	sta p0HorizPos		  ; Unknown, likely related to screen offset or trigger state
 	lda #$1F		  ;2
-	sta indyVertPos		  ; Set Indy's vertical position in the Ark Room
+	sta indyPosY		  ; Set Indy's vertical position in the Ark Room
 	rts			  ; Return from subroutine
 
 ClearGameStateMemory:
@@ -2086,7 +2086,7 @@ ConfigureTempleOrShiningLightGraphics:
 InitMesaFieldSinkingState:
 	cpx #ID_MESA_FIELD
 	bne ReturnFromRoomSpecificInit 				; If not Mesa Field, skip
-	ldy indyVertPos					; get Indy's vertical position
+	ldy indyPosY					; get Indy's vertical position
 	cpy #$49		  
 	bcc ReturnFromRoomSpecificInit 	   ; If Indy is "Above" the quicksand/sink line ($49), Initialize with 0 Offset.
 	lda #$50		  
@@ -2113,11 +2113,11 @@ CheckVerticalOverride:
 	lda RoomVerticalPositionOverrideTable,x	  ; Load vertical position override (if any)
 	beq ApplyHorizontalOverride	  ; If zero, skip vertical positioning
 ApplyVerticalOverride:
-	sta indyVertPos		  ; Apply vertical override to Indy
+	sta indyPosY		  ; Apply vertical override to Indy
 ApplyHorizontalOverride:
 	lda RoomHorizontalPositionOverrideTable,x	  ; Load horizontal position override (if any)
 	beq ReturnFromOverrideWithSEC	 ; If zero, skip horizontal positioning
-	sta indyHorizPos			; Apply horizontal override to Indy
+	sta indyPosX			; Apply horizontal override to Indy
 ReturnFromOverrideWithSEC:
 	sec			  ; Set carry to indicate an override was applied
 	rts			  ; Return to caller
@@ -2290,7 +2290,7 @@ RemoveChaiFromInventory:
 	lda #$42						; Check for specific movement direction command.
 									; This value ($42) is set in the Marketplace when Indy
 									; hits the invisible "Stalls" at the top (Y >= $09).
-	cmp movementDirection			; Check if player is pushing against that boundary?
+	cmp moveDirection			; Check if player is pushing against that boundary?
 	bne checkMarketplaceYarEasterEgg; If not $42, skip the main warp.
 	
 	; --------------------------------------------------------------------------
@@ -2301,9 +2301,9 @@ RemoveChaiFromInventory:
 	sta currentRoomId				; Change Room.
 	jsr InitializeScreenState		; Init Screen.
 	lda #$15						; Set Indy X (Entrance).
-	sta indyHorizPos				
+	sta indyPosX				
 	lda #$1C						; Set Indy Y.
-	sta indyVertPos		  
+	sta indyPosY		  
 	bne RemoveItemFromInventory		; Always branch to cleanup (remove Chai).
 	
 checkMarketplaceYarEasterEgg:
@@ -2364,17 +2364,17 @@ RemoveCoinsFromInventory
 	ldx currentRoomId				; get the current screen id
 	cpx #ID_BLACK_MARKET
 	bne FinalizeCoinRemovalFlags						; branch if not in Black Market
-	lda indyHorizPos					; get Indy's horizontal position
+	lda indyPosX					; get Indy's horizontal position
 	cmp #$3C		  ; Check if Indy is on the Left side (Sheik/Merchant area)
 	bcs FinalizeCoinRemovalFlags
 	rol blackMarketState				; rotate Black Market state left
 	sec								; set carry (Successful Purchase)
 	ror blackMarketState				; rotate right to show Indy not carry coins (Update Merchant State)
 FinalizeCoinRemovalFlags:
-	lda movementDirection		  ;3
+	lda moveDirection		  ;3
 	clc			  ;2
 	adc #$40		  ; Update UI/event state (Trigger Purchase effect?)
-	sta movementDirection		  ;3
+	sta moveDirection		  ;3
 RemoveItemFromInventory
 	dec inventoryItemCount		; reduce number of inventory items
 	bne .selectNextAvailableInventoryItem; branch if Indy has remaining items
@@ -2873,9 +2873,9 @@ InitializeGameStartState:
 	lda #>IndySprites
 	sta indyGfxPtrs + 1
 	lda #$4C		  ;2
-	sta indyHorizPos			;3
+	sta indyPosX			;3
 	lda #$0F		  ;2
-	sta indyVertPos		  ;3
+	sta indyPosY		  ;3
 	lda #ID_ENTRANCE_ROOM
 	sta currentRoomId
 	sta lives
@@ -2982,14 +2982,14 @@ JumpToBank1
 	sta bankSwitchJMPOpcode
 	jmp.w bankSwitchVars
 	
-DetermineDirectionToMoveObject
+getMoveDir
 	ror
 	bcs .checkToMoveObjectDown
-	dec objectVertPositions,x		; move object up one pixel
+	dec objectPosY,x		; move object up one pixel
 .checkToMoveObjectDown
 	ror
 	bcs .checkToMoveObjectLeft
-	inc objectVertPositions,x		; move object down one pixel
+	inc objectPosY,x		; move object down one pixel
 .checkToMoveObjectLeft
 	ror
 	bcs .checkToMoveObjectRight
@@ -3082,7 +3082,7 @@ StoreDungeonWallScanline:
 	txs								; Set Stack Pointer (used for timing or special stack trick).
 	lda scanlineCounter				; Load current scanline.
 	sec								; Set carry.
-	sbc indyVertPos					; Subtract Indy's vertical position.
+	sbc indyPosY					; Subtract Indy's vertical position.
 	cmp indySpriteHeight			; Compare with Indy's height.
 	bcs .skipIndyDraw				; Skip if outside drawing range.
 	tay								; Transfer index to Y.
@@ -3207,7 +3207,7 @@ SetMissile1EnableForScanline:
 UpdateMissile1EnableForScanline:
 	sty ENAM1						; Update Missile 1 Enable.
 	sec								; Set carry.
-	sbc indyVertPos					; Subtract Indy vertical position.
+	sbc indyPosY					; Subtract Indy vertical position.
 	cmp indySpriteHeight			; Compare with sprite height.
 	bcs SkipDrawingStationaryPlayer1Sprite; Skip if outside sprite.
 	tay								; Transfer to Y (sprite index).
@@ -3280,7 +3280,7 @@ ThievesDenOrWellOfTheSoulsKernel
 	cmp m0VertPos					; Compare with Missile 0 Y.
 	php								; Push Status (Writes P to ENAM0 @ $1D).
 	sec								; Set Carry.
-	sbc indyVertPos					; Subtract Indy Y.
+	sbc indyPosY					; Subtract Indy Y.
 	cmp indySpriteHeight			; Compare with Height.
 	bcs AdvanceStationaryKernelScanline; If outside (Carry Set), branch back.
 	tay								; Use result as Y index.
@@ -3899,10 +3899,10 @@ CheckForChoosingInventoryItem
 	; --------------------------------------------------------------------------
 	lda #$49						; Load Event State value.
 	sta eventState					; Set State.
-	lda indyVertPos					; Get Indy's vertical position.
+	lda indyPosY					; Get Indy's vertical position.
 	adc #9							; Add Offset.
 	sta weaponVertPos				; Set Object Y to Indy Y + 9.
-	lda indyHorizPos				; Get Indy X.
+	lda indyPosX				; Get Indy X.
 	adc #9							; Add Offset.
 	sta weaponHorizPos				; Set Object X to Indy X + 9.
 
@@ -3945,7 +3945,7 @@ HandleInventorySelectionAdjustment:
 	lda weaponHorizPos				; Get Object/Cursor X.
 	sec								; Set Carry.
 	sbc #$04						; Subtract offset.
-	cmp indyHorizPos				; Compare with Indy X.
+	cmp indyPosX				; Compare with Indy X.
 	bne HandleInventorySelectionPositionCheck; If not equal, check boundaries.
 	
 	lda #$03						; Load Mask $03 (Bits 0, 1).
@@ -3966,7 +3966,7 @@ HandleInventorySelectionVerticalCheck:
 	lda weaponVertPos				; Get Object/Cursor Y.
 	sec								; Set Carry.
 	sbc #$05						; Subtract offset.
-	cmp indyVertPos					; Compare with Indy Y.
+	cmp indyPosY					; Compare with Indy Y.
 	bne HandleInventorySelectionBoundaryCheck; If not equal, check boundary.
 	lda #$0C						; Load Mask $0C (Bits 2, 3).
 
@@ -4017,7 +4017,7 @@ ArkRoomKernel
 	cpx #18							; Compare scanline with 18.
 	bcc .checkToDrawArk				; Branch if < 18 (Ark Zone).
 	txa								; Move scanline to A.
-	sbc indyVertPos					; Subtract Indy Y to check relative position
+	sbc indyPosY					; Subtract Indy Y to check relative position
 	bmi AdvanceArkRoomKernelScanline; If negative, skip drawing Indy line
 	cmp #(H_INDY_SPRITE - 1) * 2	; Compare with Height*2 (Double-height sprite check)
 	bcs .drawLiftingPedestal		; If > Height*2, draw pedestal bits instead
@@ -4033,7 +4033,7 @@ ArkRoomKernel
 
 .drawPlayer1Sprite
 	sta GRP1						; Store in GRP1 (Player 1 Graphics)
-	lda indyVertPos					; Load Indy Y Position
+	lda indyPosY					; Load Indy Y Position
 	sta COLUP1						; Set Color P1 (matches Indy's Y?)
 
 AdvanceArkRoomKernelScanline:
@@ -4140,7 +4140,7 @@ MesaFieldScreenHandler:
 	
 SpiderRoomScreenHandler:
 	ldx #$00						; X = 0 (Spider Object / Player 0 Index)
-	ldy #<indyVertPos - objectVertPositions; Y = Offset to Indy's Vertical Position in array
+	ldy #<indyPosY - objectPosY; Y = Offset to Indy's Vertical Position in array
 	bit CXP1FB						; Check P1 (Indy) vs Playfield (Walls) Collision
 	bmi SpiderRoomObjectPositionHandler; If Indy touches walls, Spider enters "Aggressive Mode" (Chases Indy)
 	bit spiderRoomState				; Check bit 7 of spiderRoomState (Set if Indy touches the Web/Ms0)
@@ -4171,7 +4171,7 @@ SpiderRoomSpriteAndStateHandler:
 	
 	; Animation Logic
 	; Calculates a sprite frame based on position to simulate leg movement/scuttling.
-	lda objectVertPositions			; Load Spider Vertical Position (p0VertPos) ($CE)
+	lda objectPosY			; Load Spider Vertical Position (p0VertPos) ($CE)
 	and #$01						; Check LSB (Odd/Even pixel)
 	ror p0HorizPos					; Rotate Spider X into Carry (Modifying X pos momentarily)
 	rol								; Rotate Carry into A (Combines Y-bit and X-bit info)
@@ -4231,7 +4231,7 @@ ValleyOfPoisonEscapeModeSetup:
 	
 ValleyOfPoisonChaseModeHandler:
 	; Mode: Thief Chase (Man in Black chases Indy)
-	ldy #<indyVertPos - objectVertPositions			; Target Index = Indy's Vertical Position.
+	ldy #<indyPosY - objectPosY			; Target Index = Indy's Vertical Position.
 	lda #$03						; Speed Mask = 3 (Update every 4th frame - Slow).
 
 ValleyOfPoisonObjectUpdateLoop:
@@ -4263,7 +4263,7 @@ ValleyOfPoisonEscapeCheck:
 
 ValleyOfPoisonSpriteLogic:
 	lda p0HorizPos					; Load Thief X.
-	cmp indyHorizPos				; Compare with Indy X.
+	cmp indyPosX				; Compare with Indy X.
 	bcs ValleyOfPoisonFaceLeft		; If Thief >= Indy, Face Left.
 	dex								; Decrement X (0->FF).
 	eor #$03						; Toggle bits.
@@ -4291,7 +4291,7 @@ ValleyOfPoisonFaceLeft:
 	ldy #$8E						; Default Y.
 	adc #$03						; Add 3 to p0VertPos.
 	sta m0VertPos					; Set M0 Y near Thief.
-	cmp indyVertPos					; Compare M0 Y vs Indy Y.
+	cmp indyPosY					; Compare M0 Y vs Indy Y.
 	bcs ValleyOfPoisonM0UpdateX		; If M0 >= Indy, Face/Move X.
 	dey								; Adjust Y?
 
@@ -4390,7 +4390,7 @@ MesaSideScreenHandler:
 	bpl MesaSideScreenUpdateState	; Branch if Bit 7 clear (Parachute NOT active -> Freefall).
 									; In Freefall, input is skipped (No Control).
 	bvc MesaSideScreenInputHandler	; Branch if Overflow clear (Bit 6?).
-	dec indyHorizPos				; Decrement Indy X (Slide left?).
+	dec indyPosX				; Decrement Indy X (Slide left?).
 	bne MesaSideScreenUpdateState	; Unconditional branch.
 
 MesaSideScreenInputHandler:
@@ -4404,13 +4404,13 @@ MesaSideScreenInputHandler:
 	ror								; Bit 1 (P1 Down) -> Carry.
 	ror								; Bit 2 (P1 Left) -> Carry.
 	bcs MesaSideScreenRightInputHandler; Branch if Left NOT pressed (Active Low, Carry Set = 1).
-	dec indyHorizPos				; Move Left.
+	dec indyPosX				; Move Left.
 	bne MesaSideScreenUpdateState	; Unconditional branch.
 
 MesaSideScreenRightInputHandler:
 	ror								; Bit 3 (P1 Right) -> Carry.
 	bcs MesaSideScreenUpdateState	; Branch if Right NOT pressed.
-	inc indyHorizPos				; Move Right.
+	inc indyPosX				; Move Right.
 
 MesaSideScreenUpdateState:
 	lda #$02						; Load 2.
@@ -4421,7 +4421,7 @@ MesaSideScreenUpdateState:
 	sta p0VertPos					; Set Object Vertical Position? (Previously $CE).
 
 MesaSideScreenVerticalStateHandler:
-	ldx indyVertPos					; Get Indy Vertical.
+	ldx indyPosY					; Get Indy Vertical.
 	lda frameCount					; Get Frame Count.
 	bit mesaSideState				; Check state.
 	bmi MesaSideScreenParachuteDescentUpdate; Branch if Bit 7 set (Parachute Active = Slow Fall).
@@ -4443,11 +4443,11 @@ MesaSideScreenVerticalPositionIncrement:
 
 MesaSideScreenVerticalPositionFinalize:
 	inx								; Increment Y (Move Down).
-	stx indyVertPos					; Update Indy Y.
+	stx indyPosY					; Update Indy Y.
 	bne ReturnToScreenHandlerFromMesaSide; Return.
 
 BlackMarketScreenHandler:
-	lda indyHorizPos				; Get Indy X.
+	lda indyPosX				; Get Indy X.
 	cmp #$64						; Compare $64 (Decimal 100).
 	bcc BlackMarketScreenLunaticZoneHandler; Branch if < 100 (Left Side/Lunatic Zone).
 	rol blackMarketState			; Rotate Black Market state left.
@@ -4466,13 +4466,13 @@ BlackMarketScreenBribeCheck:
 	bit blackMarketState			; Check Black Market state (Did we drop Gold?).
 	bmi ReturnToScreenHandlerFromBlackMarket; Branch if Bit 7 set (Condition not met/No Bribe?).
 	lda #$30						; Load $30 (Decimal 48).
-	sta indyHorizPos				; Teleport Indy to X=48 (Past the Lunatic/Line!).
+	sta indyPosX				; Teleport Indy to X=48 (Past the Lunatic/Line!).
 	ldy #$00						; Clear Y.
 	sty snakeDungeonY				; Clear Lunatic Y (Remove Lunatic?).
 	ldy #$7F						; Load $7F.
 	sty $DC							; Set temp DC.
 	sty snakeVertPos				; Set snakeVertPos.
-	inc indyHorizPos				; Increment Indy X (49).
+	inc indyPosX				; Increment Indy X (49).
 	lda #$80						; Set Bit 7.
 	sta majorEventFlag 				; Trigger Major Event (Won Black Market / Bribed Lunatic).
 ReturnToScreenHandlerFromBlackMarket:
@@ -4555,11 +4555,11 @@ MapRoomScreenHandler:
 	; In this screen, the player controls the "Staff" placement vertically.
 	; X is fixed to the center ($71).
 	lda #$71
-	sta indyHorizPos				
+	sta indyPosX				
 	
 	ldy #$4F						; Load "Correct Alignment" Object Offset (Visual state for correct placement).
 	lda #$3A
-	cmp indyVertPos					; Check if Indy (Staff) is at Y = $3A (The Hole).
+	cmp indyPosY					; Check if Indy (Staff) is at Y = $3A (The Hole).
 	bne MapRoomScreenSpecialStateHandler; If not at correct height, branch to failure case.
 	
 	lda selectedInventoryId			; Check current inventory.
@@ -4568,7 +4568,7 @@ MapRoomScreenHandler:
 	
 	; Secondary check (Logic unreachable if X forced to $71?)
 	lda #$5E						
-	cmp indyHorizPos				
+	cmp indyPosX				
 	beq MapRoomScreenFinalizeState	
 
 MapRoomScreenSpecialStateHandler:
@@ -4640,12 +4640,12 @@ MapRoomScreenFinalizePositionState:
 	; --------------------------------------------------------------------------
 	rol mapRoomState				; Shift old state
 	lda #$3A
-	cmp indyVertPos					; Check Y again
+	cmp indyPosY					; Check Y again
 	bne MapRoomScreenFinalizePositionFlags
 	cpy #$4F						; Check if we were in "Success" graphics mode
 	beq MapRoomScreenFinalizePositionBoundary
 	lda #$5E
-	cmp indyHorizPos				; Check X
+	cmp indyPosX				; Check X
 	bne MapRoomScreenFinalizePositionFlags
 
 MapRoomScreenFinalizePositionBoundary:
@@ -4676,7 +4676,7 @@ TempleEntranceScreenHandler:
 	; Since the Timepiece is also positioned here, this likely ensures instant
 	; interaction/pickup or guides the player to it.
 	lda #$4C						
-	sta indyHorizPos				
+	sta indyPosX				
 
 	; Reuse snakeDungeonY ($D2) for Timepiece Vertical Position ($2A)
 	lda #$2A						
@@ -4729,12 +4729,12 @@ RoomOfShiningLightScreenHandler:
 	lda frameCount					; Get frame count.
 	and #7							; Screen update every 8 frames?
 	bne RoomOfShiningLightScreenFinalizeInput; Branch if not frame.
-	ldx #<p0VertPos - objectVertPositions; Index X for P0.
-	ldy #<indyVertPos - objectVertPositions; Index Y for Indy.
-	lda indyVertPos					; Get Indy's vertical position.
+	ldx #<p0VertPos - objectPosY; Index X for P0.
+	ldy #<indyPosY - objectPosY; Index Y for Indy.
+	lda indyPosY					; Get Indy's vertical position.
 	cmp #58							; Compare 58.
 	bcc RoomOfShiningLightScreenFinalizeState; Branch if Y < 58.
-	lda indyHorizPos				; Get Indy's horizontal position.
+	lda indyPosX				; Get Indy's horizontal position.
 	cmp #$2B						; Compare $2B.
 	bcc RoomOfShiningLightScreenSpecialStateHandler; Branch if < $2B.
 	cmp #$6D						; Compare $6D.
@@ -4752,9 +4752,9 @@ RoomOfShiningLightScreenFinalizeState:
 
 RoomOfShiningLightScreenFinalizeInput:
 	ldx #$4E						; Load $4E.
-	cpx indyVertPos					; Compare Indy Y.
+	cpx indyPosY					; Compare Indy Y.
 	bne ReturnToScreenHandlerFromBank1; Branch if !=.
-	ldx indyHorizPos				; Get Indy X.
+	ldx indyPosX				; Get Indy X.
 	cpx #$76						; Compare $76.
 	beq RoomOfShiningLightScreenFinalizePenalty; Branch if == $76.
 	cpx #$14						; Compare $14.
@@ -4767,7 +4767,7 @@ RoomOfShiningLightScreenFinalizePenalty:
 	bne ReturnToScreenHandlerFromBank1; Branch if not Down.
 	sta shiningLightPenalty			; Set penalty.
 	lda #$4C						; Load $4C.
-	sta indyHorizPos				; Reset Indy X?
+	sta indyPosX				; Reset Indy X?
 	ror entranceRoomEventState		; Rotate Event State (Modify flags).
 	sec								; Set Carry.
 	rol entranceRoomEventState		; Rotate Left (Set bit 0?).
@@ -4866,25 +4866,25 @@ TreasureRoomBasketItemAwardPickupHandler:
 	rts								; Return.
 
 UpdateObjectPositionHandler:
-	cpy #<indyVertPos - objectVertPositions; Check if Target is Indy (Offset).
+	cpy #<indyPosY - objectPosY; Check if Target is Indy (Offset).
 	bne UpdateObjectVerticalPositionHandler; Branch if not Indy.
-	lda indyVertPos					; Get Indy's Vertical Position.
+	lda indyPosY					; Get Indy's Vertical Position.
 	bmi UpdateObjectVerticalPositionDecrementHandler; Branch if negative (or > 127).
 
 UpdateObjectVerticalPositionHandler:
-	lda objectVertPositions,x		; Get Follower Y.
-	cmp objectVertPositions,y		; Compare Target Y.
+	lda objectPosY,x		; Get Follower Y.
+	cmp objectPosY,y		; Compare Target Y.
 	bne UpdateObjectVerticalPositionIncrementHandler; Branch if different.
 	cpy #$05						; Check Bounds/Type?
 	bcs UpdateObjectHorizontalPositionHandler; Branch if >= 5.
 
 UpdateObjectVerticalPositionIncrementHandler:
 	bcs UpdateObjectVerticalPositionDecrementHandler; Branch if Follower > Target (Move Up/Dec).
-	inc objectVertPositions,x		; Increment Follower Y (Move Down).
+	inc objectPosY,x		; Increment Follower Y (Move Down).
 	bne UpdateObjectHorizontalPositionHandler; Unconditional branch (unless 0).
 
 UpdateObjectVerticalPositionDecrementHandler:
-	dec objectVertPositions,x		; Decrement Follower Y (Move Up).
+	dec objectPosY,x		; Decrement Follower Y (Move Up).
 
 UpdateObjectHorizontalPositionHandler:
 	lda objectHorizPositions,x		; Get Follower X.
@@ -4905,7 +4905,7 @@ UpdateObjectHorizontalPositionDecrementHandler:
 	rts								; Return.
 
 UpdateObjectPositionBoundaryHandler:
-	lda objectVertPositions,x		; Get Object Y.
+	lda objectPosY,x		; Get Object Y.
 	cmp #$53						; Compare $53 (Bottom/Top Boundary?).
 	bcc UpdateObjectPositionBoundaryClamp; Branch if < $53.
 
@@ -4914,7 +4914,7 @@ UpdateObjectPositionBoundaryClampHandler:
 	clc								; Clear Carry.
 	ror arkLocationRegionId,x				; Rotate Back (Clear Bit 7?).
 	lda #$78						; Load $78.
-	sta objectVertPositions,x		; Reset Object Y.
+	sta objectPosY,x		; Reset Object Y.
 	rts								; Return.
 
 UpdateObjectPositionBoundaryClamp:
@@ -5911,11 +5911,11 @@ TreasureRoomBasketItemAwardBitMaskTable:
 InventorySelectionAdjustmentHandler:
 	ror			  ;2
 	bcs InventorySelectionAdjustmentIncrementVertHandler	  ;2
-	dec objectVertPositions,x	  ;6
+	dec objectPosY,x	  ;6
 InventorySelectionAdjustmentIncrementVertHandler:
 	ror			  ;2
 	bcs InventorySelectionAdjustmentDecrementHorizHandler	  ;2
-	inc objectVertPositions,x	  ;6
+	inc objectPosY,x	  ;6
 InventorySelectionAdjustmentDecrementHorizHandler:
 	ror			  ;2
 	bcs InventorySelectionAdjustmentIncrementHorizHandler	  ;2
