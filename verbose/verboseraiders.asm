@@ -1197,7 +1197,7 @@ CheckToShowDeveloperInitials
 	cmp #ID_ARK_ROOM
 	bne HandlePostEasterEggFlow						; branch if not in ID_ARK_ROOM
 	lda #$9C		  
-	sta soundChan1_WhipTimer		  ; Likely sets a display timer or animation state
+	sta soundChan1WhipTimer		  ; Likely sets a display timer or animation state
 	ldy yarEasterEggBonus
 	beq CheckArkRoomEasterEggFailConditions	  ; If not in Yar's Easter Egg mode, skip
 	bit resetEnableFlag
