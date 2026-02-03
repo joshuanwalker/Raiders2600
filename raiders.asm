@@ -1763,31 +1763,36 @@ checkAnimationTiming
 	bcc		setIndySpriteLSBValue		; If not, update walking frame			
 	lda		#$02						; Set a short animation timer
 	sta		soundChan1WhipTimer					
-	lda		#$00					
-	bcs		setIndySpriteLSBValue					
+	lda		#<Indy_0					; Reset animation back to first walking frame					
+	bcs		setIndySpriteLSBValue		; Unconditional jump to store new sprite pointer
+
+
 handleMesaScroll
-	ldx		currentRoomId					
-	cpx		#ID_MESA_FIELD					
-	beq		ld7bc					
-	cpx		#$0a					
-	bne		switchToBank1AndGo					
-ld7bc
-	lda		frameCount				
-	bit		playerInputState					
-	bpl		ld7c3					
+	ldx		currentRoomId				; get the current screen id		
+	cpx		#ID_MESA_FIELD				; are we on the Mesa Field?	
+	beq		CheckScrollEligibility		; Yes, check if we need to scroll
+	cpx		#ID_VALLEY_OF_POISON		; Do check if we are in Valley of Poison too			
+	bne		switchToBank1AndGo			; If neither, continue to Bank 1 routines
+CheckScrollEligibility
+	lda		frameCount					; get current frame count
+	bit		playerInputState			; Check movement input flags		
+	bpl		scrollIfInZone				; If bit 7 of playerInputState is clear 
 	lsr								
-ld7c3
-	ldy		indyPosY					
-	cpy		#$27					
-	beq		switchToBank1AndGo					
-	ldx		objState					
-	bcs		ld7e8					
-	beq		switchToBank1AndGo					
-	inc		indyPosY					
-	inc		weaponPosY					
-	and		#$02					
-	bne		switchToBank1AndGo					
-	dec		objState					
+scrollIfInZone
+	ldy		indyPosY					; get Indy's vertical position			
+	cpy		#$27						; Check Lower Bound 
+	beq		switchToBank1AndGo			; ; If at bottom, stop scrolling
+
+	ldx		objState					; Load Scroll Offset	
+	bcs		ReverseScrollIfApplicable	; if pushing up 				
+	beq		switchToBank1AndGo			; if objState is zero, skip scrolling		
+	inc		indyPosY					; Increment Indy's vertical position	
+	inc		weaponPosY					; Move Weapon DOWN with him
+	and		#$02						; Check Frame Timing every 2 frames
+	bne		switchToBank1AndGo			; if not time to scroll, skip			
+
+	; These variables are modified but overridden in Bank 1 for display.
+	dec		objState					; Decrement scroll offset
 	inc		objectPosY					 
 	inc		m0PosY				
 	inc		objPosY					
@@ -1796,14 +1801,15 @@ ld7c3
 	inc		objPosY					
 	jmp		switchToBank1AndGo					
 
-ld7e8
-	cpx		#$50					
-	bcs		switchToBank1AndGo					
-	dec		indyPosY					
-	dec		weaponPosY					
-	and		#$02					
+ReverseScrollIfApplicable
+	cpx		#$50						; Check Upper Bound
+	bcs		switchToBank1AndGo			; If at top, stop scrolling	
+	dec		indyPosY					; Move Indy UP
+	dec		weaponPosY					; Move Weapon UP
+	and		#$02						; Frame Timer check
 	bne		switchToBank1AndGo					
-	inc		objState					
+
+	inc		objState					;					
 	dec		objectPosY					 
 	dec		m0PosY				
 	dec		objPosY					
@@ -4220,7 +4226,7 @@ lf874
 	sta		PF1						
 	lda		room_PF2_gfx,y					
 	sta		PF2						
-	ldx		lf9ee,y					
+	ldx		KernelJumpTableIndex,y					
 	lda		lfae2+1,x				
 	pha								
 	lda		lfae2,x					
@@ -4303,232 +4309,366 @@ lf8f1
 	bcs		lf8e7					
 	rts								
 
-	.byte	$00,$00,$00,$00,$00,$e4,$7e,$9a ; $f8fc (*)
-	.byte	$e4,$a6,$5a,$7e,$e4,$7f,$00,$00 ; $f904 (*)
-	.byte	$84,$08,$2a,$22,$00,$22,$2a,$08 ; $f90c (*)
-	.byte	$00,$b9,$d4,$89,$6c,$7b,$7f,$81 ; $f914 (*)
-	.byte	$a6,$3f,$77,$07,$7f,$86,$89,$3f ; $f91c (*)
-	.byte	$1f,$0e,$0c,$00,$c1,$b6,$00,$00 ; $f924 (*)
-	.byte	$00,$81,$1c,$2a,$55,$2a,$14,$3e ; $f92c (*)
-	.byte	$00,$a9,$00,$e4,$89,$81,$7e,$9a ; $f934 (*)
-	.byte	$e4,$a6,$5a,$7e,$e4,$7f,$00,$c9 ; $f93c (*)
-	.byte	$89,$82,$00,$7c,$18,$18,$92,$7f ; $f944 (*)
-	.byte	$1f,$07,$00,$00,$00				; $f94c (*)
+	;padding to $F900
+	.byte	$00,$00,$00,$00				
 
+BlackMarketPlayerGraphics
+	.byte $00 ; |........| $F900
+	.byte $E4 ; |XXX..X..| $F901
+	.byte $7E ; |.XXXXXX.| $F902
+	.byte $9A ; |X..XX.X.| $F903
+	.byte $E4 ; |XXX..X..| $F904
+	.byte $A6 ; |X.X..XX.| $F905
+	.byte $5A ; |.X.XX.X.| $F906
+	.byte $7E ; |.XXXXXX.| $F907
+	.byte $E4 ; |XXX..X..| $F908
+	.byte $7F ; |.XXXXXXX| $F909
+	.byte $00 ; |........| $F90A
+	.byte $00 ; |........| $F90B
+	.byte $84 ; |X....X..| $F90C
+	.byte $08 ; |....X...| $F90D
+	.byte $2A ; |..X.X.X.| $F90E
+	.byte $22 ; |..X...X.| $F90F
+	.byte $00 ; |........| $F910
+	.byte $22 ; |..X...X.| $F911
+	.byte $2A ; |..X.X.X.| $F912
+	.byte $08 ; |....X...| $F913
+	.byte $00 ; |........| $F914
+	.byte $B9 ; |X.XXX..X| $F915
+	.byte $D4 ; |XX.X.X..| $F916
+	.byte $89 ; |X...X..X| $F917
+	.byte $6C ; |.XX.XX..| $F918
+	.byte $7B ; |.XXXX.XX| $F919
+	.byte $7F ; |.XXXXXXX| $F91A
+	.byte $81 ; |X......X| $F91B
+	.byte $A6 ; |X.X..XX.| $F91C
+	.byte $3F ; |..XXXXXX| $F91D
+	.byte $77 ; |.XXX.XXX| $F91E
+	.byte $07 ; |.....XXX| $F91F
+	.byte $7F ; |.XXXXXXX| $F920
+	.byte $86 ; |X....XX.| $F921
+	.byte $89 ; |X...X..X| $F922
+	.byte $3F ; |..XXXXXX| $F923
+	.byte $1F ; |...XXXXX| $F924
+	.byte $0E ; |....XXX.| $F925
+	.byte $0C ; |....XX..| $F926
+	.byte $00 ; |........| $F927
+	.byte $C1 ; |XX.....X| $F928
+	.byte $B6 ; |X.XX.XX.| $F929
+	.byte $00 ; |........| $F92A
+	.byte $00 ; |........| $F92B
+	.byte $00 ; |........| $F92C
+	.byte $81 ; |X......X| $F92D
+	.byte $1C ; |...XXX..| $F92E
+	.byte $2A ; |..X.X.X.| $F92F
+	.byte $55 ; |.X.X.X.X| $F930
+	.byte $2A ; |..X.X.X.| $F931
+	.byte $14 ; |...X.X..| $F932
+	.byte $3E ; |..XXXXX.| $F933
+	.byte $00 ; |........| $F934
+	.byte $A9 ; |X.X.X..X| $F935
+	.byte $00 ; |........| $F936
+	.byte $E4 ; |XXX..X..| $F937
+	.byte $89 ; |X...X..X| $F938
+	.byte $81 ; |X......X| $F939
+	.byte $7E ; |.XXXXXX.| $F93A
+	.byte $9A ; |X..XX.X.| $F93B
+	.byte $E4 ; |XXX..X..| $F93C
+	.byte $A6 ; |X.X..XX.| $F93D
+	.byte $5A ; |.X.XX.X.| $F93E
+	.byte $7E ; |.XXXXXX.| $F93F
+	.byte $E4 ; |XXX..X..| $F940
+	.byte $7F ; |.XXXXXXX| $F941
+	.byte $00 ; |........| $F942
+	.byte $C9 ; |XX..X..X| $F943
+	.byte $89 ; |X...X..X| $F944
+	.byte $82 ; |X.....X.| $F945
+	.byte $00 ; |........| $F946
+	.byte $7C ; |.XXXXX..| $F947
+	.byte $18 ; |...XX...| $F948
+	.byte $18 ; |...XX...| $F949
+	.byte $92 ; |X..X..X.| $F94A
+	.byte $7F ; |.XXXXXXX| $F94B
+	.byte $1F ; |...XXXXX| $F94C
+	.byte $07 ; |.....XXX| $F94D
+	.byte $00 ; |........| $F94E
+	.byte $00 ; |........| $F94F
+	.byte $00 ; |........| $F950
 
-;map room
-	.byte	$94 ; |#  # #  |
-	.byte	$00 ; |		|
-	.byte	$08 ; |	#   |
-	.byte	$1c ; |		###  |
-	.byte	$3e ; |	 ##### |
-	.byte	$3e ; |	 ##### |
-	.byte	$3e ; |	 ##### |
-	.byte	$3e ; |	 ##### |
-	.byte	$1c ; |		###  |
-	.byte	$08 ; |	#   |
-	.byte	$00 ; |		|
-	.byte	$8e ; |#   ### |
-	.byte	$7f ; | #######|
-	.byte	$7f ; | #######|
-	.byte	$7f ; | #######|
-	.byte	$14 ; |		# #  |
-	.byte	$14 ; |		# #  |
-	.byte	$00 ; |		|
-	.byte	$00 ; |		|
-	.byte	$2a ; |	 # # # |
-	.byte	$2a ; |	 # # # |
-	.byte	$00 ; |		|
-	.byte	$00 ; |		|
-	.byte	$14 ; |		# #  |
-	.byte	$36 ; |	 ## ## |
-	.byte	$22 ; |	 #	 # |
-	.byte	$08 ; |	#   |
-	.byte	$08 ; |	#   |
-	.byte	$3e ; |	 ##### |
-	.byte	$1c ; |		###  |
-	.byte	$08 ; |	#   |
-	.byte	$00 ; |		|
-	.byte	$41 ; | #		#|
-	.byte	$63 ; | ##	 ##|
-	.byte	$49 ; | #  #  #|
-	.byte	$08 ; |	#   |
-	.byte	$00 ; |		|
-	.byte	$00 ; |		|
-	.byte	$14 ; |		# #  |
-	.byte	$14 ; |		# #  |
-	.byte	$00 ; |		|
-	.byte	$00 ; |		|
-	.byte	$08 ; |	#   |
-	.byte	$6b ; | ## # ##|
-	.byte	$6b ; | ## # ##|
-	.byte	$08 ; |	#   |
-	.byte	$00 ; |		|
-	.byte	$22 ; |	 #	 # |
-	.byte	$22 ; |	 #	 # |
-	.byte	$00 ; |		|
-	.byte	$00 ; |		|
-	.byte	$08 ; |	#   |
-	.byte	$1c ; |		###  |
-	.byte	$1c ; |		###  |
-	.byte	$7f ; | #######|
-	.byte	$7f ; | #######|
-	.byte	$7f ; | #######|
-	.byte	$e4 ; |###	#  |
-	.byte	$41 ; | #		#|
-	.byte	$41 ; | #		#|
-	.byte	$41 ; | #		#|
-	.byte	$41 ; | #		#|
-	.byte	$41 ; | #		#|
-	.byte	$41 ; | #		#|
-	.byte	$41 ; | #		#|
-	.byte	$41 ; | #		#|
-	.byte	$41 ; | #		#|
-	.byte	$41 ; | #		#|
-	.byte	$7f ; | #######|
-	.byte	$92 ; |#  #	 # |
-	.byte	$77 ; | ### ###|
-	.byte	$77 ; | ### ###|
-	.byte	$63 ; | ##	 ##|
-	.byte	$77 ; | ### ###|
-	.byte	$14 ; |		# #  |
-	.byte	$36 ; |	 ## ## |
-	.byte	$55 ; | # # # #|
-	.byte	$63 ; | ##	 ##|
-	.byte	$77 ; | ### ###|
-	.byte	$7f ; | #######|
-	.byte	$7f ; | #######|
-	.byte	$00 ; |		|
-	.byte	$86 ; |#	## |
-	.byte	$24 ; |	 #	#  |
-	.byte	$18 ; |		##   |
-	.byte	$24 ; |	 #	#  |
-	.byte	$24 ; |	 #	#  |
-	.byte	$7e ; | ###### |
-	.byte	$5a ; | # ## # |
-	.byte	$5b ; | # ## ##|
-	.byte	$3c ; |	 ####  |
+MapRoomPlayerGraphics
+	.byte $94 ; |X..X.X..| $F951
+	.byte $00 ; |........| $F952
+	.byte $08 ; |....X...| $F953
+	.byte $1C ; |...XXX..| $F954
+	.byte $3E ; |..XXXXX.| $F955
+	.byte $3E ; |..XXXXX.| $F956
+	.byte $3E ; |..XXXXX.| $F957
+	.byte $3E ; |..XXXXX.| $F958
+	.byte $1C ; |...XXX..| $F959
+	.byte $08 ; |....X...| $F95A
+	.byte $00 ; |........| $F95B
+	.byte $8E ; |X...XXX.| $F95C
+	.byte $7F ; |.XXXXXXX| $F95D
+	.byte $7F ; |.XXXXXXX| $F95E
+	.byte $7F ; |.XXXXXXX| $F95F
+	.byte $14 ; |...X.X..| $F960
+	.byte $14 ; |...X.X..| $F961
+	.byte $00 ; |........| $F962
+	.byte $00 ; |........| $F963
+	.byte $2A ; |..X.X.X.| $F964
+	.byte $2A ; |..X.X.X.| $F965
+	.byte $00 ; |........| $F966
+	.byte $00 ; |........| $F967
+	.byte $14 ; |...X.X..| $F968
+	.byte $36 ; |..XX.XX.| $F969
+	.byte $22 ; |..X...X.| $F96A
+	.byte $08 ; |....X...| $F96B
+	.byte $08 ; |....X...| $F96C
+	.byte $3E ; |..XXXXX.| $F96D
+	.byte $1C ; |...XXX..| $F96E
+	.byte $08 ; |....X...| $F96F
+	.byte $00 ; |........| $F970
+	.byte $41 ; |.X.....X| $F971
+	.byte $63 ; |.XX...XX| $F972
+	.byte $49 ; |.X..X..X| $F973
+	.byte $08 ; |....X...| $F974
+	.byte $00 ; |........| $F975
+	.byte $00 ; |........| $F976
+	.byte $14 ; |...X.X..| $F977
+	.byte $14 ; |...X.X..| $F978
+	.byte $00 ; |........| $F979
+	.byte $00 ; |........| $F97A
+	.byte $08 ; |....X...| $F97B
+	.byte $6B ; |.XX.X.XX| $F97C
+	.byte $6B ; |.XX.X.XX| $F97D
+	.byte $08 ; |....X...| $F97E
+	.byte $00 ; |........| $F97F
+	.byte $22 ; |..X...X.| $F980
+	.byte $22 ; |..X...X.| $F981
+	.byte $00 ; |........| $F982
+	.byte $00 ; |........| $F983
+	.byte $08 ; |....X...| $F984
+	.byte $1C ; |...XXX..| $F985
+	.byte $1C ; |...XXX..| $F986
+	.byte $7F ; |.XXXXXXX| $F987
+	.byte $7F ; |.XXXXXXX| $F988
+	.byte $7F ; |.XXXXXXX| $F989
+	.byte $E4 ; |XXX..X..| $F98A
+	.byte $41 ; |.X.....X| $F98B
+	.byte $41 ; |.X.....X| $F98C
+	.byte $41 ; |.X.....X| $F98D
+	.byte $41 ; |.X.....X| $F98E
+	.byte $41 ; |.X.....X| $F98F
+	.byte $41 ; |.X.....X| $F990
+	.byte $41 ; |.X.....X| $F991
+	.byte $41 ; |.X.....X| $F992
+	.byte $41 ; |.X.....X| $F993
+	.byte $41 ; |.X.....X| $F994
+	.byte $7F ; |.XXXXXXX| $F995
+	.byte $92 ; |X..X..X.| $F996
+	.byte $77 ; |.XXX.XXX| $F997
+	.byte $77 ; |.XXX.XXX| $F998
+	.byte $63 ; |.XX...XX| $F999
+	.byte $77 ; |.XXX.XXX| $F99A
+	.byte $14 ; |...X.X..| $F99B
+	.byte $36 ; |..XX.XX.| $F99C
+	.byte $55 ; |.X.X.X.X| $F99D
+	.byte $63 ; |.XX...XX| $F99E
+	.byte $77 ; |.XXX.XXX| $F99F
+	.byte $7F ; |.XXXXXXX| $F9A0
+	.byte $7F ; |.XXXXXXX| $F9A1
+	
+MesaSidePlayerGraphics
+	.byte $00 ; |........| $F9A2
+	.byte $86 ; |X....XX.| $F9A3
+	.byte $24 ; |..X..X..| $F9A4
+	.byte $18 ; |...XX...| $F9A5
+	.byte $24 ; |..X..X..| $F9A6
+	.byte $24 ; |..X..X..| $F9A7
+	.byte $7E ; |.XXXXXX.| $F9A8
+	.byte $5A ; |.X.XX.X.| $F9A9
+	.byte $5B ; |.X.XX.XX| $F9AA
+	.byte $3C ; |..XXXX..| $F9AB
+	.byte $00 ; |........| $F9AC
+	.byte $00 ; |........| $F9AD
+	.byte $00 ; |........| $F9AE
+	.byte $00 ; |........| $F9AF
+	.byte $00 ; |........| $F9B0
+	.byte $00 ; |........| $F9B1
+	.byte $00 ; |........| $F9B2
+	.byte $00 ; |........| $F9B3
+	.byte $00 ; |........| $F9B4
+	.byte $00 ; |........| $F9B5
+	.byte $00 ; |........| $F9B6
+	.byte $00 ; |........| $F9B7
+	.byte $00 ; |........| $F9B8
+	.byte $00 ; |........| $F9B9
+	.byte $00 ; |........| $F9BA
+	.byte $00 ; |........| $F9BB
+	.byte $00 ; |........| $F9BC
+	.byte $00 ; |........| $F9BD
+	.byte $00 ; |........| $F9BE
+	.byte $00 ; |........| $F9BF
+	.byte $00 ; |........| $F9C0
+	.byte $00 ; |........| $F9C1
+	.byte $00 ; |........| $F9C2
+	.byte $00 ; |........| $F9C3
+	.byte $00 ; |........| $F9C4
+	.byte $B9 ; |X.XXX..X| $F9C5
+	.byte $E4 ; |XXX..X..| $F9C6
+	.byte $81 ; |X......X| $F9C7
+	.byte $89 ; |X...X..X| $F9C8
+	.byte $55 ; |.X.X.X.X| $F9C9
+	.byte $F9 ; |XXXXX..X| $F9CA
+	.byte $89 ; |X...X..X| $F9CB
+	.byte $F9 ; |XXXXX..X| $F9CC
+	.byte $81 ; |X......X| $F9CD
+	.byte $FA ; |XXXXX.X.| $F9CE
+	.byte $32 ; |..XX..X.| $F9CF
+	.byte $1C ; |...XXX..| $F9D0
+	.byte $89 ; |X...X..X| $F9D1
+	.byte $3E ; |..XXXXX.| $F9D2
+	.byte $91 ; |X..X...X| $F9D3
+	.byte $7F ; |.XXXXXXX| $F9D4
+	.byte $7F ; |.XXXXXXX| $F9D5
+	.byte $7F ; |.XXXXXXX| $F9D6
+	.byte $7F ; |.XXXXXXX| $F9D7
+	.byte $89 ; |X...X..X| $F9D8
+	.byte $1F ; |...XXXXX| $F9D9
+	.byte $07 ; |.....XXX| $F9DA
+	.byte $01 ; |.......X| $F9DB
+	.byte $00 ; |........| $F9DC
+	.byte $E9 ; |XXX.X..X| $F9DD
+	.byte $FE ; |XXXXXXX.| $F9DE
+	.byte $89 ; |X...X..X| $F9DF
+	.byte $3F ; |..XXXXXX| $F9E0
+	.byte $7F ; |.XXXXXXX| $F9E1
+	.byte $F9 ; |XXXXX..X| $F9E2
+	.byte $91 ; |X..X...X| $F9E3
+	.byte $F9 ; |XXXXX..X| $F9E4
+	.byte $89 ; |X...X..X| $F9E5
+	.byte $3F ; |..XXXXXX| $F9E6
+	.byte $F9 ; |XXXXX..X| $F9E7
+	.byte $7F ; |.XXXXXXX| $F9E8
+	.byte $3F ; |..XXXXXX| $F9E9
+	.byte $7F ; |.XXXXXXX| $F9EA
+	.byte $7F ; |.XXXXXXX| $F9EB
+	.byte $00 ; |........| $F9EC
+	.byte $00 ; |........| $F9ED
 
-
-
-
-
-
-	.byte	$00,$00,$00,$00,$00,$00,$00,$00 ; $f9ac (*)
-	.byte	$00,$00,$00,$00,$00,$00,$00,$00 ; $f9b4 (*)
-	.byte	$00,$00,$00,$00,$00,$00,$00,$00 ; $f9bc (*)
-	.byte	$00,$b9,$e4,$81,$89,$55,$f9,$89 ; $f9c4 (*)
-	.byte	$f9,$81,$fa,$32,$1c,$89,$3e,$91 ; $f9cc (*)
-	.byte	$7f,$7f,$7f,$7f,$89,$1f,$07,$01 ; $f9d4 (*)
-	.byte	$00,$e9,$fe,$89,$3f,$7f,$f9,$91 ; $f9dc (*)
-	.byte	$f9,$89,$3f,$f9,$7f,$3f,$7f,$7f ; $f9e4 (*)
-	.byte	$00,$00							; $f9ec (*)
-lf9ee
-	.byte	$00,$00,$00,$00,$00,$00,$02,$02 ; $f9ee (*)
-	.byte	$02,$02,$02,$04,$04				; $f9f6 (*)
-	.byte	$06								; $f9fb (d)
+KernelJumpTableIndex
+	.byte 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 4, 4, 6
 
 lf9fc
-	.byte	$1c ; |		###  |			$f9fc (g)
-	.byte	$36 ; |	 ## ## |			$f9fd (g)
-	.byte	$63 ; | ##	 ##|			$f9fe (g)
-	.byte	$36 ; |	 ## ## |			$f9ff (g)
+	.byte $1C ; |...XXX..| $F9FC
+	.byte $36 ; |..XX.XX.| $F9FD
+	.byte $63 ; |.XX...XX| $F9FE
+	.byte $36 ; |..XX.XX.| $F9FF
 
-	.byte	$18 ; |		xx   |			$fa00 (g)
-	.byte	$3c ; |	 xxxx  |			$fa01 (g)
-	.byte	$00 ; |		|			$fa02 (g)
-	.byte	$18 ; |		xx   |			$fa03 (g)
-	.byte	$1c ; |		xxx  |			$fa04 (g)
-	.byte	$18 ; |		xx   |			$fa05 (g)
-	.byte	$18 ; |		xx   |			$fa06 (g)
-	.byte	$0c ; |	xx  |			$fa07 (g)
-	.byte	$62 ; | xx	 x |			$fa08 (g)
-	.byte	$43 ; | x	 xx|			$fa09 (g)
-	.byte	$00 ; |		|			$fa0a (g)
+IndySprites
+Indy_0
+	.byte $18 ; |...XX...| $FA00
+	.byte $3C ; |..XXXX..| $FA01
+	.byte $00 ; |........| $FA02
+	.byte $18 ; |...XX...| $FA03
+	.byte $1C ; |...XXX..| $FA04
+	.byte $18 ; |...XX...| $FA05
+	.byte $18 ; |...XX...| $FA06
+	.byte $0C ; |....XX..| $FA07
+	.byte $62 ; |.XX...X.| $FA08
+	.byte $43 ; |.X....XX| $FA09
+	.byte $00 ; |........| $FA0A
 
-	.byte	$18 ; |		xx   |			$fa0b (g)
-	.byte	$3c ; |	 xxxx  |			$fa0c (g)
-	.byte	$00 ; |		|			$fa0d (g)
-	.byte	$18 ; |		xx   |			$fa0e (g)
-	.byte	$38 ; |	 xxx   |			$fa0f (g)
-	.byte	$1c ; |		xxx  |			$fa10 (g)
-	.byte	$18 ; |		xx   |			$fa11 (g)
-	.byte	$14 ; |		x x  |			$fa12 (g)
-	.byte	$64 ; | xx	x  |			$fa13 (g)
-	.byte	$46 ; | x	xx |			$fa14 (g)
-	.byte	$00 ; |		|			$fa15 (g)
+Indy_1
+	.byte $18 ; |...XX...| $FA0B
+	.byte $3C ; |..XXXX..| $FA0C
+	.byte $00 ; |........| $FA0D
+	.byte $18 ; |...XX...| $FA0E
+	.byte $38 ; |..XXX...| $FA0F
+	.byte $1C ; |...XXX..| $FA10
+	.byte $18 ; |...XX...| $FA11
+	.byte $14 ; |...X.X..| $FA12
+	.byte $64 ; |.XX..X..| $FA13
+	.byte $46 ; |.X...XX.| $FA14
+	.byte $00 ; |........| $FA15
 
-	.byte	$18 ; |		xx   |			$fa16 (g)
-	.byte	$3c ; |	 xxxx  |			$fa17 (g)
-	.byte	$00 ; |		|			$fa18 (g)
-	.byte	$38 ; |	 xxx   |			$fa19 (g)
-	.byte	$38 ; |	 xxx   |			$fa1a (g)
-	.byte	$18 ; |		xx   |			$fa1b (g)
-	.byte	$18 ; |		xx   |			$fa1c (g)
-	.byte	$28 ; |	 x x   |			$fa1d (g)
-	.byte	$48 ; | x  x   |			$fa1e (g)
-	.byte	$8c ; |x   xx  |			$fa1f (g)
-	.byte	$00 ; |		|			$fa20 (g)
+Indy_2
+	.byte $18 ; |...XX...| $FA16
+	.byte $3C ; |..XXXX..| $FA17
+	.byte $00 ; |........| $FA18
+	.byte $38 ; |..XXX...| $FA19
+	.byte $38 ; |..XXX...| $FA1A
+	.byte $18 ; |...XX...| $FA1B
+	.byte $18 ; |...XX...| $FA1C
+	.byte $28 ; |..X.X...| $FA1D
+	.byte $48 ; |.X..X...| $FA1E
+	.byte $8C ; |X...XX..| $FA1F
+	.byte $00 ; |........| $FA20
 
-	.byte	$18 ; |		xx   |			$fa21 (g)
-	.byte	$3c ; |	 xxxx  |			$fa22 (g)
-	.byte	$00 ; |		|			$fa23 (g)
-	.byte	$38 ; |	 xxx   |			$fa24 (g)
-	.byte	$58 ; | x xx   |			$fa25 (g)
-	.byte	$38 ; |	 xxx   |			$fa26 (g)
-	.byte	$10 ; |		x	|			$fa27 (g)
-	.byte	$e8 ; |xxx x   |			$fa28 (g)
-	.byte	$88 ; |x   x   |			$fa29 (g)
-	.byte	$0c ; |	xx  |			$fa2a (g)
-	.byte	$00 ; |		|			$fa2b (g)
+Indy_3
+	.byte $18 ; |...XX...| $FA21
+	.byte $3C ; |..XXXX..| $FA22
+	.byte $00 ; |........| $FA23
+	.byte $38 ; |..XXX...| $FA24
+	.byte $58 ; |.X.XX...| $FA25
+	.byte $38 ; |..XXX...| $FA26
+	.byte $10 ; |...X....| $FA27
+	.byte $E8 ; |XXX.X...| $FA28
+	.byte $88 ; |X...X...| $FA29
+	.byte $0C ; |....XX..| $FA2A
+	.byte $00 ; |........| $FA2B
 
-	.byte	$18 ; |		xx   |			$fa2c (g)
-	.byte	$3c ; |	 xxxx  |			$fa2d (g)
-	.byte	$00 ; |		|			$fa2e (g)
-	.byte	$30 ; |	 xx	|			$fa2f (g)
-	.byte	$78 ; | xxxx   |			$fa30 (g)
-	.byte	$34 ; |	 xx x  |			$fa31 (g)
-	.byte	$18 ; |		xx   |			$fa32 (g)
-	.byte	$60 ; | xx	|			$fa33 (g)
-	.byte	$50 ; | x x	|			$fa34 (g)
-	.byte	$18 ; |		xx   |			$fa35 (g)
-	.byte	$00 ; |		|			$fa36 (g)
+Indy_4
+	.byte $18 ; |...XX...| $FA2C
+	.byte $3C ; |..XXXX..| $FA2D
+	.byte $00 ; |........| $FA2E
+	.byte $30 ; |..XX....| $FA2F
+	.byte $78 ; |.XXXX...| $FA30
+	.byte $34 ; |..XX.X..| $FA31
+	.byte $18 ; |...XX...| $FA32
+	.byte $60 ; |.XX.....| $FA33
+	.byte $50 ; |.X.X....| $FA34
+	.byte $18 ; |...XX...| $FA35
+	.byte $00 ; |........| $FA36
 
-	.byte	$18 ; |		xx   |			$fa37 (g)
-	.byte	$3c ; |	 xxxx  |			$fa38 (g)
-	.byte	$00 ; |		|			$fa39 (g)
-	.byte	$30 ; |	 xx	|			$fa3a (g)
-	.byte	$38 ; |	 xxx   |			$fa3b (g)
-	.byte	$3c ; |	 xxxx  |			$fa3c (g)
-	.byte	$18 ; |		xx   |			$fa3d (g)
-	.byte	$38 ; |	 xxx   |			$fa3e (g)
-	.byte	$20 ; |	 x	|			$fa3f (g)
-	.byte	$30 ; |	 xx	|			$fa40 (g)
-	.byte	$00 ; |		|			$fa41 (g)
+Indy_5
+	.byte $18 ; |...XX...| $FA37
+	.byte $3C ; |..XXXX..| $FA38
+	.byte $00 ; |........| $FA39
+	.byte $30 ; |..XX....| $FA3A
+	.byte $38 ; |..XXX...| $FA3B
+	.byte $3C ; |..XXXX..| $FA3C
+	.byte $18 ; |...XX...| $FA3D
+	.byte $38 ; |..XXX...| $FA3E
+	.byte $20 ; |..X.....| $FA3F
+	.byte $30 ; |..XX....| $FA40
+	.byte $00 ; |........| $FA41
 
-	.byte	$18 ; |		xx   |			$fa42 (g)
-	.byte	$3c ; |	 xxxx  |			$fa43 (g)
-	.byte	$00 ; |		|			$fa44 (g)
-	.byte	$18 ; |		xx   |			$fa45 (g)
-	.byte	$38 ; |	 xxx   |			$fa46 (g)
-	.byte	$1c ; |		xxx  |			$fa47 (g)
-	.byte	$18 ; |		xx   |			$fa48 (g)
-	.byte	$2c ; |	 x xx  |			$fa49 (g)
-	.byte	$20 ; |	 x	|			$fa4a (g)
-	.byte	$30 ; |	 xx	|			$fa4b (g)
-	.byte	$00 ; |		|			$fa4c (g)
+Indy_6
+	.byte $18 ; |...XX...| $FA42
+	.byte $3C ; |..XXXX..| $FA43
+	.byte $00 ; |........| $FA44
+	.byte $18 ; |...XX...| $FA45
+	.byte $38 ; |..XXX...| $FA46
+	.byte $1C ; |...XXX..| $FA47
+	.byte $18 ; |...XX...| $FA48
+	.byte $2C ; |..X.XX..| $FA49
+	.byte $20 ; |..X.....| $FA4A
+	.byte $30 ; |..XX....| $FA4B
+	.byte $00 ; |........| $FA4C
 
-	.byte	$18 ; |		xx   |			$fa4d (g)
-	.byte	$3c ; |	 xxxx  |			$fa4e (g)
-	.byte	$00 ; |		|			$fa4f (g)
-	.byte	$18 ; |		xx   |			$fa50 (g)
-	.byte	$18 ; |		xx   |			$fa51 (g)
-	.byte	$18 ; |		xx   |			$fa52 (g)
-	.byte	$08 ; |	x   |			$fa53 (g)
-	.byte	$16 ; |		x xx |			$fa54 (g)
-	.byte	$30 ; |	 xx	|			$fa55 (g)
-	.byte	$20 ; |	 x	|			$fa56 (g)
-	.byte	$00 ; |		|			$fa57 (g)
+Indy_7	 
+	.byte $18 ; |...XX...| $FA4D
+	.byte $3C ; |..XXXX..| $FA4E
+	.byte $00 ; |........| $FA4F
+	.byte $18 ; |...XX...| $FA50
+	.byte $18 ; |...XX...| $FA51
+	.byte $18 ; |...XX...| $FA52
+	.byte $08 ; |....X...| $FA53
+	.byte $16 ; |...X.XX.| $FA54
+	.byte $30 ; |..XX....| $FA55
+	.byte $20 ; |..X.....| $FA56
+	.byte $00 ; |........| $FA57
 
 IndyStandSprite
 	.byte $18 ; |...XX...| $FA58
