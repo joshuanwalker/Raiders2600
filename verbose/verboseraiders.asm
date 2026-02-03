@@ -2443,20 +2443,20 @@ COARSE_MOTION SET 9
 	.byte HMOVE_L7 | COARSE_MOTION, HMOVE_L6 | COARSE_MOTION, HMOVE_L5 | COARSE_MOTION
 	
 PlayfieldControlTable
-	.byte MSBL_SIZE2 | PF_REFLECT
-	.byte MSBL_SIZE2 | PF_REFLECT
-	.byte MSBL_SIZE2 | PF_REFLECT
-	.byte MSBL_SIZE2 | PF_REFLECT
-	.byte MSBL_SIZE8 | PF_REFLECT
-	.byte MSBL_SIZE2 | PF_REFLECT
-	.byte MSBL_SIZE4 | PF_PRIORITY | PF_REFLECT
-	.byte MSBL_SIZE1 | PF_PRIORITY | PF_REFLECT
-	.byte MSBL_SIZE1 | PF_PRIORITY | PF_REFLECT
-	.byte MSBL_SIZE1 | PF_REFLECT	
-	.byte MSBL_SIZE1 | PF_REFLECT	
-	.byte MSBL_SIZE1 | PF_PRIORITY | PF_REFLECT
-	.byte MSBL_SIZE1 | PF_PRIORITY | PF_REFLECT
-	.byte MSBL_SIZE1 | PF_REFLECT
+	.byte MSBL_SIZE2 | PF_REFLECT					; Treasure Room
+	.byte MSBL_SIZE2 | PF_REFLECT					; Marketplace
+	.byte MSBL_SIZE2 | PF_REFLECT					; Entrance Room
+	.byte MSBL_SIZE2 | PF_REFLECT					; Black Market
+	.byte MSBL_SIZE8 | PF_REFLECT					; Map Room
+	.byte MSBL_SIZE2 | PF_REFLECT					; Mesa Side
+	.byte MSBL_SIZE4 | PF_PRIORITY | PF_REFLECT		; Temple Entrance
+	.byte MSBL_SIZE1 | PF_PRIORITY | PF_REFLECT		; Spider Room
+	.byte MSBL_SIZE1 | PF_PRIORITY | PF_REFLECT		; Room of the Shining Light
+	.byte MSBL_SIZE1 | PF_REFLECT					; Mesa Field
+	.byte MSBL_SIZE1 | PF_REFLECT					; Valley of Poison
+	.byte MSBL_SIZE1 | PF_PRIORITY | PF_REFLECT		; Thieves Den
+	.byte MSBL_SIZE1 | PF_PRIORITY | PF_REFLECT		; Well of Souls
+	.byte MSBL_SIZE1 | PF_REFLECT					; Ark Room
 
 BackgroundColorTable
 	.byte BLACK						; Treasure Room

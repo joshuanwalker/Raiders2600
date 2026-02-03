@@ -131,8 +131,7 @@ OVERSCAN_TIME			= 36
 ; Z P - V A R I A B L E S
 ;============================================================================
 
-zero_page		= $00
-scan_line		= $80
+scanline		= $80
 currentRoomId		= $81
 frameCount	= $82
 secondsTimer		= $83
@@ -140,24 +139,24 @@ loopCounter			= $84; (c)
 tempGfxHolder			= $85; (c)
 bankSwitchJMPOpcode			= $86; (c)
 bankSwitchJMPAddr			= $87; (c)
-ram_88			= $88; (c)
-ram_89			= $89; (c)
+bankSwitchJMPAddrLo			= $88; (c)
+bankSwitchJMPAddrHi			= $89; (c)
 playerInputState			= $8a
 arkDigRegionId			= $8b
 arkLocationRegionId			= $8c
 eventState			= $8d
 m0PosYShadow			= $8e
 weaponStatus			= $8f
-ram_90			= $90
+unused_90			= $90
 moveDirection			= $91
 indyDir		= $92
 screenEventState			= $93
-room_pf_cfg		= $94
+roomPFControlFlags		= $94
 pickupStatusFlags			= $95
 diggingState			= $96
 digAttemptCounter			= $97
 ram_98			= $98
-ram_99			= $99
+screenInitFlag			= $99
 grenadeState			= $9a
 grenadeCookTime			= $9b
 resetEnableFlag			= $9c
@@ -228,12 +227,12 @@ p0SpriteHeight			= $dc
 emy_anim		= $dd
 ram_de			= $de
 objState			= $df
-ram_e0			= $e0
-PF1_data		= $e1
-ram_e2			= $e2
-PF2_data		= $e3
-ram_e4			= $e4
-dungeonGfxData			= $e5
+p0GfxData			= $e0
+PF1GfxDataLo		= $e1
+PF1GfxDataHi			= $e2
+PF2GfxDataLo		= $e3
+PF2GfxDataHi			= $e4
+dynamicGfxData			= $e5
 dungeonBlock1			= $e6
 dungeonBlock2			= $e7
 dungeonBlock3			= $e8
@@ -242,7 +241,7 @@ dungeonBlock5			= $ea
 savedThiefPosY			= $eb
 savedIndyPosY			= $ec
 savedIndyPosX			= $ed
-ram_ee			= $ee
+thiefPosX			= $ee
 ;					$ef  (i)
 ;					$f0  (i)
 ;					$f1  (i)
@@ -482,7 +481,7 @@ checkDungeonWallHit:
 	cpy		#$8d						
 	bcs		clearWeaponState			; branch if too far right			
 	lda		#$00						
-	sta		dungeonGfxData,x			; zero out dungeon gfx data for wall hit			
+	sta		dynamicGfxData,x			; zero out dungeon gfx data for wall hit			
 	beq		clearWeaponState			; unconditional branch			
 
 handleLeftWall:
@@ -501,10 +500,10 @@ maskDungeonWall:
 	lda		itemStatusMaskTable,x		; Load a mask value from the 
 										; itemStatusMaskTable table 
 										; (mask used to disable a wall segment)		
-	and		dungeonGfxData			; Apply the mask to the current
+	and		dynamicGfxData			; Apply the mask to the current
 										; dungeon graphic state 
 										; (clear bits to "erase" part of it)			
-	sta		dungeonGfxData			; Store the updated graphic
+	sta		dynamicGfxData			; Store the updated graphic
 										; state back (modifying visual representation
 										; of the wall)			
 	jmp		clearWeaponState			; unconditional branch			
@@ -1019,7 +1018,7 @@ setIndyInDungeon:
 	ldx		#$40						
 	stx		indyPosY					; set Indy vertical position					
 	ldx		#$ff						
-	stx		dungeonGfxData				; restore dungeon graphics	
+	stx		dynamicGfxData				; restore dungeon graphics	
 	ldx		#$01						
 	stx		dungeonBlock1					
 	stx		dungeonBlock2					
@@ -1337,7 +1336,7 @@ checkMajorEventDone
 	bit		majorEventFlag				
 	bpl		checkGameScriptTimer		; If major event not complete
 										; continue sequence	
-	jmp		switchToBank1AndGo			; Else, jump to end	
+	jmp		jmpBank1Kernel			; Else, jump to end	
 
 checkGameScriptTimer
 	bit		eventTimer					
@@ -1772,7 +1771,7 @@ handleMesaScroll
 	cpx		#ID_MESA_FIELD				; are we on the Mesa Field?	
 	beq		CheckScrollEligibility		; Yes, check if we need to scroll
 	cpx		#ID_VALLEY_OF_POISON		; Do check if we are in Valley of Poison too			
-	bne		switchToBank1AndGo			; If neither, continue to Bank 1 routines
+	bne		jmpBank1Kernel			; If neither, continue to Bank 1 routines
 CheckScrollEligibility
 	lda		frameCount					; get current frame count
 	bit		playerInputState			; Check movement input flags		
@@ -1781,15 +1780,15 @@ CheckScrollEligibility
 scrollIfInZone
 	ldy		indyPosY					; get Indy's vertical position			
 	cpy		#$27						; Check Lower Bound 
-	beq		switchToBank1AndGo			; ; If at bottom, stop scrolling
+	beq		jmpBank1Kernel			; ; If at bottom, stop scrolling
 
 	ldx		objState					; Load Scroll Offset	
 	bcs		ReverseScrollIfApplicable	; if pushing up 				
-	beq		switchToBank1AndGo			; if objState is zero, skip scrolling		
+	beq		jmpBank1Kernel			; if objState is zero, skip scrolling		
 	inc		indyPosY					; Increment Indy's vertical position	
 	inc		weaponPosY					; Move Weapon DOWN with him
 	and		#$02						; Check Frame Timing every 2 frames
-	bne		switchToBank1AndGo			; if not time to scroll, skip			
+	bne		jmpBank1Kernel			; if not time to scroll, skip			
 
 	; These variables are modified but overridden in Bank 1 for display.
 	dec		objState					; Decrement scroll offset
@@ -1799,125 +1798,137 @@ scrollIfInZone
 	inc		objectPosY					 
 	inc		m0PosY				
 	inc		objPosY					
-	jmp		switchToBank1AndGo					
+	jmp		jmpBank1Kernel					
 
 ReverseScrollIfApplicable
 	cpx		#$50						; Check Upper Bound
-	bcs		switchToBank1AndGo			; If at top, stop scrolling	
+	bcs		jmpBank1Kernel			; If at top, stop scrolling	
 	dec		indyPosY					; Move Indy UP
 	dec		weaponPosY					; Move Weapon UP
 	and		#$02						; Frame Timer check
-	bne		switchToBank1AndGo					
+	bne		jmpBank1Kernel					
 
-	inc		objState					;					
+	inc		objState										
 	dec		objectPosY					 
 	dec		m0PosY				
 	dec		objPosY					
 	dec		objectPosY					 
 	dec		m0PosY				
 	dec		objPosY					
-switchToBank1AndGo
-	lda		#<JumpToScreenHandlerFromBank1					
-	sta		ram_88					
-	lda		#>JumpToScreenHandlerFromBank1					
-	sta		ram_89					
-	jmp		ldfad					
+
+jmpBank1Kernel
+	lda		#<bank1Kernel				; Load low byte of Bank 1 Kernel address	
+	sta		bankSwitchJMPAddrLo			; Store in Bank Switch JMP Addr Low		
+	lda		#>bank1Kernel				; Load high byte of Bank 1 Kernel address	
+	sta		bankSwitchJMPAddrHi			; Store in Bank Switch JMP Addr High
+	jmp		JumpToBank1					; Jump to Bank 1 Kernel
 
 setupScreenAndObj
-	lda		ram_99					
-	beq		set_room_attr					
-	jsr		updateRoomEventState				
-	lda		#$00					
-set_room_attr
-	sta		ram_99					
-	ldx		currentRoomId					
+	lda		screenInitFlag				; Check status flag	
+	beq		setRoomAttr					; If zero, skip subroutine 
+	jsr		updateRoomEventState		; Run special screen setup routine		
+	lda		#$00						; Clear the flag afterward
+setRoomAttr
+	sta		screenInitFlag				; Store the updated flag
+	ldx		currentRoomId				; get the current room id	
 	lda		HMOVETable,x					
-	sta		NUSIZ0					
-	lda		room_pf_cfg					
-	sta		CTRLPF					
-	lda		room_bg_color_tbl,x					
-	sta		COLUBK					
-	lda		room_pf_color_tbl,x					
-	sta		COLUPF					
-	lda		room_p0_color_tbl,x					
-	sta		COLUP0					
-	lda		room_p1_color_tbl,x					
-	sta		COLUP1					
-	cpx		#$0b					
-	bcc		ld84b					
+	sta		NUSIZ0						; Set object sizing/horizontal motion control
+	lda		roomPFControlFlags					
+	sta		CTRLPF						; Set playfield control flags
+	lda		roomBGColorTable,x					
+	sta		COLUBK						; set current room background color
+	lda		roomPFColorTable,x					
+	sta		COLUPF						; set current room playfield color
+	lda		roomP0ColorTable,x					
+	sta		COLUP0						; Set current room Player 0 color (enemies)
+	lda		IndyColorValues,x					
+	sta		COLUP1						; Set indy's color for this room
+	cpx		#ID_THIEVES_DEN				; Is this the Thieves' Den?					
+	bcc		placeObjectPosX					
 	lda		#$20					
-	sta		objectState					
+	sta		objectState					; set object state value					
 	ldx		#$04					
-ld841
-	ldy		dungeonGfxData,x				
-	lda		HMOVETable,y					
-	sta		ram_ee,x				
-	dex								
-	bpl		ld841					
-ld84b
+
+SetupThievesDenObjects
+	; --------------------------------------------------------------------------
+	; INITIALIZE THIEVES POSITIONS
+	; Uses a lookup table to set initial HMOVE values for 5 thieves.
+	; --------------------------------------------------------------------------
+	ldy		dynamicGfxData,x			; Get index.
+	lda		HMOVETable,y				; Load X position from table.
+	sta		thiefPosX,x					; Store
+	dex									; Next thief.
+	bpl		SetupThievesDenObjects		; Loop through all Thieves' Den
+										; enemy positions			
+placeObjectPosX
 	jmp		setObjPosX					
 
-ld84e
-	lda		#$4d					
+initArkRoomObjPos
+	lda		#$4d						; Set Indy's X position in the Ark Room
 	sta		indyPosX					
 	lda		#$48					
-	sta		ObjectPosX					 
+	sta		ObjectPosX					; Set object X position					 
 	lda		#$1f					
-	sta		indyPosY					
+	sta		indyPosY					; Set Indy's Y position in the Ark Room
 	rts								
 
-ld85b
-	ldx		#$00					
-	txa								
-ld85e
-	sta		objState,x				
-	sta		ram_e0,x				
-	sta		PF1_data,x					
-	sta		ram_e2,x				
-	sta		PF2_data,x					
-	sta		ram_e4,x				
-	txa								
-	bne		ld873					
-	ldx		#$06					
-	lda		#$14					
-	bne		ld85e					
-ld873
-	lda		#$fc					
-	sta		snakeMotionPtr					
-	rts								
+clearGameStateMem
+	ldx		#$00						; Start at index 0		
+	txa									; A also 0
+clearStateLoop
+	sta		objState,x					; Clear object state array
+	sta		p0GfxData,x				
+	sta		PF1GfxDataLo,x					
+	sta		PF1GfxDataHi,x				
+	sta		PF2GfxDataLo,x					
+	sta		PF2GfxDataHi,x				
+	txa									; Check accumulator value
+	bne		exitStateClear				; If A ? 0, exit		
+	ldx		#$06						; Prepare to re-run loop with X = 6
+	lda		#$14						; Now set A = 20
+	bne		clearStateLoop				; Unconditional loop to write new value	
+exitStateClear
+	lda		#$fc						; Load setup value	
+	sta		snakeMotionPtr				; Store it to a specific control variable	
+	rts									; Return from subroutine
 
 InitializeScreenState
-	lda		grenadeState					
-	bpl		ld880					
-	ora		#$40					
-	sta		grenadeState					
-ld880
-	lda		#$5c					
+; Initialize the screen state, loading graphics, setting positions, and resetting flags.
+; This is called when entering a new room or restarting a room.
+	lda		grenadeState				; Load grenade/parachute state.		
+	bpl		resetRoomFlags				; If bit 7 is clear (not active),
+										; skip setting the "warped/re-entered" flag.	
+	ora		#$40						; Set bit 6 to indicate re-entry or warp status.
+	sta		grenadeState				; Update the state.	
+resetRoomFlags
+	lda		#$5c						; Load default value for digging state
 	sta		diggingState					
-	ldx		#$00					
-	stx		screenEventState					
-	stx		spiderRoomState					
-	stx		m0PosYShadow					
-	stx		ram_90					
-	lda		pickupStatusFlags					
-	stx		pickupStatusFlags					
-	jsr		updateRoomEventState				
-	rol		playerInputState					
+	ldx		#$00						; Initialize X to 0 for clearing.
+	stx		screenEventState			; Clear screen event state.
+	stx		spiderRoomState				; Clear spider room state.	
+	stx		m0PosYShadow				; Clear shadow variable for missile Y Position
+	stx		unused_90					; Clear unknown flag at $90
+	lda		pickupStatusFlags			; Load pickup flags.		
+	stx		pickupStatusFlags			; Clear pickup flags.
+	jsr		updateRoomEventState		; Update room event counters/offsets.		
+	rol		playerInputState			; Rotate input flags
 	clc								
-	ror		playerInputState					
-	ldx		currentRoomId					
-	lda		ldb92,x					
-	sta		room_pf_cfg					
-	cpx		#$0d					
-	beq		ld84e					
-	cpx		#$05					
-	beq		ld8b1					
-	cpx		#$0c					
-	beq		ld8b1					
+	ror		playerInputState			; Reverse the bit rotation
+										; keeps input state consistent	
+	ldx		currentRoomId				; Load the current room ID into X.	
+	lda		PFControlTable,x			; Set playfield control flags
+										; (reflection, priority) based on table.		
+	sta		roomPFControlFlags					
+	cpx		#ID_ARK_ROOM				; Is this the Ark Room?					
+	beq		initArkRoomObjPos			; then jump to special setup	
+	cpx		#ID_MESA_SIDE				; Is this the Mesa Side?					
+	beq		loadRoomGfx					; skip clear and go to load graphics.
+	cpx		#ID_WELL_OF_SOULS			; Is this the Well of Souls?					
+	beq		loadRoomGfx					; skip clear and go to load graphics.
 	lda		#$00					
-	sta		arkDigRegionId					
-ld8b1
-	lda		ldbee,x					
+	sta		arkDigRegionId				; CLear Ark location	
+loadRoomGfx
+	lda		RoomPlayer0LSBGraphicData,x					
 	sta		emy_anim					
 	lda		ldbe1,x					
 	sta		ram_de					
@@ -1930,17 +1941,17 @@ ld8b1
 	lda		ldc1b,x					
 	sta		m0PosY				
 	cpx		#$0b					
-	bcs		ld85b					
+	bcs		clearGameStateMem					
 	adc		ldc03,x					
-	sta		ram_e0					
+	sta		p0GfxData					
 	lda		ldc28,x					
-	sta		PF1_data					
+	sta		PF1GfxDataLo					
 	lda		ldc33,x					
-	sta		ram_e2					
+	sta		PF1GfxDataHi					
 	lda		ldc3e,x					
-	sta		PF2_data					
+	sta		PF2GfxDataLo					
 	lda		ldc49,x					
-	sta		ram_e4					
+	sta		PF2GfxDataHi					
 	lda		#$55					
 	sta		objPosY					
 	sta		weaponPosY					
@@ -1999,11 +2010,11 @@ ld93e
 	ldy		#$00					
 	sty		timepieceSpriteDataPtr					
 	ldy		#$40					
-	sty		dungeonGfxData					
+	sty		dynamicGfxData					
 	bne		ld958					
 ld950
 	ldy		#$ff					
-	sty		dungeonGfxData					
+	sty		dynamicGfxData					
 	iny								
 	sty		timepieceSpriteDataPtr					
 	iny								
@@ -2293,12 +2304,32 @@ ldaf7
 	sec								
 	rts								
 
-	.byte	$00,$00,$00						; $dafd (*)
+	.byte	$00,$00,$00				; $dafd (*)
+
+
 HMOVETable
-	.byte	$00								; $db00 (d)
-	.byte	$00,$35,$10,$17,$30,$00,$00,$00 ; $db01 (*)
-	.byte	$00,$00,$00,$00					; $db09 (*)
-	.byte	$05								; $db0d (d)
+	.byte MSBL_SIZE1 | ONE_COPY		; Treasure Room
+	.byte MSBL_SIZE1 | ONE_COPY		; Marketplace
+	.byte MSBL_SIZE8 | DOUBLE_SIZE	; Entrance Room
+	.byte MSBL_SIZE2 | ONE_COPY		; Black Market
+	.byte MSBL_SIZE2 | QUAD_SIZE	; Map Room
+	.byte MSBL_SIZE8 | ONE_COPY		; Mesa Side
+	.byte MSBL_SIZE1 | ONE_COPY		; Temple Entrance
+	.byte MSBL_SIZE1 | ONE_COPY		; Spider Room
+	.byte MSBL_SIZE1 | ONE_COPY		; Room of Shining Light
+	.byte MSBL_SIZE1 | ONE_COPY		; Mesa Field
+	.byte MSBL_SIZE1 | ONE_COPY		; Valley of Poison
+	.byte MSBL_SIZE1 | ONE_COPY		; Thieves Den
+	.byte MSBL_SIZE1 | ONE_COPY		; Well of Souls
+	.byte MSBL_SIZE1 | DOUBLE_SIZE	; Ark Room
+
+
+
+
+	; .byte	$00								; $db00 (d)
+	; .byte	$00,$35,$10,$17,$30,$00,$00,$00 ; $db01 (*)
+	; .byte	$00,$00,$00,$00					; $db09 (*)
+	; .byte	$05								; $db0d (d)
 	.byte	$00,$00,$f0,$e0,$d0,$c0,$b0,$a0 ; $db0e (*)
 	.byte	$90,$71,$61,$51,$41,$31,$21,$11 ; $db16 (*)
 	.byte	$01,$f1,$e1,$d1,$c1,$b1,$a1,$91 ; $db1e (*)
@@ -2319,59 +2350,73 @@ HMOVETable
 	.byte	$a7,$97,$78,$68,$58,$48,$38,$28 ; $db7e (*)
 	.byte	$18,$08,$f8,$e8,$d8,$c8,$b8,$a8 ; $db86 (*)
 	.byte	$98,$79,$69,$59					; $db8e (*)
-ldb92
-	.byte	$11,$11,$11,$11,$31,$11,$25,$05 ; $db92 (*)
-	.byte	$05,$01,$01,$05,$05				; $db9a (*)
-	.byte	$01								; $db9f (d)
 
-room_bg_color_tbl
-    .byte $00 ; |        | $dba0 - room $00 - black #000000
-    .byte $24 ; |  x  x  | $dba1 - room $01 - paarl #985c28
-    .byte $96 ; |x  x xx | $dba2 - room $02 
-    .byte $22 ; |  x   x | $dba3 - room $03 
-    .byte $72 ; | xxx  x | $dba4 - room $04 
-    .byte $fc ; |xxxxxx  | $dba5 - room $05 
-    .byte $00 ; |        | $dba6 - room $06 - black #000000
-    .byte $00 ; |        | $dba7 - room $07 - black #000000 
-    .byte $00 ; |        | $dba8 - room $08 - black #000000 
-    .byte $72 ; | xxx  x | $dba9 - room $09 
-    .byte $12 ; |   x  x | $dbaa - room $0a 
-    .byte $00 ; |        | $dbab - room $0b - black #000000 
-    .byte $f8 ; |xxxxx   | $dbac - room $0c 
-    .byte $00 ; |        | $dbad - room $0d - black #000000 
+PFControlTable
+	.byte MSBL_SIZE2 | PF_REFLECT					; Treasure Room
+	.byte MSBL_SIZE2 | PF_REFLECT					; Marketplace
+	.byte MSBL_SIZE2 | PF_REFLECT					; Entrance Room
+	.byte MSBL_SIZE2 | PF_REFLECT					; Black Market
+	.byte MSBL_SIZE8 | PF_REFLECT					; Map Room
+	.byte MSBL_SIZE2 | PF_REFLECT					; Mesa Side
+	.byte MSBL_SIZE4 | PF_PRIORITY | PF_REFLECT		; Temple Entrance
+	.byte MSBL_SIZE1 | PF_PRIORITY | PF_REFLECT		; Spider Room
+	.byte MSBL_SIZE1 | PF_PRIORITY | PF_REFLECT		; Room of the Shining Light
+	.byte MSBL_SIZE1 | PF_REFLECT					; Mesa Field
+	.byte MSBL_SIZE1 | PF_REFLECT					; Valley of Poison
+	.byte MSBL_SIZE1 | PF_PRIORITY | PF_REFLECT		; Thieves Den
+	.byte MSBL_SIZE1 | PF_PRIORITY | PF_REFLECT		; Well of Souls
+	.byte MSBL_SIZE1 | PF_REFLECT					; Ark Room
 
-room_pf_color_tbl
-    .byte $08 ; |    x   | $dbae - room $00
-    .byte $22 ; |  x   x | $dbaf - room $01
-    .byte $08 ; |    x   | $dbb0 - room $02
-    .byte $00 ; |        | $dbb1 - room $03 - black #000000
-    .byte $1a ; |   xx x | $dbb2 - room $04
-    .byte $28 ; |  x x   | $dbb3 - room $05
-    .byte $c8 ; |xx  x   | $dbb4 - room $06
-    .byte $e8 ; |xxx x   | $dbb5 - room $07
-	.byte $8a ; |x   x x | $dbb6 - room $08
-    .byte $1a ; |   xx x | $dbb7 - room $09
-    .byte $c6 ; |xx   xx | $dbb8 - room $0a
-    .byte $00 ; |        | $dbb9 - room $0b - black #000000
-    .byte $28 ; |  x x   | $dbba - room $0c
-    .byte $78 ; | xxxx   | $dbbb - room $0d
 
-room_p1_color_tbl
-	.byte $cc ; |xx  xx  | $dbbc
-    .byte $ea ; |xxx x x | $dbbd
-    .byte $5a ; | x xx x | $dbbe
-    .byte $26 ; |  x  xx | $dbbf
-    .byte $9e ; |x  xxxx | $dbc0
-    .byte $a6 ; |x x  xx | $dbc1
-    .byte $7c ; | xxxxx  | $dbc2
 
-room_p0_color_tbl
-	.byte $88 ; |x   x   | $dbc3
-    .byte $28 ; |  x x   | $dbc4
-    .byte $f8 ; |xxxxx   | $dbc5
-    .byte $4a ; | x  x x | $dbc6
-    .byte $26 ; |  x  xx | $dbc7
-    .byte $a8 ; |x x x   | $dbc8
+roomBGColorTable
+	.byte BLACK						; Treasure Room
+	.byte LT_RED + 4				; Marketplace
+	.byte LT_BLUE + 6				; Entrance Room
+	.byte LT_RED + 2				; Black Market
+	.byte DK_BLUE + 2				; Map Room
+	.byte BROWN + 12				; Mesa Side
+	.byte BLACK						; Temple Entrance
+	.byte BLACK						; Spider Room
+	.byte BLACK						; Room of the Shining Light
+	.byte DK_BLUE + 2				; Mesa Field
+	.byte YELLOW + 2				; Valley of Poison
+	.byte BLACK						; Thieves Den
+	.byte BROWN + 8					; Well of Souls
+	.byte BLACK						; Ark Room
+
+roomPFColorTable
+	.byte BLACK + 8					; Treasure Room
+	.byte LT_RED + 2				; Marketplace
+	.byte BLACK + 8					; Entrance Room
+	.byte BLACK						; Black Market
+	.byte YELLOW + 10				; Map Room
+	.byte LT_RED + 8				; Mesa Side
+	.byte GREEN + 8					; Temple Entrance
+	.byte LT_BROWN + 8				; Spider Room
+	.byte BLUE + 10					; Room of the Shining Light
+	.byte YELLOW + 10				; Mesa Field
+	.byte GREEN + 6					; Valley of Poison
+	.byte BLACK						; Thieves Den
+	.byte LT_RED + 8				; Well of Souls
+	.byte DK_BLUE + 8				; Ark Room
+
+IndyColorValues
+	.byte GREEN + 12				; Treasure Room
+	.byte LT_BROWN + 10				; Marketplace Room
+	.byte DK_PINK + 10				; Entrance Room
+	.byte LT_RED + 6				; Black Market
+	.byte LT_BLUE + 14				; Map Room
+	.byte GREEN_BLUE + 6			; Mesa Side
+	.byte DK_BLUE + 12				; Temple Entrance
+
+roomP0ColorTable
+	.byte BLUE + 8					; Treasure Room
+	.byte LT_RED + 8				; Marketplace Room
+	.byte BROWN + 8					; Entrance Room - Whip
+	.byte ORANGE +10				; Black Market - Shovel
+	.byte LT_RED + 6				; Map Room - Marker
+	.byte GREEN_BLUE + 8			; Mesa Side - Indy Parachute
 
 ldbc9
 	.byte	$c0|$c							; $dbc9 (c)
@@ -2387,7 +2432,22 @@ ldbd4
 ldbe1
 	.byte	$ff,$ff,$ff,$f9,$f9,$f9,$fa,$00 ; $dbe1 (*)
 	.byte	$fd,$fb,$fc,$fc,$fc				; $dbe9 (*)
-ldbee
+
+RoomPlayer0LSBGraphicData
+	; .byte <TreasureRoomPlayerGraphics
+	; .byte <MarketplacePlayerGraphics
+	; .byte <EntranceRoomPlayerGraphics
+	; .byte <BlackMarketPlayerGraphics
+	; .byte <MapRoomPlayerGraphics
+	; .byte <MesaSidePlayerGraphics
+	; .byte $C1
+	; .byte $E5
+	; .byte <ShiningLightSprites
+	; .byte <EmptySprite
+	; .byte <ThiefSprites
+	; .byte <ThiefSprites
+	; .byte <ThiefSprites
+
 	.byte	$00,$51,$a1,$00,$51,$a2,$c1,$e5 ; $dbee (*)
 	.byte	$e0,$00,$00,$00,$00				; $dbf6 (*)
 
@@ -2609,7 +2669,7 @@ startGame
 	inx								; clear x
 	txa								; clear a
 clear_zp
-	sta		zero_page,x
+	sta		VSYNC,x
 	dex
 	bne		clear_zp
 
@@ -2780,10 +2840,10 @@ JumpToDisplayKernel SUBROUTINE
 	sta		WSYNC					
 ;---------------------------------------
 	lda		#$44					
-	sta		ram_88					
+	sta		bankSwitchJMPAddrLo					
 	lda		#$f8					
-	sta		ram_89					
-ldfad
+	sta		bankSwitchJMPAddrHi					
+JumpToBank1
 	lda		#$ad					
 	sta		loopCounter					
 	lda		#$f9					
@@ -2854,7 +2914,7 @@ ldfe5
 
 	lda		lfff8					
 lf003
-	cmp		ram_e0					
+	cmp		p0GfxData					
 	bcs		lf01a					
 	lsr								
 	clc								
@@ -2863,9 +2923,9 @@ lf003
 	sta		WSYNC					
 ;---------------------------------------
 	sta		HMOVE					
-	lda		(PF1_data),y				
+	lda		(PF1GfxDataLo),y				
 	sta		PF1						
-	lda		(PF2_data),y				
+	lda		(PF2GfxDataLo),y				
 	sta		PF2						
 	bcc		lf033					
 lf01a
@@ -2882,14 +2942,14 @@ lf01a
 	lda		#$00					
 	beq		lf031					
 lf02d
-	lda		dungeonGfxData,x				
+	lda		dynamicGfxData,x				
 	ldx		timepieceSpriteDataPtr					
 lf031
 	sta		PF1,x					
 lf033
 	ldx		#$1e					
 	txs								
-	lda		scan_line				
+	lda		scanline				
 	sec								
 	sbc		indyPosY					
 	cmp		indySpriteHeight					
@@ -2898,7 +2958,7 @@ lf033
 	lda		(indyGfxPtrs),y			
 	tax								
 lf043
-	lda		scan_line				
+	lda		scanline				
 	sec								
 	sbc		objectPosY					 
 	cmp		p0SpriteHeight					 
@@ -2907,7 +2967,7 @@ lf043
 	lda		(emy_anim),y				
 	tay								
 lf050
-	lda		scan_line				
+	lda		scanline				
 	sta		WSYNC					
 ;---------------------------------------
 	sta		HMOVE					
@@ -2926,8 +2986,8 @@ lf050
 	sta		ENABL					
 	sta		HMBL					
 lf06e
-	inc		scan_line				
-	lda		scan_line				
+	inc		scanline				
+	lda		scanline				
 	cmp		#$50					
 	bcc		lf003					
 	jmp		lf1ea					
@@ -2961,14 +3021,14 @@ lf09c
 	and		#$02					
 	tax								
 	tya								
-	sta		(PF1_data,x)				
+	sta		(PF1GfxDataLo,x)				
 lf0a4
-	inc		scan_line				
-	ldx		scan_line				
+	inc		scanline				
+	ldx		scanline				
 	lda		#$02					
 	cpx		m0PosY				
 	bcc		lf0b2					
-	cpx		ram_e0					
+	cpx		p0GfxData					
 	bcc		lf0b3					
 lf0b2
 	ror								
@@ -3006,7 +3066,7 @@ lf0d6
 	tay								
 	lda		(indyGfxPtrs),y			
 lf0e2
-	ldy		scan_line				
+	ldy		scanline				
 	sta		GRP1					
 	sta		WSYNC					
 ;---------------------------------------
@@ -3080,8 +3140,8 @@ lf140
 	sta		HMOVE					
 	bit		objectState					
 	bpl		lf157					
-	ldy		ram_89					
-	lda		ram_88					
+	ldy		bankSwitchJMPAddrHi					
+	lda		bankSwitchJMPAddrLo					
 	lsr		objectState					
 lf14e
 	dey								
@@ -3149,7 +3209,7 @@ lf1a7
 	beq		lf1b6					
 	lda		#$03					
 lf1b6
-	eor.wy	dungeonGfxData,y				
+	eor.wy	dynamicGfxData,y				
 	and		#$03					
 	tay								
 	lda		lfc40,y					
@@ -3170,10 +3230,10 @@ lf1ce
 
 lf1d8
 	ldy		bankSwitchJMPAddr					
-	lda.wy	ram_ee,y				
-	sta		ram_88					
+	lda.wy	thiefPosX,y				
+	sta		bankSwitchJMPAddrLo					
 	and		#$0f					
-	sta		ram_89					
+	sta		bankSwitchJMPAddrHi					
 	lda		#$80					
 	sta		objectState					
 	jmp		lf115					
@@ -3466,9 +3526,9 @@ lf3bf
 	bne		lf3d0					
 lf3c5
 	lda		#$d8					
-	sta		ram_88					
+	sta		bankSwitchJMPAddrLo					
 	lda		#$d3					
-	sta		ram_89					
+	sta		bankSwitchJMPAddrHi					
 	jmp		lf493					
 
 lf3d0
@@ -3587,9 +3647,9 @@ lf487
 	bcs		lf472					
 lf48b
 	lda		#$24					
-	sta		ram_88					
+	sta		bankSwitchJMPAddrLo					
 	lda		#$d0					
-	sta		ram_89					
+	sta		bankSwitchJMPAddrHi					
 lf493
 	lda		#$ad					
 	sta		loopCounter					
@@ -3688,7 +3748,7 @@ lf51b
 	inx								
 	bne		lf4ea
 
-JumpToScreenHandlerFromBank1:				
+bank1Kernel:				
 	lda		currentRoomId					
 	asl								
 	tax								
@@ -4201,7 +4261,7 @@ draw_field
 ;---------------------------------------
 	sta		HMOVE					
 	sty		VBLANK					
-	sty		scan_line				
+	sty		scanline				
 	cpx		#$04					
 	bne		lf865					
 	dey								
