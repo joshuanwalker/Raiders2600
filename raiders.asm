@@ -376,7 +376,7 @@ ENTRANCE_ROOM_ROCK_VERT_POS = 53
 	lda	BANK0STROBE				;trigger 1st bank
 
 coldStart
-	jmp		gameStart				;cold start
+	jmp		startGame				;cold start
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1140,7 +1140,7 @@ firstLineOfVerticalSync
 	bpl		frameFirstLine						
 	ror		SWCHB						; rotate RESET to carry
 	bcs		frameFirstLine				; branch if RESET not pressed		
-	jmp		gameStart					; If RESET was pressed, restart the game 
+	jmp		startGame					; If RESET was pressed, restart the game 
 
 frameFirstLine
 	sta		WSYNC						;wait for first sync
@@ -1185,7 +1185,7 @@ checkEasterEggFail:
 	bcc		slowlyLowerIndy				; If Indy is higher up than his point score, skip	
 	bit		INPT5|$30					; read action button from right controller
 	bmi		gotoArkRoomLogic			; branch if action button not pressed		
-	jmp		gameStart					; RESET game if button *is* pressed 
+	jmp		startGame					; RESET game if button *is* pressed 
 
 slowlyLowerIndy:
 	lda		frameCount					; get current frame count
@@ -1817,9 +1817,9 @@ ReverseScrollIfApplicable
 	dec		m0PosY				
 	dec		objPosY					
 switchToBank1AndGo
-	lda		#$28					
+	lda		#<JumpToScreenHandlerFromBank1					
 	sta		ram_88					
-	lda		#$f5					
+	lda		#>JumpToScreenHandlerFromBank1					
 	sta		ram_89					
 	jmp		ldfad					
 
@@ -2601,7 +2601,7 @@ updateRoomEventState
 ldd67
 	rts								
 
-gameStart
+startGame
 	sei								; turn off interrupts
 	cld								; clear decimal flag (no bcd)
 	ldx		#$ff					;
@@ -3686,7 +3686,9 @@ lf51b
 	sta		GRP0					
 	stx		COLUP0					
 	inx								
-	bne		lf4ea					
+	bne		lf4ea
+
+JumpToScreenHandlerFromBank1:				
 	lda		currentRoomId					
 	asl								
 	tax								
