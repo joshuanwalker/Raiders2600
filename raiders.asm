@@ -203,9 +203,9 @@ ram_c4			= $c4
 selectedInventoryId	= $c5
 ram_c6			= $c6
 ram_c7			= $c7
-ObjectPosX			= $c8
+objectPosX			= $c8
 indyPosX			= $c9
-ram_ca			= $ca
+m0PosX			= $ca
 weaponPosX			= $cb
 indyPosXSet			= $cc
 
@@ -224,14 +224,14 @@ indyGfxPtrs		= $d9
 ram_da			= $da
 indySpriteHeight			= $db
 p0SpriteHeight			= $dc
-emy_anim		= $dd
-ram_de			= $de
+p0GfxPtrLo		= $dd
+p0GfxPtrHi			= $de
 objState			= $df
-p0GfxData			= $e0
-PF1GfxDataLo		= $e1
-PF1GfxDataHi			= $e2
-PF2GfxDataLo		= $e3
-PF2GfxDataHi			= $e4
+roomSpecialData			= $e0
+PF1GfxPtrLo		= $e1
+PF1GfxPtrHi			= $e2
+PF2GfxPtrLo		= $e3
+PF2GfxPtrHi			= $e4
 dynamicGfxData			= $e5
 dungeonBlock1			= $e6
 dungeonBlock2			= $e7
@@ -354,6 +354,9 @@ BANK0_REORG				= $D000
 
 INIT_SCORE				= 100		; starting score
 
+SET_PLAYER_0_COLOR		= %10000000
+SET_PLAYER_0_HMOVE		= %10000001
+
 XMAX					= 160
 
 BULLET_OR_WHIP_ACTIVE 	= %10000000
@@ -386,7 +389,7 @@ setObjPosX
 	ldx		#<RESBL - RESP0					
 .moveObjectLoop
 	sta		WSYNC					; wait for next scan line
-	lda		ObjectPosX,x			; get object's horizontal position
+	lda		objectPosX,x			; get object's horizontal position
 	tay								
 	lda		HMOVETable,y	; get fine motion/coarse position value				
 	sta		HMP0,x					; set object's fine motion value
@@ -1867,7 +1870,7 @@ initArkRoomObjPos
 	lda		#$4d						; Set Indy's X position in the Ark Room
 	sta		indyPosX					
 	lda		#$48					
-	sta		ObjectPosX					; Set object X position					 
+	sta		objectPosX					; Set object X position					 
 	lda		#$1f					
 	sta		indyPosY					; Set Indy's Y position in the Ark Room
 	rts								
@@ -1877,11 +1880,11 @@ clearGameStateMem
 	txa									; A also 0
 clearStateLoop
 	sta		objState,x					; Clear object state array
-	sta		p0GfxData,x				
-	sta		PF1GfxDataLo,x					
-	sta		PF1GfxDataHi,x				
-	sta		PF2GfxDataLo,x					
-	sta		PF2GfxDataHi,x				
+	sta		roomSpecialData,x				
+	sta		PF1GfxPtrLo,x					
+	sta		PF1GfxPtrHi,x				
+	sta		PF2GfxPtrLo,x					
+	sta		PF2GfxPtrHi,x				
 	txa									; Check accumulator value
 	bne		exitStateClear				; If A ? 0, exit		
 	ldx		#$06						; Prepare to re-run loop with X = 6
@@ -1927,41 +1930,43 @@ resetRoomFlags
 	beq		loadRoomGfx					; skip clear and go to load graphics.
 	lda		#$00					
 	sta		arkDigRegionId				; CLear Ark location	
+
 loadRoomGfx
-	lda		RoomPlayer0LSBGraphicData,x					
-	sta		emy_anim					
-	lda		ldbe1,x					
-	sta		ram_de					
-	lda		ldbc9,x					
-	sta		p0SpriteHeight					 
-	lda		ldbd4,x					
-	sta		ObjectPosX					 
-	lda		ldc0e,x					
-	sta		ram_ca					
-	lda		ldc1b,x					
-	sta		m0PosY				
-	cpx		#$0b					
-	bcs		clearGameStateMem					
-	adc		ldc03,x					
-	sta		p0GfxData					
-	lda		ldc28,x					
-	sta		PF1GfxDataLo					
-	lda		ldc33,x					
-	sta		PF1GfxDataHi					
-	lda		ldc3e,x					
-	sta		PF2GfxDataLo					
-	lda		ldc49,x					
-	sta		PF2GfxDataHi					
+	;Load the graphics for the current room
+	lda		p0GfxDataLo,x			
+	sta		p0GfxPtrLo					; Set low byte of sprite pointer for P0
+	lda		p0GfxDataHi,x					
+	sta		p0GfxPtrHi					; Set high byte of sprite pointer for P0
+	lda		p0SpriteHeightData,x					
+	sta		p0SpriteHeight				; Set sprite height for P0	 
+	lda		objectPosXTable,x				
+	sta		objectPosX					; Set default object X position 
+	lda		m0PosXTable,x					
+	sta		m0PosX						; Set default missile X position
+	lda		m0PosYTable,x					
+	sta		m0PosY						; Set default missile Y position
+	cpx		#ID_THIEVES_DEN				; Are we in the Thieves' Den?	
+	bcs		clearGameStateMem			; jump to clear game state memory.	
+	adc		roomSpecialTable,x			; set special behavior flags for room		
+	sta		roomSpecialData				; put into roomSpecialData
+	lda		PF1GfxDataLo,x					
+	sta		PF1GfxPtrLo					; Load PF1 graphics pointer LSB.
+	lda		PF1GfxDataHi,x					
+	sta		PF1GfxPtrHi					; Load PF1 graphics pointer MSB.
+	lda		PF2GfxDataLo,x					
+	sta		PF2GfxPtrLo					; Load PF2 graphics pointer LSB.
+	lda		PF2GfxDataHi,x					
+	sta		PF2GfxPtrHi					; Load PF2 graphics pointer MSB.
 	lda		#$55					
-	sta		objPosY					
-	sta		weaponPosY					
-	cpx		#$06					
-	bcs		ld93e					
-	lda		#$00					
-	cpx		#$00					
-	beq		ld91b					
-	cpx		#$02					
-	beq		ld92a					
+	sta		objPosY						; Init object vertical parameter
+	sta		weaponPosY					; Reset Weapon vertical parameter
+	cpx		#ID_TEMPLE_ENTRANCE			; If Temple Entrance or later,		
+	bcs		initTempleAndShiningLight	; jump to specific initialization.				
+	lda		#$00						; Load 0
+	cpx		#ID_TREASURE_ROOM			; Is this the Treasure Room?					
+	beq		setTreasureRoomObjPosY		; Special setup for Treasure Room.			
+	cpx		#ID_ENTRANCE_ROOM					
+	beq		setEntranceRoomObjPosY		; Special setup for Enterance Room.			
 	sta		objectPosY					 
 ld902
 	ldy		#$4f					
@@ -1979,7 +1984,7 @@ ld918
 	sty		objState					
 	rts								
 
-ld91b
+setTreasureRoomObjPosY
 	lda		treasureIndex					
 	and		#$78					
 	sta		treasureIndex					
@@ -1989,7 +1994,7 @@ ld91b
 	sta		objState					
 	rts								
 
-ld92a
+setEntranceRoomObjPosY
 	lda		entranceRoomState					
 	and		#$07					
 	lsr								
@@ -2002,7 +2007,7 @@ ld935
 	sta		objectPosY					 
 	jmp		ld902					
 
-ld93e
+initTempleAndShiningLight
 	cpx		#$08					
 	beq		ld950					
 	cpx		#$06					
@@ -2418,38 +2423,54 @@ roomP0ColorTable
 	.byte LT_RED + 6				; Map Room - Marker
 	.byte GREEN_BLUE + 8			; Mesa Side - Indy Parachute
 
-ldbc9
-	.byte	$c0|$c							; $dbc9 (c)
+p0SpriteHeightData
+	.byte $CC						; Treasure Room
+	.byte $CE 						; Marketplace
+	.byte $4A						; Entrance Room
+	.byte $98						; Black Market
+	.byte $00						; Map Room
+	.byte $00						; Mesa Side
+	.byte $00						; Temple Entrance
+	.byte $08						; Spider Room
+	.byte $07						; Room of the Shining Light
+	.byte $01						; Mesa Field
+	.byte $10						; Valley of Poison
 
-	.byte	$ce,$4a,$98,$00,$00,$00			; $dbca (*)
-
-	.byte	$00|$8							; $dbd0 (c)
-
-	.byte	$07,$01,$10						; $dbd1 (*)
-ldbd4
+objectPosXTable
 	.byte	$78,$4c,$5d,$4c,$4f,$4c,$12,$4c ; $dbd4 (*)
 	.byte	$4c,$4c,$4c,$12,$12				; $dbdc (*)
-ldbe1
-	.byte	$ff,$ff,$ff,$f9,$f9,$f9,$fa,$00 ; $dbe1 (*)
-	.byte	$fd,$fb,$fc,$fc,$fc				; $dbe9 (*)
 
-RoomPlayer0LSBGraphicData
-	; .byte <TreasureRoomPlayerGraphics
-	; .byte <MarketplacePlayerGraphics
-	; .byte <EntranceRoomPlayerGraphics
-	; .byte <BlackMarketPlayerGraphics
-	; .byte <MapRoomPlayerGraphics
-	; .byte <MesaSidePlayerGraphics
-	; .byte $C1
-	; .byte $E5
-	; .byte <ShiningLightSprites
-	; .byte <EmptySprite
-	; .byte <ThiefSprites
-	; .byte <ThiefSprites
-	; .byte <ThiefSprites
+p0GfxDataHi
+	.byte >TreasureRoomPlayerGraphics
+	.byte >MarketplacePlayerGraphics
+	.byte >EntranceRoomPlayerGraphics
+	.byte >BlackMarketPlayerGraphics
+	.byte >MapRoomPlayerGraphics
+	.byte >MesaSidePlayerGraphics
+	.byte $FA
+	.byte $00
+	.byte >ShiningLightSprites
+	.byte >emptySprite
+	.byte >thiefSprites
+	.byte >thiefSprites
+	.byte >thiefSprites
 
-	.byte	$00,$51,$a1,$00,$51,$a2,$c1,$e5 ; $dbee (*)
-	.byte	$e0,$00,$00,$00,$00				; $dbf6 (*)
+p0GfxDataLo
+	.byte <TreasureRoomPlayerGraphics
+	.byte <MarketplacePlayerGraphics
+	.byte <EntranceRoomPlayerGraphics
+	.byte <BlackMarketPlayerGraphics
+	.byte <MapRoomPlayerGraphics
+	.byte <MesaSidePlayerGraphics
+	.byte $C1
+	.byte $E5
+	.byte <ShiningLightSprites
+	.byte <emptySprite
+	.byte <thiefSprites
+	.byte <thiefSprites
+	.byte <thiefSprites
+
+
 
 snakeMoveTableLSB
 	.byte <snakeMotionTable0,<snakeMotionTable1,<snakeMotionTable3,<snakeMotionTable2
@@ -2459,25 +2480,53 @@ snakeMoveTableLSB
 snakePosXOffsetTable:
 	.byte	$fe,$fa,$02,$06					; $dbff (*)
 
-ldc03
-	.byte	$00,$00,$18,$04,$03,$03,$85,$85 ; $dc03 (*)
-	.byte	$3b,$85,$85						; $dc0b (*)
-ldc0e
-	.byte	$20,$78,$85,$4d,$62,$17,$50,$50 ; $dc0e (*)
-	.byte	$50,$50,$50,$12,$12				; $dc16 (*)
-ldc1b
-	.byte	$ff,$ff,$14,$4b,$4a,$44,$ff,$27 ; $dc1b (*)
-	.byte	$ff,$ff,$ff,$f0,$f0				; $dc23 (*)
-ldc28
+roomSpecialTable
+	.byte	$00,$00,$18,$04,$03,$03,$85,$85,$3b,$85,$85	
+
+m0PosXTable
+	.byte	$20					; Treasure Room
+	.byte	$78					; Marketplace
+	.byte	$85					; Entrance Room
+	.byte	$4d					; Black Market
+	.byte	$62					; Map Room
+	.byte	$17					; Mesa Side
+	.byte	$50					; Temple Entrance
+	.byte	$50					; Spider Room
+	.byte	$50					; Room of the Shining Light
+	.byte	$50					; Mesa Field
+	.byte	$50					; Valley of Poison
+	.byte	$12					; Thieves Den
+	.byte	$12					; Well of Souls
+
+
+m0PosYTable
+	.byte	$ff
+	.byte	$ff
+	.byte	$14
+	.byte	$4b
+	.byte	$4a
+	.byte	$44
+	.byte	$ff
+	.byte	$27
+	.byte	$ff
+	.byte	$ff
+	.byte	$ff
+	.byte	$f0
+	.byte	$f0	
+
+
+
+
+PF1GfxDataLo
 	.byte	$06,$06,$06,$06,$06,$06,$48,$68 ; $dc28 (*)
 	.byte	$89,$00,$00						; $dc30 (*)
-ldc33
+PF1GfxDataHi
 	.byte	$00,$00,$00,$00,$00,$00,$fd,$fd ; $dc33 (*)
 	.byte	$fd,$fe,$fe						; $dc3b (*)
-ldc3e
+PF2GfxDataLo
 	.byte	$20,$20,$20,$20,$20,$20,$20,$b7 ; $dc3e (*)
 	.byte	$9b,$78,$78						; $dc46 (*)
-ldc49
+PF2GfxDataHi
 	.byte	$00,$00,$00,$00,$00,$00,$fd,$fd ; $dc49 (*)
 	.byte	$fd,$fe,$fe						; $dc51 (*)
 ldc54
@@ -2865,11 +2914,11 @@ mov_emy_right
 mov_emy_down
 	ror								;rotate next bit into carry
 	bcs		mov_emy_up				;if 1 check if enemy should go up
-	dec		ObjectPosX,x				;move enemy down 1 unit
+	dec		objectPosX,x				;move enemy down 1 unit
 mov_emy_up
 	ror								;rotate next bit into carry
 	bcs		mov_emy_finish			;if 1, moves are finished
-	inc		ObjectPosX,x				;move enemy up 1 unit
+	inc		objectPosX,x				;move enemy up 1 unit
 mov_emy_finish
 	rts								;return
 
@@ -2912,9 +2961,11 @@ ldfe5
 	org		$1000
 	rorg	$f000
 
+BANK1Start
 	lda		lfff8					
+
 lf003
-	cmp		p0GfxData					
+	cmp		roomSpecialData					
 	bcs		lf01a					
 	lsr								
 	clc								
@@ -2923,9 +2974,9 @@ lf003
 	sta		WSYNC					
 ;---------------------------------------
 	sta		HMOVE					
-	lda		(PF1GfxDataLo),y				
+	lda		(PF1GfxPtrLo),y				
 	sta		PF1						
-	lda		(PF2GfxDataLo),y				
+	lda		(PF2GfxPtrLo),y				
 	sta		PF2						
 	bcc		lf033					
 lf01a
@@ -2964,7 +3015,7 @@ lf043
 	cmp		p0SpriteHeight					 
 	bcs		lf07d					
 	tay								
-	lda		(emy_anim),y				
+	lda		(p0GfxPtrLo),y				
 	tay								
 lf050
 	lda		scanline				
@@ -3007,7 +3058,7 @@ lf088
 	lda		#$00					
 	beq		lf0a4					
 lf08c
-	lda		(emy_anim),y				
+	lda		(p0GfxPtrLo),y				
 	bmi		lf09c					
 	cpy		objState					
 	bcs		lf081					
@@ -3021,14 +3072,14 @@ lf09c
 	and		#$02					
 	tax								
 	tya								
-	sta		(PF1GfxDataLo,x)				
+	sta		(PF1GfxPtrLo,x)				
 lf0a4
 	inc		scanline				
 	ldx		scanline				
 	lda		#$02					
 	cpx		m0PosY				
 	bcc		lf0b2					
-	cpx		p0GfxData					
+	cpx		roomSpecialData					
 	bcc		lf0b3					
 lf0b2
 	ror								
@@ -3154,12 +3205,12 @@ lf157
 	txa								
 	and		#$0f					
 	tay								
-	lda		(emy_anim),y				
+	lda		(p0GfxPtrLo),y				
 	sta		GRP0					
 	lda		(timepieceGfxPtrs),y				
 	sta		COLUP0					
 	iny								
-	lda		(emy_anim),y				
+	lda		(p0GfxPtrLo),y				
 	sta		loopCounter					
 	lda		(timepieceGfxPtrs),y				
 	sta		tempGfxHolder					
@@ -3188,7 +3239,7 @@ lf177
 	sta		bankSwitchJMPOpcode					
 	bpl		lf1a2					
 	lda		diggingState					
-	sta		emy_anim					
+	sta		p0GfxPtrLo					
 	lda		#$65					
 	sta		timepieceGfxPtrs					
 	lda		#$00					
@@ -3213,7 +3264,7 @@ lf1b6
 	and		#$03					
 	tay								
 	lda		lfc40,y					
-	sta		emy_anim					
+	sta		p0GfxPtrLo					
 	lda		#$44					
 	sta		timepieceGfxPtrs					
 	lda		#$0f					
@@ -3281,7 +3332,7 @@ lf1ea
 	lda		cursor_pos					
 	lsr								
 	tay								
-	lda		lfff2,y					
+	lda		InventoryIndexHorizValues,y					
 	sta		HMBL					
 	and		#$0f					
 	tay								
@@ -4336,19 +4387,19 @@ lf8c6
 lf8cc
 	dec		objectPosY,x				 
 lf8ce
-	lda		ObjectPosX,x				 
-	cmp.wy	ObjectPosX,y				 
+	lda		objectPosX,x				 
+	cmp.wy	objectPosX,y				 
 	bne		lf8d9					
 	cpy		#$05					
 	bcs		lf8dd					
 lf8d9
 	bcs		lf8de					
-	inc		ObjectPosX,x				 
+	inc		objectPosX,x				 
 lf8dd
 	rts								
 
 lf8de
-	dec		ObjectPosX,x				 
+	dec		objectPosX,x				 
 	rts								
 
 lf8e1
@@ -4364,7 +4415,7 @@ lf8e7
 	rts								
 
 lf8f1
-	lda		ObjectPosX,x				 
+	lda		objectPosX,x				 
 	cmp		#$10					
 	bcc		lf8e7					
 	cmp		#$8e					
@@ -4889,14 +4940,14 @@ inventorySprites
 
 
 emptySprite ; blank space
-	.byte	$00 ; |		|			$fb00 (g)
-	.byte	$00 ; |		|			$fb01 (g)
-	.byte	$00 ; |		|			$fb02 (g)
-	.byte	$00 ; |		|			$fb03 (g)
-	.byte	$00 ; |		|			$fb04 (g)
-	.byte	$00 ; |		|			$fb05 (g)
-	.byte	$00 ; |		|			$fb06 (g)
-	.byte	$00 ; |		|			$fb07 (g)
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
 
 copyrightGfx3 ;copyright3
     ; Used to display "(c) 1982 Atari" in the inventory strip
@@ -5193,75 +5244,75 @@ lfbe8
 	.byte	$10,$12,$14,$17,$17,$17,$17		; $fbf1 (*)
 	.byte	$18,$1b,$0f,$0f,$0f,$14,$17,$18 ; $fbf8 (d)
 
-
-	.byte	$14 ; |		# #  |			$fc00 (g)
-	.byte	$3c ; |	 ####  |			$fc01 (g)
-	.byte	$7e ; | ###### |			$fc02 (g)
-	.byte	$00 ; |		|			$fc03 (g)
-	.byte	$30 ; |	 ##	|			$fc04 (g)
-	.byte	$38 ; |	 ###   |			$fc05 (g)
-	.byte	$3c ; |	 ####  |			$fc06 (g)
-	.byte	$3e ; |	 ##### |			$fc07 (g)
-	.byte	$3f ; |	 ######|			$fc08 (g)
-	.byte	$7f ; | #######|			$fc09 (g)
-	.byte	$7f ; | #######|			$fc0a (g)
-	.byte	$7f ; | #######|			$fc0b (g)
-	.byte	$11 ; |		#		#|			$fc0c (g)
-	.byte	$11 ; |		#		#|			$fc0d (g)
-	.byte	$33 ; |	 ##	 ##|			$fc0e (g)
-	.byte	$00 ; |		|			$fc0f (g)
-
-	.byte	$14 ; |		# #  |			$fc10 (g)
-	.byte	$3c ; |	 ####  |			$fc11 (g)
-	.byte	$7e ; | ###### |			$fc12 (g)
-	.byte	$00 ; |		|			$fc13 (g)
-	.byte	$30 ; |	 ##	|			$fc14 (g)
-	.byte	$38 ; |	 ###   |			$fc15 (g)
-	.byte	$3c ; |	 ####  |			$fc16 (g)
-	.byte	$3e ; |	 ##### |			$fc17 (g)
-	.byte	$3f ; |	 ######|			$fc18 (g)
-	.byte	$7f ; | #######|			$fc19 (g)
-	.byte	$7f ; | #######|			$fc1a (g)
-	.byte	$7f ; | #######|			$fc1b (g)
-	.byte	$22 ; |	 #	 # |			$fc1c (g)
-	.byte	$22 ; |	 #	 # |			$fc1d (g)
-	.byte	$66 ; | ##	## |			$fc1e (g)
-	.byte	$00 ; |		|			$fc1f (g)
-
-	.byte	$14 ; |		# #  |			$fc20 (g)
-	.byte	$3c ; |	 ####  |			$fc21 (g)
-	.byte	$7e ; | ###### |			$fc22 (g)
-	.byte	$00 ; |		|			$fc23 (g)
-	.byte	$30 ; |	 ##	|			$fc24 (g)
-	.byte	$38 ; |	 ###   |			$fc25 (g)
-	.byte	$3c ; |	 ####  |			$fc26 (g)
-	.byte	$3e ; |	 ##### |			$fc27 (g)
-	.byte	$3f ; |	 ######|			$fc28 (g)
-	.byte	$7f ; | #######|			$fc29 (g)
-	.byte	$7f ; | #######|			$fc2a (g)
-	.byte	$7f ; | #######|			$fc2b (g)
-	.byte	$44 ; | #	#  |			$fc2c (g)
-	.byte	$44 ; | #	#  |			$fc2d (g)
-	.byte	$cc ; |##  ##  |			$fc2e (g)
-	.byte	$00 ; |		|			$fc2f (g)
-
-	.byte	$14 ; |		# #  |			$fc30 (g)
-	.byte	$3c ; |	 ####  |			$fc31 (g)
-	.byte	$7e ; | ###### |			$fc32 (g)
-	.byte	$00 ; |		|			$fc33 (g)
-	.byte	$30 ; |	 ##	|			$fc34 (g)
-	.byte	$38 ; |	 ###   |			$fc35 (g)
-	.byte	$3c ; |	 ####  |			$fc36 (g)
-	.byte	$3e ; |	 ##### |			$fc37 (g)
-	.byte	$3f ; |	 ######|			$fc38 (g)
-	.byte	$7f ; | #######|			$fc39 (g)
-	.byte	$7f ; | #######|			$fc3a (g)
-	.byte	$7f ; | #######|			$fc3b (g)
-	.byte	$08 ; |	#   |			$fc3c (g)
-	.byte	$08 ; |	#   |			$fc3d (g)
-	.byte	$18 ; |		##   |			$fc3e (g)
-	.byte	$00 ; |		|			$fc3f (g)
-
+thiefSprites
+ThiefSprite_0
+	.byte $14 ; |...X.X..| $FC00
+	.byte $3C ; |..XXXX..| $FC01
+	.byte $7E ; |.XXXXXX.| $FC02
+	.byte $00 ; |........| $FC03
+	.byte $30 ; |..XX....| $FC04
+	.byte $38 ; |..XXX...| $FC05
+	.byte $3C ; |..XXXX..| $FC06
+	.byte $3E ; |..XXXXX.| $FC07
+	.byte $3F ; |..XXXXXX| $FC08
+	.byte $7F ; |.XXXXXXX| $FC09
+	.byte $7F ; |.XXXXXXX| $FC0A
+	.byte $7F ; |.XXXXXXX| $FC0B
+	.byte $11 ; |...X...X| $FC0C
+	.byte $11 ; |...X...X| $FC0D
+	.byte $33 ; |..XX..XX| $FC0E
+	.byte $00 ; |........| $FC0F
+ThiefSprite_1
+	.byte $14 ; |...X.X..| $FC10
+	.byte $3C ; |..XXXX..| $FC11
+	.byte $7E ; |.XXXXXX.| $FC12
+	.byte $00 ; |........| $FC13
+	.byte $30 ; |..XX....| $FC14
+	.byte $38 ; |..XXX...| $FC15
+	.byte $3C ; |..XXXX..| $FC16
+	.byte $3E ; |..XXXXX.| $FC17
+	.byte $3F ; |..XXXXXX| $FC18
+	.byte $7F ; |.XXXXXXX| $FC19
+	.byte $7F ; |.XXXXXXX| $FC1A
+	.byte $7F ; |.XXXXXXX| $FC1B
+	.byte $22 ; |..X...X.| $FC1C
+	.byte $22 ; |..X...X.| $FC1D
+	.byte $66 ; |.XX..XX.| $FC1E
+	.byte $00 ; |........| $FC1F
+ThiefSprite_2
+	.byte $14 ; |...X.X..| $FC20
+	.byte $3C ; |..XXXX..| $FC21
+	.byte $7E ; |.XXXXXX.| $FC22
+	.byte $00 ; |........| $FC23
+	.byte $30 ; |..XX....| $FC24
+	.byte $38 ; |..XXX...| $FC25
+	.byte $3C ; |..XXXX..| $FC26
+	.byte $3E ; |..XXXXX.| $FC27
+	.byte $3F ; |..XXXXXX| $FC28
+	.byte $7F ; |.XXXXXXX| $FC29
+	.byte $7F ; |.XXXXXXX| $FC2A
+	.byte $7F ; |.XXXXXXX| $FC2B
+	.byte $44 ; |.X...X..| $FC2C
+	.byte $44 ; |.X...X..| $FC2D
+	.byte $CC ; |XX..XX..| $FC2E
+	.byte $00 ; |........| $FC2F
+ThiefSprite_3
+	.byte $14 ; |...X.X..| $FC30
+	.byte $3C ; |..XXXX..| $FC31
+	.byte $7E ; |.XXXXXX.| $FC32
+	.byte $00 ; |........| $FC33
+	.byte $30 ; |..XX....| $FC34
+	.byte $38 ; |..XXX...| $FC35
+	.byte $3C ; |..XXXX..| $FC36
+	.byte $3E ; |..XXXXX.| $FC37
+	.byte $3F ; |..XXXXXX| $FC38
+	.byte $7F ; |.XXXXXXX| $FC39
+	.byte $7F ; |.XXXXXXX| $FC3A
+	.byte $7F ; |.XXXXXXX| $FC3B
+	.byte $08 ; |....X...| $FC3C
+	.byte $08 ; |....X...| $FC3D
+	.byte $18 ; |...XX...| $FC3E
+	.byte $00 ; |........| $FC3F
 
 lfc40
        .byte $00 ; |        | $fc40
@@ -5464,47 +5515,292 @@ lfcef
 lfcf4
 	ror								
 	bcs		lfcf9					
-	dec		ObjectPosX,x				 
+	dec		objectPosX,x				 
 lfcf9
 	ror								
 	bcs		lfcfe					
-	inc		ObjectPosX,x				 
+	inc		objectPosX,x				 
 lfcfe
 	rts								
-
-	.byte	$00,$f2,$40,$f2,$c0,$12,$10,$f2 ; $fcff (*)
-	.byte	$00,$12,$20,$02,$b0,$f2,$30,$12 ; $fd07 (*)
-	.byte	$00,$f2,$40,$f2,$d0,$12,$10,$02 ; $fd0f (*)
-	.byte	$00,$02,$30,$12,$b0,$02,$20,$12 ; $fd17 (*)
-	.byte	$00,$ff,$ff,$fc,$f0,$e0,$e0,$c0 ; $fd1f (*)
-	.byte	$80,$00,$00,$00,$00,$00,$00,$00 ; $fd27 (*)
-	.byte	$00,$00,$00,$00,$00,$00,$00,$00 ; $fd2f (*)
-	.byte	$00,$00,$00,$00,$00,$00,$00,$00 ; $fd37 (*)
-	.byte	$00,$00,$80,$80,$c0,$e0,$e0,$f0 ; $fd3f (*)
-	.byte	$fe,$ff,$ff,$ff,$ff,$fc,$f0,$e0 ; $fd47 (*)
-	.byte	$e0,$c0,$80,$00,$00,$00,$00,$00 ; $fd4f (*)
-	.byte	$00,$00,$00,$00,$00,$00,$c0,$f0 ; $fd57 (*)
-	.byte	$f8,$fe,$fe,$f8,$f0,$e0,$c0,$80 ; $fd5f (*)
-	.byte	$00,$00,$00,$00,$00,$00,$00,$00 ; $fd67 (*)
-	.byte	$00,$02,$07,$07,$0f,$0f,$0f,$07 ; $fd6f (*)
-	.byte	$07,$02,$00,$00,$00,$00,$00,$00 ; $fd77 (*)
-	.byte	$00,$00,$04,$0e,$0e,$0f,$0e,$06 ; $fd7f (*)
-	.byte	$00,$00,$00,$00,$00,$00,$00,$00 ; $fd87 (*)
-	.byte	$00,$00,$02,$07,$07,$0f,$1f,$0f ; $fd8f (*)
-	.byte	$07,$07,$02,$00,$00,$00,$00,$00 ; $fd97 (*)
-	.byte	$00,$00,$00,$00,$00,$00,$00,$01 ; $fd9f (*)
-	.byte	$03,$01,$00,$00,$00,$00,$00,$80 ; $fda7 (*)
-	.byte	$80,$c0,$e0,$f8,$e0,$c0,$80,$80 ; $fdaf (*)
-	.byte	$00,$00,$00,$c0,$e0,$e0,$c0,$00 ; $fdb7 (*)
-	.byte	$00,$00,$00,$00,$00,$00,$00,$00 ; $fdbf (*)
-	.byte	$00,$80,$80,$80,$80,$80,$80,$00 ; $fdc7 (*)
-	.byte	$00,$00,$00,$00,$00,$00,$00,$00 ; $fdcf (*)
-	.byte	$00,$c0,$e0,$e0,$c0,$00,$00,$00 ; $fdd7 (*)
-	.byte	$00,$22,$41,$08,$14,$08,$41,$22 ; $fddf (*)
-	.byte	$00,$41,$08,$14,$2a,$14,$08,$41 ; $fde7 (*)
-	.byte	$00,$08,$14,$3e,$55,$3e,$14,$08 ; $fdef (*)
-	.byte	$00,$14,$3e,$63,$2a,$63,$3e,$14 ; $fdf7 (*)
-	.byte	$00,$07,$07,$07,$03,$03,$03,$01 ; $fdff (*)
+	.byte $00 ; |........| $FCFF
+	.byte $F2 ; |XXXX..X.| $FD00
+	.byte $40 ; |.X......| $FD01
+	.byte $F2 ; |XXXX..X.| $FD02
+	.byte $C0 ; |XX......| $FD03
+	.byte $12 ; |...X..X.| $FD04
+	.byte $10 ; |...X....| $FD05
+	.byte $F2 ; |XXXX..X.| $FD06
+	.byte $00 ; |........| $FD07
+	.byte $12 ; |...X..X.| $FD08
+	.byte $20 ; |..X.....| $FD09
+	.byte $02 ; |......X.| $FD0A
+	.byte $B0 ; |X.XX....| $FD0B
+	.byte $F2 ; |XXXX..X.| $FD0C
+	.byte $30 ; |..XX....| $FD0D
+	.byte $12 ; |...X..X.| $FD0E
+	.byte $00 ; |........| $FD0F
+	.byte $F2 ; |XXXX..X.| $FD10
+	.byte $40 ; |.X......| $FD11
+	.byte $F2 ; |XXXX..X.| $FD12
+	.byte $D0 ; |XX.X....| $FD13
+	.byte $12 ; |...X..X.| $FD14
+	.byte $10 ; |...X....| $FD15
+	.byte $02 ; |......X.| $FD16
+	.byte $00 ; |........| $FD17
+	.byte $02 ; |......X.| $FD18
+	.byte $30 ; |..XX....| $FD19
+	.byte $12 ; |...X..X.| $FD1A
+	.byte $B0 ; |X.XX....| $FD1B
+	.byte $02 ; |......X.| $FD1C
+	.byte $20 ; |..X.....| $FD1D
+	.byte $12 ; |...X..X.| $FD1E
+	.byte $00 ; |........| $FD1F
+	
+RoomPF1GraphicData_6:
+	.byte $FF ; |XXXXXXXX| $FD20
+	.byte $FF ; |XXXXXXXX| $FD21
+	.byte $FC ; |XXXXXX..| $FD22
+	.byte $F0 ; |XXXX....| $FD23
+	.byte $E0 ; |XXX.....| $FD24
+	.byte $E0 ; |XXX.....| $FD25
+	.byte $C0 ; |XX......| $FD26
+	.byte $80 ; |X.......| $FD27
+	.byte $00 ; |........| $FD28
+	.byte $00 ; |........| $FD29
+	.byte $00 ; |........| $FD2A
+	.byte $00 ; |........| $FD2B
+	.byte $00 ; |........| $FD2C
+	.byte $00 ; |........| $FD2D
+	.byte $00 ; |........| $FD2E
+	.byte $00 ; |........| $FD2F
+	.byte $00 ; |........| $FD30
+	.byte $00 ; |........| $FD31
+	.byte $00 ; |........| $FD32
+	.byte $00 ; |........| $FD33
+	.byte $00 ; |........| $FD34
+	.byte $00 ; |........| $FD35
+	.byte $00 ; |........| $FD36
+	.byte $00 ; |........| $FD37
+	.byte $00 ; |........| $FD38
+	.byte $00 ; |........| $FD39
+	.byte $00 ; |........| $FD3A
+	.byte $00 ; |........| $FD3B
+	.byte $00 ; |........| $FD3C
+	.byte $00 ; |........| $FD3D
+	.byte $00 ; |........| $FD3E
+	.byte $00 ; |........| $FD3F
+	.byte $00 ; |........| $FD40
+	.byte $80 ; |X.......| $FD41
+	.byte $80 ; |X.......| $FD42
+	.byte $C0 ; |XX......| $FD43
+	.byte $E0 ; |XXX.....| $FD44
+	.byte $E0 ; |XXX.....| $FD45
+	.byte $F0 ; |XXXX....| $FD46
+	.byte $FE ; |XXXXXXX.| $FD47
+	
+RoomPF1GraphicData_7:
+	.byte $FF ; |XXXXXXXX| $FD48
+	.byte $FF ; |XXXXXXXX| $FD49
+	.byte $FF ; |XXXXXXXX| $FD4A
+	.byte $FF ; |XXXXXXXX| $FD4B
+	.byte $FC ; |XXXXXX..| $FD4C
+	.byte $F0 ; |XXXX....| $FD4D
+	.byte $E0 ; |XXX.....| $FD4E
+	.byte $E0 ; |XXX.....| $FD4F
+	.byte $C0 ; |XX......| $FD50
+	.byte $80 ; |X.......| $FD51
+	.byte $00 ; |........| $FD52
+	.byte $00 ; |........| $FD53
+	.byte $00 ; |........| $FD54
+	.byte $00 ; |........| $FD55
+	.byte $00 ; |........| $FD56
+	.byte $00 ; |........| $FD57
+	.byte $00 ; |........| $FD58
+	.byte $00 ; |........| $FD59
+	.byte $00 ; |........| $FD5A
+	.byte $00 ; |........| $FD5B
+	.byte $00 ; |........| $FD5C
+	.byte $C0 ; |XX......| $FD5D
+	.byte $F0 ; |XXXX....| $FD5E
+	.byte $F8 ; |XXXXX...| $FD5F
+	.byte $FE ; |XXXXXXX.| $FD60
+	.byte $FE ; |XXXXXXX.| $FD61
+	.byte $F8 ; |XXXXX...| $FD62
+	.byte $F0 ; |XXXX....| $FD63
+	.byte $E0 ; |XXX.....| $FD64
+	.byte $C0 ; |XX......| $FD65
+	.byte $80 ; |X.......| $FD66
+	.byte $00 ; |........| $FD67
+	
+RoomPF1GraphicData_8:
+	.byte $00 ; |........| $FD68
+	.byte $00 ; |........| $FD69
+	.byte $00 ; |........| $FD6A
+	.byte $00 ; |........| $FD6B
+	.byte $00 ; |........| $FD6C
+	.byte $00 ; |........| $FD6D
+	.byte $00 ; |........| $FD6E
+	.byte $00 ; |........| $FD6F
+	.byte $02 ; |......X.| $FD70
+	.byte $07 ; |.....XXX| $FD71
+	.byte $07 ; |.....XXX| $FD72
+	.byte $0F ; |....XXXX| $FD73
+	.byte $0F ; |....XXXX| $FD74
+	.byte $0F ; |....XXXX| $FD75
+	.byte $07 ; |.....XXX| $FD76
+	.byte $07 ; |.....XXX| $FD77
+	.byte $02 ; |......X.| $FD78
+	.byte $00 ; |........| $FD79
+	.byte $00 ; |........| $FD7A
+	.byte $00 ; |........| $FD7B
+	.byte $00 ; |........| $FD7C
+	.byte $00 ; |........| $FD7D
+	.byte $00 ; |........| $FD7E
+	.byte $00 ; |........| $FD7F
+	.byte $00 ; |........| $FD80
+	.byte $04 ; |.....X..| $FD81
+	.byte $0E ; |....XXX.| $FD82
+	.byte $0E ; |....XXX.| $FD83
+	.byte $0F ; |....XXXX| $FD84
+	.byte $0E ; |....XXX.| $FD85
+	.byte $06 ; |.....XX.| $FD86
+	.byte $00 ; |........| $FD87
+	.byte $00 ; |........| $FD88
+	
+RoomPF1GraphicData_9:
+	.byte $00 ; |........| $FD89
+	.byte $00 ; |........| $FD8A
+	.byte $00 ; |........| $FD8B
+	.byte $00 ; |........| $FD8C
+	.byte $00 ; |........| $FD8D
+	.byte $00 ; |........| $FD8E
+	.byte $00 ; |........| $FD8F
+	.byte $00 ; |........| $FD90
+	.byte $02 ; |......X.| $FD91
+	.byte $07 ; |.....XXX| $FD92
+	.byte $07 ; |.....XXX| $FD93
+	.byte $0F ; |....XXXX| $FD94
+	.byte $1F ; |...XXXXX| $FD95
+	.byte $0F ; |....XXXX| $FD96
+	.byte $07 ; |.....XXX| $FD97
+	.byte $07 ; |.....XXX| $FD98
+	.byte $02 ; |......X.| $FD99
+	.byte $00 ; |........| $FD9A
+	
+RoomPF2GraphicData_6:
+	.byte $00 ; |........| $FD9B
+	.byte $00 ; |........| $FD9C
+	.byte $00 ; |........| $FD9D
+	.byte $00 ; |........| $FD9E
+	.byte $00 ; |........| $FD9F
+	.byte $00 ; |........| $FDA0
+	.byte $00 ; |........| $FDA1
+	.byte $00 ; |........| $FDA2
+	.byte $00 ; |........| $FDA3
+	.byte $00 ; |........| $FDA4
+	.byte $00 ; |........| $FDA5
+	.byte $01 ; |.......X| $FDA6
+	.byte $03 ; |......XX| $FDA7
+	.byte $01 ; |.......X| $FDA8
+	.byte $00 ; |........| $FDA9
+	.byte $00 ; |........| $FDAA
+	.byte $00 ; |........| $FDAB
+	.byte $00 ; |........| $FDAC
+	.byte $00 ; |........| $FDAD
+	.byte $80 ; |X.......| $FDAE
+	.byte $80 ; |X.......| $FDAF
+	.byte $C0 ; |XX......| $FDB0
+	.byte $E0 ; |XXX.....| $FDB1
+	.byte $F8 ; |XXXXX...| $FDB2
+	.byte $E0 ; |XXX.....| $FDB3
+	.byte $C0 ; |XX......| $FDB4
+	.byte $80 ; |X.......| $FDB5
+	.byte $80 ; |X.......| $FDB6
+	
+RoomPF2GraphicData_7:
+	.byte $00 ; |........| $FDB7
+	.byte $00 ; |........| $FDB8
+	.byte $00 ; |........| $FDB9
+	.byte $C0 ; |XX......| $FDBA
+	.byte $E0 ; |XXX.....| $FDBB
+	.byte $E0 ; |XXX.....| $FDBC
+	.byte $C0 ; |XX......| $FDBD
+	.byte $00 ; |........| $FDBE
+	.byte $00 ; |........| $FDBF
+	.byte $00 ; |........| $FDC0
+	.byte $00 ; |........| $FDC1
+	.byte $00 ; |........| $FDC2
+	.byte $00 ; |........| $FDC3
+	.byte $00 ; |........| $FDC4
+	.byte $00 ; |........| $FDC5
+	.byte $00 ; |........| $FDC6
+	.byte $00 ; |........| $FDC7
+	.byte $80 ; |X.......| $FDC8
+	.byte $80 ; |X.......| $FDC9
+	.byte $80 ; |X.......| $FDCA
+	.byte $80 ; |X.......| $FDCB
+	.byte $80 ; |X.......| $FDCC
+	.byte $80 ; |X.......| $FDCD
+	.byte $00 ; |........| $FDCE
+	.byte $00 ; |........| $FDCF
+	.byte $00 ; |........| $FDD0
+	.byte $00 ; |........| $FDD1
+	.byte $00 ; |........| $FDD2
+	.byte $00 ; |........| $FDD3
+	.byte $00 ; |........| $FDD4
+	.byte $00 ; |........| $FDD5
+	.byte $00 ; |........| $FDD6
+	.byte $00 ; |........| $FDD7
+	.byte $C0 ; |XX......| $FDD8
+	.byte $E0 ; |XXX.....| $FDD9
+	.byte $E0 ; |XXX.....| $FDDA
+	.byte $C0 ; |XX......| $FDDB
+	.byte $00 ; |........| $FDDC
+	.byte $00 ; |........| $FDDD
+	.byte $00 ; |........| $FDDE
+	.byte $00 ; |........| $FDDF
+	
+ShiningLightSprites
+ShiningLight_00
+	.byte $22 ; |..X...X.| $FDE0
+	.byte $41 ; |.X.....X| $FDE1
+	.byte $08 ; |....X...| $FDE2
+	.byte $14 ; |...X.X..| $FDE3
+	.byte $08 ; |....X...| $FDE4
+	.byte $41 ; |.X.....X| $FDE5
+	.byte $22 ; |..X...X.| $FDE6
+	.byte $00 ; |........| $FDE7
+ShiningLight_01
+	.byte $41 ; |.X.....X| $FDE8
+	.byte $08 ; |....X...| $FDE9
+	.byte $14 ; |...X.X..| $FDEA
+	.byte $2A ; |..X.X.X.| $FDEB
+	.byte $14 ; |...X.X..| $FDEC
+	.byte $08 ; |....X...| $FDED
+	.byte $41 ; |.X.....X| $FDEE
+	.byte $00 ; |........| $FDEF
+ShiningLight_02
+	.byte $08 ; |....X...| $FDF0
+	.byte $14 ; |...X.X..| $FDF1
+	.byte $3E ; |..XXXXX.| $FDF2
+	.byte $55 ; |.X.X.X.X| $FDF3
+	.byte $3E ; |..XXXXX.| $FDF4
+	.byte $14 ; |...X.X..| $FDF5
+	.byte $08 ; |....X...| $FDF6
+	.byte $00 ; |........| $FDF7
+ShiningLight_03
+	.byte $14 ; |...X.X..| $FDF8
+	.byte $3E ; |..XXXXX.| $FDF9
+	.byte $63 ; |.XX...XX| $FDFA
+	.byte $2A ; |..X.X.X.| $FDFB
+	.byte $63 ; |.XX...XX| $FDFC
+	.byte $3E ; |..XXXXX.| $FDFD
+	.byte $14 ; |...X.X..| $FDFE
+	.byte $00 ; |........| $FDFF
+	
+	
+	
+	.byte   $07,$07,$07,$03,$03,$03,$01 ; $fdff (*)
 	.byte	$00,$00,$00,$00,$00,$00,$00,$00 ; $fe07 (*)
 	.byte	$30,$78,$7c,$3c,$3c,$18,$08,$00 ; $fe0f (*)
 	.byte	$00,$00,$00,$00,$00,$00,$00,$00 ; $fe17 (*)
@@ -5554,7 +5850,8 @@ lfef9
 
 
 
-    .byte $80 ; |x       | $ff00
+TreasureRoomPlayerGraphics
+	.byte SET_PLAYER_0_COLOR | BLACK >> 1
 
 devInitialsGfx1 ;programmer's initials #2
     .byte $00 ; |        | $ff01
@@ -5579,45 +5876,212 @@ devInitialsGfx1 ;programmer's initials #2
 	
 	
 devInitialsGfx0
-	.byte $07 ; |     xxx| $ff46
-    .byte $01 ; |       x| $ff47
-    .byte $57 ; | x x xxx| $ff48
-    .byte $54 ; | x x x  | $ff49
-    .byte $77 ; | xxx xxx| $ff4a
-    .byte $50 ; | x x    | $ff4b
-    .byte $50 ; | x x    | $ff4c
+	.byte $07 ; |.....XXX| $FF46
+	.byte $01 ; |.......X| $FF47
+	.byte $57 ; |.X.X.XXX| $FF48
+	.byte $54 ; |.X.X.X..| $FF49
+	.byte $77 ; |.XXX.XXX| $FF4A
+	.byte $50 ; |.X.X....| $FF4B
+	.byte $50 ; |.X.X....| $FF4C
+	.byte $00 ; |........| $FF4D
+	.byte $00 ; |........| $FF4E
+	.byte $00 ; |........| $FF4F
+	.byte $00 ; |........| $FF50
 
 	
 	
+MarketplacePlayerGraphics
+	.byte $80 ; |X.......| $FF51
+	.byte $7E ; |.XXXXXX.| $FF52
+	.byte $86 ; |X....XX.| $FF53
+	.byte $80 ; |X.......| $FF54
+	.byte $A6 ; |X.X..XX.| $FF55
+	.byte $5A ; |.X.XX.X.| $FF56
+	.byte $7E ; |.XXXXXX.| $FF57
+	.byte $80 ; |X.......| $FF58
+	.byte $7F ; |.XXXXXXX| $FF59
+	.byte $00 ; |........| $FF5A
+	.byte $B1 ; |X.XX...X| $FF5B
+	.byte $F9 ; |XXXXX..X| $FF5C
+	
+	.byte $F6 ; |XXXX.XX.| $FF5D
+	.byte $06 ; |.....XX.| $FF5E
+	.byte $1E ; |...XXXX.| $FF5F
+	.byte $12 ; |...X..X.| $FF60
+	.byte $1E ; |...XXXX.| $FF61
+	.byte $12 ; |...X..X.| $FF62
+	.byte $1E ; |...XXXX.| $FF63
+	.byte $7F ; |.XXXXXXX| $FF64
+	.byte $00 ; |........| $FF65
+	.byte $B9 ; |X.XXX..X| $FF66
+	.byte $00 ; |........| $FF67
+	.byte $D4 ; |XX.X.X..| $FF68
+	.byte $00 ; |........| $FF69
+	.byte SET_PLAYER_0_HMOVE | HMOVE_0 >> 1;$81
+	.byte $1C ; |...XXX..| $FF6B
+	.byte $2A ; |..X.X.X.| $FF6C
+	.byte $55 ; |.X.X.X.X| $FF6D
+	.byte $2A ; |..X.X.X.| $FF6E
+	.byte $14 ; |...X.X..| $FF6F
+	.byte $3E ; |..XXXXX.| $FF70
+	.byte $00 ; |........| $FF71
+	.byte $C1 ; |XX.....X| $FF72
+	.byte $E6 ; |XXX..XX.| $FF73
+	.byte $00 ; |........| $FF74
+	.byte $00 ; |........| $FF75
+	.byte $00 ; |........| $FF76
+	.byte SET_PLAYER_0_HMOVE | HMOVE_0 >> 1;$81
+	.byte $7F ; |.XXXXXXX| $FF78
+	.byte $55 ; |.X.X.X.X| $FF79
+	.byte $2A ; |..X.X.X.| $FF7A
+	.byte $55 ; |.X.X.X.X| $FF7B
+	.byte $2A ; |..X.X.X.| $FF7C
+	.byte $3E ; |..XXXXX.| $FF7D
+	.byte $00 ; |........| $FF7E
+	.byte $B9 ; |X.XXX..X| $FF7F
+	.byte $86 ; |X....XX.| $FF80
+	.byte $91 ; |X..X...X| $FF81
+	.byte SET_PLAYER_0_HMOVE | HMOVE_0 >> 1;$81
+	.byte $7E ; |.XXXXXX.| $FF83
+	.byte $80 ; |X.......| $FF84
+	.byte $86 ; |X....XX.| $FF85
+	.byte $A6 ; |X.X..XX.| $FF86
+	.byte $5A ; |.X.XX.X.| $FF87
+	.byte $7E ; |.XXXXXX.| $FF88
+	.byte $86 ; |X....XX.| $FF89
+	.byte $7F ; |.XXXXXXX| $FF8A
+	.byte $00 ; |........| $FF8B
+	.byte $D6 ; |XX.X.XX.| $FF8C
+	.byte $77 ; |.XXX.XXX| $FF8D
+	.byte $77 ; |.XXX.XXX| $FF8E
+	.byte $80 ; |X.......| $FF8F
+	.byte $D6 ; |XX.X.XX.| $FF90
+	.byte $77 ; |.XXX.XXX| $FF91
+	.byte $00 ; |........| $FF92
+	.byte $C1 ; |XX.....X| $FF93
+	.byte $B6 ; |X.XX.XX.| $FF94
+	.byte $A1 ; |X.X....X| $FF95
+	.byte SET_PLAYER_0_HMOVE | HMOVE_0 >> 1;$81
+	.byte $1C ; |...XXX..| $FF97
+	.byte $2A ; |..X.X.X.| $FF98
+	.byte $55 ; |.X.X.X.X| $FF99
+	.byte $2A ; |..X.X.X.| $FF9A
+	.byte $14 ; |...X.X..| $FF9B
+	.byte $3E ; |..XXXXX.| $FF9C
+	.byte $00 ; |........| $FF9D
+	.byte $00 ; |........| $FF9E
+	.byte $00 ; |........| $FF9F
+	.byte $00 ; |........| $FFA0
 
-	.byte	$00,$00,$00 ; $ff4d (*)
-	.byte	$00,$80,$7e,$86,$80,$a6,$5a,$7e ; $ff50 (*)
-	.byte	$80,$7f,$00,$b1,$f9,$f6,$06,$1e ; $ff58 (*)
-	.byte	$12,$1e,$12,$1e,$7f,$00,$b9,$00 ; $ff60 (*)
-	.byte	$d4,$00,$81,$1c,$2a,$55,$2a,$14 ; $ff68 (*)
-	.byte	$3e,$00,$c1,$e6,$00,$00,$00,$81 ; $ff70 (*)
-	.byte	$7f,$55,$2a,$55,$2a,$3e,$00,$b9 ; $ff78 (*)
-	.byte	$86,$91,$81,$7e,$80,$86,$a6,$5a ; $ff80 (*)
-	.byte	$7e,$86,$7f,$00,$d6,$77,$77,$80 ; $ff88 (*)
-	.byte	$d6,$77,$00,$c1,$b6,$a1,$81,$1c ; $ff90 (*)
-	.byte	$2a,$55,$2a,$14,$3e,$00,$00,$00 ; $ff98 (*)
-	.byte	$00,$00,$86,$70,$5f,$72,$05,$00 ; $ffa0 (*)
-	.byte	$c1,$00,$81,$84,$1f,$89,$f9,$91 ; $ffa8 (*)
-	.byte	$f9,$18,$81,$80,$1c,$1f,$f1,$7f ; $ffb0 (*)
-	.byte	$89,$f9,$f9,$89,$91,$f1,$f9,$89 ; $ffb8 (*)
-	.byte	$f9,$f9,$89,$f9,$89,$f9,$89,$3f ; $ffc0 (*)
-	.byte	$91,$81,$70,$40,$84,$89,$7e,$f9 ; $ffc8 (*)
-	.byte	$91,$f9,$f1,$00,$b9,$84,$00,$00 ; $ffd0 (*)
-	.byte	$89,$38,$78,$7b,$f9,$89,$f9,$6f ; $ffd8 (*)
-	.byte	$00,$b1,$92,$e9,$f9,$00,$30,$30 ; $ffe0 (*)
-	.byte	$30,$e9,$30,$30,$30,$10,$00,$00 ; $ffe8 (*)
-	.byte	$00,$00							; $fff0 (*)
-lfff2
-	.byte	$a4								; $fff2 (d)
-	.byte	$15,$95,$06,$86,$f7				; $fff3 (*)
+
+
+
+EntranceRoomPlayerGraphics
+	;Rock Sprite Setup
+	.byte $00						; Padding/Space.
+	.byte SET_PLAYER_0_COLOR | (BLACK + 12) >> 1; Set Color (Grey/White).
+	
+	; The Rock Sprite Pattern
+	.byte $70 						; |.XXX....|
+	.byte $5F 						; |.X.XXXXX|
+	.byte $72 						; |.XXX..X.|
+	.byte $05 						; |.....X.X|
+	
+	.byte $00 						; End of sprite.
+
+	; Positioning Commands (for subsequent items or HMOVE logic)
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R8 >> 1
+	.byte $00
+	.byte SET_PLAYER_0_HMOVE | HMOVE_0 >> 1
+	.byte SET_PLAYER_0_COLOR | (BLACK + 8) >> 1
+	.byte $1F ; |...XXXXX|
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L1 >> 1
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L2 >> 1
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1
+	.byte $18 ; |...XX...|
+	.byte SET_PLAYER_0_HMOVE | HMOVE_0 >> 1
+	.byte SET_PLAYER_0_COLOR | BLACK >> 1
+	.byte $1C ; |...XXX..|
+	.byte $1F ; |...XXXXX|
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R2 >> 1
+	.byte $7F ; |.XXXXXXX|
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L1 >> 1
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L1 >> 1
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L2 >> 1
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R2 >> 1
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L1 >> 1
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L1 >> 1
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L1 >> 1
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L1 >> 1
+	.byte $3F ; |..XXXXXX|
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L2 >> 1
+	.byte SET_PLAYER_0_HMOVE | HMOVE_0 >> 1
+	.byte $70 ; |.XXX....|
+	.byte $40 ; |.X......|
+	.byte SET_PLAYER_0_COLOR | (BLACK + 8) >> 1
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L1 >> 1
+	.byte $7E ; |.XXXXXX.|
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L2 >> 1
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R2 >> 1
+	.byte $00 ; |........|
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L7 >> 1
+	.byte SET_PLAYER_0_COLOR | (BLACK + 8) >> 1
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L1 >> 1
+	.byte $38 ; |..XXX...|
+	.byte $78 ; |.XXXX...|
+	.byte $7B ; |.XXXX.XX|
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L1 >> 1
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1
+	.byte $6F ; |.XX.XXXX|
+	.byte $00 ; |........|
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L6 >> 1
+	.byte SET_PLAYER_0_COLOR | (LT_RED + 4) >> 1
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R3 >> 1
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1
+	.byte $00 ; |........|
+	.byte $30 ; |..XX....|
+	.byte $30 ; |..XX....|
+	.byte $30 ; |..XX....|
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R3 >> 1
+	.byte $30 ; |..XX....|
+	.byte $30 ; |..XX....|
+	.byte $30 ; |..XX....|
+	.byte $10 ; |...X....|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+
+
+
+
+
+InventoryIndexHorizValues
+	.byte HMOVE_R6 | 4
+	.byte HMOVE_L1 | 5
+	.byte HMOVE_R7 | 5
+	.byte HMOVE_0  | 6
+	.byte HMOVE_R8 | 6
+	.byte HMOVE_R1 | 7
+
 lfff8
 	.byte	$00								; $fff8 (d)
-	.byte	$00,$00,$f0						; $fff9 (*)
-	.byte	$00,$f0							; $fffc (d)
-	.byte	$00								; $fffe (*)
-	.byte	$f0								; $ffff (*)
+	.byte	$00
+	
+	;Interrupt Vectors
+	.word BANK1Start	; NMI
+	.word BANK1Start	; RESET
+	.word BANK1Start	; IRQ/BRK
