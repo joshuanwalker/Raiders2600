@@ -165,7 +165,7 @@ score			= $9e
 lives_left		= $9f
 bulletCount		= $a0
 eventTimer			= $a1
-indyFootstep			= $a2
+indyFootstepSound			= $a2
 soundChan1WhipTimer			= $a3
 diamond_h		= $a4
 grenadeOpeningPenalty	= $a5
@@ -198,8 +198,8 @@ invSlotLo5	= $bf
 invSlotHi5	= $c0
 invSlotLo6	= $c1
 invSlotHi6	= $c2
-cursor_pos		= $c3
-ram_c4			= $c4
+selectedItemSlot		= $c3
+inventoryItemCount			= $c4
 selectedInventoryId	= $c5
 ram_c6			= $c6
 ram_c7			= $c7
@@ -264,11 +264,7 @@ HEIGHT_PARACHUTING_SPRITE = 15
 HEIGHT_THIEF					= 16
 HEIGHT_KERNEL				= 160
 
-;--------------------
-;objects
-;---------------------
 
-key_obj = $07
 
 ;--------------------
 ; Inventory Sprite Ids
@@ -578,7 +574,7 @@ handleMesaSideSecretExit:
 	stx		indyPosY					; set Indy vertical position (i.e. x = 5)						
 	lda		#ID_WELL_OF_SOULS									
 	sta    currentRoomId				; move Indy to the Well of Souls						
-	jsr		InitializeScreenState						
+	jsr		initRoomState						
 	lda		#(XMAX / 2) - 4						
 	sta		indyPosX					; place Indy in horizontal middle  
 	bne		clearHits					; unconditional branch  
@@ -591,7 +587,7 @@ handleMesaFall:
 										; (don't fall)		
 	lda		#ID_VALLEY_OF_POISON 		; Otherwise, load Valley of Poison						
 	sta		currentRoomId 			; Set the current screen to Valley of Poison						
-	jsr		InitializeScreenState		; initialize rooom state				
+	jsr		initRoomState		; initialize rooom state				
 	lda		savedThiefPosY			; get saved thief vertical position						
 	sta		objState				; set thief vertical position						
 	lda		savedIndyPosY				; get saved Indy vertical position						
@@ -618,7 +614,7 @@ dispatchHits:
 	clc								
 	ror		pickupStatusFlags						
 ContinueToHitDispatch:
-	jmp		screenLogicDispatcher						
+	jmp		playerHitDefaut						
 
 collectTreasure:
 	lda		currentRoomId				; get the current screen id						
@@ -636,9 +632,9 @@ collectTreasure:
 jumpPlayerHit:
 	asl									; multiply screen id by 2
 	tax								
-	lda		playerCollisionJumpTable+1,x					
+	lda		playerHitJumpTable+1,x					
 	pha									; push MSB to stack
-	lda		playerCollisionJumpTable,x					
+	lda		playerHitJumpTable,x					
 	pha									; push LSB to stack
 	rts									; jump to player collision routine
 
@@ -674,7 +670,7 @@ playerHitInWellOfSouls:
 	jsr		getFinalScore				; Calculate ranking/title based on score		
 	lda		#ID_ARK_ROOM				; Set up transition to Ark Room		
 	sta		currentRoomId					
-	jsr		InitializeScreenState		; Load new screen data for the Ark Room				
+	jsr		initRoomState		; Load new screen data for the Ark Room				
 	jmp		verticalSync 			; Finish frame cleanly and transition visually			
 
 arkNotFound:
@@ -719,7 +715,7 @@ playerHitInSpiderRoom:
 	lda		#%10000000					; Set Bit 7						
 	sta		majorEventFlag				; Trigger major event flag					
 ResumeHitDispatch:
-	jmp		screenLogicDispatcher						
+	jmp		playerHitDefaut						
 
 playerHitInMesaSide:
 	bit		mesaSideState		  		;Check event state flags					
@@ -743,7 +739,7 @@ removeParachute:
 	sec								
 	jsr		removeItem					; carry set...take away selected item	
 continueAfterParachute:
-	jmp		screenLogicDispatcher						
+	jmp		playerHitDefaut						
 
 playerHitInMarket:
 	; This handles collision with the 3 Baskets in the Marketplace.
@@ -763,7 +759,7 @@ playerHitInMarket:
 	and		moveDirection				; Preserve current movement		
 	ora		#$43						; Force bits 6, 1, and 0 ($43).
 	sta		moveDirection				; Set "Bumping/Shoving"	
-	jmp		screenLogicDispatcher		; Resume				
+	jmp		playerHitDefaut		; Resume				
 
 checkIndyYForMarketFlags:
 	cpy		#$20						; Check Zone (Row $20)
@@ -773,7 +769,7 @@ clearMarketFlags:
 	; Zone 2: Between $20 and $3A (Middle path)
 	lda		#$00						
 	sta		moveDirection				; Clear movement modification flags.		
-	jmp		screenLogicDispatcher		; Resume				
+	jmp		playerHitDefaut		; Resume				
 
 setMarketFlags:
 	cpy		#$09						; Check Topmost Boundary ($09)
@@ -782,7 +778,7 @@ setMarketFlags:
 	and		moveDirection					
 	ora		#$42						; Force bits 6 and 1 ($42).
 	sta		moveDirection				; Apply "Shove" physics.	
-	jmp		screenLogicDispatcher		; Resume		
+	jmp		playerHitDefaut		; Resume		
 
 indyTouchMarketBaskets:
 	; --- Basket Content Logic ---
@@ -827,7 +823,7 @@ checkAddItemToInv:
 	txa									; Move Item ID to A
 	jsr		placeItemInInventory		; Add to inventory				
 exitGiveItem:
-	jmp		screenLogicDispatcher		; Resume				
+	jmp		playerHitDefaut		; Resume				
 
 
 playerHitInBlackMarket:
@@ -845,7 +841,7 @@ resetInteractionFlags:
 	sta		moveDirection						
 
 resumeScreenLogic:
-	jmp		screenLogicDispatcher						
+	jmp		playerHitDefaut						
 
 pickMarketItemByTime:
 	ldx		#ID_BLACK_MARKET_GRENADE  	; Load X with the grenade item ID (for black market)						
@@ -878,7 +874,7 @@ checkMiddleMarketZone:
 
 playerHitInTempleEntrance:
 	inc		indyPosX					; Push Indy right					
-	bne		screenLogicDispatcher		; Resume				
+	bne		playerHitDefaut		; Resume				
 
 playerHitInEntranceRoom:
 	; This routine handles interactions with the central Rock object and whip.
@@ -891,14 +887,14 @@ playerHitInEntranceRoom:
 	; --- Whip Pickup Logic ---			
 	lda		#ID_INVENTORY_WHIP			; Load Whip Item ID					
 	jsr		placeItemInInventory		; Attempt to add to inventory				
-	bcc		screenLogicDispatcher		; If inventory full (Carry Clear), exit				
+	bcc		playerHitDefaut		; If inventory full (Carry Clear), exit				
 	ror		entranceRoomState						
 	sec								
 	rol		entranceRoomState			; Update Room State:		
 	lda		#$42						;   Set High Bit of rotated value 
 										;   (becomes Bit 0 after roll)
 	sta		$df							; Move the Whip to Y=66
-	bne		screenLogicDispatcher		; Resume				
+	bne		playerHitDefaut		; Resume				
 
 checkRockRange:
 	; --- Rock Collision Logic ---
@@ -907,13 +903,13 @@ checkRockRange:
 	cmp		#$16						; Top Boundary Check (22)	
 	bcc		pushIndyOutOfRock						
 	cmp		#$1f						; Bottom Bound of Top Segment
-	bcc		screenLogicDispatcher		; If 22 <= Y < 31, pass-through
+	bcc		playerHitDefaut		; If 22 <= Y < 31, pass-through
 
 	; If Y >= 31 (and < 63 from earlier check), fall through to push left.			
 pushIndyOutOfRock:
 	dec		indyPosX					; Push Indy Left
 
-screenLogicDispatcher:
+playerHitDefaut:
 	lda		currentRoomId				; get the current screen id					
 	asl									; multiply screen id by 2 (word table)
 	tax									; Move the result to X
@@ -921,9 +917,9 @@ screenLogicDispatcher:
 	bit		CXP1FB						; check Indy collision with playfield
 	bpl		screenIdleLogicDispatcher	; If no collision (bit 7 is clear),
 										; branch to non-collision handler					
-	lda		PlayerPFCollisionJumpTable+1,x	; Load high byte of handler address				
+	lda		playfieldHitJumpTable+1,x	; Load high byte of handler address				
 	pha									; Push it to the return stack  
-	lda		PlayerPFCollisionJumpTable,x	; Load low byte of handler address				
+	lda		playfieldHitJumpTable,x		; Load low byte of handler address				
 	pha									; Push it to the return stack
 	rts									; jump to Player / Playfield collision strategy
 
@@ -945,7 +941,7 @@ SaveIndyAndThiefPosition:
 putIndyInMesaSide:
 	lda		#ID_MESA_SIDE				; Change screen to Mesa Side	
 	sta		currentRoomId					
-	jsr		InitializeScreenState					
+	jsr		initRoomState					
 	lda		#$05					
 	sta		indyPosY					; Set Indy's vertical position on entry to Mesa Side
 	lda		#$50					
@@ -956,7 +952,7 @@ putIndyInMesaSide:
 	rts									; Otherwise, return
 
 FailSafeToCollisionCheck:
-	jmp		roomIdleHandler					
+	jmp		defaultIdleHandler					
 
 
 initFallbackEntryPosition:
@@ -994,7 +990,7 @@ nudgeIndyLeft:
 	sty		indyPosX					; Apply horizontal adjustment					
 	bne		setIndyToNormalMove			; Continue			
 
-IndyPFHitEntranceRoom:
+indyPFHitEntranceRoom:
 	; Handles collision with Room Walls.
 	; Specifically handles the "Grenade Opening" 
 	lda		#GRENADE_OPENING_IN_WALL	; check flag: Is the wall blown open? ($02)						
@@ -1040,8 +1036,8 @@ indyMoveOnInput:
 
 setIndyToNormalMove:
 	lda		#$05						
-	sta		indyFootstep				; Set Indy walk state	
-	bne		roomIdleHandler				; unconditional branch		
+	sta		indyFootstepSound				; Set Indy walk state	
+	bne		defaultIdleHandler				; unconditional branch		
 
 indyEnterHole:
 	rol		playerInputState					
@@ -1055,7 +1051,7 @@ setIndyToTriggeredState:
 undoInputBitShift:
 	ror		playerInputState					
 
-roomIdleHandler:
+defaultIdleHandler:
 	bit		CXM0P						; check player collisions with missile0
 	bpl		CheckGrenadeDetonation		; branch if didn't collide with Indy			
 	ldx		currentRoomId				; get the current screen id	
@@ -1099,7 +1095,7 @@ ApplyGrenadeWallEffect:
 	ldx		#ID_ENTRANCE_ROOM					
 	cpx		currentRoomId					
 	bne		UpdateEntranceRoomEventState ; branch if not in the ENTRANCE_ROOM					
-	jsr		InitializeScreenState		; Update visuals/state to reflect the wall opening			
+	jsr		initRoomState		; Update visuals/state to reflect the wall opening			
 UpdateEntranceRoomEventState:
 	lda		entranceRoomEventState					
 	and		#$0f					
@@ -1111,7 +1107,7 @@ UpdateEntranceRoomEventState:
 	ldx		#ID_ENTRANCE_ROOM					
 	cpx		currentRoomId					
 	bne		skipUpdate					; branch if not in the ENTRANCE_ROOM
-	jsr		InitializeScreenState		; Refresh screen visuals			
+	jsr		initRoomState		; Refresh screen visuals			
 skipUpdate
 	sec								
 	jsr		removeItem					; carry set...take away selected item
@@ -1158,7 +1154,7 @@ frameFirstLine
 	jsr		getFinalScore				; set score to minimum
 	lda		#ID_ARK_ROOM				; set ark title screen 
 	sta		currentRoomId				; to the current room
-	jsr		InitializeScreenState		; Transition to Ark Room			
+	jsr		initRoomState		; Transition to Ark Room			
 gotoArkRoomLogic:
 	jmp		setupScreenAndObj					
 
@@ -1201,7 +1197,7 @@ setIndyArkDescentState
 	bit		resetEnableFlag				; Check bit 7 of resetEnableFlag	
 	bmi		checkArkInput				; If bit 7 is set, skip (reset enabled)	
 	lda		#$0e					
-	sta		indyFootstep				; Set Indys state to 0E	
+	sta		indyFootstepSound				; Set Indys state to 0E	
 
 checkArkInput
 	lda		#$80						
@@ -1465,7 +1461,7 @@ checkScanBoundaryOrContinue
 
 TriggerScreenTransition
 	sty		currentRoomId				; Set new screen based on event result	
-	jsr		InitializeScreenState		; Load new room or area
+	jsr		initRoomState		; Load new room or area
 
 HandleIInventorySelect
 	bit		INPT4|$30					; read action button from left controller
@@ -1656,7 +1652,7 @@ ankhWarpToMesa
 	lda		#ID_MESA_FIELD				; Mark this warp use 	
 	sta		ankhUsedBonus				; set to reduce score by 9 points
 	sta		currentRoomId				; Change current screen to Mesa Field	
-	jsr		InitializeScreenState		; Load the data for the new screen			
+	jsr		initRoomState		; Load the data for the new screen			
 	lda		#$4c						; Prepare a flag or state value for later use
 	;Warp Indy to center of Mesa Field
 	sta		indyPosX					; Set Indy's horizontal position
@@ -1895,7 +1891,7 @@ exitStateClear
 	sta		snakeMotionPtr				; Store it to a specific control variable	
 	rts									; Return from subroutine
 
-InitializeScreenState
+initRoomState
 ; Initialize the screen state, loading graphics, setting positions, and resetting flags.
 ; This is called when entering a new room or restarting a room.
 	lda		grenadeState				; Load grenade/parachute state.		
@@ -1968,345 +1964,372 @@ loadRoomGfx
 	cpx		#ID_ENTRANCE_ROOM					
 	beq		setEntranceRoomObjPosY		; Special setup for Enterance Room.			
 	sta		objectPosY					 
-ld902
-	ldy		#$4f					
-	cpx		#$02					
-	bcc		ld918					
-	lda		treasureIndex,x				
-	ror								
-	bcc		ld918					
-	ldy		ldf72,x					
-	cpx		#$03					
-	bne		ld918					
-	lda		#$ff					
-	sta		m0PosY				
-ld918
-	sty		objState					
-	rts								
+setObjPosY
+	ldy		#$4f						; Load default vertical offset ($4F).
+	cpx		#ID_ENTRANCE_ROOM			; If ID < Entrance Room				
+	bcc		finishScreenInit			; keep default and return.	
+	lda		treasureIndex,x				; Load treasure index
+	ror									; Rotate bit 0 into carry.
+	bcc		finishScreenInit			; If carry clear, use default offset.		
+	ldy		roomObjPosYTable,x			; Load room-specific vertical offset.	
+	cpx		#ID_BLACK_MARKET			; if Black Market or later,	
+	bne		finishScreenInit			; use loaded offset and return.		
+	lda		#$ff						; Load $FF
+	sta		m0PosY						; Hide Missile 0 (off-screen).
+finishScreenInit
+	sty		objState					; Store the final vertical object
+	rts									; Return from subroutine.
 
 setTreasureRoomObjPosY
-	lda		treasureIndex					
-	and		#$78					
-	sta		treasureIndex					
+	lda		treasureIndex				; Load screen control byte
+	and		#$78						; Mask off all but bits 3-6
+	sta		treasureIndex				; Save the updated control state	
 	lda		#$1a					
-	sta		objectPosY					 
+	sta		objectPosY					; Set Y Pos for the top object 
 	lda		#$26					
-	sta		objState					
-	rts								
+	sta		objState					; Set vertical position for the bottom object
+	rts									; Return 
 
 setEntranceRoomObjPosY
 	lda		entranceRoomState					
 	and		#$07					
-	lsr								
-	bne		ld935					
+	lsr									; shift value right
+	bne		setEntranceRoomTopObjPos	; branch if wall opening present
 	ldy		#$ff					
 	sty		m0PosY				
-ld935
-	tay								
-	lda		ldf70,y					
+setEntranceRoomTopObjPos
+	tay									; Transfer A (index) to Y
+	lda		EntranceRoomTopObjPosY,y	; Look up Y-position for top object				
 	sta		objectPosY					 
-	jmp		ld902					
+	jmp		setObjPosY					
 
 initTempleAndShiningLight
-	cpx		#$08					
-	beq		ld950					
-	cpx		#$06					
-	bne		ld968					
+	cpx		#ID_ROOM_OF_SHINING_LIGHT	; Is this the Room of Shining Light?					
+	beq		initRoomOfShiningLight		; If so, jump to its specific init routine		
+	cpx		#ID_TEMPLE_ENTRANCE			; If not, is it the Temple Entrance?					
+	bne		initMesaFieldScrollState	; If neither, skip this routine				
 	ldy		#$00					
-	sty		timepieceSpriteDataPtr					
+	sty		timepieceSpriteDataPtr		; Clear timepiece sprite data pointer			
 	ldy		#$40					
-	sty		dynamicGfxData					
-	bne		ld958					
-ld950
+	sty		dynamicGfxData				; Set visual reference for top dungeon gfx	
+	bne		ConfigTempleOrShiningLightGfx	;Always taken				
+
+initRoomOfShiningLight
 	ldy		#$ff					
-	sty		dynamicGfxData					
-	iny								
-	sty		timepieceSpriteDataPtr					
-	iny								
-ld958
-	sty		dungeonBlock1					
+	sty		dynamicGfxData				; Top of dungeon should render so light is "behind"		
+	iny									; y = 0
+	sty		timepieceSpriteDataPtr		; Possibly clear temple or environmental state			
+	iny									; y = 1
+ConfigTempleOrShiningLightGfx
+	sty		dungeonBlock1				; render dungeon wall blocks	
 	sty		dungeonBlock2					
 	sty		dungeonBlock3					
 	sty		dungeonBlock4					
 	sty		dungeonBlock5					
 	ldy		#$39					
-	sty		objectState					
-	sty		snakePosY					
-ld968
-	cpx		#$09					
-	bne		ld977					
-	ldy		indyPosY					
-	cpy		#$49					
-	bcc		ld977					
+	sty		objectState					; Likely a counter or timer
+	sty		snakePosY					; Set snake enemy Y-position baseline
+initMesaFieldScrollState
+	cpx		#ID_MESA_FIELD				; Is this the Mesa Field?					
+	bne		finishRoomSpecificInit		; If not Mesa Field, skip			
+	ldy		indyPosY					; get Indy's vertical position
+	cpy		#$49						; If Indy is "Above" the scroll line
+	bcc		finishRoomSpecificInit					
 	lda		#$50					
-	sta		objState					
-	rts								
+	sta		objState					; start scrolling from bottom
+	rts									; return
 
-ld977
+finishRoomSpecificInit
 	lda		#$00					
-	sta		objState					
-	rts								
+	sta		objState					; Clear Scroll Offset
+	rts									; complete screen init
 
 CheckRoomOverrideCondition
-	ldy		lde00,x					
-	cpy		bankSwitchJMPOpcode					
-	beq		ld986					
-	clc								
-	clv								
-	rts								
+	ldy		roomOverrideTable,x			; Load room override index based on
+										; current screen ID			
+	cpy		bankSwitchJMPOpcode			; Compare with current override 		
+	beq		applyOverrideIfMatch		; If it matches, apply special overrides			
+	clc									; Clear carry (no override occurred)
+	clv									; Clear overflow 
+	rts									; Exit with no overrides
 
-ld986
-	ldy		lde34,x					
-	bmi		ld99b					
-ld98b
-	lda		ldf04,x					
-	beq		ld992					
-ld990
-	sta		indyPosY					
-ld992
-	lda		ldf38,x					
-	beq		ld999					
-	sta		indyPosX					
-ld999
-	sec								
-	rts								
+applyOverrideIfMatch
+	ldy		posYOverrideFlagTable,x		; Load vertical override flag				
+	bmi		checkOverrideConditions		; If negative, skip overrides and return 			
+checkPosYlOverride
+	lda		roomPosYOverrideTable,x		; Load vertical position override (if any)		
+	beq		applyPosXOverride			; If zero, skip vertical positioning		
+applyPosYOverride
+	sta		indyPosY					; Apply vertical override to Indy
+applyPosXOverride
+	lda		roomPosXOverrideTable,x		; Load horizontal position override			
+	beq		rtsWithOverride				; If zero, skip horizontal positioning	
+	sta		indyPosX					; Apply horizontal override to Indy
+rtsWithOverride
+	sec									; Set carry to indicate an override was applied
+	rts									; Return to caller
 
-ld99b
+checkOverrideConditions
+	iny									; Bump Y from previous Y override
+	beq		rtsNoOverrideSideEffect		; If it was $FF, return early			
 	iny								
-	beq		ld9f9					
+	bne		evalRangeXOverride			; If not $FE, jump to advanced evaluation
+	; Case where Y = $FE
+	ldy		overrideLowXBoundTable,x	; Load lower horizontal boundary			
+	cpy		bankSwitchJMPAddr			; Compare with current horizontal state		
+	bcc		cmpWithExtRoomThreshold		; If below lower limit, use another check			
+	ldy		overrideHighXBoundTable,x	; Load upper horizontal boundary			
+	bmi		checkFlagforFixedY			; If negative, apply default vertical		
+	bpl		checkPosYlOverride			; Always taken  go check vertical override	
+
+cmpWithExtRoomThreshold
+	ldy		advOverrideControlTable,x	; Load alternate override flag				
+	bmi		checkFlagforFixedY			; If negative, jump to handle special override		
+	bpl		checkPosYlOverride			; Always taken		
+evalRangeXOverride
+	lda		bankSwitchJMPAddr			; Load current horizontal position		
+	cmp		overrideLowXBoundTable,x	; Compare with lower limit				
+	bcc		rtsNoOverrideSideEffect					
+	cmp		overrideHighXBoundTable,x	; Compare with upper limit				
+	bcs		rtsNoOverrideSideEffect					
+	ldy		advOverrideControlTable,x	; Load override control byte				
+	bpl		checkPosYlOverride			; If positive, allow override		
+checkFlagforFixedY
 	iny								
-	bne		ld9b6					
-	ldy		lde68,x					
-	cpy		bankSwitchJMPAddr					
-	bcc		ld9af					
-	ldy		lde9c,x					
-	bmi		ld9c7					
-	bpl		ld98b					
-ld9af
-	ldy		lded0,x					
-	bmi		ld9c7					
-	bpl		ld98b					
-ld9b6
-	lda		bankSwitchJMPAddr					
-	cmp		lde68,x					
-	bcc		ld9f9					
-	cmp		lde9c,x					
-	bcs		ld9f9					
-	ldy		lded0,x					
-	bpl		ld98b					
-ld9c7
+	bmi		eventStateOverride			; If negative, special flag check		
+	ldy		#$08						; Use a fixed override value
+	bit		treasureIndex				; Check room flag register	
+	bpl		checkPosYlOverride			; If bit 7 is clear, proceed		
+	lda		#$41						
+	bne		applyPosYOverride			; Always taken  apply forced vertical position		
+eventStateOverride
 	iny								
-	bmi		ld9d4					
-	ldy		#$08					
-	bit		treasureIndex					
-	bpl		ld98b					
-	lda		#$41					
-	bne		ld990					
-ld9d4
-	iny								
-	bne		ld9e1					
+	bne		overrideEventStateLess10	; Always taken unless overflowed				
 	lda		entranceRoomEventState					
-	and		#$0f					
-	bne		ld9f9					
+	and		#$0f						; Mask to lower nibble
+	bne		rtsNoOverrideSideEffect		; If any bits set, don't override			
 	ldy		#$06					
-	bne		ld98b					
-ld9e1
+	bne		checkPosYlOverride			; Always taken		
+overrideEventStateLess10
 	iny								
-	bne		ld9f0					
+	bne		inputFinalOverride			; Continue check chain		
 	lda		entranceRoomEventState					
 	and		#$0f					
 	cmp		#$0a					
-	bcs		ld9f9					
+	bcs		rtsNoOverrideSideEffect					
 	ldy		#$06					
-	bne		ld98b					
-ld9f0
+	bne		checkPosYlOverride			; Always taken	
+inputFinalOverride
 	iny								
-	bne		ld9fe					
+	bne		checkHeadOfRaAlign			; Continue to final check		
 	ldy		#$01					
 	bit		playerInputState					
-	bmi		ld98b					
-ld9f9
-	clc								
-	bit		ld9fd					
+	bmi		checkPosYlOverride			; If fire button pressed, allow override		
+rtsNoOverrideSideEffect
+	clc									; Clear carry to signal no override
+	bit		NoOpRTS						; Dummy BIT used for timing/padding
 
-ld9fd
-	.byte	$60								; $d9fd (d)
+NoOpRTS
+	rts	
 
-ld9fe
-	iny								
-	bne		ld9f9					
-	ldy		#$06					
-	lda		#$0e					
-	cmp		selectedInventoryId					
-	bne		ld9f9					
-	bit		INPT5|$30				
-	bmi		ld9f9					
-	jmp		ld98b					
+checkHeadOfRaAlign
+	iny									; Increment Y (conditional trigger)	
+	bne		rtsNoOverrideSideEffect		; If Y was not zero before, exit early		
+	ldy		#$06						; Load override index value into Y
+	lda		#ID_INVENTORY_HEAD_OF_RA	; Load ID for the Head of Ra item				
+	cmp		selectedInventoryId			; compare with current selected inventory id		
+	bne		rtsNoOverrideSideEffect		; branch if not holding Head of Ra		
+	bit		INPT5|$30					; read action button from right controller
+	bmi		rtsNoOverrideSideEffect		; branch if action button not pressed			
+	jmp		checkPosYlOverride			; All conditions met: apply vertical override		
 
 removeItem
-	ldy		ram_c4					
-	bne		lda16					
-	clc								
-	rts								
+	ldy		inventoryItemCount			; get number of inventory items		
+	bne		dropInvIentoryItem					; branch if Indy carrying items
+	clc									; clear carry (indicates no item removed)
+	rts									; Return (nothing to do)
 
-lda16
-	bcs		check_key					
-	tay								
+dropInvIentoryItem
+	bcs		clearInventorySlot					
+	tay									; move item id to be removed to y
+	asl									; multiply value by 8 to get graphic LSB
 	asl								
 	asl								
-	asl								
-	ldx		#$0a					
-lda1e
-	cmp		invSlotLo,x					
-	bne		lda3a					
-	cpx		cursor_pos					
-	beq		lda3a					
-	dec		ram_c4					
-	lda		#$00					
-	sta		invSlotLo,x					
-	cpy		#$05					
-	bcc		lda37					
-	tya								
-	tax								
-	jsr		ShowItemAsNotTaken					
-	txa								
-	tay								
-lda37
-	jmp		ldaf7					
+	ldx		#$0a						; Start from the last inventory slot
+dropItemLoop
+	cmp		invSlotLo,x					; Compare target LSB value to 
+										; current inventory slot	
+	bne		checkNextItem				; If not a match, try the next slot	
+	cpx		selectedItemSlot					
+	beq		checkNextItem					
+	dec		inventoryItemCount			; reduce number of inventory items	
+	lda		##<emptySprite				; place empty sprite in inventory
+	sta		invSlotLo,x	
+	cpy		#$05						; If item index is less than 5,
+										; skip clearing pickup flag
+	bcc		FinishItemRemoval
+; Remove pickup status bit if this is a non-basket item					
+	tya									; Move item ID to A
+	tax									; move item id to x
+	jsr		setItemAsNotTaken			; Update pickup/basket flags to
+										; show it's no longer taken		
+	txa									; X -> A
+	tay									; And back to Y for further use
+FinishItemRemoval
+	jmp		finishInventorySelect					
 
-lda3a
-	dex								
-	dex								
-	bpl		lda1e					
-	clc								
-	rts								
+checkNextItem
+	dex									; Move to previous inventory slot
+	dex									; Each slot is 2 bytes (pointer to sprite)
+	bpl		dropItemLoop				; If still within bounds, continue checking	
+	clc									; Clear carry  no matching item was found
+	rts									; Return (nothing removed)
 
-check_key
-	lda		#<emptySprite				; load blank space
-	ldx		cursor_pos				; get at current position
-	sta		invSlotLo,x			; put in current slot
+clearInventorySlot
+	lda		#ID_INVENTORY_EMPTY			; load blank space
+	ldx		selectedItemSlot			; get slot at current position
+	sta		invSlotLo,x					; put empy item in current slot
 	ldx		selectedInventoryId			; is the current object
-	cpx		#key_obj				; the key?
-	bcc		lda4f					
-	jsr		ShowItemAsNotTaken					
-lda4f
-	txa								
-	tay								
-	asl								
+	cpx		#ID_INVENTORY_KEY			; the key?
+	bcc		handleInventoryRemove		; If not jump to handler
+	jsr		setItemAsNotTaken			; Else, mark as "Not Taken" 
+										; so it respawns in original room	
+
+handleInventoryRemove
+	txa									; move inventory id to accumulator
+	tay									; move inventory id to y
+	asl									; multiple inventory id by 2
 	tax								
-	lda		ldc76,x					
-	pha								
-	lda		ldc75,x					
-	pha								
-	ldx		currentRoomId					
-	rts								
+	lda		dropItemTable-1,x			; Load specific drop handler High Byte		
+	pha									; push MSB to stack
+	lda		dropItemTable-2,x			; Load specific drop handler Low Byte
+	pha									; push LSB to stack
+	ldx		currentRoomId				; get the current room id
+	rts									; jump to Remove Item strategy from stack
 
-lda5e:
-	lda		#$3f						
-	and		$b4						
-	sta		$b4						
-lda64:
-	jmp		ldad8						
+dropParachute:
+	lda		#$3f						; Mask to clear bit 6 (parachute active flag)	
+	and		mesaSideState				; Remove parachute bit from game state flag
+	sta		mesaSideState					
+finishDrop:
+	jmp		dropItem			; Go to general item removal cleanup				
 
-lda67:
-	stx		$8d						
-	lda		#$70						
-	sta		$d1						
-	bne		lda64						
+dropGrappleItem:
+	stx		eventState	   				; Store current room ID
+										; (cheking for Mesa Field)						
+	lda		#$70						; set X position to offscreen
+	sta		weaponPosY					; move grapple crosshair offscreen
+	bne		finishDrop					; Unconditional jump
 
-lda6f:
-	lda		#$42						
-	cmp		$91						
-	bne		lda86						
-	lda		#$03						
-	sta		$81						
-	jsr		InitializeScreenState						
-	lda		#$15						
-	sta		$c9						
-	lda		#$1c						
-	sta		$cf						
-	bne		ldad8						
+dropChai:
+	; --------------------------------------------------------------------------
+	; CHAI DROP HANDLER
+	; The Chai is part of the "Yar's Revenge" Easter Egg.
+	; If dropped with a specific movement vector ($42), it triggers a warp and bonuses.
+	; --------------------------------------------------------------------------
+	lda 	#$42						; Check for specific movement direction command.						
+	cmp		moveDirection				; Check if player is pushing against boundary?						
+	bne		checkMarketYar				; If not $42, skip the main warp.	
 
-lda86:
-	cpx		#$05						
-	bne		ldad8						
-	lda		#$05						
-	cmp		$8b						
-	bne		ldad8						
+	; --------------------------------------------------------------------------
+	; MARKETPLACE / BLACK MARKET WARP
+	; If the $42 condition is met, Indy is warped to the Black Market.
+	; --------------------------------------------------------------------------
+	lda		#ID_BLACK_MARKET			; Load Black Market ID.						
+	sta		currentRoomId				; Change Room.						
+	jsr		initRoomState				; Initialize new room state.	
+	lda		#$15						; Set Indy X (Entrance).
+	sta		indyPosX
+	lda		#$1c						; Set Indy Y	
+	sta		indyPosY						
+	bne		dropItem						
+
+checkMarketYar:
+	cpx		#ID_MARKETPLACE_GRENADE		; Are we removing a Grenade?						
+	bne		dropItem			; If NOT Grenade (is chai) just drop it.			
+	lda		#BONUS_FINDING_YAR			; Set Yar bonus flag					
+	cmp		arkDigRegionId				; Check if Yar bonus already awarded.						
+	bne		dropItem			
+	; Award Yar bonus		
 	sta		yarFoundBonus					
 	lda		#$00						
-	sta		$ce						
+	sta		$ce							; Clear sprite
 	lda		#$02						
-	ora		$b4						
-	sta		$b4						
-	bne		ldad8						
+	ora		mesaSideState				; Set Mesa Side State Bit 1		
+	sta		mesaSideState						
+	bne		dropItem						
 
-lda9e:
-	ror		$b1						
-	clc								
-	rol		$b1						
-	cpx		#$02						
-	bne		ldaab						
+dropWhip:
+	ror		entranceRoomState			; rotate entrance room state right						
+	clc									; clear carry
+	rol		entranceRoomState			; rotate left to show Whip not taken
+										; by Indy (Restore State)						
+	cpx		#ID_ENTRANCE_ROOM									
+	bne		finishWhipDrop						
 	lda		#$4e						
-	sta		$df						
-ldaab:
-	bne		ldad8						
+	sta		objState					; Reset Whip position below rock					
+finishWhipDrop:
+	bne		dropItem					; unconditional branch			
 
-ldaad:
-	ror		$b2						
-	clc								
-	rol		$b2						
-	cpx		#$03						
-	bne		ldabe						
+dropShovel:
+	ror		blackMarketState			; Clear lowest bit to indicate Indy
+										; is no longer carrying the shovel						
+	clc									; Clear carry (ensures bit 7 won't
+										; be set on next instruction)
+	rol		blackMarketState			; Restore original order of
+										; bits with bit 0 cleared						
+	cpx		#ID_BLACK_MARKET			; Is Indy currently in the Black Market?						
+	bne		finishShovelDrop			; If not, skip 			
 	lda		#$4f						
-	sta		$df						
+	sta		objState					; ; Reset Shovel position						
 	lda		#$4b						
-	sta		$d0						
-ldabe:
-	bne		ldad8						
+	sta		m0PosY						
+finishShovelDrop:
+	bne		dropItem						
 
-ldac0:
-	ldx		$81						
-	cpx		#$03						
-	bne		ldad1						
-	lda		$c9						
-	cmp		#$3c						
-	bcs		ldad1						
-	rol		$b2						
-	sec								
-	ror		$b2						
-ldad1:
-	lda		$91						
+dropCoins:
+	ldx		currentRoomId				; get the current screen id					
+	cpx		#ID_BLACK_MARKET			; are we in the Black Market?						
+	bne		finishCoinDrop						
+	lda		indyPosX					; get Indy's horizontal position					
+	cmp		#$3c						; Check if Indy is on the Left side 
+	bcs		finishCoinDrop						
+	rol		blackMarketState			; rotate Black Market state left			
+	sec									; set carry (Successful Purchase)
+	ror		blackMarketState			; rotate right to clear coin flag	
+finishCoinDrop:
+	lda		moveDirection						
 	clc								
-	adc		#$40						
-	sta		$91						
-ldad8:
-	dec		$c4						
-	bne		ldae2						
-	lda		#$00						
-	sta		selectedInventoryId			
-	beq		ldaf7						
+	adc		#$40						; Update UI/event state 
+	sta		moveDirection
 
-ldae2:
-	ldx		$c3						
-ldae4:
-	inx								
+dropItem:
+	dec		inventoryItemCount			; reduce number of inventory items			
+	bne		selectNextAvailableItem				; branch if Indy has remaining items		
+	lda		#ID_INVENTORY_EMPTY						
+	sta		selectedInventoryId			; clear the current selected invendory id
+	beq		finishInventorySelect		; unconditional branch				
+
+selectNextAvailableItem:
+	ldx		selectedItemSlot			; get selected inventory index		
+nextItemIndex:
+	inx									; increment by 2 to compensate for word pointer
 	inx								
 	cpx		#$0b						
-	bcc		ldaec						
-	ldx		#$00						
-ldaec:
-	lda		invSlotLo,x		 
-	beq		ldae4						
-	stx		$c3						
+	bcc		selectNextItem						
+	ldx		#$00						; wrap around to the beginning
+selectNextItem:
+	lda		invSlotLo,x		 			; get inventory graphic LSB value
+	beq		nextItemIndex				; branch if nothing in the inventory location		
+	stx		selectedItemSlot			; set inventory index			
 	lsr								
 	lsr								
 	lsr								
-	sta		selectedInventoryId			
-ldaf7
-	lda		#$0d					
-	sta		indyFootstep					
-	sec								
+	sta		selectedInventoryId			; set inventory id
+finishInventorySelect
+	lda		#$0d						; Possibly sets UI state
+	sta		indyFootstepSound					
+	sec									; Set carry to indicate success
 	rts								
 
 	.byte	$00,$00,$00				; $dafd (*)
@@ -2328,33 +2351,28 @@ HMOVETable
 	.byte MSBL_SIZE1 | ONE_COPY		; Well of Souls
 	.byte MSBL_SIZE1 | DOUBLE_SIZE	; Ark Room
 
+COARSE_MOTION SET 0
+
+	.byte HMOVE_0  | COARSE_MOTION, HMOVE_0	| COARSE_MOTION, HMOVE_R1 | COARSE_MOTION
+	.byte HMOVE_R2 | COARSE_MOTION, HMOVE_R3 | COARSE_MOTION, HMOVE_R4 | COARSE_MOTION
+	.byte HMOVE_R5 | COARSE_MOTION, HMOVE_R6 | COARSE_MOTION, HMOVE_R7 | COARSE_MOTION
+
+	REPEAT 8
+
+COARSE_MOTION SET COARSE_MOTION + 1
+
+	.byte HMOVE_L7 | COARSE_MOTION, HMOVE_L6 | COARSE_MOTION, HMOVE_L5 | COARSE_MOTION
+	.byte HMOVE_L4 | COARSE_MOTION, HMOVE_L3 | COARSE_MOTION, HMOVE_L2 | COARSE_MOTION
+	.byte HMOVE_L1 | COARSE_MOTION, HMOVE_0	| COARSE_MOTION, HMOVE_R1 | COARSE_MOTION
+	.byte HMOVE_R2 | COARSE_MOTION, HMOVE_R3 | COARSE_MOTION, HMOVE_R4 | COARSE_MOTION
+	.byte HMOVE_R5 | COARSE_MOTION, HMOVE_R6 | COARSE_MOTION, HMOVE_R7 | COARSE_MOTION	
+
+	REPEND	
+COARSE_MOTION SET 9
+	.byte HMOVE_L7 | COARSE_MOTION, HMOVE_L6 | COARSE_MOTION, HMOVE_L5 | COARSE_MOTION
+	
 
 
-
-	; .byte	$00								; $db00 (d)
-	; .byte	$00,$35,$10,$17,$30,$00,$00,$00 ; $db01 (*)
-	; .byte	$00,$00,$00,$00					; $db09 (*)
-	; .byte	$05								; $db0d (d)
-	.byte	$00,$00,$f0,$e0,$d0,$c0,$b0,$a0 ; $db0e (*)
-	.byte	$90,$71,$61,$51,$41,$31,$21,$11 ; $db16 (*)
-	.byte	$01,$f1,$e1,$d1,$c1,$b1,$a1,$91 ; $db1e (*)
-	.byte	$72,$62,$52,$42,$32,$22,$12,$02 ; $db26 (*)
-	.byte	$f2,$e2,$d2,$c2,$b2,$a2,$92,$73 ; $db2e (*)
-	.byte	$63,$53,$43,$33,$23,$13,$03,$f3 ; $db36 (*)
-	.byte	$e3,$d3,$c3,$b3,$a3,$93,$74,$64 ; $db3e (*)
-	.byte	$54,$44							; $db46 (*)
-	.byte	$34								; $db48 (d)
-	.byte	$24,$14,$04,$f4					; $db49 (*)
-	.byte	$e4								; $db4d (d)
-	.byte	$d4,$c4,$b4,$a4,$94,$75,$65,$55 ; $db4e (*)
-	.byte	$45,$35,$25,$15,$05,$f5,$e5,$d5 ; $db56 (*)
-	.byte	$c5,$b5,$a5,$95,$76,$66,$56,$46 ; $db5e (*)
-	.byte	$36,$26,$16,$06,$f6,$e6,$d6,$c6 ; $db66 (*)
-	.byte	$b6,$a6,$96,$77,$67,$57,$47,$37 ; $db6e (*)
-	.byte	$27,$17,$07,$f7,$e7,$d7,$c7,$b7 ; $db76 (*)
-	.byte	$a7,$97,$78,$68,$58,$48,$38,$28 ; $db7e (*)
-	.byte	$18,$08,$f8,$e8,$d8,$c8,$b8,$a8 ; $db86 (*)
-	.byte	$98,$79,$69,$59					; $db8e (*)
 
 PFControlTable
 	.byte MSBL_SIZE2 | PF_REFLECT					; Treasure Room
@@ -2437,8 +2455,8 @@ p0SpriteHeightData
 	.byte $10						; Valley of Poison
 
 objectPosXTable
-	.byte	$78,$4c,$5d,$4c,$4f,$4c,$12,$4c ; $dbd4 (*)
-	.byte	$4c,$4c,$4c,$12,$12				; $dbdc (*)
+	.byte	$78,$4c,$5d,$4c,$4f,$4c,$12,$4c 
+	.byte	$4c,$4c,$4c,$12,$12	
 
 p0GfxDataHi
 	.byte >TreasureRoomPlayerGraphics
@@ -2478,25 +2496,25 @@ snakeMoveTableLSB
 
 
 snakePosXOffsetTable:
-	.byte	$fe,$fa,$02,$06					; $dbff (*)
+	.byte	$fe,$fa,$02,$06	
 
 roomSpecialTable
 	.byte	$00,$00,$18,$04,$03,$03,$85,$85,$3b,$85,$85	
 
 m0PosXTable
-	.byte	$20					; Treasure Room
-	.byte	$78					; Marketplace
-	.byte	$85					; Entrance Room
-	.byte	$4d					; Black Market
-	.byte	$62					; Map Room
-	.byte	$17					; Mesa Side
-	.byte	$50					; Temple Entrance
-	.byte	$50					; Spider Room
-	.byte	$50					; Room of the Shining Light
-	.byte	$50					; Mesa Field
-	.byte	$50					; Valley of Poison
-	.byte	$12					; Thieves Den
-	.byte	$12					; Well of Souls
+	.byte	$20					
+	.byte	$78					
+	.byte	$85					
+	.byte	$4d					
+	.byte	$62					
+	.byte	$17					
+	.byte	$50					
+	.byte	$50					
+	.byte	$50					
+	.byte	$50					
+	.byte	$50					
+	.byte	$12					
+	.byte	$12					
 
 
 m0PosYTable
@@ -2515,103 +2533,129 @@ m0PosYTable
 	.byte	$f0	
 
 
-
-
 PF1GfxDataLo
-	.byte	$06,$06,$06,$06,$06,$06,$48,$68 ; $dc28 (*)
-	.byte	$89,$00,$00						; $dc30 (*)
+	.byte <COLUP0,<COLUP0,<COLUP0,<COLUP0,<COLUP0,<COLUP0,<RoomPF1GraphicData_7,<RoomPF1GraphicData_8,<RoomPF1GraphicData_9,<RoomPF1GraphicData_10,<RoomPF1GraphicData_10
+
 PF1GfxDataHi
-	.byte	$00,$00,$00,$00,$00,$00,$fd,$fd ; $dc33 (*)
-	.byte	$fd,$fe,$fe						; $dc3b (*)
+	.byte >COLUP0,>COLUP0,>COLUP0,>COLUP0,>COLUP0,>COLUP0,>RoomPF1GraphicData_7,>RoomPF1GraphicData_8,>RoomPF1GraphicData_9,>RoomPF1GraphicData_10,>RoomPF1GraphicData_10
+	
 PF2GfxDataLo
-	.byte	$20,$20,$20,$20,$20,$20,$20,$b7 ; $dc3e (*)
-	.byte	$9b,$78,$78						; $dc46 (*)
+	.byte <HMP0,<HMP0,<HMP0,<HMP0,<HMP0,<HMP0,<RoomPF1GraphicData_6,<RoomPF2GraphicData_7,<RoomPF2GraphicData_6,<RoomPF2GraphicData_9,<RoomPF2GraphicData_9
+	
 PF2GfxDataHi
-	.byte	$00,$00,$00,$00,$00,$00,$fd,$fd ; $dc49 (*)
-	.byte	$fd,$fe,$fe						; $dc51 (*)
-ldc54
-	.byte	$01,$02,$04,$08,$10,$20,$40,$80 ; $dc54 (*)
+	.byte >HMP0,>HMP0,>HMP0,>HMP0,>HMP0,>HMP0,>RoomPF1GraphicData_6,>RoomPF2GraphicData_7,>RoomPF2GraphicData_6,>RoomPF2GraphicData_9,>RoomPF2GraphicData_9
+	
+itemStatusBitValues
+	.byte BASKET_STATUS_MARKET_GRENADE | PICKUP_ITEM_STATUS_WHIP
+	.byte BASKET_STATUS_BLACK_MARKET_GRENADE | PICKUP_ITEM_STATUS_SHOVEL
+	.byte PICKUP_ITEM_STATUS_HEAD_OF_RA
+	.byte BACKET_STATUS_REVOLVER | PICKUP_ITEM_STATUS_TIME_PIECE
+	.byte BASKET_STATUS_COINS
+	.byte BASKET_STATUS_KEY | PICKUP_ITEM_STATUS_HOUR_GLASS
+	.byte PICKUP_ITEM_STATUS_ANKH
+	.byte PICKUP_ITEM_STATUS_CHAI
+
+
 itemStatusMaskTable
-	.byte	$fe,$fd,$fb,$f7,$ef,$df,$bf,$7f ; $dc5c (*)
-ldc64
-	.byte	$00,$00,$00,$00,$08,$00,$02,$0a ; $dc64 (*)
-	.byte	$0c,$0e,$01,$03,$04,$06,$05,$07 ; $dc6c (*)
-	.byte	$0d								; $dc74 (*)
-ldc75
-	.byte	$0f								; $dc75 (*)
-ldc76
-	.byte	$0b
+	.byte ~(BASKET_STATUS_MARKET_GRENADE | PICKUP_ITEM_STATUS_WHIP);$FE
+	.byte ~(BASKET_STATUS_BLACK_MARKET_GRENADE | PICKUP_ITEM_STATUS_SHOVEL);$FD
+	.byte ~PICKUP_ITEM_STATUS_HEAD_OF_RA;$FB
+	.byte ~(BACKET_STATUS_REVOLVER | PICKUP_ITEM_STATUS_TIME_PIECE);$F7
+	.byte ~BASKET_STATUS_COINS;$EF
+	.byte ~(BASKET_STATUS_KEY | PICKUP_ITEM_STATUS_HOUR_GLASS);$DF
+	.byte ~PICKUP_ITEM_STATUS_ANKH;$BF
+	.byte ~PICKUP_ITEM_STATUS_CHAI;$7F
 
 
+itemIndexTable
+	.byte $00						; empty
+	.byte $00						; Copyright 1 (not used)
+	.byte $00						; flute
+	.byte $00						; parachute
+	.byte $08						; coins
+	.byte $00						; Marketplace Grenade
+	.byte $02						; Black Market Grenade
+	.byte $0A						; key
+	.byte $0C						; ark (not used)
+	.byte $0E						; Copyright 2 (not used)
+	.byte $01						; whip........C
+	.byte $03						; shovel......C
+	.byte $04						; Copyright 3 (not used)
+	.byte $06						; revolver
+	.byte $05						; Ra..........C
+	.byte $07						; Time piece..C
+	.byte $0D						; Ankh........C
+	.byte $0F						; Chai........C
+	.byte $0B						; hour glass..C
 
 
-ldc77: ;read from 2 bytes ealier (index >=2)
-	.word ldad8-1 ; $dc77/78
-	.word ldad8-1 ; $dc79/7a
-	.word lda5e-1 ; $dc7b/7c
-	.word ldac0-1 ; $dc7d/7e
-	.word ldad8-1 ; $dc7f/80
-	.word ldad8-1 ; $dc81/82
-	.word ldad8-1 ; $dc83/84
-	.word ldad8-1 ; $dc85/86
-	.word ldad8-1 ; $dc87/88
-	.word lda9e-1 ; $dc89/8a
-	.word ldaad-1 ; $dc8b/8c
-	.word ldad8-1 ; $dc8d/8e
-	.word ldad8-1 ; $dc8f/90
-	.word ldad8-1 ; $dc91/92
-	.word ldad8-1 ; $dc93/94
-	.word lda67-1 ; $dc95/96
-	.word lda6f-1 ; $dc97/98
-	.word lda67-1 ; $dc99/9a
+dropItemTable: 						; ID 0: Empty/Default (No Action)
+	.word dropItem-1 				; ID 1: Copyright 1 (Shown at Start Screen)
+	.word dropItem-1 				; ID 2: Flute (Generic Drop)
+	.word dropParachute-1 			; ID 3: Parachute (Clear mesaSideState bit)
+	.word dropCoins-1 				; ID 4: Coins (Check Black Market Purchase)
+	.word dropItem-1 				; ID 5: Marketplace Grenade
+	.word dropItem-1 				; ID 6: Black Market Grenade
+	.word dropItem-1 				; ID 7: Key
+	.word dropItem-1 				; ID 8: Ark (Unused in Inventory)
+	.word dropItem-1 				; ID 9: Copyright 2 (Shown at Start Screen)
+	.word dropWhip-1 				; ID 10: Whip (put in Entrance Room)
+	.word dropShovel-1 				; ID 11: Shovel (Restore to Black Market)
+	.word dropItem-1 				; ID 12: Copyright 3 (Shown at Start Screen)
+	.word dropItem-1 				; ID 13: Revolver
+	.word dropItem-1 				; ID 14: Head of Ra
+	.word dropItem-1 				; ID 15: Time Piece
+	.word dropGrappleItem-1 		; ID 16: Ankh
+	.word dropChai-1 				; ID 17: Chai (Yar's Revenge Check)
+	.word dropGrappleItem-1 		; ID 18: Hourglass
 
-playerCollisionJumpTable
-	.word screenLogicDispatcher-1 ; $dc9b/9c
-	.word playerHitInMarket-1 ; $dc9d/9e
-	.word playerHitInEntranceRoom-1 ; $dc9f/a0
-	.word playerHitInBlackMarket-1 ; $dca1/a2
-	.word screenLogicDispatcher-1 ; $dca3/a4
-	.word playerHitInMesaSide-1 ; $dca5/a6
-	.word playerHitInTempleEntrance-1 ; $dca7/a8
-	.word playerHitInSpiderRoom-1 ; $dca9/aa
-	.word playerHitInRoomOfShiningLight-1 ; $dcab/ac
-	.word screenLogicDispatcher-1 ; $dcad/ae
-	.word playerHitInValleyOfPoison-1 ; $dcaf/b0
-	.word playerHitInThievesDen-1 ; $dcb1/b2
-	.word playerHitInWellOfSouls-1 ; $dcb3/b4
+playerHitJumpTable
+	.word playerHitDefaut-1 				; Treasure Room
+	.word playerHitInMarket-1 				; Marketplace
+	.word playerHitInEntranceRoom-1 		; Entrance Room
+	.word playerHitInBlackMarket-1 			; Black Market
+	.word playerHitDefaut-1 				; Map Room
+	.word playerHitInMesaSide-1 			; Mesa Side
+	.word playerHitInTempleEntrance-1 		; Temple Entrance
+	.word playerHitInSpiderRoom-1 			; Spider Room
+	.word playerHitInRoomOfShiningLight-1 	; Room of the Shining Light
+	.word playerHitDefaut-1 				; Mesa Field
+	.word playerHitInValleyOfPoison-1 		; Valley of Poison
+	.word playerHitInThievesDen-1 			; Thieves Den
+	.word playerHitInWellOfSouls-1 			; Well of Souls
 
-PlayerPFCollisionJumpTable:
-	.word roomIdleHandler-1 ; $dcb5/b6
-	.word roomIdleHandler-1 ; $dcb7/b8
-	.word IndyPFHitEntranceRoom-1 ; $dcb9/ba
-	.word roomIdleHandler-1 ; $dcbb/bc
-	.word roomIdleHandler-1 ; $dcbd/be
-	.word indyMoveOnInput-1 ; $dcbf/c0
-	.word stopIndyMovInTemple-1 ; $dcc1/c2
-	.word indyMoveOnInput-1 ; $dcc3/c4
-	.word playerHitInRoomOfShiningLight-1 ; $dcc5/c6
-	.word roomIdleHandler-1 ; $dcc7/c8
-	.word indyEnterHole-1 ; $dcc9/ca
-	.word roomIdleHandler-1 ; $dccb/cc
-	.word roomIdleHandler-1 ; $dccd/ce
+playfieldHitJumpTable:
+	.word defaultIdleHandler-1 				; Treasure Room
+	.word defaultIdleHandler-1 				; Marketplace
+	.word indyPFHitEntranceRoom-1 			; Entrance Room
+	.word defaultIdleHandler-1 				; Black Market
+	.word defaultIdleHandler-1 				; Map Room
+	.word indyMoveOnInput-1 				; Mesa Side
+	.word stopIndyMovInTemple-1 			; Temple Entrance
+	.word indyMoveOnInput-1 				; Spider Room
+	.word playerHitInRoomOfShiningLight-1 	; Room of the Shining Light
+	.word defaultIdleHandler-1 				; Mesa Field
+	.word indyEnterHole-1 					; Valley of Poison
+	.word defaultIdleHandler-1 				; Thieves Den
+	.word defaultIdleHandler-1 				; Well of Souls
 
 roomIdleHandlerJumpTable:
-	.word roomIdleHandler-1 ; $dccf/d0
-	.word roomIdleHandler-1 ; $dcd1/d2
-	.word setIndyToTriggeredState-1 ; $dcd3/d4
-	.word roomIdleHandler-1 ; $dcd5/d6
-	.word initFallbackEntryPosition-1 ; $dcd7/d8
-	.word roomIdleHandler-1 ; $dcd9/da
-	.word roomIdleHandler-1 ; $dcdb/dc
-	.word roomIdleHandler-1 ; $dcdd/de
-	.word roomIdleHandler-1 ; $dcdf/e0
-	.word warpToMesaSide-1 ; $dce1/e2
-	.word setIndyToTriggeredState-1 ; $dce3/e4
-	.word roomIdleHandler-1 ; $dce5/e6
-	.word roomIdleHandler-1 ; $dce7/e8
+	.word defaultIdleHandler-1 				; Treasure Room
+	.word defaultIdleHandler-1				; Marketplace
+	.word setIndyToTriggeredState-1 		; Entrance Room
+	.word defaultIdleHandler-1 				; Black Market
+	.word initFallbackEntryPosition-1 		; Map Room
+	.word defaultIdleHandler-1 				; Mesa Side
+	.word defaultIdleHandler-1 				; Temple Entrance
+	.word defaultIdleHandler-1 				; Spider Room
+	.word defaultIdleHandler-1 				; Room of the Shining Light
+	.word warpToMesaSide-1 					; Mesa Field
+	.word setIndyToTriggeredState-1 		; Valley of Poison
+	.word defaultIdleHandler-1 				; Thieves Den
+	.word defaultIdleHandler-1 				; Well of Souls
 
 placeItemInInventory
-	ldx		ram_c4					
+	ldx		inventoryItemCount					
 	cpx		#$06					
 	bcc		ldcf1					
 	clc								
@@ -2633,12 +2677,12 @@ ldcfc
 	asl								;...
 	asl								;...
 	sta		invSlotLo,x			; and store in current slot
-	lda		ram_c4					
+	lda		inventoryItemCount					
 	bne		ldd0a					
-	stx		cursor_pos					
+	stx		selectedItemSlot					
 	sty		selectedInventoryId					
 ldd0a
-	inc		ram_c4					
+	inc		inventoryItemCount					
 	cpy		#$04					
 	bcc		ldd15					
 	tya								
@@ -2646,12 +2690,12 @@ ldd0a
 	jsr		ShowItemAsTaken					
 ldd15
 	lda		#$0c					
-	sta		indyFootstep					
+	sta		indyFootstepSound					
 	sec								
 	rts								
 
-ShowItemAsNotTaken
-	lda		ldc64,x					
+setItemAsNotTaken
+	lda		itemIndexTable,x					
 	lsr								
 	tay								
 	lda		itemStatusMaskTable,y					
@@ -2666,10 +2710,10 @@ ldd2a
 	rts								
 
 ShowItemAsTaken
-	lda		ldc64,x					
+	lda		itemIndexTable,x					
 	lsr								
 	tax								
-	lda		ldc54,x					
+	lda		itemStatusBitValues,x					
 	bcs		ldd3e					
 	ora		ram_c6					
 	sta		ram_c6					
@@ -2681,10 +2725,10 @@ ldd3e
 	rts								
 
 isItemAlreadyTaken:
-	lda		ldc64,x					
+	lda		itemIndexTable,x					
 	lsr								
 	tay								
-	lda		ldc54,y					
+	lda		itemStatusBitValues,y					
 	bcs		ldd53						
 	and		ram_c6					 
 	beq		ldd52						
@@ -2705,7 +2749,7 @@ updateRoomEventState
 	lda		ram_98					
 	cpx		#$0c					
 	bcs		ldd67					
-	adc		ldfe5,x					
+	adc		eventStateOffsetTable,x					
 	sta		ram_98					
 ldd67
 	rts								
@@ -2747,7 +2791,7 @@ clear_zp
 	sta		currentRoomId				; as current room
 	lsr								; divide 13 by 2 (round down)
 	sta		bulletCount				; load 6 bullets
-	jsr		InitializeScreenState					
+	jsr		initRoomState					
 	jmp		startNewFrame					
 
 initGameVars:
@@ -2757,7 +2801,7 @@ initGameVars:
 	lsr								
 	lsr								
 	sta		selectedInventoryId					
-	inc		ram_c4					
+	inc		inventoryItemCount					
 	lda		#$00					
 	sta		invSlotLo2					
 	sta		invSlotLo3					
@@ -2776,7 +2820,7 @@ initGameVars:
 	lda		#ID_ENTRANCE_ROOM					
 	sta		currentRoomId					
 	sta		lives_left					
-	jsr		InitializeScreenState					
+	jsr		initRoomState					
 	jmp		setupScreenAndObj					
 
 ;------------------------------------------------------------
@@ -2804,7 +2848,7 @@ getFinalScore
 	rts								; return
 
 	.byte	$00,$00,$00,$00,$00,$00,$00,$00 ; $ddf8 (*)
-lde00
+roomOverrideTable
 	.byte	$ff,$ff,$ff,$ff,$ff,$ff,$ff,$f8 ; $de00 (*)
 	.byte	$ff,$ff,$ff,$ff,$ff,$4f,$4f,$4f ; $de08 (*)
 	.byte	$4f,$4f,$4f,$4f,$4f,$4f,$4f,$4f ; $de10 (*)
@@ -2812,7 +2856,7 @@ lde00
 	.byte	$0f,$0f,$0f,$0f,$0f,$12,$12,$89 ; $de20 (*)
 	.byte	$89,$8c,$89,$89,$86,$89,$89,$89 ; $de28 (*)
 	.byte	$89,$89,$86,$86					; $de30 (*)
-lde34
+posYOverrideFlagTable
 	.byte	$ff,$fd,$ff,$ff,$fd,$ff,$ff,$ff ; $de34 (*)
 	.byte	$fd,$01,$fd,$04,$fd,$ff,$fd,$01 ; $de3c (*)
 	.byte	$ff,$0b,$0a,$ff,$ff,$ff,$04,$ff ; $de44 (*)
@@ -2820,7 +2864,7 @@ lde34
 	.byte	$fe,$fd,$fd,$ff,$ff,$ff,$ff,$ff ; $de54 (*)
 	.byte	$fd,$fd,$fe,$ff,$ff,$fe,$fd,$fd ; $de5c (*)
 	.byte	$ff,$ff,$ff,$ff					; $de64 (*)
-lde68
+overrideLowXBoundTable
 	.byte	$00,$1e,$00,$00,$11,$00,$00,$00 ; $de68 (*)
 	.byte	$11,$00,$10,$00,$60,$00,$11,$00 ; $de70 (*)
 	.byte	$00,$00,$00,$00,$00,$00,$00,$00 ; $de78 (*)
@@ -2828,7 +2872,7 @@ lde68
 	.byte	$30,$15,$24,$00,$00,$00,$00,$00 ; $de88 (*)
 	.byte	$18,$03,$27,$00,$00,$30,$20,$12 ; $de90 (*)
 	.byte	$00,$00,$00,$00					; $de98 (*)
-lde9c
+overrideHighXBoundTable
 	.byte	$00,$7a,$00,$00,$88,$00,$00,$00 ; $de9c (*)
 	.byte	$88,$00,$80,$00,$65,$00,$88,$00 ; $dea4 (*)
 	.byte	$00,$00,$00,$00,$00,$00,$00,$00 ; $deac (*)
@@ -2836,7 +2880,7 @@ lde9c
 	.byte	$02,$1f,$2f,$00,$00,$00,$00,$00 ; $debc (*)
 	.byte	$1c,$40,$01,$00,$00,$07,$27,$16 ; $dec4 (*)
 	.byte	$00,$00,$00,$00					; $decc (*)
-lded0
+advOverrideControlTable
 	.byte	$00,$02,$00,$00,$09,$00,$00,$00 ; $ded0 (*)
 	.byte	$07,$00,$fc,$00,$05,$00,$09,$00 ; $ded8 (*)
 	.byte	$00,$00,$00,$00,$00,$00,$00,$00 ; $dee0 (*)
@@ -2844,7 +2888,7 @@ lded0
 	.byte	$01,$06,$fe,$00,$00,$00,$00,$00 ; $def0 (*)
 	.byte	$fb,$fd,$0b,$00,$00,$08,$08,$00 ; $def8 (*)
 	.byte	$00,$00,$00,$00					; $df00 (*)
-ldf04
+roomPosYOverrideTable
 	.byte	$00,$4e,$00,$00,$4e,$00,$00,$00 ; $df04 (*)
 	.byte	$4d,$4e,$4e,$4e,$04,$01,$03,$01 ; $df0c (*)
 	.byte	$01,$01,$01,$01,$01,$01,$01,$01 ; $df14 (*)
@@ -2852,7 +2896,7 @@ ldf04
 	.byte	$00,$00,$41,$00,$00,$00,$00,$00 ; $df24 (*)
 	.byte	$45,$00,$42,$00,$00,$00,$42,$23 ; $df2c (*)
 	.byte	$28,$00,$00,$00					; $df34 (*)
-ldf38
+roomPosXOverrideTable
 	.byte	$00,$00,$00,$00,$00,$00,$00,$00 ; $df38 (*)
 	.byte	$00,$00,$00,$00,$4c,$00,$00,$00 ; $df40 (*)
 	.byte	$00,$00,$00,$00,$00,$00,$00,$00 ; $df48 (*)
@@ -2864,9 +2908,9 @@ ldf38
 RoomEventOffsetTable
 	.byte	$01,$ff,$01,$ff					; $df6c (*)
 
-ldf70
+EntranceRoomTopObjPosY
 	.byte	$35,$09							; $df70 (*)
-ldf72
+roomObjPosYTable
 	.byte	$00,$00,$42,$45,$0c,$20
 
 MarketBasketItems
@@ -2940,17 +2984,17 @@ indyMoveDeltaTable
 	.byte $0D
 	.byte $0F
 
-	; .byte	$00,$00,$00,$00,$00,$0a,$09,$0b ; $dfd5 (*)
-	; .byte	$00,$06,$05,$07,$00,$0e,$0d,$0f ; $dfdd (*)
-ldfe5
-	.byte	$00								; $dfe5 (d)
-	.byte	$06,$03,$03,$03,$00,$00,$06,$00 ; $dfe6 (*)
-	.byte	$00,$00,$06,$00,$00,$00,$00,$00 ; $dfee (*)
-	.byte	$00,$00,$00						; $dff6 (*)
-	.byte	$00								; $dff9 (d)
-	.byte	$68,$dd,$68,$dd					; $dffa (*)
-	.byte	$68								; $dffe (d)
-	.byte	$dd								; $dfff (*)
+
+eventStateOffsetTable
+	.byte $00,$06,$03,$03,$03,$00,$00,$06,$00,$00,$00,$06
+
+	;Padding to align to bank 1 start
+	.byte	$00,$00,$00,$00,$00,$00,$00,$00,$00
+
+	;Vector Table					
+	.word startGame							;NMI
+	.word startGame							;RESET
+	.word startGame							;IRQ/BRK
 
 
 ;***********************************************************
@@ -3329,7 +3373,7 @@ lf1ea
 	lda		#$1a					
 	sta		COLUP0					
 	sta		COLUP1					
-	lda		cursor_pos					
+	lda		selectedItemSlot					
 	lsr								
 	tay								
 	lda		InventoryIndexHorizValues,y					
@@ -3413,7 +3457,7 @@ draw_inventory
 	sta		WSYNC					
 ;---------------------------------------
 	ldy		#$02					
-	lda		ram_c4					
+	lda		inventoryItemCount					
 	bne		lf2c6					
 	dey								
 lf2c6
@@ -3440,12 +3484,12 @@ lf2c6
 	txs								
 	ldx		#$01					
 lf2e8
-	lda		indyFootstep,x				
+	lda		indyFootstepSound,x				
 	sta		AUDC0,x					
 	sta		AUDV0,x					
 	bmi		lf2fb					
 	ldy		#$00					
-	sty		indyFootstep,x				
+	sty		indyFootstepSound,x				
 lf2f4
 	sta		AUDF0,x					
 	dex								
@@ -3495,7 +3539,7 @@ lf338
 	lsr								
 	adc		#$98					
 lf340
-	ldx		cursor_pos					
+	ldx		selectedItemSlot					
 	sta		invSlotLo,x					
 lf344
 	lda		#$00					
@@ -3592,10 +3636,10 @@ lf3d0
 	lda		#$07					
 	and		frameCount				
 	bne		lf437					
-	lda		ram_c4					
+	lda		inventoryItemCount					
 	and		#$06					
 	beq		lf437					
-	ldx		cursor_pos					
+	ldx		selectedItemSlot					
 	lda		invSlotLo,x					
 	cmp		#$98					
 	bcc		lf3f2					
@@ -3626,7 +3670,7 @@ lf411
 	ldy		invSlotLo,x					
 	beq		lf40b					
 lf415
-	stx		cursor_pos					
+	stx		selectedItemSlot					
 	tya								
 	lsr								
 	lsr								
@@ -3793,7 +3837,7 @@ lf51b
 	lsr								
 	lsr								
 	tay								
-	lda		lfef0,y					
+	lda		PedestalSprite,y					
 	sta		GRP0					
 	stx		COLUP0					
 	inx								
@@ -5799,45 +5843,256 @@ ShiningLight_03
 	.byte $00 ; |........| $FDFF
 	
 	
+RoomPF1GraphicData_10:
+	.byte $07 ; |.....XXX| $FE00
+	.byte $07 ; |.....XXX| $FE01
+	.byte $07 ; |.....XXX| $FE02
+	.byte $03 ; |......XX| $FE03
+	.byte $03 ; |......XX| $FE04
+	.byte $03 ; |......XX| $FE05
+	.byte $01 ; |.......X| $FE06
+	.byte $00 ; |........| $FE07
+	.byte $00 ; |........| $FE08
+	.byte $00 ; |........| $FE09
+	.byte $00 ; |........| $FE0A
+	.byte $00 ; |........| $FE0B
+	.byte $00 ; |........| $FE0C
+	.byte $00 ; |........| $FE0D
+	.byte $00 ; |........| $FE0E
+	.byte $30 ; |..XX....| $FE0F
+	.byte $78 ; |.XXXX...| $FE10
+	.byte $7C ; |.XXXXX..| $FE11
+	.byte $3C ; |..XXXX..| $FE12
+	.byte $3C ; |..XXXX..| $FE13
+	.byte $18 ; |...XX...| $FE14
+	.byte $08 ; |....X...| $FE15
+	.byte $00 ; |........| $FE16
+	.byte $00 ; |........| $FE17
+	.byte $00 ; |........| $FE18
+	.byte $00 ; |........| $FE19
+	.byte $00 ; |........| $FE1A
+	.byte $00 ; |........| $FE1B
+	.byte $00 ; |........| $FE1C
+	.byte $00 ; |........| $FE1D
+	.byte $00 ; |........| $FE1E
+	.byte $00 ; |........| $FE1F
+	.byte $00 ; |........| $FE20
+	.byte $00 ; |........| $FE21
+	.byte $00 ; |........| $FE22
+	.byte $00 ; |........| $FE23
+	.byte $00 ; |........| $FE24
+	.byte $00 ; |........| $FE25
+	.byte $00 ; |........| $FE26
+	.byte $00 ; |........| $FE27
+	.byte $00 ; |........| $FE28
+	.byte $00 ; |........| $FE29
+	.byte $00 ; |........| $FE2A
+	.byte $00 ; |........| $FE2B
+	.byte $00 ; |........| $FE2C
+	.byte $00 ; |........| $FE2D
+	.byte $01 ; |.......X| $FE2E
+	.byte $0F ; |....XXXX| $FE2F
+	.byte $01 ; |.......X| $FE30
+	.byte $00 ; |........| $FE31
+	.byte $00 ; |........| $FE32
+	.byte $00 ; |........| $FE33
+	.byte $00 ; |........| $FE34
+	.byte $00 ; |........| $FE35
+	.byte $00 ; |........| $FE36
+	.byte $00 ; |........| $FE37
+	.byte $80 ; |X.......| $FE38
+	.byte $C0 ; |XX......| $FE39
+	.byte $E0 ; |XXX.....| $FE3A
+	.byte $F8 ; |XXXXX...| $FE3B
+	.byte $FC ; |XXXXXX..| $FE3C
+	.byte $FE ; |XXXXXXX.| $FE3D
+	.byte $FC ; |XXXXXX..| $FE3E
+	.byte $F0 ; |XXXX....| $FE3F
+	.byte $E0 ; |XXX.....| $FE40
+	.byte $C0 ; |XX......| $FE41
+	.byte $C0 ; |XX......| $FE42
+	.byte $80 ; |X.......| $FE43
+	.byte $80 ; |X.......| $FE44
+	.byte $00 ; |........| $FE45
+	.byte $00 ; |........| $FE46
+	.byte $00 ; |........| $FE47
+	.byte $00 ; |........| $FE48
+	.byte $00 ; |........| $FE49
+	.byte $00 ; |........| $FE4A
+	.byte $00 ; |........| $FE4B
+	.byte $00 ; |........| $FE4C
+	.byte $00 ; |........| $FE4D
+	.byte $00 ; |........| $FE4E
+	.byte $00 ; |........| $FE4F
+	.byte $03 ; |......XX| $FE50
+	.byte $07 ; |.....XXX| $FE51
+	.byte $03 ; |......XX| $FE52
+	.byte $01 ; |.......X| $FE53
+	.byte $00 ; |........| $FE54
+	.byte $00 ; |........| $FE55
+	.byte $00 ; |........| $FE56
+	.byte $00 ; |........| $FE57
+	.byte $00 ; |........| $FE58
+	.byte $80 ; |X.......| $FE59
+	.byte $E0 ; |XXX.....| $FE5A
+	.byte $F8 ; |XXXXX...| $FE5B
+	.byte $F8 ; |XXXXX...| $FE5C
+	.byte $F8 ; |XXXXX...| $FE5D
+	.byte $F8 ; |XXXXX...| $FE5E
+	.byte $F0 ; |XXXX....| $FE5F
+	.byte $C0 ; |XX......| $FE60
+	.byte $80 ; |X.......| $FE61
+	.byte $00 ; |........| $FE62
+	.byte $00 ; |........| $FE63
+	.byte $00 ; |........| $FE64
+	.byte $00 ; |........| $FE65
+	.byte $00 ; |........| $FE66
+	.byte $00 ; |........| $FE67
+	.byte $00 ; |........| $FE68
+	.byte $00 ; |........| $FE69
+	.byte $03 ; |......XX| $FE6A
+	.byte $0F ; |....XXXX| $FE6B
+	.byte $1F ; |...XXXXX| $FE6C
+	.byte $3F ; |..XXXXXX| $FE6D
+	.byte $3E ; |..XXXXX.| $FE6E
+	.byte $3C ; |..XXXX..| $FE6F
+	.byte $38 ; |..XXX...| $FE70
+	.byte $30 ; |..XX....| $FE71
+	.byte $00 ; |........| $FE72
+	.byte $00 ; |........| $FE73
+	.byte $00 ; |........| $FE74
+	.byte $00 ; |........| $FE75
+	.byte $00 ; |........| $FE76
+	.byte $00 ; |........| $FE77
 	
-	.byte   $07,$07,$07,$03,$03,$03,$01 ; $fdff (*)
-	.byte	$00,$00,$00,$00,$00,$00,$00,$00 ; $fe07 (*)
-	.byte	$30,$78,$7c,$3c,$3c,$18,$08,$00 ; $fe0f (*)
-	.byte	$00,$00,$00,$00,$00,$00,$00,$00 ; $fe17 (*)
-	.byte	$00,$00,$00,$00,$00,$00,$00,$00 ; $fe1f (*)
-	.byte	$00,$00,$00,$00,$00,$00,$00,$01 ; $fe27 (*)
-	.byte	$0f,$01,$00,$00,$00,$00,$00,$00 ; $fe2f (*)
-	.byte	$00,$80,$c0,$e0,$f8,$fc,$fe,$fc ; $fe37 (*)
-	.byte	$f0,$e0,$c0,$c0,$80,$80,$00,$00 ; $fe3f (*)
-	.byte	$00,$00,$00,$00,$00,$00,$00,$00 ; $fe47 (*)
-	.byte	$00,$03,$07,$03,$01,$00,$00,$00 ; $fe4f (*)
-	.byte	$00,$00,$80,$e0,$f8,$f8,$f8,$f8 ; $fe57 (*)
-	.byte	$f0,$c0,$80,$00,$00,$00,$00,$00 ; $fe5f (*)
-	.byte	$00,$00,$00,$03,$0f,$1f,$3f,$3e ; $fe67 (*)
-	.byte	$3c,$38,$30,$00,$00,$00,$00,$00 ; $fe6f (*)
-	.byte	$00,$07,$07,$07,$03,$03,$03,$01 ; $fe77 (*)
-	.byte	$00,$00,$00,$00,$00,$00,$80,$80 ; $fe7f (*)
-	.byte	$c0,$e0,$e0,$c0,$c0,$80,$00,$00 ; $fe87 (*)
-	.byte	$00,$00,$00,$00,$00,$00,$00,$00 ; $fe8f (*)
-	.byte	$30,$38,$1c,$1e,$0e,$0c,$0c,$00 ; $fe97 (*)
-	.byte	$00,$00,$80,$80,$c0,$f0,$fc,$ff ; $fe9f (*)
-	.byte	$ff,$ff,$ff,$fe,$fc,$f8,$f0,$e0 ; $fea7 (*)
-	.byte	$00,$00,$00,$00,$00,$00,$00,$00 ; $feaf (*)
-	.byte	$00,$00,$80,$e0,$f0,$e0,$80,$00 ; $feb7 (*)
-	.byte	$00,$00,$00,$00,$00,$00,$00,$00 ; $febf (*)
-	.byte	$03,$07,$03,$03,$01,$01,$00,$00 ; $fec7 (*)
-	.byte	$00,$80,$c0,$f0,$f0,$e0,$e0,$c0 ; $fecf (*)
-	.byte	$c0,$80,$80,$00,$00,$00,$00,$00 ; $fed7 (*)
-	.byte	$00,$00,$03,$07,$07,$03,$01,$00 ; $fedf (*)
-	.byte	$00,$c0,$e0,$f0,$f8,$f8,$fc,$fc ; $fee7 (*)
-	.byte	$fc								; $feef (*)
+RoomPF2GraphicData_9:
+	.byte $07 ; |.....XXX| $FE78
+	.byte $07 ; |.....XXX| $FE79
+	.byte $07 ; |.....XXX| $FE7A
+	.byte $03 ; |......XX| $FE7B
+	.byte $03 ; |......XX| $FE7C
+	.byte $03 ; |......XX| $FE7D
+	.byte $01 ; |.......X| $FE7E
+	.byte $00 ; |........| $FE7F
+	.byte $00 ; |........| $FE80
+	.byte $00 ; |........| $FE81
+	.byte $00 ; |........| $FE82
+	.byte $00 ; |........| $FE83
+	.byte $00 ; |........| $FE84
+	.byte $80 ; |X.......| $FE85
+	.byte $80 ; |X.......| $FE86
+	.byte $C0 ; |XX......| $FE87
+	.byte $E0 ; |XXX.....| $FE88
+	.byte $E0 ; |XXX.....| $FE89
+	.byte $C0 ; |XX......| $FE8A
+	.byte $C0 ; |XX......| $FE8B
+	.byte $80 ; |X.......| $FE8C
+	.byte $00 ; |........| $FE8D
+	.byte $00 ; |........| $FE8E
+	.byte $00 ; |........| $FE8F
+	.byte $00 ; |........| $FE90
+	.byte $00 ; |........| $FE91
+	.byte $00 ; |........| $FE92
+	.byte $00 ; |........| $FE93
+	.byte $00 ; |........| $FE94
+	.byte $00 ; |........| $FE95
+	.byte $00 ; |........| $FE96
+	.byte $30 ; |..XX....| $FE97
+	.byte $38 ; |..XXX...| $FE98
+	.byte $1C ; |...XXX..| $FE99
+	.byte $1E ; |...XXXX.| $FE9A
+	.byte $0E ; |....XXX.| $FE9B
+	.byte $0C ; |....XX..| $FE9C
+	.byte $0C ; |....XX..| $FE9D
+	.byte $00 ; |........| $FE9E
+	.byte $00 ; |........| $FE9F
+	.byte $00 ; |........| $FEA0
+	.byte $80 ; |X.......| $FEA1
+	.byte $80 ; |X.......| $FEA2
+	.byte $C0 ; |XX......| $FEA3
+	.byte $F0 ; |XXXX....| $FEA4
+	.byte $FC ; |XXXXXX..| $FEA5
+	.byte $FF ; |XXXXXXXX| $FEA6
+	.byte $FF ; |XXXXXXXX| $FEA7
+	.byte $FF ; |XXXXXXXX| $FEA8
+	.byte $FF ; |XXXXXXXX| $FEA9
+	.byte $FE ; |XXXXXXX.| $FEAA
+	.byte $FC ; |XXXXXX..| $FEAB
+	.byte $F8 ; |XXXXX...| $FEAC
+	.byte $F0 ; |XXXX....| $FEAD
+	.byte $E0 ; |XXX.....| $FEAE
+	.byte $00 ; |........| $FEAF
+	.byte $00 ; |........| $FEB0
+	.byte $00 ; |........| $FEB1
+	.byte $00 ; |........| $FEB2
+	.byte $00 ; |........| $FEB3
+	.byte $00 ; |........| $FEB4
+	.byte $00 ; |........| $FEB5
+	.byte $00 ; |........| $FEB6
+	.byte $00 ; |........| $FEB7
+	.byte $00 ; |........| $FEB8
+	.byte $80 ; |X.......| $FEB9
+	.byte $E0 ; |XXX.....| $FEBA
+	.byte $F0 ; |XXXX....| $FEBB
+	.byte $E0 ; |XXX.....| $FEBC
+	.byte $80 ; |X.......| $FEBD
+	.byte $00 ; |........| $FEBE
+	.byte $00 ; |........| $FEBF
+	.byte $00 ; |........| $FEC0
+	.byte $00 ; |........| $FEC1
+	.byte $00 ; |........| $FEC2
+	.byte $00 ; |........| $FEC3
+	.byte $00 ; |........| $FEC4
+	.byte $00 ; |........| $FEC5
+	.byte $00 ; |........| $FEC6
+	.byte $03 ; |......XX| $FEC7
+	.byte $07 ; |.....XXX| $FEC8
+	.byte $03 ; |......XX| $FEC9
+	.byte $03 ; |......XX| $FECA
+	.byte $01 ; |.......X| $FECB
+	.byte $01 ; |.......X| $FECC
+	.byte $00 ; |........| $FECD
+	.byte $00 ; |........| $FECE
+	.byte $00 ; |........| $FECF
+	.byte $80 ; |X.......| $FED0
+	.byte $C0 ; |XX......| $FED1
+	.byte $F0 ; |XXXX....| $FED2
+	.byte $F0 ; |XXXX....| $FED3
+	.byte $E0 ; |XXX.....| $FED4
+	.byte $E0 ; |XXX.....| $FED5
+	.byte $C0 ; |XX......| $FED6
+	.byte $C0 ; |XX......| $FED7
+	.byte $80 ; |X.......| $FED8
+	.byte $80 ; |X.......| $FED9
+	.byte $00 ; |........| $FEDA
+	.byte $00 ; |........| $FEDB
+	.byte $00 ; |........| $FEDC
+	.byte $00 ; |........| $FEDD
+	.byte $00 ; |........| $FEDE
+	.byte $00 ; |........| $FEDF
+	.byte $00 ; |........| $FEE0
+	.byte $03 ; |......XX| $FEE1
+	.byte $07 ; |.....XXX| $FEE2
+	.byte $07 ; |.....XXX| $FEE3
+	.byte $03 ; |......XX| $FEE4
+	.byte $01 ; |.......X| $FEE5
+	.byte $00 ; |........| $FEE6
+	.byte $00 ; |........| $FEE7
+	.byte $C0 ; |XX......| $FEE8
+	.byte $E0 ; |XXX.....| $FEE9
+	.byte $F0 ; |XXXX....| $FEEA
+	.byte $F8 ; |XXXXX...| $FEEB
+	.byte $F8 ; |XXXXX...| $FEEC
+	.byte $FC ; |XXXXXX..| $FEED
+	.byte $FC ; |XXXXXX..| $FEEE
+	.byte $FC ; |XXXXXX..| $FEEF
 
-lfef0
-	.byte	$3c ; |	 ####  |			$fef0 (g)
-	.byte	$3c ; |	 ####  |			$fef1 (g)
-	.byte	$7e ; | ###### |			$fef2 (g)
-	.byte	$ff ; |########|			$fef3 (g)
-
+PedestalSprite
+	.byte $3C ; |..XXXX..| $FEF0
+	.byte $3C ; |..XXXX..| $FEF1
+	.byte $7E ; |.XXXXXX.| $FEF2
+	.byte $FF ; |XXXXXXXX| $FEF3
+	
 lfef4
 	lda		arkLocationRegionId,x				
 	bmi		lfef9					
