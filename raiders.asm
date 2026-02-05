@@ -162,22 +162,22 @@ grenadeCookTime			= $9b
 resetEnableFlag			= $9c
 majorEventFlag			= $9d
 score			= $9e
-lives_left		= $9f
+livesLeft		= $9f
 bulletCount		= $a0
 eventTimer			= $a1
 indyFootstepSound			= $a2
 soundChan1WhipTimer			= $a3
 diamond_h		= $a4
 grenadeOpeningPenalty	= $a5
-escape_hatch_used		= $a6
+escapePrisonPenalty		= $a6
 findingArkBonus			= $a7
 usingParachuteBonus	= $a8
 ankhUsedBonus		= $a9
 yarFoundBonus		= $aa
-ark_found		= $ab
-thiefShot		= $ac
-mesa_entered	= $ad
-unknown_action	= $ae
+mapRoomBonus		= $ab
+thiefShotPenalty		= $ac
+mesaLandingBonus	= $ad
+UnusedBonus	= $ae
 treasureIndex			= $af
 
 entranceRoomState			= $b1
@@ -201,8 +201,8 @@ invSlotHi6	= $c2
 selectedItemSlot		= $c3
 inventoryItemCount			= $c4
 selectedInventoryId	= $c5
-ram_c6			= $c6
-ram_c7			= $c7
+basketItemsStatus			= $c6
+pickupItemsStatus			= $c7
 objectPosX			= $c8
 indyPosX			= $c9
 m0PosX			= $ca
@@ -220,8 +220,8 @@ snakePosY			= $d5
 timepieceGfxPtrs			= $d6
 snakeMotionPtr			= $d7
 timepieceSpriteDataPtr			= $d8
-indyGfxPtrs		= $d9
-ram_da			= $da
+indyGfxPtrLo		= $d9
+indyGfxPtrHi			= $da
 indySpriteHeight			= $db
 p0SpriteHeight			= $dc
 p0GfxPtrLo		= $dd
@@ -256,12 +256,12 @@ thiefPosX			= $ee
 ;--------------------
 ;sprite heights
 ;--------------------
-HEIGHT_ARK	= 7
+HEIGHT_ARK					= 7
 HEIGHT_PEDESTAL				= 15
 HEIGHT_INDY_SPRITE			= 11
-HEIGHT_INVENTORY_SPRITES		= 8
-HEIGHT_PARACHUTING_SPRITE = 15
-HEIGHT_THIEF					= 16
+HEIGHT_INVENTORY_SPRITES	= 8
+HEIGHT_PARACHUTING_SPRITE 	= 15
+HEIGHT_THIEF				= 16
 HEIGHT_KERNEL				= 160
 
 
@@ -347,6 +347,11 @@ ID_ARK_ROOM				 = $0D
 
 BANK0STROBE				= $FFF8
 BANK0_REORG				= $D000
+BANK1_REORG				= $F000
+
+BANK0TOP				= $1000
+BANK1TOP				= $2000
+
 
 INIT_SCORE				= 100		; starting score
 
@@ -362,12 +367,14 @@ USING_GRENADE_OR_PARACHUTE = %00000010
 ENTRANCE_ROOM_CAVE_VERT_POS = 9
 ENTRANCE_ROOM_ROCK_VERT_POS = 53
 
+MAX_INVENTORY_ITEMS		= 6
+
 ;***********************************************************
 ;	bank 0 / 0..1
 ;***********************************************************
 
-	seg		code
-	org		$0000
+	seg		bank0
+	org		BANK0TOP
 	rorg	BANK0_REORG
 
 ;note: 1st bank's vector points right at the cold start routine
@@ -383,7 +390,7 @@ coldStart
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 setObjPosX
 	ldx		#<RESBL - RESP0					
-.moveObjectLoop
+moveObjectLoop
 	sta		WSYNC					; wait for next scan line
 	lda		objectPosX,x			; get object's horizontal position
 	tay								
@@ -391,22 +398,22 @@ setObjPosX
 	sta		HMP0,x					; set object's fine motion value
 	and		#$0f					; mask off fine motion value
 	tay								; move coarse move value to y
-.coarseMoveObj
+coarseMoveObj
 	dey								
-	bpl		.coarseMoveObj			; set object's coarse position			
+	bpl		coarseMoveObj			; set object's coarse position			
 	sta		RESP0,x					
 	dex								
-	bpl		.moveObjectLoop					
+	bpl		moveObjectLoop					
 	sta		WSYNC					; wait for next scan line
 	sta		HMOVE					
 	jmp		JumpToDisplayKernel					
 
-CheckObjectHit:
+checkObjectHit:
 	bit		CXM1P					; check player collision with Indy bullet 
-	bpl		.checkWeaponHit		; branch if no player collision				
+	bpl		checkWeaponHit		; branch if no player collision				
 	ldx		currentRoomId			; get the current screen id				
 	cpx		#ID_VALLEY_OF_POISON	; are we in the valley of poison?						
-	bcc		.checkWeaponHit						
+	bcc		checkWeaponHit						
 	beq		weaponHitThief		; branch if Indy in the Valley of Poison
 
 	; --------------------------------------------------------------------------
@@ -435,7 +442,7 @@ CheckObjectHit:
 
 weaponHitThief:
 	lda		weaponStatus			; get bullet or whip status			
-	bpl		.setThiefShotPenalty	; branch if bullet or whip not active					
+	bpl		setThiefShotPenalty	; branch if bullet or whip not active					
 	and		#~BULLET_OR_WHIP_ACTIVE						
 	sta		weaponStatus			; clear BULLET_OR_WHIP_ACTIVE bit			
 	lda		pickupStatusFlags						
@@ -447,7 +454,7 @@ finishItemPickup:
 	lda		#%01000000		 	; Set Bit 6.					
 	sta		pickupStatusFlags
 								
-.setThiefShotPenalty
+setThiefShotPenalty
 	; --------------------------------------------------------------------------
 	; PENALTY FOR SHOOTING THIEF
 	; Killing a thief is dishonorable (or noise?). Deducts score.
@@ -455,9 +462,9 @@ finishItemPickup:
 	lda    #~BULLET_OR_WHIP_ACTIVE 	; Clear Active Bit mask.						
 	sta		weaponPosY				; Invalidates weapon Y (effectively removing it).			
 	lda		#PENALTY_SHOOTING_THIEF 	; Load Penalty Value.					
-	sta		thiefShot					; Apply penalty.
+	sta		thiefShotPenalty					; Apply penalty.
 
-.checkWeaponHit:
+checkWeaponHit:
 	bit		CXM1FB					; check missile 1 and playfield collisions
 	bpl		weaponObjHit				; if playfield is not hit try snake hit
 	ldx		currentRoomId				; get the current screen id						
@@ -542,7 +549,7 @@ handleIndyVsObjHit:
 
 	; --- Damage / Effect Logic --
 	bit		screenEventState			; Check Event State (Snakes vs Flies?)				
-	bpl		SetWellOfSoulsEntryEvent	; If Bit 7 is CLEAR, it's a Snake/Lethal
+	bpl		setWellOfSoulsEntryEvent	; If Bit 7 is CLEAR, it's a Snake/Lethal
 										; Jump to Death Logic.				
 	; --- Tsetse Fly Paralysis ---
 	; If Bit 7 is SET, it implies Tsetse Flies (Spider Room / Valley).
@@ -552,7 +559,7 @@ handleIndyVsObjHit:
 	sta		eventTimer				; Set "Paralysis" Timer (Indy freezes).		
 	bne		handleMesaSideSecretExit	; Return.					
 
-SetWellOfSoulsEntryEvent:
+setWellOfSoulsEntryEvent:
 	bvc		handleMesaSideSecretExit	; Fail-safe?					
 	lda		#$80							; Set Bit 7.
 	sta		majorEventFlag 			; Trigger Major Event				
@@ -613,7 +620,7 @@ dispatchHits:
 	rol		pickupStatusFlags						
 	clc								
 	ror		pickupStatusFlags						
-ContinueToHitDispatch:
+continueToHitDispatch:
 	jmp		playerHitDefaut						
 
 collectTreasure:
@@ -624,10 +631,10 @@ collectTreasure:
 	tax								
 	lda		MarketBasketItems,x		; get items from market basket			
 	jsr		placeItemInInventory		; place basket item in inventory				
-	bcc		ContinueToHitDispatch						
+	bcc		continueToHitDispatch						
 	lda		#$01						
 	sta		objState					; mark treasure as collected 
-	bne		ContinueToHitDispatch		; unconditional branch				
+	bne		continueToHitDispatch		; unconditional branch				
 
 jumpPlayerHit:
 	asl									; multiply screen id by 2
@@ -657,7 +664,7 @@ playerHitInWellOfSouls:
 										; he hasn't reached the Ark yet  take away shovel		
 	lda		diggingState				; Load action/state variable	
 	cmp		#$54						; Compare to $54 (Required State/Frame to trigger)
-	bne		ResumeHitDispatch			; If not equal, nothing special happens			
+	bne		resumeHitDispatch			; If not equal, nothing special happens			
 	lda		arkLocationRegionId			; Load Ark's Position State		
 	cmp		arkDigRegionId				; Compare to Indy's calculated region	
 	bne		arkNotFound 				; If not lined up with the Ark, skip the win logic
@@ -688,13 +695,13 @@ playerHitInValleyOfPoison:
 	lda		#ID_INVENTORY_COINS						
 takeItemFromInv:
 	bit		pickupStatusFlags 					
-	bmi		ResumeHitDispatch						
+	bmi		resumeHitDispatch						
 	clc									; Carry clear
 	jsr		removeItem					; take away specified item				
 	bcs		updateAfterItemRemove						
 	sec									; Carry set
 	jsr		removeItem						
-	bcc		ResumeHitDispatch						
+	bcc		resumeHitDispatch						
 updateAfterItemRemove:
 	cpy		#$0b						
 	bne		setPickupProcessedFlag						
@@ -707,14 +714,14 @@ setPickupProcessedFlag:
 	tya								
 	ora		#$c0						
 	sta		pickupStatusFlags						
-	bne		ResumeHitDispatch			; unconditional branch			
+	bne		resumeHitDispatch			; unconditional branch			
 
 playerHitInSpiderRoom:
 	ldx		#$00						; Set X to 0
 	stx		spiderRoomState				; Clear spider room state	
 	lda		#%10000000					; Set Bit 7						
 	sta		majorEventFlag				; Trigger major event flag					
-ResumeHitDispatch:
+resumeHitDispatch:
 	jmp		playerHitDefaut						
 
 playerHitInMesaSide:
@@ -1053,38 +1060,38 @@ undoInputBitShift:
 
 defaultIdleHandler:
 	bit		CXM0P						; check player collisions with missile0
-	bpl		CheckGrenadeDetonation		; branch if didn't collide with Indy			
+	bpl		checkGrenadeDetonation		; branch if didn't collide with Indy			
 	ldx		currentRoomId				; get the current screen id	
 	cpx		#ID_SPIDER_ROOM				; Are we in the Spider Room?	
-	beq		ClearInputBit0ForSpiderRoom	; Yes, go to ClearInputBit0ForSpiderRoom				
-	bcc		CheckGrenadeDetonation		; If screen ID is lower than Spider Room, skip 			
+	beq		clearInputBit0ForSpiderRoom	; Yes, go to clearInputBit0ForSpiderRoom				
+	bcc		checkGrenadeDetonation		; If screen ID is lower than Spider Room, skip 			
 	lda		#$80						; Trigger a major event (Death/Capture)
 	sta		majorEventFlag				; Set flag.	
-	bne		DespawnMissile0				; unconditional branch
+	bne		despawnMissile0				; unconditional branch
 
-ClearInputBit0ForSpiderRoom:
+clearInputBit0ForSpiderRoom:
 	rol		playerInputState			; Rotate input left, bit 7 ? carry		
 	sec									; Set carry (overrides carry from rol)
 	ror		playerInputState			; Rotate right, carry -> bit 7 (bit 0 lost)		
 	rol		spiderRoomState				; Rotate a status byte left (bit 7 ? carry)	
 	sec									; Set carry (again overrides whatever came before)
 	ror		spiderRoomState				; Rotate right, carry -> bit 7 (bit 0 lost)	
-DespawnMissile0:
+despawnMissile0:
 	lda		#$7f					
 	sta		m0PosYShadow				; Possibly related state or shadow position	
 	sta		m0PosY						; Move missile0 offscreen (to y=127)
 
-CheckGrenadeDetonation:
+checkGrenadeDetonation:
 	bit		grenadeState				; Check status flags	
 	bpl		verticalSync 				; If bit 7 is clear, skip (no grenade active)	
-	bvs		ApplyGrenadeWallEffect		; If bit 6 is set, jump			
+	bvs		applyGrenadeWallEffect		; If bit 6 is set, jump			
 	lda		secondsTimer				; get seconds time value	 
 	cmp		grenadeCookTime				; compare with grenade detination time	
 	bne		verticalSync 				; branch if not time to detinate grenade	
 	lda		#$a0					
 	sta		weaponPosY				; Move grenade offscreen 	
 	sta		majorEventFlag				; Trigger major event (explosion happened)	
-ApplyGrenadeWallEffect:
+applyGrenadeWallEffect:
 	lsr		grenadeState				; Logical shift right: bit 0 -> carry	
 	bcc		skipUpdate					; If bit 0 was clear, skip this
 										; (grenade effect not triggered)
@@ -1094,9 +1101,9 @@ ApplyGrenadeWallEffect:
 	sta		entranceRoomState			; having the grenade opening		
 	ldx		#ID_ENTRANCE_ROOM					
 	cpx		currentRoomId					
-	bne		UpdateEntranceRoomEventState ; branch if not in the ENTRANCE_ROOM					
+	bne		updateEntranceRoomEventState ; branch if not in the ENTRANCE_ROOM					
 	jsr		initRoomState		; Update visuals/state to reflect the wall opening			
-UpdateEntranceRoomEventState:
+updateEntranceRoomEventState:
 	lda		entranceRoomEventState					
 	and		#$0f					
 	beq		skipUpdate					; If no condition active, exit
@@ -1368,12 +1375,12 @@ gatePlayerTriggeredEvent
 	cpy		#$09					
 	bcc		stopWeaponEvent				; If too close to projectile, skip	
 	tya									
-	bpl		NudgeProjectileLeft			; If projectile is to the right of Indy,
+	bpl		nudgeProjectileLeft			; If projectile is to the right of Indy,
 										; continue		
-NudgeProjectileRight
+nudgeProjectileRight
 	inx								
 	bne		setProjectilePos					
-NudgeProjectileLeft
+nudgeProjectileLeft
 	dex								
 setProjectilePos
 	stx		weaponPosX					
@@ -1388,20 +1395,20 @@ checkWeaponRangeAndDir
 	cpy		#$07					
 	bcc		stopWeaponEvent				; Too close vertically	
 	tya								
-	bpl		NudgeProjectileRight		; If projectile right of Indy, nudge right			
-	bmi		NudgeProjectileLeft			; Else, nudge left
+	bpl		nudgeProjectileRight		; If projectile right of Indy, nudge right			
+	bmi		nudgeProjectileLeft			; Else, nudge left
 			
 checkInputAndStateForEvent
 	bit		mesaSideState					
 	bmi		stopWeaponEvent				; If flag set, skip	
 	bit		playerInputState					
-	bpl		HandleIndyMove				; If no button, skip	
+	bpl		handleIndyMove				; If no button, skip	
 	ror								
-	bcc		HandleIndyMove				; If no button, skip	
+	bcc		handleIndyMove				; If no button, skip	
 stopWeaponEvent
 	jmp		HandleIInventorySelect					
 
-HandleIndyMove
+handleIndyMove
 	ldx		#<indyPosY - objectPosY		; Get index of Indy in object list					
 	lda		SWCHA						; read joystick values
 	sta		tempGfxHolder				; Store raw joystick input		
@@ -1437,17 +1444,17 @@ applyEventOffsetToIndy
 	ror		tempGfxHolder				; Rotate player input to extract direction	
 	bcs		checkScanBoundaryOrContinue	; If carry set, skip
 	jsr		CheckRoomOverrideCondition	; Run event/collision subroutine				
-	bcs		TriggerScreenTransition		; If failed/blocked, exit			
+	bcs		triggerScreenTransition		; If failed/blocked, exit			
 	bvc		checkScanBoundaryOrContinue	; If no vertical/horizontal event flag, skip				
 	ldy		loopCounter					; Event index
-	lda		RoomEventOffsetTable,y		; Get movement offset from table			
+	lda		roomEventOffsetTable,y		; Get movement offset from table			
 	cpy		#$02					
-	bcs		ApplyHorizontalOffset		; If index = 2, move horizontally
+	bcs		applyHorizontalOffset		; If index = 2, move horizontally
 	adc		indyPosY					
 	sta		indyPosY					
 	jmp		checkScanBoundaryOrContinue					
 
-ApplyHorizontalOffset
+applyHorizontalOffset
 	clc								
 	adc		indyPosX					
 	sta		indyPosX					
@@ -1459,13 +1466,13 @@ checkScanBoundaryOrContinue
 	bcc		incEventScanIndex			; If still within bounds, continue scanning		
 	bcs		HandleIInventorySelect		; Else, exit
 
-TriggerScreenTransition
+triggerScreenTransition
 	sty		currentRoomId				; Set new screen based on event result	
 	jsr		initRoomState		; Load new room or area
 
 HandleIInventorySelect
 	bit		INPT4|$30					; read action button from left controller
-	bmi		NormalizeplayerInput		; branch if action button not pressed			
+	bmi		normalizeplayerInput		; branch if action button not pressed			
 	bit		grenadeState					
 	bmi		ExitItemHandler				; If game state prevents interaction, skip	
 	lda		playerInputState					
@@ -1475,7 +1482,7 @@ HandleIInventorySelect
 	jsr		removeItem					; carry set...take away selected item
 	inc		playerInputState			;  Advance to next inventory slot		
 	bne		handleIInventoryUpdate		; Always branch			
-NormalizeplayerInput
+normalizeplayerInput
 	ror		playerInputState					
 	clc								
 	rol		playerInputState					
@@ -1484,12 +1491,12 @@ handleIInventoryUpdate
 	bpl		ExitItemHandler				; If no item queued, exit	
 	and		#$1f					
 	cmp		#$01					
-	bne		CheckShovelPickup					
+	bne		checkShovelPickup					
 	inc		bulletCount					; Give Indy 3 bullets
 	inc		bulletCount					 
 	inc		bulletCount					 
-	bne		ClearItemUseFlag					
-CheckShovelPickup
+	bne		clearItemUseFlag					
+checkShovelPickup
 	cmp		#$0b					
 	bne		placeGenericItem					
 	ror		blackMarketState			; rotate Black Market state right		
@@ -1501,7 +1508,7 @@ CheckShovelPickup
 	stx		m0PosY				
 placeGenericItem
 	jsr		placeItemInInventory					
-ClearItemUseFlag
+clearItemUseFlag
 	lda		#$00					
 	sta		moveDirection				; Clear item pickup/use state	
 ExitItemHandler
@@ -1543,14 +1550,14 @@ startGrenadeThrow
 	sta		grenadeCookTime				; detinate grenade 5 seconds from now	
 	lda		#$80						; Prepare base grenade state value (bit 7 set)
 	cpx		#ENTRANCE_ROOM_ROCK_VERT_POS  ; Is Indy below the rock's vertical line?					
-	bcs		StoreGrenadeState					
+	bcs		setGrenadeState					
 	cpy		#$64						; Is Indy too far left?
-	bcc		StoreGrenadeState					
+	bcc		setGrenadeState					
 	ldx		currentRoomId				; get the current screen id	
 	cpx		#ID_ENTRANCE_ROOM			; Are we in the Entrance Room?		
-	bne		StoreGrenadeState			; branch if not in the ENTRANCE_ROOM		
+	bne		setGrenadeState			; branch if not in the ENTRANCE_ROOM		
 	ora		#$01						; Set bit 0 to trigger wall explosion effect
-StoreGrenadeState
+setGrenadeState
 	sta		grenadeState				; Store the grenade state flags: 
 										; Bit 7 set: grenade is active
 										; Bit 0 optionally set: triggers 
@@ -1575,7 +1582,7 @@ fixParachuteStartY
 	bpl		finalizeImpact				; unconditional branch		
 handleSpecialItemUseCases
 	bit		eventState					; Check special state flags
-	bvc		AttemptDigForArk			; If bit 6 is clear , skip to further checks		
+	bvc		attemptArkDig			; If bit 6 is clear , skip to further checks		
 	bit		CXM1FB|$30					; Check collision between missile 1 and playfield
 	bmi		CalculateImpactRegionIndex	; If collision occurred (bit 7 set),
 										; go to handle collision impact				
@@ -1623,7 +1630,7 @@ hookAndMoveIndy
 finalizeImpact
 	jmp		triggerWhipEffect			; Jump to item-use or input continuation logic		
 
-AttemptDigForArk
+attemptArkDig
 	cpx		#ID_INVENTORY_SHOVEL		; Is the selected item the shovel?					
 	bne		ankhWarpToMesa				; If not, skip to other item handling	
 	lda		indyPosY					; get Indy's vertical position
@@ -1636,9 +1643,9 @@ AttemptDigForArk
 	ldy		diggingState				; Load current dig depth or animation frame	
 	dey									; Decrease depth
 	cpy		#$54						; Is it still within range?
-	bcs		ClampDigDepth						; If at or beyond max depth, cap it
+	bcs		clampDigDepth						; If at or beyond max depth, cap it
 	iny									; Otherwise restore it back (prevent negative values)
-ClampDigDepth
+clampDigDepth
 	sty		diggingState				; Save the clamped or unchanged dig depth value	
 	lda		#BONUS_FINDING_ARK					
 	sta		findingArkBonus				; Set the bonus for having found the Ark		 
@@ -1699,17 +1706,17 @@ checkUsingWhip
 	ldx		#<-6						; If pressing up, set vertical offset					
 checkWhipDownDirection
 	ror									; shift MOVE_DOWN to carry
-	bcs		CheckWhipLeftDirection		; branch if not pushed down			
+	bcs		checkWhipLeftDirection		; branch if not pushed down			
 	ldx		#$0f						; If pressing down, set vertical offset
-CheckWhipLeftDirection
+checkWhipLeftDirection
 	ror									; shift MOVE_LEFT to carry
-	bcs		CheckWhipRightDirection		; branch if not pushed left			
+	bcs		checkWhipRightDirection		; branch if not pushed left			
 	ldy		#<-9						; If pressing left, set horizontal offset
-CheckWhipRightDirection
+checkWhipRightDirection
 	ror									; shift MOVE_RIGHT to carry
-	bcs		ApplyWhipStrikePosition		; branch if not pushed right			
+	bcs		applyWhipStrikePosition		; branch if not pushed right			
 	ldy		#$10						; If pressing right, set horizontal offset
-ApplyWhipStrikePosition
+applyWhipStrikePosition
 	tya									; Move horizontal offset (Y) into A
 	clc								
 	adc		indyPosX					
@@ -1726,7 +1733,7 @@ updateIndyParachuteSprite
 	bpl		setIndySpriteIfStill		; If parachute bit (bit 7) is clear,
 										; skip parachute rendering			
 	lda		#<ParachutingIndySprite		; Load low byte of parachute sprite address					
-	sta		indyGfxPtrs					; Set Indy's sprite pointer
+	sta		indyGfxPtrLo					; Set Indy's sprite pointer
 	lda		#HEIGHT_PARACHUTING_SPRITE	; Load height for parachuting sprite					
 	bne		setIndySpriteHeight					
 setIndySpriteIfStill
@@ -1738,7 +1745,7 @@ setIndySpriteIfStill
 setIndyStandSprite
 	lda		#<IndyStandSprite			; Load low byte of pointer to stationary sprite			
 setIndySpriteLSBValue
-	sta		indyGfxPtrs					; Store sprite pointer (low byte)		
+	sta		indyGfxPtrLo					; Store sprite pointer (low byte)		
 	lda		#<HEIGHT_INDY_SPRITE		; Load low byte of pointer to stationary sprite					
 setIndySpriteHeight
 	sta		indySpriteHeight			; Store sprite height		
@@ -1756,7 +1763,7 @@ checkAnimationTiming
 	bne		handleMesaScroll			; If result is non-zero, do Mesa scroll handling		
 	lda		#HEIGHT_INDY_SPRITE			; Load height for walking sprite		
 	clc								
-	adc		indyGfxPtrs					; Advance to next sprite frame
+	adc		indyGfxPtrLo					; Advance to next sprite frame
 	cmp		#<IndyStandSprite			; Check if we've reached the end of walkcycle					
 	bcc		setIndySpriteLSBValue		; If not, update walking frame			
 	lda		#$02						; Set a short animation timer
@@ -1768,10 +1775,10 @@ checkAnimationTiming
 handleMesaScroll
 	ldx		currentRoomId				; get the current screen id		
 	cpx		#ID_MESA_FIELD				; are we on the Mesa Field?	
-	beq		CheckScrollEligibility		; Yes, check if we need to scroll
+	beq		checkScrollEligibility		; Yes, check if we need to scroll
 	cpx		#ID_VALLEY_OF_POISON		; Do check if we are in Valley of Poison too			
 	bne		jmpBank1Kernel			; If neither, continue to Bank 1 routines
-CheckScrollEligibility
+checkScrollEligibility
 	lda		frameCount					; get current frame count
 	bit		playerInputState			; Check movement input flags		
 	bpl		scrollIfInZone				; If bit 7 of playerInputState is clear 
@@ -1782,7 +1789,7 @@ scrollIfInZone
 	beq		jmpBank1Kernel			; ; If at bottom, stop scrolling
 
 	ldx		objState					; Load Scroll Offset	
-	bcs		ReverseScrollIfApplicable	; if pushing up 				
+	bcs		reverseScrollIfApplicable	; if pushing up 				
 	beq		jmpBank1Kernel			; if objState is zero, skip scrolling		
 	inc		indyPosY					; Increment Indy's vertical position	
 	inc		weaponPosY					; Move Weapon DOWN with him
@@ -1799,7 +1806,7 @@ scrollIfInZone
 	inc		objPosY					
 	jmp		jmpBank1Kernel					
 
-ReverseScrollIfApplicable
+reverseScrollIfApplicable
 	cpx		#$50						; Check Upper Bound
 	bcs		jmpBank1Kernel			; If at top, stop scrolling	
 	dec		indyPosY					; Move Indy UP
@@ -1820,7 +1827,7 @@ jmpBank1Kernel
 	sta		bankSwitchJMPAddrLo			; Store in Bank Switch JMP Addr Low		
 	lda		#>bank1Kernel				; Load high byte of Bank 1 Kernel address	
 	sta		bankSwitchJMPAddrHi			; Store in Bank Switch JMP Addr High
-	jmp		JumpToBank1					; Jump to Bank 1 Kernel
+	jmp		jumpToBank1					; Jump to Bank 1 Kernel
 
 setupScreenAndObj
 	lda		screenInitFlag				; Check status flag	
@@ -2655,91 +2662,92 @@ roomIdleHandlerJumpTable:
 	.word defaultIdleHandler-1 				; Well of Souls
 
 placeItemInInventory
-	ldx		inventoryItemCount					
-	cpx		#$06					
-	bcc		ldcf1					
+	ldx		inventoryItemCount		; get number of inventory items	
+	cpx		#MAX_INVENTORY_ITEMS	; is Indy carrying fill inventory? (6)					
+	bcc		getSpaceForItem			; branch if Indy has room to carry more items
 	clc								
 	rts								
 
-ldcf1
-	ldx		#$0a					
-ldcf3
-	ldy		invSlotLo,x					
-	beq		ldcfc					; branch if current slot is free
+getSpaceForItem
+	ldx		#$0a					; start from last inventory slot (10)
+invSearchLoop
+	ldy		invSlotLo,x				; get the LSB for the inventory graphic
+	beq		addItem					; branch if current slot is free
 	dex								
-	dex								
-	bpl		ldcf3					
-	brk								; unused
+	dex								; Move to the previous slot 
+	bpl		invSearchLoop					
+	brk								; break if no more items can be carried
+									; (Should never happen -- if ItemCount < Max)
 
-ldcfc
-	tay								
+addItem
+	tay								; move item number to y
 	asl								; multiply object number by 8 for gfx
 	asl								;...
 	asl								;...
-	sta		invSlotLo,x			; and store in current slot
-	lda		inventoryItemCount					
-	bne		ldd0a					
-	stx		selectedItemSlot					
-	sty		selectedInventoryId					
-ldd0a
-	inc		inventoryItemCount					
-	cpy		#$04					
-	bcc		ldd15					
-	tya								
-	tax								
-	jsr		ShowItemAsTaken					
-ldd15
-	lda		#$0c					
-	sta		indyFootstepSound					
+	sta		invSlotLo,x				; place graphic LSB in inventory
+	lda		inventoryItemCount		; get number of inventory items		
+	bne		updateInventory			; branch if Indy carrying items	
+	stx		selectedItemSlot		; set index to newly picked up item			
+	sty		selectedInventoryId		; set the current selected inventory id			
+updateInventory
+	inc		inventoryItemCount		; increment number of inventory items		
+	cpy		#ID_INVENTORY_COINS		; If ID < Coins'		
+	bcc		finishInventoryUpdate	; ex Flute, Parachute, skip marking as "Taken"			
+	tya								; move item number to accumulator
+	tax								; move item number to x
+	jsr		showItemAsTaken			; Mark item as taken in global bitmasks		
+finishInventoryUpdate
+	lda		#$0c					; Make sound
+	sta		indyFootstepSound		; play with Indy's footstep sound		
 	sec								
 	rts								
 
 setItemAsNotTaken
-	lda		itemIndexTable,x					
-	lsr								
+	lda		itemIndexTable,x		; get the item index value			
+	lsr								; shift D0 to carry
 	tay								
-	lda		itemStatusMaskTable,y					
-	bcs		ldd2a					
-	and		ram_c6					
-	sta		ram_c6					
+	lda		itemStatusMaskTable,y	; branch if item not a basket item				
+	bcs		showItemAsNotTaken					
+	and		basketItemsStatus					
+	sta		basketItemsStatus		; clear status bit showing item not taken			
 	rts								
 
-ldd2a
-	and		ram_c7					
-	sta		ram_c7					
+showItemAsNotTaken
+	and		pickupItemsStatus					
+	sta		pickupItemsStatus		; clear status bit showing item not taken			
 	rts								
 
-ShowItemAsTaken
-	lda		itemIndexTable,x					
-	lsr								
+showItemAsTaken
+	lda		itemIndexTable,x		; get the item index value			
+	lsr								; shift D0 to carry
 	tax								
-	lda		itemStatusBitValues,x					
-	bcs		ldd3e					
-	ora		ram_c6					
-	sta		ram_c6					
+	lda		itemStatusBitValues,x	; get item bit value				
+	bcs		pickUpItemTaken			; branch if item not a basket item		
+	ora		basketItemsStatus					
+	sta		basketItemsStatus		; show item taken			
 	rts								
 
-ldd3e
-	ora		ram_c7					
-	sta		ram_c7					
+pickUpItemTaken
+	ora		pickupItemsStatus					
+	sta		pickupItemsStatus		; show item taken			
 	rts								
 
 isItemAlreadyTaken:
-	lda		itemIndexTable,x					
-	lsr								
+	lda		itemIndexTable,x		; get the item index value			
+	lsr								; shift D0 to carry
 	tay								
-	lda		itemStatusBitValues,y					
-	bcs		ldd53						
-	and		ram_c6					 
-	beq		ldd52						
+	lda		itemStatusBitValues,y	; get item bit value				
+	bcs		isItemTaken				; branch if item not a basket item		
+	and		basketItemsStatus		; branch if item not taken from basket			 
+	beq		finishIsItemTaken		; set carry for item taken already				
 	sec								
-ldd52:
+finishIsItemTaken:
 	rts								
 
-ldd53:
-	and		ram_c7					 
-	bne		ldd52						
-	clc								
+isItemTaken:
+	and		pickupItemsStatus					 
+	bne		finishIsItemTaken						
+	clc								; clear carry for item not taken already	
 	rts								
 
 
@@ -2748,33 +2756,41 @@ updateRoomEventState
 	tax								
 	lda		ram_98					
 	cpx		#$0c					
-	bcs		ldd67					
+	bcs		doneRoomEventState					
 	adc		eventStateOffsetTable,x					
 	sta		ram_98					
-ldd67
+doneRoomEventState
 	rts								
 
 startGame
+; Set up everything so the power up state is known.
+;
 	sei								; turn off interrupts
 	cld								; clear decimal flag (no bcd)
-	ldx		#$ff					;
+	ldx		#$ff					; Load X with $FF.
 	txs								; reset the stack pointer
 	inx								; clear x
 	txa								; clear a
-clear_zp
-	sta		VSYNC,x
-	dex
-	bne		clear_zp
-
+clearZeroPage
+	sta		VSYNC,x					; clear zero page variables and TIA regs
+	dex								; Decrement X.
+	bne		clearZeroPage			; Loop until all 256 bytes are cleared.
 	dex								; x = $ff
 	stx		score					; reset score
-	lda		#>emptySprite				; blank inventory
+	; -------------------------------------------------------------------------
+	; INITIALIZE INVENTORY WITH COPYRIGHT
+	;
+	; The game displays the Copyright Notice ("(c) 1982 Atari Inc") inside the 
+	; Inventory Strip at the very beginning of the game or after a reset.
+	; It manually populates the `inventoryGfxPtrs` with the Copyright_X sprites.
+	; -------------------------------------------------------------------------
+	lda		#>emptySprite			; blank inventory
 	sta		invSlotHi				; slot 1
-	sta		invSlotHi2			; slot 2
-	sta		invSlotHi3			; slot 3
-	sta		invSlotHi4			; slot 4
-	sta		invSlotHi5			; slot 5
-	sta		invSlotHi6			; slot 6
+	sta		invSlotHi2				; slot 2
+	sta		invSlotHi3				; slot 3
+	sta		invSlotHi4				; slot 4
+	sta		invSlotHi5				; slot 5
+	sta		invSlotHi6				; slot 6
 
 	;fill with copyright text
 	lda		#<copyrightGfx0
@@ -2789,39 +2805,40 @@ clear_zp
 	sta		invSlotLo5
 	lda		#ID_ARK_ROOM				; set "ark elevator room" (room 13)
 	sta		currentRoomId				; as current room
-	lsr								; divide 13 by 2 (round down)
-	sta		bulletCount				; load 6 bullets
-	jsr		initRoomState					
-	jmp		startNewFrame					
+	lsr									; A = ID_ARK_ROOM / 2 (becomes 6)
+	sta		bulletCount					; load 6 bullets
+	jsr		initRoomState				; Init various screen and game state	
+	jmp		startNewFrame				; Jump to the main game loop.	
 
 initGameVars:
-	lda		#$20					
-	sta		invSlotLo					
+	lda		#<inventoryCoinsSprite					
+	sta		invSlotLo					; place coins in Indy's inventory
+	lsr									; divide by 8 to get the inventory id
 	lsr								
 	lsr								
-	lsr								
-	sta		selectedInventoryId					
-	inc		inventoryItemCount					
-	lda		#$00					
-	sta		invSlotLo2					
+	sta		selectedInventoryId			; set the current selected inventory id		
+	inc		inventoryItemCount			; increment number of inventory items		
+	lda		#<emptySprite					
+	sta		invSlotLo2					; clear the remainder of Indy's inventory
 	sta		invSlotLo3					
 	sta		invSlotLo4					
 	sta		invSlotLo5					
-	lda		#$64					
+	lda		#INIT_SCORE					; set initial score
 	sta		score				
-	lda		#$58					
-	sta		indyGfxPtrs				
-	lda		#$fa					
-	sta		ram_da					
+	lda		#<IndyStandSprite			; set Indy's initial sprite (standing)		
+	sta		indyGfxPtrLo				
+	lda		#>IndySprites					
+	sta		indyGfxPtrHi					
 	lda		#$4c					
-	sta		indyPosX					
+	sta		indyPosX					; set Indy's initial X position		
 	lda		#$0f					
-	sta		indyPosY					
+	sta		indyPosY					; set Indy's initial Y position
 	lda		#ID_ENTRANCE_ROOM					
-	sta		currentRoomId					
-	sta		lives_left					
-	jsr		initRoomState					
-	jmp		setupScreenAndObj					
+	sta		currentRoomId				; set current room to Entrance Room
+	sta		livesLeft					; set initial number of lives
+	jsr		initRoomState				; Initialize new room state.
+	jmp		setupScreenAndObj			; Setup the screen and objects for the
+										; entrance room.	
 
 ;------------------------------------------------------------
 ; getFinalScore
@@ -2832,21 +2849,22 @@ initGameVars:
 getFinalScore
 	lda		score					; load score
 	sec								; positve actions...
-	sbc		findingArkBonus					; shovel used
-	sbc		usingParachuteBonus			; parachute used
-	sbc		ankhUsedBonus				; ankh used
-	sbc		yarFoundBonus				; yar found
-	sbc		lives_left				; lives left
-	sbc		ark_found				; ark found
-	sbc		mesa_entered				; mesa entered
-	sbc		unknown_action			; never updated
+	sbc		findingArkBonus			; found the ark
+	sbc		usingParachuteBonus		; parachute used
+	sbc		ankhUsedBonus			; ankh used (Mesa Skip)
+	sbc		yarFoundBonus			; yar found
+	sbc		livesLeft				; lives left
+	sbc		mapRoomBonus			; used the Head of Ra in the Map Room
+	sbc		mesaLandingBonus		; landed in Mesa
+	sbc		UnusedBonus				; never used
 	clc								; negitive actions...
-	adc		grenadeOpeningPenalty			; gernade used
-	adc		escape_hatch_used		; escape hatch used
-	adc		thiefShot				; thief shot
+	adc		grenadeOpeningPenalty	; gernade used on wall (2 points)
+	adc		escapePrisonPenalty		; escape hatch used (13 points)
+	adc		thiefShotPenalty		; thief shot (4 points)
 	sta		score					; store in final score
 	rts								; return
 
+	;Padding for tables
 	.byte	$00,$00,$00,$00,$00,$00,$00,$00 ; $ddf8 (*)
 roomOverrideTable
 	.byte	$ff,$ff,$ff,$ff,$ff,$ff,$ff,$f8 ; $de00 (*)
@@ -2905,11 +2923,13 @@ roomPosXOverrideTable
 	.byte	$12,$12,$4c,$00,$00,$16,$80,$12 ; $df60 (*)
 	.byte	$50,$00,$00,$00					; $df68 (*)
 
-RoomEventOffsetTable
-	.byte	$01,$ff,$01,$ff					; $df6c (*)
+roomEventOffsetTable
+	.byte	$01,$ff,$01,$ff	
 
 EntranceRoomTopObjPosY
-	.byte	$35,$09							; $df70 (*)
+	.byte ENTRANCE_ROOM_ROCK_VERT_POS
+	.byte ENTRANCE_ROOM_CAVE_VERT_POS
+
 roomObjPosYTable
 	.byte	$00,$00,$42,$45,$0c,$20
 
@@ -2936,7 +2956,7 @@ JumpToDisplayKernel SUBROUTINE
 	sta		bankSwitchJMPAddrLo					
 	lda		#$f8					
 	sta		bankSwitchJMPAddrHi					
-JumpToBank1
+jumpToBank1
 	lda		#$ad					
 	sta		loopCounter					
 	lda		#$f9					
@@ -2988,8 +3008,8 @@ indyMoveDeltaTable
 eventStateOffsetTable
 	.byte $00,$06,$03,$03,$03,$00,$00,$06,$00,$00,$00,$06
 
-	;Padding to align to bank 1 start
-	.byte	$00,$00,$00,$00,$00,$00,$00,$00,$00
+
+	.org BANK0TOP + 4096 - 6, 0
 
 	;Vector Table					
 	.word startGame							;NMI
@@ -3001,12 +3021,12 @@ eventStateOffsetTable
 ;	bank 1 / 0..1
 ;***********************************************************
 
-	seg		code
-	org		$1000
-	rorg	$f000
+	seg		bank1
+	org		BANK1TOP
+	rorg	BANK1_REORG 
 
 BANK1Start
-	lda		lfff8					
+	lda		BANK0STROBE					
 
 lf003
 	cmp		roomSpecialData					
@@ -3050,7 +3070,7 @@ lf033
 	cmp		indySpriteHeight					
 	bcs		lf079					
 	tay								
-	lda		(indyGfxPtrs),y			
+	lda		(indyGfxPtrLo),y			
 	tax								
 lf043
 	lda		scanline				
@@ -3159,7 +3179,7 @@ lf0d6
 	cmp		indySpriteHeight					
 	bcs		lf107					
 	tay								
-	lda		(indyGfxPtrs),y			
+	lda		(indyGfxPtrLo),y			
 lf0e2
 	ldy		scanline				
 	sta		GRP1					
@@ -3225,7 +3245,7 @@ lf115
 	cmp		indySpriteHeight					
 	bcs		lf10b					
 	tay								
-	lda		(indyGfxPtrs),y			
+	lda		(indyGfxPtrLo),y			
 	sta		HMCLR					
 	inx								
 	sta		GRP1					
@@ -3507,7 +3527,7 @@ lf2fb
 	sta		diamond_h				
 lf30d
 	ldy		diamond_h				
-	lda		lfbe8,y					
+	lda		soundEffectTable,y					
 	bne		lf2f4					
 lf314
 	lda		frameCount				
@@ -3610,7 +3630,7 @@ lf3a9
 	sta		indySpriteHeight					
 	sta		soundChan1WhipTimer					
 	sta		majorEventFlag					
-	dec		lives_left					
+	dec		livesLeft					
 	bpl		lf3c5					
 	lda		#$ff					
 	sta		majorEventFlag					
@@ -4005,7 +4025,7 @@ lf62a:
        ldx    #$85                    
        stx    $e3                     
        ldx    #$03                    
-       stx    mesa_entered            
+       stx    mesaLandingBonus            
        bne    lf63a                   
 
 lf638
@@ -4212,7 +4232,7 @@ lf760:
        ldx    selectedInventoryId          
        cpx    #$0e                    
        bne    lf787                   
-       stx    ark_found               
+       stx    mapRoomBonus               
        lda    #$04                    
        and    $82                     
        bne    lf787                   
@@ -4322,7 +4342,7 @@ lf81f:
        and    #$0f                    
        cmp    #$0d                    
        bne    lf833                   
-       sta    escape_hatch_used       
+       sta    escapePrisonPenalty       
        lda    #$4c                    
        sta    $c9                     
        ror    $b5                     
@@ -4995,284 +5015,285 @@ emptySprite ; blank space
 
 copyrightGfx3 ;copyright3
     ; Used to display "(c) 1982 Atari" in the inventory strip
-	.byte	$71 ; | ###		#|			$fb08 (g)
-	.byte	$41 ; | #		#|			$fb09 (g)
-	.byte	$41 ; | #		#|			$fb0a (g)
-	.byte	$71 ; | ###		#|			$fb0b (g)
-	.byte	$11 ; |		#		#|			$fb0c (g)
-	.byte	$51 ; | # #		#|			$fb0d (g)
-	.byte	$70 ; | ###	|			$fb0e (g)
-	.byte	$00 ; |		|			$fb0f (g)
+	.byte $71 ; |.XXX...X|
+	.byte $41 ; |.X.....X|
+	.byte $41 ; |.X.....X|
+	.byte $71 ; |.XXX...X|
+	.byte $11 ; |...X...X|
+	.byte $51 ; |.X.X...X|
+	.byte $70 ; |.XXX....|
+	.byte $00 ; |........|
 
 inventoryFluteSprite
-	.byte	$00 ; |		|			$fb10 (g)
-	.byte	$01 ; |			#|			$fb11 (g)
-	.byte	$3f ; |	 ######|			$fb12(g)
-	.byte	$6b ; | ## # ##|			$fb12 (g)
-	.byte	$7f ; | #######|			$fb13 (g)
-	.byte	$01 ; |			#|			$fb14 (g)
-	.byte	$00 ; |		|			$fb15 (g)
-	.byte	$00 ; |		|			$fb16 (g)
+	.byte $00 ; |........|
+	.byte $01 ; |.......X|
+	.byte $3F ; |..XXXXXX|
+	.byte $6B ; |.XX.X.XX|
+	.byte $7F ; |.XXXXXXX|
+	.byte $01 ; |.......X|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
 
 inventoryParachuteSprite
-	.byte	$77 ; | ### ###|			$fb17 (g)
-	.byte	$77 ; | ### ###|			$fb18 (g)
-	.byte	$77 ; | ### ###|			$fb19 (g)
-	.byte	$00 ; |		|			$fb1a (g)
-	.byte	$00 ; |		|			$fb1b (g)
-	.byte	$77 ; | ### ###|			$fb1c (g)
-	.byte	$77 ; | ### ###|			$fb1d (g)
-	.byte	$77 ; | ### ###|			$fb1e (g)
+	.byte $77 ; |.XXX.XXX|
+	.byte $77 ; |.XXX.XXX|
+	.byte $77 ; |.XXX.XXX|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $77 ; |.XXX.XXX|
+	.byte $77 ; |.XXX.XXX|
+	.byte $77 ; |.XXX.XXX|
 
 inventoryCoinsSprite
-	.byte	$1c ; |		###  |			$fb1f (g)
-	.byte	$2a ; |	 # # # |			$fb20 (g)
-	.byte	$55 ; | # # # #|			$fb21 (g)
-	.byte	$2a ; |	 # # # |			$fb22 (g)
-	.byte	$55 ; | # # # #|			$fb23 (g)
-	.byte	$2a ; |	 # # # |			$fb24 (g)
-	.byte	$1c ; |		###  |			$fb25 (g)
-	.byte	$3e ; |	 ##### |			$fb26 (g)
+	.byte $1C ; |...XXX..|
+	.byte $2A ; |..X.X.X.|
+	.byte $55 ; |.X.X.X.X|
+	.byte $2A ; |..X.X.X.|
+	.byte $55 ; |.X.X.X.X|
+	.byte $2A ; |..X.X.X.|
+	.byte $1C ; |...XXX..|
+	.byte $3E ; |..XXXXX.|
 
 marketplaceGrenadeSprite
-	.byte	$3a ; |	 ### # |			$fb27 (g)
-	.byte	$01 ; |			#|			$fb28 (g)
-	.byte	$7d ; | ##### #|			$fb29 (g)
-	.byte	$01 ; |			#|			$fb2a (g)
-	.byte	$39 ; |	 ###  #|			$fb2b (g)
-	.byte	$02 ; |		 # |			$fb2c (g)
-	.byte	$3c ; |	 ####  |			$fb2d (g)
-	.byte	$30 ; |	 ##	|			$fb2e (g)
+	.byte $3A ; |..XXX.X.|
+	.byte $01 ; |.......X|
+	.byte $7D ; |.XXXXX.X|
+	.byte $01 ; |.......X|
+	.byte $39 ; |..XXX..X|
+	.byte $02 ; |......X.|
+	.byte $3C ; |..XXXX..|
+	.byte $30 ; |..XX....|
+
 
 blackMarketGrenadeSprite
-	.byte	$2e ; |	 # ### |			$fb2f (g)
-	.byte	$40 ; | #	|			$fb30 (g)
-	.byte	$5f ; | # #####|			$fb31 (g)
-	.byte	$40 ; | #	|			$fb32 (g)
-	.byte	$4e ; | #  ### |			$fb33 (g)
-	.byte	$20 ; |	 #	|			$fb34 (g)
-	.byte	$1e ; |		#### |			$fb35 (g)
-	.byte	$06 ; |		## |			$fb36 (g)
+	.byte $2E ; |..X.XXX.|
+	.byte $40 ; |.X......|
+	.byte $5F ; |.X.XXXXX|
+	.byte $40 ; |.X......|
+	.byte $4E ; |.X..XXX.|
+	.byte $20 ; |..X.....|
+	.byte $1E ; |...XXXX.|
+	.byte $06 ; |.....XX.|
 
 inventoryKeySprite
-	.byte	$00 ; |		|			$fb37 (g)
-	.byte	$25 ; |	 #	# #|			$fb38 (g)
-	.byte	$52 ; | # #	 # |			$fb39 (g)
-	.byte	$7f ; | #######|			$fb3a (g)
-	.byte	$50 ; | # #	|			$fb3b (g)
-	.byte	$20 ; |	 #	|			$fb3c (g)
-	.byte	$00 ; |		|			$fb3d (g)
-	.byte	$00 ; |		|			$fb3e (g)
+	.byte $00 ; |........|
+	.byte $25 ; |..X..X.X|
+	.byte $52 ; |.X.X..X.|
+	.byte $7F ; |.XXXXXXX|
+	.byte $50 ; |.X.X....|
+	.byte $20 ; |..X.....|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
 
 arkOfTheCovenantSprite
-	.byte	$ff ; |########|			$fb40 (g)
-	.byte	$66 ; | ##	## |			$fb41 (g)
-	.byte	$24 ; |	 #	#  |			$fb42 (g)
-	.byte	$24 ; |	 #	#  |			$fb43 (g)
-	.byte	$66 ; | ##	## |			$fb44 (g)
-	.byte	$e7 ; |###	###|			$fb45 (g)
-	.byte	$c3 ; |##	 ##|			$fb46 (g)
-	.byte	$e7 ; |###	###|			$fb47 (g)
+	.byte $FF ; |XXXXXXXX| $FB40
+	.byte $66 ; |.XX..XX.| $FB41
+	.byte $24 ; |..X..X..| $FB42
+	.byte $24 ; |..X..X..| $FB43
+	.byte $66 ; |.XX..XX.| $FB44
+	.byte $E7 ; |XXX..XXX| $FB45
+	.byte $C3 ; |XX....XX| $FB46
+	.byte $E7 ; |XXX..XXX| $FB47
 
 copyrightGfx1: ;copyright2
-	.byte	$17 ; |		# ###|			$fb48 (g)
-	.byte	$15 ; |		# # #|			$fb49 (g)
-	.byte	$15 ; |		# # #|			$fb4a (g)
-	.byte	$77 ; | ### ###|			$fb4b (g)
-	.byte	$55 ; | # # # #|			$fb4c (g)
-	.byte	$55 ; | # # # #|			$fb4d (g)
-	.byte	$77 ; | ### ###|			$fb4e (g)
-	.byte	$00 ; |		|			$fb4f (g)
+	.byte $17 ; |...X.XXX| $FB48
+	.byte $15 ; |...X.X.X| $FB49
+	.byte $15 ; |...X.X.X| $FB4A
+	.byte $77 ; |.XXX.XXX| $FB4B
+	.byte $55 ; |.X.X.X.X| $FB4C
+	.byte $55 ; |.X.X.X.X| $FB4D
+	.byte $77 ; |.XXX.XXX| $FB4E
+	.byte $00 ; |........| $FB4F
 
 inventoryWhipSprite
-	.byte	$21 ; |	 #		#|			$fb50 (g)
-	.byte	$11 ; |		#		#|			$fb51 (g)
-	.byte	$09 ; |	#  #|			$fb52 (g)
-	.byte	$11 ; |		#		#|			$fb53 (g)
-	.byte	$22 ; |	 #	 # |			$fb54 (g)
-	.byte	$44 ; | #	#  |			$fb55 (g)
-	.byte	$28 ; |	 # #   |			$fb56 (g)
-	.byte	$10 ; |		#	|			$fb57 (g)
+	.byte $21 ; |..X....X| $FB50
+	.byte $11 ; |...X...X| $FB51
+	.byte $09 ; |....X..X| $FB52
+	.byte $11 ; |...X...X| $FB53
+	.byte $22 ; |..X...X.| $FB54
+	.byte $44 ; |.X...X..| $FB55
+	.byte $28 ; |..X.X...| $FB56
+	.byte $10 ; |...X....| $FB57
 
 inventoryShovelSprite
-	.byte	$01 ; |			#|			$fb58 (g)
-	.byte	$03 ; |		 ##|			$fb59 (g)
-	.byte	$07 ; |		###|			$fb5a (g)
-	.byte	$0f ; |	####|			$fb5b (g)
-	.byte	$06 ; |		## |			$fb5c (g)
-	.byte	$0c ; |	##  |			$fb5d (g)
-	.byte	$18 ; |		##   |			$fb5e (g)
-	.byte	$3c ; |	 ####  |			$fb5f (g)
+	.byte $01 ; |.......X| $FB58
+	.byte $03 ; |......XX| $FB59
+	.byte $07 ; |.....XXX| $FB5A
+	.byte $0F ; |....XXXX| $FB5B
+	.byte $06 ; |.....XX.| $FB5C
+	.byte $0C ; |....XX..| $FB5D
+	.byte $18 ; |...XX...| $FB5E
+	.byte $3C ; |..XXXX..| $FB5F
 
 copyrightGfx0
-	.byte	$79 ; | ####  #|			$fb60 (g)
-	.byte	$85 ; |#	# #|			$fb61 (g)
-	.byte	$b5 ; |# ## # #|			$fb62 (g)
-	.byte	$a5 ; |# #	# #|			$fb63 (g)
-	.byte	$b5 ; |# ## # #|			$fb64 (g)
-	.byte	$85 ; |#	# #|			$fb65 (g)
-	.byte	$79 ; | ####  #|			$fb66 (g)
-	.byte	$00 ; |		|			$fb67 (g)
+	.byte $79 ; |.XXXX..X| $FB60
+	.byte $85 ; |X....X.X| $FB61
+	.byte $B5 ; |X.XX.X.X| $FB62
+	.byte $A5 ; |X.X..X.X| $FB63
+	.byte $B5 ; |X.XX.X.X| $FB64
+	.byte $85 ; |X....X.X| $FB65
+	.byte $79 ; |.XXXX..X| $FB66
+	.byte $00 ; |........| $FB67
 
 inventoryRevolverSprite
-	.byte	$00 ; |		|			$fb68 (g)
-	.byte	$60 ; | ##	|			$fb69 (g)
-	.byte	$60 ; | ##	|			$fb6a (g)
-	.byte	$78 ; | ####   |			$fb6b (g)
-	.byte	$68 ; | ## #   |			$fb6c (g)
-	.byte	$3f ; |	 ######|			$fb6d (g)
-	.byte	$5f ; | # #####|			$fb6e (g)
-	.byte	$00 ; |		|			$fb6f (g)
+	.byte $00 ; |........| $FB68
+	.byte $60 ; |.XX.....| $FB69
+	.byte $60 ; |.XX.....| $FB6A
+	.byte $78 ; |.XXXX...| $FB6B
+	.byte $68 ; |.XX.X...| $FB6C
+	.byte $3F ; |..XXXXXX| $FB6D
+	.byte $5F ; |.X.XXXXX| $FB6E
+	.byte $00 ; |........| $FB6F
 
 inventoryHeadOfRaSprite	
-	.byte	$08 ; |	#   |			$fb70 (g)
-	.byte	$1c ; |		###  |			$fb71 (g)
-	.byte	$22 ; |	 #	 # |			$fb72 (g)
-	.byte	$49 ; | #  #  #|			$fb73 (g)
-	.byte	$6b ; | ## # ##|			$fb74 (g)
-	.byte	$00 ; |		|			$fb75 (g)
-	.byte	$1c ; |		###  |			$fb76 (g)
-	.byte	$08 ; |	#   |			$fb77 (g)
+	.byte $08 ; |....X...| $FB70
+	.byte $1C ; |...XXX..| $FB71
+	.byte $22 ; |..X...X.| $FB72
+	.byte $49 ; |.X..X..X| $FB73
+	.byte $6B ; |.XX.X.XX| $FB74
+	.byte $00 ; |........| $FB75
+	.byte $1C ; |...XXX..| $FB76
+	.byte $08 ; |....X...| $FB77
 
 inventoryTimepieceSprite ; unopen pocket watch
-	.byte	$7f ; | #######|			$fb78 (g)
-	.byte	$5d ; | # ### #|			$fb79 (g)
-	.byte	$77 ; | ### ###|			$fb7a (g)
-	.byte	$77 ; | ### ###|			$fb7b (g)
-	.byte	$5d ; | # ### #|			$fb7c (g)
-	.byte	$7f ; | #######|			$fb7d (g)
-	.byte	$08 ; |	#   |			$fb7e (g)
-	.byte	$1c ; |		###  |			$fb7f (g)
+	.byte $7F ; |.XXXXXXX| $FB78
+	.byte $5D ; |.X.XXX.X| $FB79
+	.byte $77 ; |.XXX.XXX| $FB7A
+	.byte $77 ; |.XXX.XXX| $FB7B
+	.byte $5D ; |.X.XXX.X| $FB7C
+	.byte $7F ; |.XXXXXXX| $FB7D
+	.byte $08 ; |....X...| $FB7E
+	.byte $1C ; |...XXX..| $FB7F
 
 inventoryAnkhSprite
-	.byte	$3e ; |	 ##### |			$fb80 (g)
-	.byte	$1c ; |		###  |			$fb81 (g)
-	.byte	$49 ; | #  #  #|			$fb82 (g)
-	.byte	$7f ; | #######|			$fb83 (g)
-	.byte	$49 ; | #  #  #|			$fb84 (g)
-	.byte	$1c ; |		###  |			$fb85 (g)
-	.byte	$36 ; |	 ## ## |			$fb86 (g)
-	.byte	$1c ; |		###  |			$fb87 (g)
+	.byte $3E ; |..XXXXX.| $FB80
+	.byte $1C ; |...XXX..| $FB81
+	.byte $49 ; |.X..X..X| $FB82
+	.byte $7F ; |.XXXXXXX| $FB83
+	.byte $49 ; |.X..X..X| $FB84
+	.byte $1C ; |...XXX..| $FB85
+	.byte $36 ; |..XX.XX.| $FB86
+	.byte $1C ; |...XXX..| $FB87
 
 inventoryChaiSprite
-	.byte	$16 ; |		# ## |			$fb88 (g)
-	.byte	$0b ; |	# ##|			$fb89 (g)
-	.byte	$0d ; |	## #|			$fb8a (g)
-	.byte	$05 ; |		# #|			$fb8b (g)
-	.byte	$17 ; |		# ###|			$fb8c (g)
-	.byte	$36 ; |	 ## ## |			$fb8d (g)
-	.byte	$64 ; | ##	#  |			$fb8e (g)
-	.byte	$04 ; |		#  |			$fb8f (g)
+	.byte $16 ; |...X.XX.| $FB88
+	.byte $0B ; |....X.XX| $FB89
+	.byte $0D ; |....XX.X| $FB8A
+	.byte $05 ; |.....X.X| $FB8B
+	.byte $17 ; |...X.XXX| $FB8C
+	.byte $36 ; |..XX.XX.| $FB8D
+	.byte $64 ; |.XX..X..| $FB8E
+	.byte $04 ; |.....X..| $FB8F
 
 inventoryHourGlassSprite
-	.byte	$77 ; | ### ###|			$fb90 (g)
-	.byte	$36 ; |	 ## ## |			$fb91 (g)
-	.byte	$14 ; |		# #  |			$fb92 (g)
-	.byte	$22 ; |	 #	 # |			$fb93 (g)
-	.byte	$22 ; |	 #	 # |			$fb94 (g)
-	.byte	$14 ; |		# #  |			$fb95 (g)
-	.byte	$36 ; |	 ## ## |			$fb96 (g)
-	.byte	$77 ; | ### ###|			$fb97 (g)
+	.byte $77 ; |.XXX.XXX| $FB90
+	.byte $36 ; |..XX.XX.| $FB91
+	.byte $14 ; |...X.X..| $FB92
+	.byte $22 ; |..X...X.| $FB93
+	.byte $22 ; |..X...X.| $FB94
+	.byte $14 ; |...X.X..| $FB95
+	.byte $36 ; |..XX.XX.| $FB96
+	.byte $77 ; |.XXX.XXX| $FB97
 
 inventory12_00: ;timepiece bitmaps...
-	.byte	$3e ; |	 ##### |			$fb98 (g)
-	.byte	$41 ; | #		#|			$fb99 (g)
-	.byte	$41 ; | #		#|			$fb9a (g)
-	.byte	$49 ; | #  #  #|			$fb9b (g)
-	.byte	$49 ; | #  #  #|			$fb9c (g)
-	.byte	$49 ; | #  #  #|			$fb9d (g)
-	.byte	$3e ; |	 ##### |			$fb9e (g)
-	.byte	$1c ; |		###  |			$fb9f (g)
+	.byte $3E ; |..XXXXX.| $FB98
+	.byte $41 ; |.X.....X| $FB99
+	.byte $41 ; |.X.....X| $FB9A
+	.byte $49 ; |.X..X..X| $FB9B
+	.byte $49 ; |.X..X..X| $FB9C
+	.byte $49 ; |.X..X..X| $FB9D
+	.byte $3E ; |..XXXXX.| $FB9E
+	.byte $1C ; |...XXX..| $FB9F
 
 inventory01_00
-	.byte	$3e ; |	 ##### |			$fba0 (g)
-	.byte	$41 ; | #		#|			$fba1 (g)
-	.byte	$41 ; | #		#|			$fba2 (g)
-	.byte	$49 ; | #  #  #|			$fba3 (g)
-	.byte	$45 ; | #	# #|			$fba4 (g)
-	.byte	$43 ; | #	 ##|			$fba5 (g)
-	.byte	$3e ; |	 ##### |			$fba6 (g)
-	.byte	$1c ; |		###  |			$fba7 (g)
+	.byte $3E ; |..XXXXX.| $FBA0
+	.byte $41 ; |.X.....X| $FBA1
+	.byte $41 ; |.X.....X| $FBA2
+	.byte $49 ; |.X..X..X| $FBA3
+	.byte $45 ; |.X...X.X| $FBA4
+	.byte $43 ; |.X....XX| $FBA5
+	.byte $3E ; |..XXXXX.| $FBA6
+	.byte $1C ; |...XXX..| $FBA7
 
 inventory03_00
-	.byte	$3e ; |	 ##### |			$fba8 (g)
-	.byte	$41 ; | #		#|			$fba9 (g)
-	.byte	$41 ; | #		#|			$fbaa (g)
-	.byte	$4f ; | #  ####|			$fbab (g)
-	.byte	$41 ; | #		#|			$fbac (g)
-	.byte	$41 ; | #		#|			$fbad (g)
-	.byte	$3e ; |	 ##### |			$fbae (g)
-	.byte	$1c ; |		###  |			$fbaf (g)
+	.byte $3E ; |..XXXXX.| $FBA8
+	.byte $41 ; |.X.....X| $FBA9
+	.byte $41 ; |.X.....X| $FBAA
+	.byte $4F ; |.X..XXXX| $FBAB
+	.byte $41 ; |.X.....X| $FBAC
+	.byte $41 ; |.X.....X| $FBAD
+	.byte $3E ; |..XXXXX.| $FBAE
+	.byte $1C ; |...XXX..| $FBAF
 
 inventory05_00
-	.byte	$3e ; |	 ##### |			$fbb0 (g)
-	.byte	$43 ; | #	 ##|			$fbb1 (g)
-	.byte	$45 ; | #	# #|			$fbb2 (g)
-	.byte	$49 ; | #  #  #|			$fbb3 (g)
-	.byte	$41 ; | #		#|			$fbb4 (g)
-	.byte	$41 ; | #		#|			$fbb5 (g)
-	.byte	$3e ; |	 ##### |			$fbb6 (g)
-	.byte	$1c ; |		###  |			$fbb7 (g)
+	.byte $3E ; |..XXXXX.| $FBB0
+	.byte $43 ; |.X....XX| $FBB1
+	.byte $45 ; |.X...X.X| $FBB2
+	.byte $49 ; |.X..X..X| $FBB3
+	.byte $41 ; |.X.....X| $FBB4
+	.byte $41 ; |.X.....X| $FBB5
+	.byte $3E ; |..XXXXX.| $FBB6
+	.byte $1C ; |...XXX..| $FBB7
 
 inventory06_00
-	.byte	$3e ; |	 ##### |			$fbb8 (g)
-	.byte	$49 ; | #  #  #|			$fbb9 (g)
-	.byte	$49 ; | #  #  #|			$fbba (g)
-	.byte	$49 ; | #  #  #|			$fbbb (g)
-	.byte	$41 ; | #		#|			$fbbc (g)
-	.byte	$41 ; | #		#|			$fbbd (g)
-	.byte	$3e ; |	 ##### |			$fbbe (g)
-	.byte	$1c ; |		###  |			$fbbf (g)
+	.byte $3E ; |..XXXXX.| $FBB8
+	.byte $49 ; |.X..X..X| $FBB9
+	.byte $49 ; |.X..X..X| $FBBA
+	.byte $49 ; |.X..X..X| $FBBB
+	.byte $41 ; |.X.....X| $FBBC
+	.byte $41 ; |.X.....X| $FBBD
+	.byte $3E ; |..XXXXX.| $FBBE
+	.byte $1C ; |...XXX..| $FBBF
 
 inventory07_00
-	.byte	$3e ; |	 ##### |			$fbc0 (g)
-	.byte	$61 ; | ##		#|			$fbc1 (g)
-	.byte	$51 ; | # #		#|			$fbc2 (g)
-	.byte	$49 ; | #  #  #|			$fbc3 (g)
-	.byte	$41 ; | #		#|			$fbc4 (g)
-	.byte	$41 ; | #		#|			$fbc5 (g)
-	.byte	$3e ; |	 ##### |			$fbc6 (g)
-	.byte	$1c ; |		###  |			$fbc7 (g)
+	.byte $3E ; |..XXXXX.| $FBC0
+	.byte $61 ; |.XX....X| $FBC1
+	.byte $51 ; |.X.X...X| $FBC2
+	.byte $49 ; |.X..X..X| $FBC3
+	.byte $41 ; |.X.....X| $FBC4
+	.byte $41 ; |.X.....X| $FBC5
+	.byte $3E ; |..XXXXX.| $FBC6
+	.byte $1C ; |...XXX..| $FBC7
 
 inventory09_00
-	.byte	$3e ; |	 ##### |			$fbc8 (g)
-	.byte	$41 ; | #		#|			$fbc9 (g)
-	.byte	$41 ; | #		#|			$fbca (g)
-	.byte	$79 ; | ####  #|			$fbcb (g)
-	.byte	$41 ; | #		#|			$fbcc (g)
-	.byte	$41 ; | #		#|			$fbcd (g)
-	.byte	$3e ; |	 ##### |			$fbce (g)
-	.byte	$1c ; |		###  |			$fbcf (g)
+	.byte $3E ; |..XXXXX.| $FBC8
+	.byte $41 ; |.X.....X| $FBC9
+	.byte $41 ; |.X.....X| $FBCA
+	.byte $79 ; |.XXXX..X| $FBCB
+	.byte $41 ; |.X.....X| $FBCC
+	.byte $41 ; |.X.....X| $FBCD
+	.byte $3E ; |..XXXXX.| $FBCE
+	.byte $1C ; |...XXX..| $FBCF
 
 inventory11_00
-	.byte	$3e ; |	 ##### |			$fbd0 (g)
-	.byte	$41 ; | #		#|			$fbd1 (g)
-	.byte	$41 ; | #		#|			$fbd2 (g)
-	.byte	$49 ; | #  #  #|			$fbd3 (g)
-	.byte	$51 ; | # #		#|			$fbd4 (g)
-	.byte	$61 ; | ##		#|			$fbd5 (g)
-	.byte	$3e ; |	 ##### |			$fbd6 (g)
-	.byte	$1c ; |		###  |			$fbd7 (g)
+	.byte $3E ; |..XXXXX.| $FBD0
+	.byte $41 ; |.X.....X| $FBD1
+	.byte $41 ; |.X.....X| $FBD2
+	.byte $49 ; |.X..X..X| $FBD3
+	.byte $51 ; |.X.X...X| $FBD4
+	.byte $61 ; |.XX....X| $FBD5
+	.byte $3E ; |..XXXXX.| $FBD6
+	.byte $1C ; |...XXX..| $FBD7
 
 copyrightGfx2 ;copyright2
-	.byte	$49 ; | #  #  #|			$fbd8 (g)
-	.byte	$49 ; | #  #  #|			$fbd9 (g)
-	.byte	$49 ; | #  #  #|			$fbda (g)
-	.byte	$c9 ; |##  #  #|			$fbdb (g)
-	.byte	$49 ; | #  #  #|			$fbdc (g)
-	.byte	$49 ; | #  #  #|			$fbdd (g)
-	.byte	$be ; |# ##### |			$fbde (g)
-	.byte	$00 ; |		|			$fbdf (g)
+	.byte $49 ; |.X..X..X| $FBD8
+	.byte $49 ; |.X..X..X| $FBD9
+	.byte $49 ; |.X..X..X| $FBDA
+	.byte $C9 ; |XX..X..X| $FBDB
+	.byte $49 ; |.X..X..X| $FBDC
+	.byte $49 ; |.X..X..X| $FBDD
+	.byte $BE ; |X.XXXXX.| $FBDE
+	.byte $00 ; |........| $FBDF
 
 copyrightGfx4: ;copyright5
-	.byte	$55 ; | # # # #|			$fbe0 (g)
-	.byte	$55 ; | # # # #|			$fbe1 (g)
-	.byte	$55 ; | # # # #|			$fbe2 (g)
-	.byte	$d9 ; |## ##  #|			$fbe3 (g)
-	.byte	$55 ; | # # # #|			$fbe4 (g)
-	.byte	$55 ; | # # # #|			$fbe5 (g)
-	.byte	$99 ; |#  ##  #|			$fbe6 (g)
-	.byte	$00 ; |		|			$fbe7 (g)
+	.byte $55 ; |.X.X.X.X| $FBE0
+	.byte $55 ; |.X.X.X.X| $FBE1
+	.byte $55 ; |.X.X.X.X| $FBE2
+	.byte $D9 ; |XX.XX..X| $FBE3
+	.byte $55 ; |.X.X.X.X| $FBE4
+	.byte $55 ; |.X.X.X.X| $FBE5
+	.byte $99 ; |X..XX..X| $FBE6
+	.byte $00 ; |........| $FBE7
 
 ;------------------------------------------------------------
 ; OverscanSpecialSoundEffectTable
@@ -5282,11 +5303,33 @@ copyrightGfx4: ;copyright5
 ; Indexed by `soundEffectTimer` (counts down from $17).
 ;
 
-lfbe8
-	.byte	$14								; $fbe8 (d)
-	.byte	$14,$14,$0f,$10,$12,$0b,$0b,$0b ; $fbe9 (*)
-	.byte	$10,$12,$14,$17,$17,$17,$17		; $fbf1 (*)
-	.byte	$18,$1b,$0f,$0f,$0f,$14,$17,$18 ; $fbf8 (d)
+soundEffectTable
+	.byte $14 ; |...X.X..|
+	.byte $14 ; |...X.X..|
+	.byte $14 ; |...X.X..|
+	.byte $0F ; |....XXXX|
+	.byte $10 ; |...X....|
+	.byte $12 ; |...X..X.|
+	.byte $0B ; |....X.XX|
+	
+	.byte $0B ; |....X.XX|
+	.byte $0B ; |....X.XX|
+	.byte $10 ; |...X....|
+	.byte $12 ; |...X..X.|
+	.byte $14 ; |...X.X..|
+	.byte $17 ; |...X.XXX|
+	.byte $17 ; |...X.XXX|
+	.byte $17 ; |...X.XXX|
+	
+	.byte $17 ; |...X.XXX|
+	.byte $18 ; |...XX...|
+	.byte $1B ; |...XX.XX|
+	.byte $0F ; |....XXXX|
+	.byte $0F ; |....XXXX|
+	.byte $0F ; |....XXXX|
+	.byte $14 ; |...X.X..|
+	.byte $17 ; |...X.XXX|
+	.byte $18 ; |...XX...|
 
 thiefSprites
 ThiefSprite_0
@@ -6332,9 +6375,7 @@ InventoryIndexHorizValues
 	.byte HMOVE_R8 | 6
 	.byte HMOVE_R1 | 7
 
-lfff8
-	.byte	$00								; $fff8 (d)
-	.byte	$00
+	.org BANK1TOP + 4096 - 6, 0
 	
 	;Interrupt Vectors
 	.word BANK1Start	; NMI
