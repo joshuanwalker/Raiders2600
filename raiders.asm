@@ -203,7 +203,7 @@ inventoryItemCount			= $c4
 selectedInventoryId	= $c5
 basketItemsStatus			= $c6
 pickupItemsStatus			= $c7
-objectPosX			= $c8
+p0PosX			= $c8
 indyPosX			= $c9
 m0PosX			= $ca
 weaponPosX			= $cb
@@ -395,7 +395,7 @@ setObjPosX
 	ldx		#<RESBL - RESP0					
 moveObjectLoop
 	sta		WSYNC					; wait for next scan line
-	lda		objectPosX,x			; get object's horizontal position
+	lda		p0PosX,x			; get object's horizontal position
 	tay								
 	lda		HMOVETable,y	; get fine motion/coarse position value				
 	sta		HMP0,x					; set object's fine motion value
@@ -1166,7 +1166,7 @@ frameFirstLine
 	sta		currentRoomId				; to the current room
 	jsr		initRoomState		; Transition to Ark Room			
 gotoArkRoomLogic:
-	jmp		setupScreenAndObj					
+	jmp		setupNewRoom					
 
 checkShowDevInitials:
 	lda		currentRoomId				; get teh room number
@@ -1832,7 +1832,7 @@ jmpRoomHandler
 	sta		bankSwitchJMPAddrHi			; Store in Bank Switch JMP Addr High
 	jmp		jumpToBank1					; Jump to Bank 1 Kernel
 
-setupScreenAndObj
+setupNewRoom
 	lda		screenInitFlag				; Check status flag	
 	beq		setRoomAttr					; If zero, skip subroutine 
 	jsr		updateRoomEventState		; Run special screen setup routine		
@@ -1876,7 +1876,7 @@ initArkRoomObjPos
 	lda		#$4d						; Set Indy's X position in the Ark Room
 	sta		indyPosX					
 	lda		#$48					
-	sta		objectPosX					; Set object X position					 
+	sta		p0PosX					; Set object X position					 
 	lda		#$1f					
 	sta		indyPosY					; Set Indy's Y position in the Ark Room
 	rts								
@@ -1946,7 +1946,7 @@ loadRoomGfx
 	lda		p0SpriteHeightData,x					
 	sta		p0SpriteHeight				; Set sprite height for P0	 
 	lda		objectPosXTable,x				
-	sta		objectPosX					; Set default object X position 
+	sta		p0PosX					; Set default object X position 
 	lda		m0PosXTable,x					
 	sta		m0PosX						; Set default missile X position
 	lda		m0PosYTable,x					
@@ -2840,7 +2840,7 @@ initGameVars:
 	sta		currentRoomId				; set current room to Entrance Room
 	sta		livesLeft					; set initial number of lives
 	jsr		initRoomState				; Initialize new room state.
-	jmp		setupScreenAndObj			; Setup the screen and objects for the
+	jmp		setupNewRoom			; Setup the screen and objects for the
 										; entrance room.	
 
 ;------------------------------------------------------------
@@ -2981,11 +2981,11 @@ mov_emy_right
 mov_emy_down
 	ror								;rotate next bit into carry
 	bcs		mov_emy_up				;if 1 check if enemy should go up
-	dec		objectPosX,x				;move enemy down 1 unit
+	dec		p0PosX,x				;move enemy down 1 unit
 mov_emy_up
 	ror								;rotate next bit into carry
 	bcs		mov_emy_finish			;if 1, moves are finished
-	inc		objectPosX,x				;move enemy up 1 unit
+	inc		p0PosX,x				;move enemy up 1 unit
 mov_emy_finish
 	rts								;return
 
@@ -4099,11 +4099,11 @@ animateSpider:
 	; Calculates a sprite frame based on position to simulate scuttling.                  	
        lda    p0PosY					; Load Spider Vertical Position                   
        and    #$01                    	; Check LSB (Odd/Even pixel)
-       ror    objectPosX                ; Rotate Spider X into Carry   
+       ror    p0PosX                ; Rotate Spider X into Carry   
        rol                            	; Rotate Carry into A 
        tay                            	; Use result as index into sprite table
        ror                            	; Restore Carry
-       rol    objectPosX                ; Restore Spider X Position    
+       rol    p0PosX                ; Restore Spider X Position    
        lda    spiderSpriteTable,y    	; Load the appropriate Spider Sprite frame            
        sta    p0GfxPtrLo                ; Store Low Byte of sprite pointer     
        lda    #>spiderSprites    		; Start at first spider frame
@@ -4136,221 +4136,279 @@ updateSpiderSpriteState:
        dec    spiderRoomState           ; Decrement the timer/state counter
 	             
 finishRoomHandle:
-       jmp    jmpSetupScreenAndObj		; Return to Bank 0 Dispatcher             
+       jmp    jmpSetupNewRoom		; Return to Bank 0 Dispatcher             
 
+; Screen ID 06: Valley of Poison
 valleyOfPoisonRoomHandler:
-       lda    #$80                    
-       sta    screenEventState                     
-       ldx    #$00                    
-       bit    majorEventFlag                     
-       bmi    lf5ab                   
-       bit    pickupStatusFlags                     
-       bvc    lf5b7                   
-lf5ab:
-       ldy    #$05                    
-       lda    #$55                    
-       sta    unused_CD                     
-       sta    targetPosY                     
-       lda    #$01                    
-       bne    lf5bb                   
+       lda    #$80               		; Set Bit 7 ($80) in Screen Event State.     
+       sta    screenEventState          ; screenEventState = $80 (Active).          
+       ldx    #$00                    	; X = 0.
+       bit    majorEventFlag            ; Check Major Event Flag         
+       bmi    thiefEscape               ;  If Major Event Set (Negative),
+	   									; Enter thief escape mode. 
+       bit    pickupStatusFlags         ; Check Pickup Status (Bit 6 = Overflow).           
+       bvc    thiefChase                ; If Overflow Clear (No Item Stolen),
+	   									; Enter thief chase Mode. 
+thiefEscape:
+	; Mode: Thief Escape (Man in Black leaves with item or during death)
+       ldy    #$05                    	; Target Index = 5.
+       lda    #$55                    	; Target Y = $55 (Escape Point).
+       sta    unused_CD                 ; Store unused temp.   
+       sta    targetPosY                ; Set Target Vertical Position to $55.    
+       lda    #$01                    	; Speed Mask = 1 
+	   									; (Update every ODD frame - Fast).
+       bne    updateThiefMove           ; Unconditional branch.       
 
-lf5b7:
-       ldy    #$01                    
-       lda    #$03                    
-lf5bb:
-       and    frameCount                     
-       bne    lf5ce                   
-       jsr    updateMoveToTarget                   
-       lda    p0PosY                     
-       bpl    lf5ce                   
-       cmp    #$a0                    
-       bcc    lf5ce                   
-       inc    p0PosY                     
-       inc    p0PosY                     
-lf5ce:
-       bvc    lf5de                   
-       lda    p0PosY                     
-       cmp    #$51                    
-       bcc    lf5de                   
-       lda    pickupStatusFlags                     
-       sta    screenInitFlag                     
-       lda    #$00                    
-       sta    pickupStatusFlags                     
-lf5de:
-       lda    objectPosX                     
-       cmp    indyPosX                     
-       bcs    lf5e7                   
-       dex                            
-       eor    #$03                    
-lf5e7:
-       stx    REFP0                   
-       and    #$03                    
+thiefChase:
+	; Mode: Thief Chase (Man in Black chases Indy)
+       ldy    #<indyPosY - p0PosY       ; Target Index = Indy's Y Position.          
+       lda    #$03                    	; Speed Mask = 3 
+	  									; (Update every 4th frame - Slow).
+updateThiefMove:
+       and    frameCount                ; Apply Speed Mask.    
+       bne    checkEscape            	; If Mask != 0 (Skip Frame),
+	   									; Check Scrolling/Boundary   
+       jsr    updateMoveToTarget        ; Update Object Position
+	   									; (Move P0 towards Target).   
+       lda    p0PosY                    ; Load Thief Vertical Position
+       bpl    checkEscape            	; If Positive, Skip.      
+       cmp    #$a0                    	; Check against 16
+       bcc    checkEscape            	; If < 16, Skip.       
+       inc    p0PosY                    ; Nudge Up (for scrolling effect)
+       inc    p0PosY                    ; Nudge Up again
+checkEscape:
+       bvc    updateThiefDirection     	; If Overflow Clear (Chase Mode),
+	   									; Skip Escape Check              
+       lda    p0PosY                    ; Load Thief Vertical Position.
+       cmp    #$51                    	; Check against Escape Line
+       bcc    updateThiefDirection      ; If < $51 (Not there yet), Continue. 
+
+	   ; Thief has escaped with the item.           
+       lda    pickupStatusFlags         ; Load Flags.            
+       sta    screenInitFlag            ; Trigger initialization/state change?         
+       lda    #$00                    	; Clear A.
+       sta    pickupStatusFlags         ; Clear Stolen Status (Reset Theft)
+
+updateThiefDirection:
+       lda    p0PosX                    ; Load Thief X.
+       cmp    indyPosX                  ; Compare with Indy X.  
+       bcs    faceThiefLeft             ; If Thief >= Indy, Face Left.      
+       dex                            	; Decrement X (0->FF).
+       eor    #$03                    	; Toggle bits.
+
+faceThiefLeft:
+       stx    REFP0                   	; Set P0 Reflection.
+       and    #$03                    	; Mask Low bits of X-Diff.
+       asl                            	; Shift Left x3 (Multiply by 8).
        asl                            
        asl                            
-       asl                            
-       asl                            
-       sta    p0GfxPtrLo                     
+       asl                            	; Calculate Animation Offset.
+       sta    p0GfxPtrLo                ; Store P0 Graphics Pointer.
+
+	   ; Missile 0 (Swarm) Update
        lda    frameCount                     
        and    #$7f                    
-       bne    lf617                   
-       lda    p0PosY                     
-       cmp    #$4a                    
-       bcs    lf617                   
-       ldy    EventStateOffset                     
-       beq    lf617                   
-       dey                            
-       sty    EventStateOffset                     
-       ldy    #$8e                    
-       adc    #$03                    
-       sta    m0PosY                     
-       cmp    indyPosY                     
-       bcs    lf60f                   
-       dey                            
-lf60f:
-       lda    objectPosX                     
-       adc    #$04                    
-       sta    m0PosX                     
-       sty    m0PosYShadow                     
-lf617:
-       ldy    #$7f                    
-       lda    m0PosYShadow                     
-       bmi    lf61f                   
-       sty    m0PosY                     
-lf61f:
-       lda    weaponPosY                     
-       cmp    #$52                    
-       bcc    lf627                   
-       sty    weaponPosY                     
-lf627:
-       jmp    jmpSetupScreenAndObj                    
+       bne    swarmOffscreen            ; Skip update most frames (Slow update).       
+       lda    p0PosY                    ; Load Thief Y
+       cmp    #$4a                    	; Check Bound.
+       bcs    swarmOffscreen            ; If >= $4A, Skip.      
+       ldy    EventStateOffset          ; Load Swarm Timer/State.         
+       beq    swarmOffscreen            ; If 0, Skip.      
+       dey                            	; Decrement.
+       sty    EventStateOffset          ; Update State.           
+       ldy    #$8e                    	; Default Y.
+       adc    #$03                    	; Add 3 to thief Y location
+       sta    m0PosY                    ; Set swarm Y near Thief.
+       cmp    indyPosY                 	; Compare swarm Y vs Indy Y.   
+       bcs    updateSwarm               ; If swarm >= Indy, Move X.   
+       dey                            	; Adjust Y
 
-lf62a:
-       ldx    #$3a                    
-       stx    dungeonBlock4                     
-       ldx    #$85                    
-       stx    PF2GfxPtrLo                     
-       ldx    #$03                    
-       stx    mesaLandingBonus            
-       bne    lf63a                   
+updateSwarm:
+       lda    p0PosX                    ; Load Thief X.
+       adc    #$04                    	; Add Offset.
+       sta    m0PosX                    ; Set swarm X. 
+       sty    m0PosYShadow              ; Store Y to Shadow.
 
-lf638
-       ldx    #$04                    
-lf63a:
-       lda    lfcd8,x                 
-       and    frameCount                     
-       bne    lf656                   
-       ldy    dynamicGfxData,x                   
-       lda    #$08                    
-       and    objOffsetPosY,x                   
-       bne    lf65c                   
-       dey                            
-       cpy    #$14                    
-       bcs    lf654                   
-lf64e:
-       lda    #$08                    
-       eor    objOffsetPosY,x                   
-       sta    objOffsetPosY,x                   
-lf654:
-       sty    dynamicGfxData,x                   
-lf656:
-       dex                            
-       bpl    lf63a                   
-       jmp    jmpSetupScreenAndObj                    
+swarmOffscreen:
+       ldy    #$7f                    	; Load $7F.
+       lda    m0PosYShadow              ; Load shadow.      
+       bmi    weaponUse                 ; Branch if negative.
+       sty    m0PosY                    ; Set M0 to $7F (offscreen)
 
-lf65c:
-       iny                            
-       cpy    #$85                    
-       bcs    lf64e                   
-       bcc    lf654                   
+weaponUse:
+       lda    weaponPosY                ; Get bullet/whip vertical position.     
+       cmp    #$52                    	; Compare.
+       bcc    finishValleyOfPoison      ; Branch if <.             
+       sty    weaponPosY                ; Store Y to weapon pos.
 
-lf663
-       bit    mesaSideState                     
-       bpl    lf685                   
-       bvc    lf66d                   
-       dec    indyPosX                     
-       bne    lf685                   
-lf66d:
-       lda    frameCount                     
-       ror                            
-       bcc    lf685                   
-       lda    SWCHA                   
-       sta    indyDir                     
-       ror                            
-       ror                            
-       ror                            
-       bcs    lf680                   
-       dec    indyPosX                     
-       bne    lf685                   
-lf680:
-       ror                            
-       bcs    lf685                   
-       inc    indyPosX                     
-lf685:
-       lda    #$02                    
-       and    mesaSideState                     
-       bne    lf691                   
-       sta    eventState                     
-       lda    #$0b                    
-       sta    p0PosY                     
-lf691:
-       ldx    indyPosY                     
-       lda    frameCount                     
-       bit    mesaSideState                     
-       bmi    lf6a3                   
-       cpx    #$15                    
-       bcc    lf6a3                   
-       cpx    #$30                    
-       bcc    lf6aa                   
-       bcs    lf6a9                   
+finishValleyOfPoison:
+       jmp    jmpSetupNewRoom      ; Return.             
 
-lf6a3:
-       ror                            
-       bcc    lf6aa                   
-lf6a6:
-       jmp    jmpSetupScreenAndObj                    
+WellOfSoulsRoomHandler:
+	; --------------------------------------------------------------------------
+	; WELL OF SOULS (Screen ID 12)
+	; Uses Thief logic to drive Thieves here too. 
+	; --------------------------------------------------------------------------
+       ldx    #$3a                    	; Load Initial X Position ($3A = 58).
+       stx    dungeonBlock4             ; Set Position of Object 4         
+       ldx    #$85                    	; Load Initial Value 
+       stx    PF2GfxPtrLo               ; Set playfield graphics pointer     
+       ldx    #BONUS_LANDING_IN_MESA	; Load Value 3.                    
+       stx    mesaLandingBonus          ; Set Flag  
+       bne    checkToMoveThieves                   
 
-lf6a9:
-       inx                            
-lf6aa:
-       inx                            
-       stx    indyPosY                     
-       bne    lf6a6                   
+thievesDenRoomHandler
+	; --------------------------------------------------------------------------
+	; THIEVES' DEN (Screen ID 7)
+	; Controls the movement of 5 Thieves patroling the screen.
+	; --------------------------------------------------------------------------
+       ldx    #$04             			; Load loop counter
+										; (5 thieves, Indices 4 down to 0).     
+checkToMoveThieves:
+       lda    thiefMoveDelayTable,x     ; Get speed mask for Thief X.            
+       and    frameCount                ; Apply mask.  
+       bne    moveNextThief             ;  If result != 0, skip this frame.      
+       ldy    dynamicGfxData,x          ; Get current horizontal position         
+       lda    #REFLECT					; Load Reflect Bit (Direction Check).                   
+       and    objOffsetPosY,x           ; Check thief state.        
+       bne    moveThiefRight           	; If Bit Set (Reflected), Moving Right.        
+	; Moving left
+       dey                         		; Decrement position (Move Left).   
+       cpy    #$14                    	; Check Left Boundary (X=20).
+       bcs    setNewThiefPosX           ; If >= 20, still in bounds, update Position.       
+										; Else, fall through to Change Direction.
+changeThiefDirection:
+       lda    #$08                    	; Load Reflect mask.
+       eor    objOffsetPosY,x           ; XOR with current state     
+       sta    objOffsetPosY,x           ; Update state.
 
-lf6af:
-       lda    indyPosX                     
-       cmp    #$64                    
-       bcc    lf6bc                   
-       rol    blackMarketState                     
-       clc                            
-       ror    blackMarketState                     
-       bpl    lf6de                   
-lf6bc:
-       cmp    #$2c                    
-       beq    lf6c6                   
-       lda    #$7f                    
-       sta    ballPosY                     
-       bne    lf6de                   
+setNewThiefPosX:
+       sty    dynamicGfxData,x        	; Save new Horizontal Position.           
 
-lf6c6:
-       bit    blackMarketState                     
-       bmi    lf6de                   
-       lda    #$30                    
-       sta    indyPosXSet                     
-       ldy    #$00                    
-       sty    ballPosY                     
-       ldy    #$7f                    
-       sty    p0SpriteHeight                     
-       sty    snakePosY                     
-       inc    indyPosX                     
-       lda    #$80                    
-       sta    majorEventFlag                     
-lf6de:
-       jmp    jmpSetupScreenAndObj                    
+moveNextThief:
+       dex                            	; Decrement thief index.  
+       bpl    checkToMoveThieves       	; If X >= 0, Loop for next thief.      
+       jmp    jmpSetupNewRoom      ; All thieves done. Return.           
+
+moveThiefRight:
+       iny                            	; Increment position (Move Right).
+       cpy    #$85                    	; Check Right Boundary (X=133).
+       bcs    changeThiefDirection      ; If >= 133, Hit edge. Change Direction.         
+       bcc    setNewThiefPosX           ; Else, Update Position.       
+
+
+mesaSideRoomHandler
+	; --------------------------------------------------------------------------
+	; MESA SIDE
+	; Controls the movement of 5 Thieves patroling the screen.
+	; --------------------------------------------------------------------------
+       bit    mesaSideState             ; Check Mesa Side State.
+	   									; Bit 7 = Parachute Active.        
+       bpl    updateMesaSideRoom        ; Branch if Bit 7 clear
+	   									; (Parachute NOT active -> Freefall).           	
+       bvc    getMesaSideRoomInput      ; Branch if Overflow clear (Bit 6?).            
+       dec    indyPosX                  ; Decrement Indy X   
+       bne    updateMesaSideRoom        ; Unconditional branch.
+
+getMesaSideRoomInput:
+       lda    frameCount                ; Get current frame count.     
+       ror                            	; Rotate bit 0 into Carry.
+       bcc    updateMesaSideRoom        ; Branch on even frame (Limit speed).          
+       lda    SWCHA                   	; Get Joystick Inputs
+       sta    indyDir                   ; Store input. 
+       ror                            	; Bit 0 (P1 Up) -> Carry.
+       ror                            	; Bit 1 (P1 Down) -> Carry.
+       ror                            	; Bit 2 (P1 Left) -> Carry.
+       bcs    ifRightInput              ; Branch if Left NOT pressed 
+
+; If Left Input
+       dec    indyPosX                  ; Move Left.   
+       bne    updateMesaSideRoom        ; Unconditional branch.
+
+ifRightInput:
+       ror                            	; Bit 3 (P1 Right) -> Carry.
+       bcs    updateMesaSideRoom        ; Branch if Right NOT pressed.           
+       inc    indyPosX                  ; Move Right.
+
+updateMesaSideRoom:
+       lda    #$02                    	; Load 2.
+       and    mesaSideState             ; Check Bit 1 of state.        
+       bne    indyVsGravity           	; Branch if set.        
+       sta    eventState                ; Clear eventState if bit 1 was clear   
+       lda    #$0b                    	; Load $0B.
+       sta    p0PosY                    ; Set Object Vertical Position?
+
+indyVsGravity:
+       ldx    indyPosY                 	; Get Indy Vertical.    
+       lda    frameCount                ; Get Frame Count.     
+       bit    mesaSideState             ; Check state.    
+       bmi    updateParachuteFall       ; Branch if Bit 7 set
+	   									; (Parachute Active = Slow Fall).              
+       cpx    #$15                    	; Compare Y with $15.
+       bcc    updateParachuteFall       ; Branch if Y < $15
+	   									; (slow fall initially)          
+       cpx    #$30                    	; Compare Y with $30.
+       bcc    finshMesaGravity          ; Branch if Y < $30.         
+       bcs    increaseFall              ; Unconditional branch (>= $30).     
+
+updateParachuteFall:
+       ror                            	; Rotate A (Frame Count - slow decent) 
+       bcc    finshMesaGravity			; Branch on even frames
+	   									; (Slower fall: 0.5px/frame).
+
+finishMesaSide:
+       jmp    jmpSetupNewRoom     ; Return.               
+
+increaseFall:
+       inx								; Increment Y (Accel fall).	
+	                            
+finshMesaGravity:
+       inx                         		; Increment Y (Move Down).   
+       stx    indyPosY               	; Update Indy Y.      
+       bne    finishMesaSide            ; Return.      
+
+
+blackMarketRoomHandler:
+	; --------------------------------------------------------------------------
+	; BLACK MARKET
+	; --------------------------------------------------------------------------
+       lda    indyPosX                 	; Get Indy X.    
+       cmp    #$64                    	; Compare 100.
+       bcc    inLunaticZone            	; Branch if < 100 (Left Side/Lunatic Zone).       
+       rol    blackMarketState         	; Rotate Black Market state left.            
+       clc                            	; Clear Carry.
+       ror    blackMarketState          ; Rotate right (preserves high bit).          
+       bpl    finishBlackMarket         ; Branch if positive.
+
+inLunaticZone:
+       cmp    #$2c                    	; Compare Decimal 44. The "Lunatic LOS".
+       beq    bribeCheck                   	; Branch if equal (Indy is exactly at the line).
+       lda    #$7f                    	; Screen center
+       sta    ballPosY                  ; Set Lunatic/Blocker Y to Center  
+       bne    finishBlackMarket         ; Return.          
+
+bribeCheck:
+       bit    blackMarketState        	; Check Black Market state
+	   									; (Did we drop Gold?)             
+       bmi    finishBlackMarket         ; Branch if Bit 7 set (No Bribe).         
+       lda    #$30                    	; Load 48.
+       sta    indyPosXSet               ; Teleport Indy to X=48      
+       ldy    #$00                    	
+       sty    ballPosY                  ; Clear Lunatic Y  (Remove Lunatic).
+       ldy    #$7f                    	; Load $7F. 
+       sty    p0SpriteHeight            ; set p0SpriteHeight        
+       sty    snakePosY                 ; Set snakeVertPos.    
+       inc    indyPosX                  ; Increment Indy X (49).   
+       lda    #$80                    	; Set Bit 7.
+       sta    majorEventFlag            ; Trigger Major Event (bribe success)         
+
+finishBlackMarket:
+       jmp    jmpSetupNewRoom     		; Return.               
 
 lf6e1:
        ldy    objOffsetPosY                     
        dey                            
-       bne    lf6de                   
+       bne    finishBlackMarket                   
        lda    treasureIndex                     
        and    #$07                    
        bne    lf71d                   
@@ -4370,7 +4428,7 @@ lf6e1:
        bcc    lf70a                   
 lf705:
        inc    objOffsetPosY                     
-       bne    lf6de                   
+       bne    finishBlackMarket                   
 
 
        .byte $00 ; |        | $f709 unused
@@ -4385,7 +4443,7 @@ lf70a:
        sta    p0PosY                     
        lda    lfca6,y                 
        sta    objOffsetPosY                     
-       bne    lf6de                   
+       bne    finishBlackMarket                   
 
 lf71d:
        cmp    #$04                    
@@ -4471,7 +4529,7 @@ lf7a2:
        clc                            
        ror    mapRoomState                     
 lf7a5:
-       jmp    jmpSetupScreenAndObj                    
+       jmp    jmpSetupNewRoom                    
 
 lf7a8:
        lda    #$08                    
@@ -4493,7 +4551,7 @@ lf7c0:
 lf7c4:
        lda    entranceRoomEventState                     
        and    #$0f                    
-       beq    jmpSetupScreenAndObj                    
+       beq    jmpSetupNewRoom                    
        sta    p0SpriteHeight                     
        ldy    #$14                    
        sty    p0PosY                     
@@ -4505,7 +4563,7 @@ lf7c4:
        sec                            
        sbc    p0SpriteHeight                     
        sta    p0GfxPtrLo                     
-       bne    jmpSetupScreenAndObj                    
+       bne    jmpSetupNewRoom                    
 
 lf7e0:
        lda    frameCount                     
@@ -4536,34 +4594,34 @@ lf80c:
 lf80f:
        ldx    #$4e                    
        cpx    indyPosY                     
-       bne    jmpSetupScreenAndObj                    
+       bne    jmpSetupNewRoom                    
        ldx    indyPosX                     
        cpx    #$76                    
        beq    lf81f                   
        cpx    #$14                    
-       bne    jmpSetupScreenAndObj                    
+       bne    jmpSetupNewRoom                    
 lf81f:
        lda    SWCHA                   
        and    #$0f                    
        cmp    #$0d                    
-       bne    jmpSetupScreenAndObj                    
+       bne    jmpSetupNewRoom                    
        sta    escapePrisonPenalty       
        lda    #$4c                    
        sta    indyPosX                     
        ror    entranceRoomEventState                     
        sec                            
        rol    entranceRoomEventState                     
-jmpSetupScreenAndObj 
-       lda    #<setupScreenAndObj                 
+jmpSetupNewRoom 
+       lda    #<setupNewRoom                 
        sta    bankSwitchJMPAddrLo                     
-       lda    #>setupScreenAndObj                 
+       lda    #>setupNewRoom                 
        sta    bankSwitchJMPAddrHi                     
        jmp    JumpToBank0                   
 
 lf83e
        lda    #$40                    
        sta    screenEventState                     
-       bne    jmpSetupScreenAndObj                    
+       bne    jmpSetupNewRoom                    
 
 drawScreen
 	sta		WSYNC					
@@ -4656,19 +4714,19 @@ lf8c6
 lf8cc
 	dec		p0PosY,x				 
 lf8ce
-	lda		objectPosX,x				 
-	cmp.wy	objectPosX,y				 
+	lda		p0PosX,x				 
+	cmp.wy	p0PosX,y				 
 	bne		lf8d9					
 	cpy		#$05					
 	bcs		lf8dd					
 lf8d9
 	bcs		lf8de					
-	inc		objectPosX,x				 
+	inc		p0PosX,x				 
 lf8dd
 	rts								
 
 lf8de
-	dec		objectPosX,x				 
+	dec		p0PosX,x				 
 	rts								
 
 lf8e1
@@ -4684,7 +4742,7 @@ lf8e7
 	rts								
 
 lf8f1
-	lda		objectPosX,x				 
+	lda		p0PosX,x				 
 	cmp		#$10					
 	bcc		lf8e7					
 	cmp		#$8e					
@@ -5674,24 +5732,26 @@ lfc75
        .byte $0b ; |    x xx| $fc87
 
 
+HandlerJumpTable:
 RoomHandlerJmpTableLo
        .byte $e0             ; $fc88 (*)
+
 RoomHandlerJmpTableHi 
        .byte $f6             ; $fc89 (*)
 
 
-       .word jmpSetupScreenAndObj -1 ; $fc8a/b
+       .word jmpSetupNewRoom -1 ; $fc8a/b
        .word lf83e-1 ; $fc8c/d
-       .word lf6af-1 ; $fc8e/f
+       .word blackMarketRoomHandler-1 ; $fc8e/f
        .word lf728-1 ; $fc90/1
-       .word lf663-1 ; $fc92/3
+       .word mesaSideRoomHandler-1 ; $fc92/3
        .word lf7a8-1 ; $fc94/5
        .word spiderRoomHandler-1 ; $fc96/7
        .word lf7e0-1 ; $fc98/9
        .word mesaFieldRoomHandler-1 ; $fc9a/b
        .word valleyOfPoisonRoomHandler-1 ; $fc9c/d
-       .word lf638-1 ; $fc9e/f
-       .word lf62a-1 ; $fca0/1
+       .word thievesDenRoomHandler-1 ; $fc9e/f
+       .word WellOfSoulsRoomHandler-1 ; $fca0/1
 
 lfca2
        .byte $1a ; |   xx x | $fca2
@@ -5714,48 +5774,48 @@ lfcaa
 
 spiderSprites
 spiderGfxFrame1
-	.byte	$54 ; | # # #  |			$fcae (g)
-	.byte	$fc ; |######  |			$fcaf (g)
-	.byte	$5f ; | # #####|			$fcb0 (g)
-	.byte	$fe ; |####### |			$fcb1 (g)
-	.byte	$7f ; | #######|			$fcb2 (g)
-	.byte	$fa ; |##### # |			$fcb3 (g)
-	.byte	$3f ; |	 ######|			$fcb4 (g)
-	.byte	$2a ; |	 # # # |			$fcb5 (g)
-	.byte	$00 ; |        |			$fcb6 (g)
+	.byte	$54 ; |.#.#.#..|			$fcae (g)
+	.byte	$fc ; |######..|			$fcaf (g)
+	.byte	$5f ; |.#.#####|			$fcb0 (g)
+	.byte	$fe ; |#######.|			$fcb1 (g)
+	.byte	$7f ; |.#######|			$fcb2 (g)
+	.byte	$fa ; |#####.#.|			$fcb3 (g)
+	.byte	$3f ; |..######|			$fcb4 (g)
+	.byte	$2a ; |..#.#.#.|			$fcb5 (g)
+	.byte	$00 ; |........|			$fcb6 (g)
 
 spiderGfxFrame3
-	.byte	$54 ; | # # #  |			$fcb7 (g)
-	.byte	$5f ; | # #####|			$fcb8 (g)
-	.byte	$fc ; |######  |			$fcb9 (g)
-	.byte	$7f ; | #######|			$fcba (g)
-	.byte	$fe ; |####### |			$fcbb (g)
-	.byte	$3f ; |	 ######|			$fcbc (g)
-	.byte	$fa ; |##### # |			$fcbd (g)
-	.byte	$2a ; |	 # # # |			$fcbe (g)
-	.byte	$00 ; |	       |			$fcbf (g)
+	.byte	$54 ; |.#.#.#..|			$fcb7 (g)
+	.byte	$5f ; |.#.#####|			$fcb8 (g)
+	.byte	$fc ; |######..|			$fcb9 (g)
+	.byte	$7f ; |.#######|			$fcba (g)
+	.byte	$fe ; |#######.|			$fcbb (g)
+	.byte	$3f ; |..######|			$fcbc (g)
+	.byte	$fa ; |#####.#.|			$fcbd (g)
+	.byte	$2a ; |..#.#.#.|			$fcbe (g)
+	.byte	$00 ; |........|			$fcbf (g)
 
 spiderGfxFrame2
-	.byte	$2a ; |	 # # # |			$fcc0 (g)
-	.byte	$fa ; |##### # |			$fcc1 (g)
-	.byte	$3f ; |	 ######|			$fcc2 (g)
-	.byte	$fe ; |####### |			$fcc3 (g)
-	.byte	$7f ; | #######|			$fcc4 (g)
-	.byte	$fa ; |##### # |			$fcc5 (g)
-	.byte	$5f ; | # #####|			$fcc6 (g)
-	.byte	$54 ; | # # #  |			$fcc7 (g)
-	.byte	$00 ; |	       |			$fcc8 (g)
+	.byte	$2a ; |..#.#.#.|			$fcc0 (g)
+	.byte	$fa ; |#####.#.|			$fcc1 (g)
+	.byte	$3f ; |..######|			$fcc2 (g)
+	.byte	$fe ; |#######.|			$fcc3 (g)
+	.byte	$7f ; |.#######|			$fcc4 (g)
+	.byte	$fa ; |#####.#.|			$fcc5 (g)
+	.byte	$5f ; |.#.#####|			$fcc6 (g)
+	.byte	$54 ; |.#.# #..|			$fcc7 (g)
+	.byte	$00 ; |........|			$fcc8 (g)
 
 spiderGfxFrame4
-	.byte	$2a ; |	 # # # |			$fcc9 (g)
-	.byte	$3f ; |	 ######|			$fcca (g)
-	.byte	$fa ; |##### # |			$fccb (g)
-	.byte	$7f ; | #######|			$fccc (g)
-	.byte	$fe ; |####### |			$fccd (g)
-	.byte	$5f ; | # #####|			$fcce (g)
-	.byte	$fc ; |######  |			$fccf (g)
-	.byte	$54 ; | # # #  |			$fcd0 (g)
-    .byte   $00 ; |        |            $fcd1
+	.byte	$2a ; |..#.#.#.|			$fcc9 (g)
+	.byte	$3f ; |..######|			$fcca (g)
+	.byte	$fa ; |#####.#.|			$fccb (g)
+	.byte	$7f ; |.#######|			$fccc (g)
+	.byte	$fe ; |#######.|			$fccd (g)
+	.byte	$5f ; |.#.#####|			$fcce (g)
+	.byte	$fc ; |######..|			$fccf (g)
+	.byte	$54 ; |.#.#.#..|			$fcd0 (g)
+    .byte   $00 ; |........|            $fcd1
 
 TreasureRoomItemStateTable
        .byte $8b ; |x   x xx| $fcd2
@@ -5764,7 +5824,8 @@ TreasureRoomItemStateTable
        .byte $87 ; |x    xxx| $fcd5
        .byte $85 ; |x    x x| $fcd6
        .byte $89 ; |x   x  x| $fcd7
-lfcd8
+
+thiefMoveDelayTable
        .byte $03 ; |      xx| $fcd8
        .byte $01 ; |       x| $fcd9
        .byte $00 ; |        | $fcda
@@ -5797,11 +5858,11 @@ lfcef
 lfcf4
 	ror								
 	bcs		lfcf9					
-	dec		objectPosX,x				 
+	dec		p0PosX,x				 
 lfcf9
 	ror								
 	bcs		lfcfe					
-	inc		objectPosX,x				 
+	inc		p0PosX,x				 
 lfcfe
 	rts								
 	.byte $00 ; |........| $FCFF
