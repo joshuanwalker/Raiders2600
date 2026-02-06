@@ -4107,30 +4107,38 @@ animateSpider:
        lda    spiderSpriteTable,y    	; Load the appropriate Spider Sprite frame            
        sta    p0GfxPtrLo                ; Store Low Byte of sprite pointer     
        lda    #>spiderSprites    		; Start at first spider frame
-       sta    p0GfxPtrHi                     
-       lda    m0PosYShadow                     
-       bmi    finishRoomHandle                   
-       ldx    #$50                    
-       stx    m0PosX                     
-       ldx    #$26                    
-       stx    m0PosY                     
-       lda    spiderRoomState                     
-       bmi    finishRoomHandle                   
-       bit    majorEventFlag                     
-       bmi    finishRoomHandle                   
-       and    #$07                    
-       bne    lf592                   
-       ldy    #$06                    
-       sty    spiderRoomState                     
-lf592:
-       tax                            
-       lda    lfcd2,x                 
-       sta    m0PosYShadow                     
-       dec    spiderRoomState                     
-finishRoomHandle:
-       jmp    lf833                   
+       sta    p0GfxPtrHi                ; Store High Byte of sprite pointer
+	
+	; Web (Missile 0) Logic
+	; The "Web" is represented by Missile 0 held in a fixed position.  
+       lda    m0PosYShadow              ; Check Shadow Variable for M0      
+       bmi    finishRoomHandle         	; If negative (disabled/offscreen), exit         
+       ldx    #$50                    	; Set Web Horizontal Position to $50
+       stx    m0PosX                    
+       ldx    #$26                    	; Set Web Vertical Position to $26
+       stx    m0PosY
 
-lf59d:
+	   ; State / Animation Timer Logic
+       lda    spiderRoomState           ; Check main state        
+       bmi    finishRoomHandle          ; If Bit 7 set (Aggressive/Caught),
+	   									; skip passive animation updates        
+       bit    majorEventFlag            ; Check if a major event       
+       bmi    finishRoomHandle          ; If so, skip         
+       and    #$07                    	; Mask lower 3 bits (Animation Timer)
+       bne    updateSpiderSpriteState   ; If timer != 0, go update sprite state shadow              
+       ldy    #$06                    	; Reset timer/state to 6
+       sty    spiderRoomState           ; Store back
+
+updateSpiderSpriteState:
+       tax                            	; Use A (masked spiderRoomState) as index
+       lda    TreasureRoomItemStateTable,x	; Load a value from table               
+       sta    m0PosYShadow              ; Update the shadow variable     
+       dec    spiderRoomState           ; Decrement the timer/state counter
+	             
+finishRoomHandle:
+       jmp    jmpSetupScreenAndObj		; Return to Bank 0 Dispatcher             
+
+valleyOfPoisonRoomHandler:
        lda    #$80                    
        sta    screenEventState                     
        ldx    #$00                    
@@ -4214,7 +4222,7 @@ lf61f:
        bcc    lf627                   
        sty    weaponPosY                     
 lf627:
-       jmp    lf833                   
+       jmp    jmpSetupScreenAndObj                    
 
 lf62a:
        ldx    #$3a                    
@@ -4247,7 +4255,7 @@ lf654:
 lf656:
        dex                            
        bpl    lf63a                   
-       jmp    lf833                   
+       jmp    jmpSetupScreenAndObj                    
 
 lf65c:
        iny                            
@@ -4299,7 +4307,7 @@ lf6a3:
        ror                            
        bcc    lf6aa                   
 lf6a6:
-       jmp    lf833                   
+       jmp    jmpSetupScreenAndObj                    
 
 lf6a9:
        inx                            
@@ -4337,7 +4345,7 @@ lf6c6:
        lda    #$80                    
        sta    majorEventFlag                     
 lf6de:
-       jmp    lf833                   
+       jmp    jmpSetupScreenAndObj                    
 
 lf6e1:
        ldy    objOffsetPosY                     
@@ -4463,7 +4471,7 @@ lf7a2:
        clc                            
        ror    mapRoomState                     
 lf7a5:
-       jmp    lf833                   
+       jmp    jmpSetupScreenAndObj                    
 
 lf7a8:
        lda    #$08                    
@@ -4485,7 +4493,7 @@ lf7c0:
 lf7c4:
        lda    entranceRoomEventState                     
        and    #$0f                    
-       beq    lf833                   
+       beq    jmpSetupScreenAndObj                    
        sta    p0SpriteHeight                     
        ldy    #$14                    
        sty    p0PosY                     
@@ -4497,7 +4505,7 @@ lf7c4:
        sec                            
        sbc    p0SpriteHeight                     
        sta    p0GfxPtrLo                     
-       bne    lf833                   
+       bne    jmpSetupScreenAndObj                    
 
 lf7e0:
        lda    frameCount                     
@@ -4528,24 +4536,24 @@ lf80c:
 lf80f:
        ldx    #$4e                    
        cpx    indyPosY                     
-       bne    lf833                   
+       bne    jmpSetupScreenAndObj                    
        ldx    indyPosX                     
        cpx    #$76                    
        beq    lf81f                   
        cpx    #$14                    
-       bne    lf833                   
+       bne    jmpSetupScreenAndObj                    
 lf81f:
        lda    SWCHA                   
        and    #$0f                    
        cmp    #$0d                    
-       bne    lf833                   
+       bne    jmpSetupScreenAndObj                    
        sta    escapePrisonPenalty       
        lda    #$4c                    
        sta    indyPosX                     
        ror    entranceRoomEventState                     
        sec                            
        rol    entranceRoomEventState                     
-lf833
+jmpSetupScreenAndObj 
        lda    #<setupScreenAndObj                 
        sta    bankSwitchJMPAddrLo                     
        lda    #>setupScreenAndObj                 
@@ -4555,7 +4563,7 @@ lf833
 lf83e
        lda    #$40                    
        sta    screenEventState                     
-       bne    lf833                   
+       bne    jmpSetupScreenAndObj                    
 
 drawScreen
 	sta		WSYNC					
@@ -5672,7 +5680,7 @@ RoomHandlerJmpTableHi
        .byte $f6             ; $fc89 (*)
 
 
-       .word lf833-1 ; $fc8a/b
+       .word jmpSetupScreenAndObj -1 ; $fc8a/b
        .word lf83e-1 ; $fc8c/d
        .word lf6af-1 ; $fc8e/f
        .word lf728-1 ; $fc90/1
@@ -5681,7 +5689,7 @@ RoomHandlerJmpTableHi
        .word spiderRoomHandler-1 ; $fc96/7
        .word lf7e0-1 ; $fc98/9
        .word mesaFieldRoomHandler-1 ; $fc9a/b
-       .word lf59d-1 ; $fc9c/d
+       .word valleyOfPoisonRoomHandler-1 ; $fc9c/d
        .word lf638-1 ; $fc9e/f
        .word lf62a-1 ; $fca0/1
 
@@ -5749,7 +5757,7 @@ spiderGfxFrame4
 	.byte	$54 ; | # # #  |			$fcd0 (g)
     .byte   $00 ; |        |            $fcd1
 
-lfcd2
+TreasureRoomItemStateTable
        .byte $8b ; |x   x xx| $fcd2
        .byte $8a ; |x   x x | $fcd3
        .byte $86 ; |x    xx | $fcd4
