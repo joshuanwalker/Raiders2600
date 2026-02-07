@@ -5,7 +5,7 @@
 ; Artist:	Jerome Domurat
 
 ; Originally Analyzed, labeled and commented
-;  by Dennis Debro
+;  by Dennis Debro - Aug. 8, 2018
 ; Furthur coding and comments
 ;  by Halkun
 ; 	Last Update: Feb, 7th 2026
