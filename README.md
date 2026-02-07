@@ -2,7 +2,7 @@
 
 **Original Game (1982) by Atari, Inc.**  
 **Original Designer:** Howard Scott Warshaw  
-**Disassembly & Analysis:** Dennis Debro & Halkun
+**Disassembly & Analysis:** Dennis Debro & Halkun (That's me!)
 
 ---
 
