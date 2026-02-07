@@ -1,2 +1,2 @@
 rem Stella.exe out\raiders.bin -debug
-Stella.exe out\raiders.bin
+bin\Stella.exe out\raiders.bin

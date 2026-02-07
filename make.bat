@@ -4,5 +4,5 @@ if not exist out (
     mkdir out
 )
 echo Compiling raiders
-del out\raiders.bin
-dasm.exe Raiders.asm -sout\raiders.sym -T1 -Lout\raiders.lst -f3 -oout\raiders.bin
+if exist out\raiders.bin del out\raiders.bin
+bin\dasm.exe src\Raiders.asm -Isrc -sout\raiders.sym -T1 -Lout\raiders.lst -f3 -oout\raiders.bin
