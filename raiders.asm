@@ -113,17 +113,9 @@ TIM64T			= $0296 ; 11111111	set 64 clock interval (53.6 usec/interval)
 ;===============================================================================
 ;	NTSC version for now
 
-;	IF COMPILE_VERSION = NTSC
-
 VBLANK_TIME				= 44
 OVERSCAN_TIME			= 36
 
-;	ELSE
-
-;VBLANK_TIME				= 78
-;OVERSCAN_TIME			= 72
-
-;	ENDIF
 
 
 
@@ -131,126 +123,144 @@ OVERSCAN_TIME			= 36
 ; Z P - V A R I A B L E S
 ;============================================================================
 
-scanline		= $80
-currentRoomId		= $81
-frameCount	= $82
-secondsTimer		= $83
-loopCounter			= $84; (c)
-tempGfxHolder			= $85; (c)
-bankSwitchJMPOpcode			= $86; (c)
-bankSwitchJMPAddr			= $87; (c)
-bankSwitchJMPAddrLo			= $88; (c)
-bankSwitchJMPAddrHi			= $89; (c)
-playerInputState			= $8a
-arkDigRegionId			= $8b
-arkLocationRegionId			= $8c
-eventState			= $8d
-m0PosYShadow			= $8e
-weaponStatus			= $8f
-unused_90			= $90
-moveDirection			= $91
-indyDir		= $92
-screenEventState			= $93
-roomPFControlFlags		= $94
-pickupStatusFlags			= $95
-diggingState			= $96
-digAttemptCounter			= $97
-EventStateOffset			= $98
-screenInitFlag			= $99
-grenadeState			= $9a
-grenadeCookTime			= $9b
-resetEnableFlag			= $9c
-majorEventFlag			= $9d
-score			= $9e
-livesLeft		= $9f
-bulletCount		= $a0
-eventTimer			= $a1
-soundChan0EffectTimer			= $a2
-soundChan1EffectTimer			= $a3
-soundTimer		= $a4
-grenadeOpeningPenalty	= $a5
-escapePrisonPenalty		= $a6
-findingArkBonus			= $a7
-usingParachuteBonus	= $a8
-ankhUsedBonus		= $a9
-yarFoundBonus		= $aa
-mapRoomBonus		= $ab
-thiefShotPenalty		= $ac
-mesaLandingBonus	= $ad
-UnusedBonus	= $ae
-treasureIndex			= $af
-unused_B0				= $b0
-entranceRoomState			= $b1
-blackMarketState			= $b2
-mapRoomState			= $b3
-mesaSideState			= $b4
-entranceRoomEventState			= $b5
-spiderRoomState			= $b6
-invSlotLo	= $b7
-invSlotHi	= $b8
-invSlotLo2	= $b9
-invSlotHi2	= $ba
-invSlotLo3	= $bb
-invSlotHi3	= $bc
-invSlotLo4	= $bd
-invSlotHi4	= $be
-invSlotLo5	= $bf
-invSlotHi5	= $c0
-invSlotLo6	= $c1
-invSlotHi6	= $c2
-selectedItemSlot		= $c3
-inventoryItemCount			= $c4
-selectedInventoryId	= $c5
-basketItemStatus			= $c6
-pickupItemsStatus			= $c7
-p0PosX			= $c8
-indyPosX			= $c9
-m0PosX			= $ca
-weaponPosX			= $cb
-indyPosXSet			= $cc
-unused_CD			= $cd
-p0PosY			= $ce
-indyPosY			= $cf
-m0PosY		= $d0
-weaponPosY			= $d1	;Weapon vertical position (Whip or Bullet)
-ballPosY			= $d2
-targetPosY			= $d3
-objectState			= $d4
-snakePosY			= $d5
-timepieceGfxPtrs			= $d6
-snakeMotionPtr			= $d7
-timepieceSpriteDataPtr			= $d8
-indyGfxPtrLo		= $d9
-indyGfxPtrHi			= $da
-indySpriteHeight			= $db
-p0SpriteHeight			= $dc
-p0GfxPtrLo		= $dd
-p0GfxPtrHi			= $de
-p0OffsetPosY			= $df
-p0GfxState			= $e0
-PF1GfxPtrLo		= $e1
-PF1GfxPtrHi			= $e2
-PF2GfxPtrLo		= $e3
-PF2GfxPtrHi			= $e4
-dynamicGfxData			= $e5
-dungeonBlock1			= $e6
-dungeonBlock2			= $e7
-dungeonBlock3			= $e8
-dungeonBlock4			= $e9
-dungeonBlock5			= $ea
-savedThiefPosY			= $eb
-savedIndyPosY			= $ec
-savedIndyPosX			= $ed
-thiefPosX			= $ee
-;					$ef	 (i)
-;					$f0	 (i)
-;					$f1	 (i)
-;					$f2	 (i)
+;----------------------------------------------------------------------------
+; System & Timers
+;----------------------------------------------------------------------------
+scanline                = $80   ; Current scanline counter for the kernel
+currentRoomId           = $81   ; ID of the room Indy is currently in (e.g., ID_ENTRANCE_ROOM)
+frameCount              = $82   ; Master frame counter, used for animation timing and random seeds
+timeOfDay               = $83   ; Clock/Sun position (Manual: "Timepiece... shows you the current time")
+loopCounter             = $84   ; (c) General purpose loop counter
+tempGfxHolder           = $85   ; (c) Temporary storage for graphics data/masks
+bankSwitchJMPOpcode     = $86   ; (c) RAM code: Opcode for bankswitch (LDA ABS / $AD)
+bankSwitchJMPAddr       = $87   ; (c) RAM code: Address for bankswitch strobe
+bankSwitchJMPAddrLo     = $88   ; (c) Low byte of return address after bankswitch
+bankSwitchJMPAddrHi     = $89   ; (c) High byte of return address after bankswitch
+playerInputState        = $8a   ; Input flags (Direction + Button state processing)
 
-;					$fc	 (s)
-;					$fd	 (s)
-;					$fe	 (s)
-;					$ff	 (s)
+;----------------------------------------------------------------------------
+; Game Logic & State
+;----------------------------------------------------------------------------
+arkDigRegionId          = $8b   ; The region ID where Indy is currently digging
+arkLocationRegionId     = $8c   ; The randomized region/mesa where the Ark is hidden
+eventState              = $8d   ; General state for room-specific events (e.g. Grapple swing stage)
+m0PosYShadow            = $8e   ; Shadow copy of Missile 0 Y position (Webs/Swarm)
+weaponStatus            = $8f   ; Status of Indy's weapon (Bit 7: Active/Cooldown)
+unused_90               = $90   ; Screen flags cleared on room change
+moveDirection           = $91   ; Direction Indy is moving (Joystick input mask)
+indyDir                 = $92   ; Direction Indy is facing (for Sprite selection)
+screenEventState        = $93   ; Flags for screen events (e.g., Snake/Fly active)
+roomPFControlFlags      = $94   ; Playfield priority and reflection flags (CTRLPF)
+pickupStatusFlags       = $95   ; Bitmask: Items taken in current room (prevents infinite pickup)
+diggingState            = $96   ; Tracks progress of digging in Well of Souls
+digAttemptCounter       = $97   ; Counter for dig attempts
+EventStateOffset        = $98   ; Offset index for room event tables (Swarm behavior)
+screenInitFlag          = $99   ; Non-zero if the screen needs initialization logic
+grenadeState            = $9a   ; Status: Bit 7=Active, Bit 6=Wall Effect Trigger
+grenadeCookTime         = $9b   ; Timer until grenade explosion
+resetEnableFlag         = $9c   ; Bit 7 enables game reset (also triggers Ark reveal logic)
+majorEventFlag          = $9d   ; Flags for Cutscenes (Death, Capture, End Game)
+adventurePoints         = $9e   ; (Manual: "Adventure Points") Score/Pedestal Height
+livesLeft               = $9f   ; (Manual: Starts with 3 lives)
+bulletCount             = $a0   ; (Manual: Max 6 bullets)
+eventTimer              = $a1   ; General event timer (Tsetse paralysis / Cutscene delays)
+soundChan0EffectTimer   = $a2   ; Sound Effect ID/Timer for Channel 0
+soundChan1EffectTimer   = $a3   ; Sound Effect ID/Timer for Channel 1
+soundTimer              = $a4   ; Duration timer for complex sounds (Theme song)
+
+;----------------------------------------------------------------------------
+; Scoring & Bonuses (Used in getFinalScore)
+;----------------------------------------------------------------------------
+grenadeOpeningPenalty   = $a5   ; Penalty collision: Blasting Entrance Room wall
+escapePrisonPenalty     = $a6   ; Penalty collision: Escaping Shining Light dungeon
+findingArkBonus         = $a7   ; Bonus: Found the Ark
+usingParachuteBonus     = $a8   ; Bonus: Successfully used Parachute
+ankhUsedBonus           = $a9   ; Penalty/Cost: Using Ankh to warp to Mesa
+yarFoundBonus           = $aa   ; Bonus: Found Yar (Easter Egg)
+mapRoomBonus            = $ab   ; Bonus: Used Head of Ra in Map Room
+thiefShotPenalty        = $ac   ; Penalty: Shot the thief
+mesaLandingBonus        = $ad   ; Bonus: Landed on Mesa
+UnusedBonus             = $ae   ; Unused slot
+treasureIndex           = $af   ; Index/State of treasure appearance in Treasure Room
+unused_B0               = $b0   ; Unused
+entranceRoomState       = $b1   ; State: Wall blown open? Whips taken?
+blackMarketState        = $b2   ; State: Bribed lunatic? Shovel purchase?
+mapRoomState            = $b3   ; State: Sun position / Beam reveal
+mesaSideState           = $b4   ; State: Parachute active? Gravity logic
+entranceRoomEventState  = $b5   ; Visual state for entrance room (Wall debris)
+spiderRoomState         = $b6   ; State: Spider aggression / Web collision
+
+;----------------------------------------------------------------------------
+; Inventory System
+;----------------------------------------------------------------------------
+invSlotLo               = $b7   ; Inventory Slot 1 (Sprite Ptr Low)
+invSlotHi               = $b8   ; Inventory Slot 1 (Sprite Ptr High)
+invSlotLo2              = $b9   ; Inventory Slot 2
+invSlotHi2              = $ba   ; ...
+invSlotLo3              = $bb   ; Inventory Slot 3
+invSlotHi3              = $bc   ; ...
+invSlotLo4              = $bd   ; Inventory Slot 4
+invSlotHi4              = $be   ; ...
+invSlotLo5              = $bf   ; Inventory Slot 5
+invSlotHi5              = $c0   ; ...
+invSlotLo6              = $c1   ; Inventory Slot 6
+invSlotHi6              = $c2   ; ...
+selectedItemSlot        = $c3   ; Index (0-10) of currently highlighted slot
+inventoryItemCount      = $c4   ; Number of items currently held
+selectedInventoryId     = $c5   ; ID of the item currently selected (e.g. ID_INVENTORY_WHIP)
+basketItemStatus        = $c6   ; Bitmask: Items remaining in baskets
+pickupItemsStatus       = $c7   ; Bitmask: Global "Has item been found" flags
+
+;----------------------------------------------------------------------------
+; Object Positioning (Kernel Variables)
+;----------------------------------------------------------------------------
+p0PosX                  = $c8   ; Player 0 (Usually Enemy/Object) X Position
+indyPosX                = $c9   ; Player 1 (Indy) X Position
+m0PosX                  = $ca   ; Missile 0 (Web/Swarm/Bullet) X Position
+weaponPosX              = $cb   ; Missile 1 (Whip/Bullet/Grapple) X Position
+indyPosXSet             = $cc   ; Target X position for forced movement events
+unused_CD               = $cd   ; Unused / Temp
+p0PosY                  = $ce   ; Player 0 Y Position
+indyPosY                = $cf   ; Player 1 (Indy) Y Position
+m0PosY                  = $d0   ; Missile 0 Y Position
+weaponPosY              = $d1   ; Missile 1 Y Position (Whip tip/Bullet)
+ballPosY                = $d2   ; Ball Y Position (Snake/Timepiece graphics)
+targetPosY              = $d3   ; Target Y position for AI movement logic
+objectState             = $d4   ; General object animation phase / state
+snakePosY               = $d5   ; Vertical position specifically for Snake/Dungeon Guardian
+timepieceGfxPtrs        = $d6   ; Pointer to current Timepiece/Misc graphic
+snakeMotionPtr          = $d7   ; Pointer to Snake motion table
+timepieceSpriteDataPtr  = $d8   ; Pointer to sprite data (often reused for Snake/Dungeon)
+
+;----------------------------------------------------------------------------
+; Graphics Pointers & Buffers
+;----------------------------------------------------------------------------
+indyGfxPtrLo            = $d9   ; Indy Sprite Pointer Low
+indyGfxPtrHi            = $da   ; Indy Sprite Pointer High
+indySpriteHeight        = $db   ; Height of Indy sprite (Walking vs Standing)
+p0SpriteHeight          = $dc   ; Height of Player 0 sprite
+p0GfxPtrLo              = $dd   ; Player 0 Sprite Pointer Low
+p0GfxPtrHi              = $de   ; Player 0 Sprite Pointer High
+p0OffsetPosY            = $df   ; Vertical offset for P0 drawing
+p0GfxState              = $e0   ; Graphics state control for P0
+PF1GfxPtrLo             = $e1   ; Playfield 1 Pointer Low
+PF1GfxPtrHi             = $e2   ; Playfield 1 Pointer High
+PF2GfxPtrLo             = $e3   ; Playfield 2 Pointer Low
+PF2GfxPtrHi             = $e4   ; Playfield 2 Pointer High
+dynamicGfxData          = $e5   ; RAM buffer for mutable graphics (Dungeon walls)
+dungeonBlock1           = $e6   ; Dungeon Wall Segment 1
+dungeonBlock2           = $e7   ; Dungeon Wall Segment 2
+dungeonBlock3           = $e8   ; Dungeon Wall Segment 3
+dungeonBlock4           = $e9   ; Dungeon Wall Segment 4
+dungeonBlock5           = $ea   ; Dungeon Wall Segment 5
+
+;----------------------------------------------------------------------------
+; Temporary / Room Specific (Thieves Den & Mesa Side)
+;----------------------------------------------------------------------------
+savedThiefPosY          = $eb   ; Context save: Thief Y
+savedIndyPosY           = $ec   ; Context save: Indy Y
+savedIndyPosX           = $ed   ; Context save: Indy X
+thiefPosX               = $ee   ; Base address for Thief X array (Thieves Den)
 
 
 ;--------------------
@@ -259,7 +269,7 @@ thiefPosX			= $ee
 HEIGHT_ARK					= 7
 HEIGHT_PEDESTAL				= 15
 HEIGHT_INDY_SPRITE			= 11
-HEIGHT_ITEM_SPRITES	= 8
+HEIGHT_ITEM_SPRITES			= 8
 HEIGHT_PARACHUTING_SPRITE	= 15
 HEIGHT_THIEF				= 16
 HEIGHT_KERNEL				= 160
@@ -291,36 +301,36 @@ ID_INVENTORY_HOUR_GLASS = (invHourGlassSprite - inventorySprites) / HEIGHT_ITEM_
 ;--------------------
 
 ; Entrance Room status values
-INDY_CARRYING_WHIP		= %00000001
-GRENADE_OPENING_IN_WALL = %00000010
+INDY_CARRYING_WHIP					= %00000001
+GRENADE_OPENING_IN_WALL				= %00000010
 
 ; Black Market status values
-INDY_NOT_CARRYING_COINS = %10000000
-INDY_CARRYING_SHOVEL	= %00000001
+INDY_NOT_CARRYING_COINS				= %10000000
+INDY_CARRYING_SHOVEL				= %00000001
 
-BASKET_STATUS_MARKET_GRENADE = %00000001
-BASKET_STATUS_BLACK_MARKET_GRENADE = %00000010
-BACKET_STATUS_REVOLVER	= %00001000
-BASKET_STATUS_COINS		= %00010000
-BASKET_STATUS_KEY		= %00100000
+BASKET_STATUS_MARKET_GRENADE 		= %00000001
+BASKET_STATUS_BLACK_MARKET_GRENADE	= %00000010
+BACKET_STATUS_REVOLVER				= %00001000
+BASKET_STATUS_COINS					= %00010000
+BASKET_STATUS_KEY					= %00100000
 
-PICKUP_ITEM_STATUS_WHIP = %00000001
-PICKUP_ITEM_STATUS_SHOVEL = %00000010
-PICKUP_ITEM_STATUS_HEAD_OF_RA = %00000100
-PICKUP_ITEM_STATUS_TIME_PIECE = %00001000
-PICKUP_ITEM_STATUS_HOUR_GLASS = %00100000
-PICKUP_ITEM_STATUS_ANKH = %01000000
-PICKUP_ITEM_STATUS_CHAI = %10000000
+PICKUP_ITEM_STATUS_WHIP				= %00000001
+PICKUP_ITEM_STATUS_SHOVEL			= %00000010
+PICKUP_ITEM_STATUS_HEAD_OF_RA		= %00000100
+PICKUP_ITEM_STATUS_TIME_PIECE		= %00001000
+PICKUP_ITEM_STATUS_HOUR_GLASS		= %00100000
+PICKUP_ITEM_STATUS_ANKH				= %01000000
+PICKUP_ITEM_STATUS_CHAI 			= %10000000
 
-PENALTY_GRENADE_OPENING = 2
-PENALTY_SHOOTING_THIEF	= 4
+PENALTY_GRENADE_OPENING				= 2
+PENALTY_SHOOTING_THIEF				= 4
 PENALTY_ESCAPE_SHINING_LIGHT_PRISON = 13
-BONUS_USING_PARACHUTE	= 3
-BONUS_LANDING_IN_MESA	= 3
-BONUS_FINDING_YAR		= 5
-BONUS_SKIP_MESA_FIELD	= 9
-BONUS_FINDING_ARK		= 10
-BONUS_USING_HEAD_OF_RA_IN_MAPROOM = 14
+BONUS_USING_PARACHUTE				= 3
+BONUS_LANDING_IN_MESA				= 3
+BONUS_FINDING_YAR					= 5
+BONUS_SKIP_MESA_FIELD				= 9
+BONUS_FINDING_ARK					= 10
+BONUS_USING_HEAD_OF_RA_IN_MAPROOM	= 14
 
 ;--------------------
 ;rooms
@@ -356,7 +366,7 @@ BANK1TOP				= $2000
 LDA_ABS					= $AD		; instruction to LDA $XXXX
 JMP_ABS					= $4C		; instruction for JMP $XXXX
 
-INIT_SCORE				= 100		; starting score
+INIT_SCORE				= 100		; starting adventurePoints
 
 SET_PLAYER_0_COLOR		= %10000000
 SET_PLAYER_0_HMOVE		= %10000001
@@ -381,7 +391,7 @@ MAX_INVENTORY_ITEMS		= 6
 	rorg	BANK0_REORG
 
 ;note: 1st bank's vector points right at the cold start routine
-	lda	BANK0STROBE				;trigger 1st bank
+	lda		BANK0STROBE				;trigger 1st bank
 
 coldStart
 	jmp		startGame				;cold start
@@ -460,7 +470,7 @@ finishItemPickup:
 setThiefShotPenalty
 	; --------------------------------------------------------------------------
 	; PENALTY FOR SHOOTING THIEF
-	; Killing a thief is dishonorable (or noise?). Deducts score.
+	; Killing a thief is dishonorable (or noise?). Deducts adventurePoints.
 	; --------------------------------------------------------------------------
 	lda		#~BULLET_OR_WHIP_ACTIVE	; Clear Active Bit mask.
 	sta		weaponPosY				; Invalidates weapon Y (effectively removing it).
@@ -556,7 +566,7 @@ handleIndyVsObjHit:
 										; Jump to Death Logic.
 	; --- Tsetse Fly Paralysis ---
 	; If Bit 7 is SET, it implies Tsetse Flies (Spider Room / Valley).
-	lda		secondsTimer				; Get Timer.
+	lda		timeOfDay				; Get Timer.
 	and		#$07							; Mask for random duration?
 	ora		#$80						; Set Bit 7.
 	sta		eventTimer				; Set "Paralysis" Timer (Indy freezes).
@@ -673,11 +683,11 @@ playerHitInWellOfSouls:
 	bne		arkNotFound					; If not lined up with the Ark, skip the win logic
 
 	; --- WIN CONDITION MET ---
-	lda		#INIT_SCORE - 12			; Load final score modifier ($58 = Positive)
+	lda		#INIT_SCORE - 12			; Load final adventurePoints modifier ($58 = Positive)
 	sta		resetEnableFlag				; Store it. This Positive value signals
 										; ArkRoomKernel to DRAW the Ark.
-	sta		score						; Set the players final adventure score
-	jsr		getFinalScore				; Calculate ranking/title based on score
+	sta		adventurePoints						; Set the players final adventure adventurePoints
+	jsr		getFinalScore				; Calculate ranking/title based on adventurePoints
 	lda		#ID_ARK_ROOM				; Set up transition to Ark Room
 	sta		currentRoomId
 	jsr		initRoomState		; Load new screen data for the Ark Room
@@ -821,7 +831,7 @@ tryAwardHeadOfRa:
 	; Sometimes, a basket contains the Head of Ra instead of its usual item.
 	lda		#$40
 	sta		screenEventState			; Set flag
-	lda		secondsTimer				; get global timer
+	lda		timeOfDay				; get global timer
 	and		#$1f						; Mask to 0-31 seconds cycle
 	cmp		#$02						; Check if time is < 2
 	bcs		checkAddItemToInv			; If Time >= 2, give the standard item
@@ -855,7 +865,7 @@ resumeScreenLogic:
 
 pickMarketItemByTime:
 	ldx		#ID_BLACK_MARKET_GRENADE	; Load X with the grenade item ID (for black market)
-	lda		secondsTimer				; Load the global seconds timer
+	lda		timeOfDay				; Load the global seconds timer
 	cmp		#$40						; Check if >= 64 seconds have passed
 	bcs		checkAddItemToInv			; If yes, continue with grenade
 	ldx		#ID_INVENTORY_KEY			; If not, switch to the key as the item to give
@@ -1088,7 +1098,7 @@ checkGrenadeDetonation:
 	bit		grenadeState				; Check status flags
 	bpl		newFrame				; If bit 7 is clear, skip (no grenade active)
 	bvs		applyGrenadeWallEffect		; If bit 6 is set, jump
-	lda		secondsTimer				; get seconds time value
+	lda		timeOfDay				; get seconds time value
 	cmp		grenadeCookTime				; compare with grenade detination time
 	bne		newFrame				; branch if not time to detinate grenade
 	lda		#$a0
@@ -1099,7 +1109,7 @@ applyGrenadeWallEffect:
 	bcc		skipUpdate					; If bit 0 was clear, skip this
 										; (grenade effect not triggered)
 	lda		#GRENADE_OPENING_IN_WALL
-	sta		grenadeOpeningPenalty		; Apply penalty (e.g., reduce score)
+	sta		grenadeOpeningPenalty		; Apply penalty (e.g., reduce adventurePoints)
 	ora		entranceRoomState			; Mark the entrance room as
 	sta		entranceRoomState			; having the grenade opening
 	ldx		#ID_ENTRANCE_ROOM
@@ -1138,7 +1148,7 @@ updateTimers
 	lda		#$3f
 	and		frameCount					; every 63 frames
 	bne		firstLineOfVerticalSync		; branch if roughly 60 frames haven't passed
-	inc		secondsTimer				; increment every second
+	inc		timeOfDay				; increment every second
 	lda		eventTimer					; If eventTimer is positive, skip
 	bpl		firstLineOfVerticalSync
 	dec		eventTimer					; Else, decrement it
@@ -1161,7 +1171,7 @@ frameFirstLine
 	inx									; Increment counter
 	bne		checkShowDevInitials		; If not overflowed, check initials display
 	stx		majorEventFlag				; Overflowed: zero -> set majorEventFlag to 0
-	jsr		getFinalScore				; set score to minimum
+	jsr		getFinalScore				; set adventurePoints to minimum
 	lda		#ID_ARK_ROOM				; set ark title screen
 	sta		currentRoomId				; to the current room
 	jsr		initRoomState		; Transition to Ark Room
@@ -1189,8 +1199,8 @@ checkEasterEggFail:
 	ldy		indyPosY					; get Indy's vertical position
 	cpy		#$7c						; 124 levels
 	bcs		setIndyArkDescentState		; If Indy is below or at Y=$7C (124), skip
-	cpy		score
-	bcc		slowlyLowerIndy				; If Indy is higher up than his point score, skip
+	cpy		adventurePoints
+	bcc		slowlyLowerIndy				; If Indy is higher up than his point adventurePoints, skip
 	bit		INPT5|$30					; read action button from right controller
 	bmi		gotoArkRoomLogic			; branch if action button not pressed
 	jmp		startGame					; RESET game if button *is* pressed
@@ -1548,7 +1558,7 @@ startGrenadeThrow
 	stx		weaponPosY					; Set grenade's starting vertical position
 	ldy		indyPosX					; get Indy horizontal position
 	sty		weaponPosX					; Set grenade's starting horizontal position
-	lda		secondsTimer				; get the seconds timer
+	lda		timeOfDay				; get the seconds timer
 	adc		#5 - 1						; increment value by 5...carry set
 	sta		grenadeCookTime				; detinate grenade 5 seconds from now
 	lda		#$80						; Prepare base grenade state value (bit 7 set)
@@ -1660,7 +1670,7 @@ ankhWarpToMesa
 	cpx		#ID_TREASURE_ROOM			; Is Indy in the Treasure Room?
 	beq		exitItemUseHandler			; If so, don't allow Ankh warp from here
 	lda		#ID_MESA_FIELD				; Mark this warp use
-	sta		ankhUsedBonus				; set to reduce score by 9 points
+	sta		ankhUsedBonus				; set to reduce adventurePoints by 9 points
 	sta		currentRoomId				; Change current screen to Mesa Field
 	jsr		initRoomState		; Load the data for the new screen
 	lda		#$4c						; Prepare a flag or state value for later use
@@ -2779,7 +2789,7 @@ clearZeroPage
 	dex								; Decrement X.
 	bne		clearZeroPage			; Loop until all 256 bytes are cleared.
 	dex								; x = $ff
-	stx		score					; reset score
+	stx		adventurePoints					; reset adventurePoints
 	; -------------------------------------------------------------------------
 	; INITIALIZE INVENTORY WITH COPYRIGHT
 	;
@@ -2826,8 +2836,8 @@ initGameVars:
 	sta		invSlotLo3
 	sta		invSlotLo4
 	sta		invSlotLo5
-	lda		#INIT_SCORE					; set initial score
-	sta		score
+	lda		#INIT_SCORE					; set initial adventurePoints
+	sta		adventurePoints
 	lda		#<IndyStandSprite			; set Indy's initial sprite (standing)
 	sta		indyGfxPtrLo
 	lda		#>IndySprites
@@ -2850,7 +2860,7 @@ initGameVars:
 ; possible to lower Indy's position on the pedestal.
 ;
 getFinalScore
-	lda		score					; load score
+	lda		adventurePoints					; load adventurePoints
 	sec								; positve actions...
 	sbc		findingArkBonus			; found the ark
 	sbc		usingParachuteBonus		; parachute used
@@ -2864,7 +2874,7 @@ getFinalScore
 	adc		grenadeOpeningPenalty	; gernade used on wall (2 points)
 	adc		escapePrisonPenalty		; escape hatch used (13 points)
 	adc		thiefShotPenalty		; thief shot (4 points)
-	sta		score					; store in final score
+	sta		adventurePoints					; store in final adventurePoints
 	rts								; return
 
 	;Padding for tables
@@ -3482,7 +3492,7 @@ coarseMoveInventorySelector
 	and		frameCount					; Check frame count.
 	bne		updateInventoryMenu			; Skip if not 0.
 	lda		#$3f						; Mask.
-	and		secondsTimer				; Check timer.
+	and		timeOfDay				; Check timer.
 	bne		updateInventoryMenu			; Skip if not 0.
 	lda		entranceRoomEventState		; Load event state.
 	and		#$0f						; Mask low nibble.
@@ -3639,9 +3649,9 @@ updateTimepieceSprite
 	; --------------------------------------------------------------------------
 	; UPDATE TIMEPIECE GRAPHIC
 	; The timepiece in the inventory shows the passing of time by hand rotation.
-	; Uses secondsTimer to select the correct graphic frame.
+	; Uses timeOfDay to select the correct graphic frame.
 	; --------------------------------------------------------------------------
-	lda		secondsTimer				; Load seconds counter.
+	lda		timeOfDay				; Load seconds counter.
 	and		#$e0						; Keep top 3 bits for the 8 sprites
 	lsr
 	lsr
@@ -4421,7 +4431,7 @@ treasureRoomHandler:
 ; ITEM CYCLE LOGIC
 		lda		#$40						; Load Bit 6 ($40).
 		sta		screenEventState			; Update screen event state.
-		lda		secondsTimer				; Divide by 32 (Shift Right 5 times).
+		lda		timeOfDay				; Divide by 32 (Shift Right 5 times).
 		lsr
 		lsr
 		lsr
@@ -4491,10 +4501,10 @@ mapRoomActive:
 	; --------------------------------------------------------------------------
 	; SUN / TIME OF DAY CYCLE
 	; --------------------------------------------------------------------------
-	; Uses secondsTimer to simulate the sun moving/intensity changing.
+	; Uses timeOfDay to simulate the sun moving/intensity changing.
 	; Creates a ping-pong value 0..15..0 for P0 Vertical Position (Sun Object).
 		sty		p0OffsetPosY			; Update graphic offset based on placement check
-		lda		secondsTimer			; Get time
+		lda		timeOfDay			; Get time
 		sec
 		sbc		#$10					; Subtract 16.
 		bpl		mapRoomTimer			; If Timer >= 16, skip inversion (Sunrise)
