@@ -364,7 +364,7 @@ weaponHorizPos			= objectHorizPositions + 3 	;= $CB
 indyHorizPosForced		ds 1 						;= $CC
 unused_CD_WriteOnly		ds 1 						;= $CD
 
-p0PosY
+objectPosY
 p0VertPos				ds 1 		;= $CE	
 indyPosY				ds 1 	    ;= $CF
 m0VertPos				ds 1 	    ;= $D0
@@ -1068,7 +1068,7 @@ MoveIndyBasedOnInput:
 	and #$0F		   ; Isolate lower 4 bits (D-pad direction)
 	tay			  ; Use as index
 	lda IndyMovementDeltaTable,y	   ; Get movement delta from direction lookup table
-	ldx #<indyPosY - p0PosY ; X = offset to Indy in object array
+	ldx #<indyPosY - objectPosY ; X = offset to Indy in object array
 	jsr getMoveDir ; Move Indy accordingly
 SetIndyToNormalMovementState:
 	lda #$05		  
@@ -1441,7 +1441,7 @@ AbortProjectileDrivenEvent:
 	jmp	 HandleInventoryButtonPress	  ;3
 	
 HandleIndyMovementAndStartEventScan:
-	ldx #<indyPosY - p0PosY  ; Get index of Indy in object list
+	ldx #<indyPosY - objectPosY  ; Get index of Indy in object list
 	lda SWCHA						; read joystick values
 	sta $85						; Store raw joystick input
 	and #P1_NO_MOVE
@@ -2985,11 +2985,11 @@ JumpToBank1
 getMoveDir
 	ror
 	bcs .checkToMoveObjectDown
-	dec p0PosY,x		; move object up one pixel
+	dec objectPosY,x		; move object up one pixel
 .checkToMoveObjectDown
 	ror
 	bcs .checkToMoveObjectLeft
-	inc p0PosY,x		; move object down one pixel
+	inc objectPosY,x		; move object down one pixel
 .checkToMoveObjectLeft
 	ror
 	bcs .checkToMoveObjectRight
@@ -4140,7 +4140,7 @@ MesaFieldScreenHandler:
 	
 SpiderRoomScreenHandler:
 	ldx #$00						; X = 0 (Spider Object / Player 0 Index)
-	ldy #<indyPosY - p0PosY; Y = Offset to Indy's Vertical Position in array
+	ldy #<indyPosY - objectPosY; Y = Offset to Indy's Vertical Position in array
 	bit CXP1FB						; Check P1 (Indy) vs Playfield (Walls) Collision
 	bmi SpiderRoomObjectPositionHandler; If Indy touches walls, Spider enters "Aggressive Mode" (Chases Indy)
 	bit spiderRoomState				; Check bit 7 of spiderRoomState (Set if Indy touches the Web/Ms0)
@@ -4171,7 +4171,7 @@ SpiderRoomSpriteAndStateHandler:
 	
 	; Animation Logic
 	; Calculates a sprite frame based on position to simulate leg movement/scuttling.
-	lda p0PosY			; Load Spider Vertical Position (p0VertPos) ($CE)
+	lda objectPosY			; Load Spider Vertical Position (p0VertPos) ($CE)
 	and #$01						; Check LSB (Odd/Even pixel)
 	ror p0HorizPos					; Rotate Spider X into Carry (Modifying X pos momentarily)
 	rol								; Rotate Carry into A (Combines Y-bit and X-bit info)
@@ -4231,7 +4231,7 @@ ValleyOfPoisonEscapeModeSetup:
 	
 ValleyOfPoisonChaseModeHandler:
 	; Mode: Thief Chase (Man in Black chases Indy)
-	ldy #<indyPosY - p0PosY			; Target Index = Indy's Vertical Position.
+	ldy #<indyPosY - objectPosY			; Target Index = Indy's Vertical Position.
 	lda #$03						; Speed Mask = 3 (Update every 4th frame - Slow).
 
 ValleyOfPoisonObjectUpdateLoop:
@@ -4729,8 +4729,8 @@ RoomOfShiningLightScreenHandler:
 	lda frameCount					; Get frame count.
 	and #7							; Screen update every 8 frames?
 	bne RoomOfShiningLightScreenFinalizeInput; Branch if not frame.
-	ldx #<p0VertPos - p0PosY; Index X for P0.
-	ldy #<indyPosY - p0PosY; Index Y for Indy.
+	ldx #<p0VertPos - objectPosY; Index X for P0.
+	ldy #<indyPosY - objectPosY; Index Y for Indy.
 	lda indyPosY					; Get Indy's vertical position.
 	cmp #58							; Compare 58.
 	bcc RoomOfShiningLightScreenFinalizeState; Branch if Y < 58.
@@ -4866,25 +4866,25 @@ TreasureRoomBasketItemAwardPickupHandler:
 	rts								; Return.
 
 UpdateObjectPositionHandler:
-	cpy #<indyPosY - p0PosY; Check if Target is Indy (Offset).
+	cpy #<indyPosY - objectPosY; Check if Target is Indy (Offset).
 	bne UpdateObjectVerticalPositionHandler; Branch if not Indy.
 	lda indyPosY					; Get Indy's Vertical Position.
 	bmi UpdateObjectVerticalPositionDecrementHandler; Branch if negative (or > 127).
 
 UpdateObjectVerticalPositionHandler:
-	lda p0PosY,x		; Get Follower Y.
-	cmp p0PosY,y		; Compare Target Y.
+	lda objectPosY,x		; Get Follower Y.
+	cmp objectPosY,y		; Compare Target Y.
 	bne UpdateObjectVerticalPositionIncrementHandler; Branch if different.
-	cpy #$05						; Branch if different.
+	cpy #$05						; Check Bounds/Type?
 	bcs UpdateObjectHorizontalPositionHandler; Branch if >= 5.
 
 UpdateObjectVerticalPositionIncrementHandler:
 	bcs UpdateObjectVerticalPositionDecrementHandler; Branch if Follower > Target (Move Up/Dec).
-	inc p0PosY,x		; Increment Follower Y (Move Down).
+	inc objectPosY,x		; Increment Follower Y (Move Down).
 	bne UpdateObjectHorizontalPositionHandler; Unconditional branch (unless 0).
 
 UpdateObjectVerticalPositionDecrementHandler:
-	dec p0PosY,x		; Decrement Follower Y (Move Up).
+	dec objectPosY,x		; Decrement Follower Y (Move Up).
 
 UpdateObjectHorizontalPositionHandler:
 	lda objectHorizPositions,x		; Get Follower X.
@@ -4905,7 +4905,7 @@ UpdateObjectHorizontalPositionDecrementHandler:
 	rts								; Return.
 
 UpdateObjectPositionBoundaryHandler:
-	lda p0PosY,x		; Get Object Y.
+	lda objectPosY,x		; Get Object Y.
 	cmp #$53						; Compare $53 (Bottom/Top Boundary?).
 	bcc UpdateObjectPositionBoundaryClamp; Branch if < $53.
 
@@ -4914,7 +4914,7 @@ UpdateObjectPositionBoundaryClampHandler:
 	clc								; Clear Carry.
 	ror arkLocationRegionId,x				; Rotate Back (Clear Bit 7?).
 	lda #$78						; Load $78.
-	sta p0PosY,x		; Load $78.
+	sta objectPosY,x		; Reset Object Y.
 	rts								; Return.
 
 UpdateObjectPositionBoundaryClamp:
@@ -4923,7 +4923,7 @@ UpdateObjectPositionBoundaryClamp:
 	bcc UpdateObjectPositionBoundaryClampHandler; Branch if < $10.
 	cmp #$8E						; Compare $8E (Right Boundary?).
 	bcs UpdateObjectPositionBoundaryClampHandler; Branch if >= $8E.
-	rts								; Branch if >= $8E.
+	rts								; Return.
 
 	BOUNDARY 0
 	
@@ -5911,11 +5911,11 @@ TreasureRoomBasketItemAwardBitMaskTable:
 InventorySelectionAdjustmentHandler:
 	ror			  ;2
 	bcs InventorySelectionAdjustmentIncrementVertHandler	  ;2
-	dec p0PosY,x	  ;6
+	dec objectPosY,x	  ;6
 InventorySelectionAdjustmentIncrementVertHandler:
 	ror			  ;2
 	bcs InventorySelectionAdjustmentDecrementHorizHandler	  ;2
-	inc p0PosY,x	  ;6
+	inc objectPosY,x	  ;6
 InventorySelectionAdjustmentDecrementHorizHandler:
 	ror			  ;2
 	bcs InventorySelectionAdjustmentIncrementHorizHandler	  ;2

@@ -5246,51 +5246,51 @@ snakeMotionTable3:
 
 
 roomPF1Gfx
-		.byte $00 ; |		| $fa91
-		.byte $00 ; |		| $fa92
-		.byte $e0 ; |xxx		| $fa93
-		.byte $00 ; |		| $fa94
-		.byte $00 ; |		| $fa95
-		.byte $c0 ; |xx		| $fa96
-		.byte $ff ; |xxxxxxxx| $fa97
-		.byte $ff ; |xxxxxxxx| $fa98
-		.byte $00 ; |		| $fa99
-		.byte $ff ; |xxxxxxxx| $fa9a
-		.byte $ff ; |xxxxxxxx| $fa9b
-		.byte $f0 ; |xxxx	| $fa9c
-		.byte $f0 ; |xxxx	| $fa9d
+	.byte $00 ; |........| $FA91
+	.byte $00 ; |........| $FA92
+	.byte $E0 ; |XXX.....| $FA93
+	.byte $00 ; |........| $FA94
+	.byte $00 ; |........| $FA95
+	.byte $C0 ; |XX......| $FA96
+	.byte $FF ; |XXXXXXXX| $FA97
+	.byte $FF ; |XXXXXXXX| $FA98
+	.byte $00 ; |........| $FA99
+	.byte $FF ; |XXXXXXXX| $FA9A
+	.byte $FF ; |XXXXXXXX| $FA9B
+	.byte $F0 ; |XXXX....| $FA9C
+	.byte $F0 ; |XXXX....| $FA9D
 
 roomPF2Gfx
-		.byte $00 ; |		| $fa9e
-		.byte $e0 ; |xxx		| $fa9f
-		.byte $00 ; |		| $faa0
-		.byte $e0 ; |xxx		| $faa1
-		.byte $80 ; |x		| $faa2
-		.byte $00 ; |		| $faa3
-		.byte $ff ; |xxxxxxxx| $faa4
-		.byte $ff ; |xxxxxxxx| $faa5
-		.byte $00 ; |		| $faa6
-		.byte $ff ; |xxxxxxxx| $faa7
-		.byte $ff ; |xxxxxxxx| $faa8
-		.byte $c0 ; |xx		| $faa9
-		.byte $00 ; |		| $faaa
-		.byte $00 ; |		| $faab
+	.byte $00 ; |........| $FA9E
+	.byte $E0 ; |XXX.....| $FA9F
+	.byte $00 ; |........| $FAA0
+	.byte $E0 ; |XXX.....| $FAA1
+	.byte $80 ; |X.......| $FAA2
+	.byte $00 ; |........| $FAA3
+	.byte $FF ; |XXXXXXXX| $FAA4
+	.byte $FF ; |XXXXXXXX| $FAA5
+	.byte $00 ; |........| $FAA6
+	.byte $FF ; |XXXXXXXX| $FAA7
+	.byte $FF ; |XXXXXXXX| $FAA8
+	.byte $C0 ; |XX......| $FAA9
+	.byte $00 ; |........| $FAAA
+	.byte $00 ; |........| $FAAB
 
 roomPF0Gfx
-		.byte $c0 ; |xx		| $faac
-		.byte $f0 ; |xxxx	| $faad
-		.byte $f0 ; |xxxx	| $faae
-		.byte $f0 ; |xxxx	| $faaf
-		.byte $f0 ; |xxxx	| $fab0
-		.byte $f0 ; |xxxx	| $fab1
-		.byte $c0 ; |xx		| $fab2
-		.byte $c0 ; |xx		| $fab3
-		.byte $c0 ; |xx		| $fab4
-		.byte $f0 ; |xxxx	| $fab5
-		.byte $f0 ; |xxxx	| $fab6
-		.byte $f0 ; |xxxx	| $fab7
-		.byte $f0 ; |xxxx	| $fab8
-		.byte $c0 ; |xx		| $fab9
+	.byte $C0 ; |XX......| $FAAC
+	.byte $F0 ; |XXXX....| $FAAD
+	.byte $F0 ; |XXXX....| $FAAE
+	.byte $F0 ; |XXXX....| $FAAF
+	.byte $F0 ; |XXXX....| $FAB0
+	.byte $F0 ; |XXXX....| $FAB1
+	.byte $C0 ; |XX......| $FAB2
+	.byte $C0 ; |XX......| $FAB3
+	.byte $C0 ; |XX......| $FAB4
+	.byte $F0 ; |XXXX....| $FAB5
+	.byte $F0 ; |XXXX....| $FAB6
+	.byte $F0 ; |XXXX....| $FAB7
+	.byte $F0 ; |XXXX....| $FAB8
+	.byte $C0 ; |XX......| $FAB9
 
 timeSprite
 	.byte HMOVE_R1 | 7
@@ -5815,23 +5815,13 @@ roomHandlerJmpTable:
 		.word WellOfSoulsRoomHandler-1 ; $fca0/1
 
 treasureRoomItemPosY
-		.byte $1a ; |   xx x | $fca2
-		.byte $38 ; |  xxx	| $fca3
-		.byte $09 ; |	x  x| $fca4
-		.byte $26 ; |  x	 xx | $fca5
+	.byte $1A,$38,$09,$26
+
 treasureRoomItemOffset
-		.byte $26 ; |  x	 xx | $fca6
-		.byte $46 ; | x	 xx | $fca7
-		.byte $1a ; |   xx x | $fca8
-		.byte $38 ; |  xxx	| $fca9
+	.byte $26,$46,$1A,$38
 
 treasureRoomStateTable
-		.byte $04 ; |	 x	| $fcaa
-		.byte $11 ; |   x   x| $fcab
-		.byte $10 ; |   x	| $fcac
-		.byte $12 ; |   x  x | $fcad
-
-
+	.byte $04,$11,$10,$12
 
 
 spiderSprites
@@ -5880,35 +5870,16 @@ spiderGfxFrame4
 	.byte	$00 ; |........|			$fcd1
 
 TreasureRoomItemStateTable
-		.byte $8b ; |x	x xx| $fcd2
-		.byte $8a ; |x	x x | $fcd3
-		.byte $86 ; |x	 xx | $fcd4
-		.byte $87 ; |x	 xxx| $fcd5
-		.byte $85 ; |x	 x x| $fcd6
-		.byte $89 ; |x	x  x| $fcd7
+	.byte $8B,$8A,$86,$87,$85,$89
 
 thiefMoveDelayTable
-		.byte $03 ; |		xx| $fcd8
-		.byte $01 ; |		x| $fcd9
-		.byte $00 ; |		| $fcda
-		.byte $01 ; |		x| $fcdb
+	.byte $03,$01,$00,$01
 
 treasureRoomStateIndex
-		.byte $03 ; |		xx| $fcdc
-		.byte $02 ; |		x | $fcdd
-		.byte $01 ; |		x| $fcde
-		.byte $03 ; |		xx| $fcdf
-		.byte $02 ; |		x | $fce0
-		.byte $03 ; |		xx| $fce1
+	.byte $03,$02,$01,$03,$02,$03
+
 itemMaskTable
-		.byte $01 ; |		x| $fce2
-		.byte $02 ; |		x | $fce3
-		.byte $04 ; |	 x	| $fce4
-		.byte $08 ; |	x	| $fce5
-		.byte $10 ; |   x	| $fce6
-		.byte $20 ; |  x		| $fce7
-		.byte $40 ; | x		| $fce8
-		.byte $80 ; |x		| $fce9
+	.byte $01,$02,$04,$08,$10,$20,$40,$80
 
 invSelectAdjHandler
 ;invDecP0PosY
@@ -6474,25 +6445,79 @@ TreasureRoomPlayerGraphics
 	.byte SET_PLAYER_0_COLOR | BLACK >> 1
 
 devInitialsGfx1 ;programmer's initials #2
-	.byte $00 ; |		 | $ff01
-	.byte $07 ; |		xxx| $ff02
-	.byte $04 ; |		x	 | $ff03
-	.byte $77 ; | xxx xxx| $ff04
-	.byte $71 ; | xxx	x| $ff05
-	.byte $75 ; | xxx x x| $ff06
-	.byte $57 ; | x x xxx| $ff07
-	.byte $50 ; | x x	 | $ff08
+	.byte $00 ; |........| $FF01
+	.byte $07 ; |.....XXX| $FF02
+	.byte $04 ; |.....X..| $FF03
+	.byte $77 ; |.XXX.XXX| $FF04
+	.byte $71 ; |.XXX...X| $FF05
+	.byte $75 ; |.XXX.X.X| $FF06
+	.byte $57 ; |.X.X.XXX| $FF07
+	.byte $50 ; |.X.X....| $FF08
+	.byte $00 ; |........| $FF09
 
 
 
-	.byte	$00,$d6,$1c,$36,$1c,$49,$7f ; $ff09 (*)
-	.byte	$49,$1c,$3e,$00,$b9,$8a,$a1,$81 ; $ff10 (*)
-	.byte	$00,$00,$00,$00,$00,$00,$1c,$70 ; $ff18 (*)
-	.byte	$07,$70,$0e,$00,$cf,$a6,$00,$81 ; $ff20 (*)
-	.byte	$77,$36,$14,$22,$ae,$14,$36,$77 ; $ff28 (*)
-	.byte	$00,$bf,$ce,$00,$ef,$81,$00,$00 ; $ff30 (*)
-	.byte	$00,$00,$00,$00,$68,$2f,$0a,$0c ; $ff38 (*)
-	.byte	$08,$00,$80,$81,$00,$00
+	.byte SET_PLAYER_0_COLOR | (GREEN_BLUE + 12) >> 1 ; D6
+	.byte $1C ; |...XXX..| $FF0B
+	.byte $36 ; |..XX.XX.| $FF0C
+	.byte $1C ; |...XXX..| $FF0D
+	.byte $49 ; |.X..X..X| $FF0E
+	.byte $7F ; |.XXXXXXX| $FF0F
+	.byte $49 ; |.X..X..X| $FF10
+	.byte $1C ; |...XXX..| $FF11
+	.byte $3E ; |..XXXXX.| $FF12
+	.byte $00 ; |........| $FF13
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L7 >> 1 ;$B9
+	.byte SET_PLAYER_0_COLOR | (YELLOW + 4) >> 1;$8A
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L4 >> 1;$A1
+	.byte SET_PLAYER_0_HMOVE | HMOVE_0 >> 1;$81
+	.byte $00 ; |........| $FF18
+	.byte $00 ; |........| $FF19
+	.byte $00 ; |........| $FF1A
+	.byte $00 ; |........| $FF1B
+	.byte $00 ; |........| $FF1C
+	.byte $00 ; |........| $FF1D
+	.byte $1C ; |...XXX..| $FF1E
+	.byte $70 ; |.XXX....| $FF1F
+	.byte $07 ; |.....XXX| $FF20
+	.byte $70 ; |.XXX....| $FF21
+	.byte $0E ; |....XXX.| $FF22
+	.byte $00 ; |........| $FF23
+	.byte SET_PLAYER_0_HMOVE | (HMOVE_R7 | 14) >> 1;$CF
+	.byte SET_PLAYER_0_COLOR | (ORANGE + 12) >> 1;$A6
+	.byte $00 ; |........| $FF26
+	.byte SET_PLAYER_0_HMOVE | HMOVE_0 >> 1;$81
+	.byte $77 ; |.XXX.XXX| $FF28
+	.byte $36 ; |..XX.XX.| $FF29
+	.byte $14 ; |...X.X..| $FF2A
+	.byte $22 ; |..X...X.| $FF2B
+	.byte SET_PLAYER_0_COLOR | (DK_PINK + 12) >> 1;$AE
+	.byte $14 ; |...X.X..| $FF2D
+	.byte $36 ; |..XX.XX.| $FF2E
+	.byte $77 ; |.XXX.XXX| $FF2F
+	.byte $00 ; |........| $FF30
+	.byte $BF ; |X.XXXXXX| $FF31
+	.byte $CE ; |XX..XXX.| $FF32
+	.byte $00 ; |........| $FF33
+	.byte $EF ; |XXX.XXXX| $FF34
+	.byte SET_PLAYER_0_HMOVE | HMOVE_0 >> 1;$81
+	.byte $00 ; |........| $FF36
+	.byte $00 ; |........| $FF37
+	.byte $00 ; |........| $FF38
+	.byte $00 ; |........| $FF39
+	.byte $00 ; |........| $FF3A
+	.byte $00 ; |........| $FF3B
+	.byte $68 ; |.XX.X...| $FF3C
+	.byte $2F ; |..X.XXXX| $FF3D
+	.byte $0A ; |....X.X.| $FF3E
+	.byte $0C ; |....XX..| $FF3F
+	.byte $08 ; |....X...| $FF40
+	.byte $00 ; |........| $FF41
+	.byte $80 ; |X.......| $FF42
+	.byte SET_PLAYER_0_HMOVE | HMOVE_0 >> 1;$81
+	.byte $00 ; |........| $FF44
+	.byte $00 ; |........| $FF45
+
 
 
 devInitialsGfx0
