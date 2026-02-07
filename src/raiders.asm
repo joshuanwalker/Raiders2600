@@ -8,7 +8,7 @@
 ;  by Dennis Debro - Aug. 8, 2018
 ; Furthur coding and comments
 ;  by Halkun
-; 	Last Update: Feb, 7th 2026
+;	Last Update: Feb, 8th 2026
 ;
 ;
 ; ==============================================================================
@@ -17,7 +17,7 @@
 ; = EXACT GAME ROM, THE LABELS AND COMMENTS ARE THE INTERPRETATION OF MY OWN	=
 ; = AND MAY NOT REPRESENT THE ORIGINAL VISION OF THE AUTHOR.					=
 ; =																				=
-; = THE ASSEMBLED CODE IS  1982, ATARI, INC.								 	=
+; = THE ASSEMBLED CODE IS  1982, ATARI, INC.									=
 ; =																				=
 ; ==============================================================================
 ;
@@ -133,141 +133,141 @@ SNAKE_CHARM_SONG		= $84
 ;----------------------------------------------------------------------------
 ; System & Timers
 ;----------------------------------------------------------------------------
-scanline                = $80   ; Current scanline counter for the kernel
-currentRoomId           = $81   ; ID of the room Indy is currently in (e.g., ID_ENTRANCE_ROOM)
-frameCount              = $82   ; Master frame counter, used for animation timing and random seeds
-timeOfDay               = $83   ; Clock/Sun position (Manual: "Timepiece... shows you the current time")
-loopCounter             = $84   ; (c) General purpose loop counter
-tempGfxHolder           = $85   ; (c) Temporary storage for graphics data/masks
-bankSwitchJMPOpcode     = $86   ; (c) RAM code: Opcode for bankswitch (LDA ABS / $AD)
-bankSwitchJMPAddr       = $87   ; (c) RAM code: Address for bankswitch strobe
-bankSwitchJMPAddrLo     = $88   ; (c) Low byte of return address after bankswitch
-bankSwitchJMPAddrHi     = $89   ; (c) High byte of return address after bankswitch
-playerInputState        = $8a   ; Input flags (Direction + Button state processing)
+scanline				= $80	; Current scanline counter for the kernel
+currentRoomId			= $81	; ID of the room Indy is currently in (e.g., ID_ENTRANCE_ROOM)
+frameCount				= $82	; Master frame counter, used for animation timing and random seeds
+timeOfDay				= $83	; Clock/Sun position (Manual: "Timepiece... shows you the current time")
+loopCounter				= $84	; (c) General purpose loop counter
+tempGfxHolder			= $85	; (c) Temporary storage for graphics data/masks
+bankSwitchJMPOpcode		= $86	; (c) RAM code: Opcode for bankswitch (LDA ABS / $AD)
+bankSwitchJMPAddr		= $87	; (c) RAM code: Address for bankswitch strobe
+bankSwitchJMPAddrLo		= $88	; (c) Low byte of return address after bankswitch
+bankSwitchJMPAddrHi		= $89	; (c) High byte of return address after bankswitch
+playerInputState		= $8a	; Input flags (Direction + Button state processing)
 
 ;----------------------------------------------------------------------------
 ; Game Logic & State
 ;----------------------------------------------------------------------------
-activeMesaID			= $8b   ; The ID of the Mesa the player is currently exploring/grappled to.
-secretArkMesaID			= $8c   ; The specific Mesa ID where the Ark is hidden.
-eventState              = $8d   ; General state for room-specific events (e.g. Grapple swing stage)
-m0PosYShadow            = $8e   ; Shadow copy of Missile 0 Y position (Webs/Swarm)
-weaponStatus            = $8f   ; Status of Indy's weapon (Bit 7: Active/Cooldown)
-unused_90               = $90   ; Screen flags cleared on room change
-moveDirection           = $91   ; Direction Indy is moving (Joystick input mask)
-indyDir                 = $92   ; Direction Indy is facing (for Sprite selection)
-screenEventState        = $93   ; Flags for screen events (e.g., Snake/Fly active)
-roomPFControlFlags      = $94   ; Playfield priority and reflection flags (CTRLPF)
-pickupStatusFlags       = $95   ; Bitmask: Items taken in current room (prevents infinite pickup)
-diggingState            = $96   ; Tracks progress of digging in Well of Souls
-digAttemptCounter       = $97   ; Counter for dig attempts
-EventStateOffset        = $98   ; Offset index for room event tables (Swarm behavior)
-screenInitFlag          = $99   ; Non-zero if the screen needs initialization logic
-grenadeState            = $9a   ; Status: Bit 7=Active, Bit 6=Wall Effect Trigger
-grenadeCookTime         = $9b   ; Timer until grenade explosion
-arkRoomStateFlag        = $9c   ; bit7 = RESET enabled & Ark hidden; bit7 clear = Ark visible & RESET ignored.
-majorEventFlag          = $9d   ; Flags for Cutscenes (Death, Capture, End Game)
-adventurePoints         = $9e   ; (Manual: "Adventure Points") Score/Pedestal Height
-livesLeft               = $9f   ; (Manual: Starts with 3 lives)
-bulletCount             = $a0   ; (Manual: Max 6 bullets)
-eventTimer              = $a1   ; General event timer (Tsetse paralysis / Cutscene delays)
-soundChan0EffectTimer   = $a2   ; Sound Effect ID/Timer for Channel 0
-soundChan1EffectTimer   = $a3   ; Sound Effect ID/Timer for Channel 1
-soundTimer              = $a4   ; Duration timer for complex sounds (Theme song)
+activeMesaID			= $8b	; The ID of the Mesa the player is currently exploring/grappled to.
+secretArkMesaID			= $8c	; The specific Mesa ID where the Ark is hidden.
+eventState				= $8d	; General state for room-specific events (e.g. Grapple swing stage)
+m0PosYShadow			= $8e	; Shadow copy of Missile 0 Y position (Webs/Swarm)
+weaponStatus			= $8f	; Status of Indy's weapon (Bit 7: Active/Cooldown)
+unused_90				= $90	; Screen flags cleared on room change
+moveDirection			= $91	; Direction Indy is moving (Joystick input mask)
+indyDir					= $92	; Direction Indy is facing (for Sprite selection)
+screenEventState		= $93	; Flags for screen events (e.g., Snake/Fly active)
+roomPFControlFlags		= $94	; Playfield priority and reflection flags (CTRLPF)
+pickupStatusFlags		= $95	; Bitmask: Items taken in current room (prevents infinite pickup)
+diggingState			= $96	; Tracks progress of digging in Well of Souls
+digAttemptCounter		= $97	; Counter for dig attempts
+EventStateOffset		= $98	; Offset index for room event tables (Swarm behavior)
+screenInitFlag			= $99	; Non-zero if the screen needs initialization logic
+grenadeState			= $9a	; Status: Bit 7=Active, Bit 6=Wall Effect Trigger
+grenadeCookTime			= $9b	; Timer until grenade explosion
+arkRoomStateFlag		= $9c	; bit7 = RESET enabled & Ark hidden; bit7 clear = Ark visible & RESET ignored.
+majorEventFlag			= $9d	; Flags for Cutscenes (Death, Capture, End Game)
+adventurePoints			= $9e	; (Manual: "Adventure Points") Score/Pedestal Height
+livesLeft				= $9f	; (Manual: Starts with 3 lives)
+bulletCount				= $a0	; (Manual: Max 6 bullets)
+eventTimer				= $a1	; General event timer (Tsetse paralysis / Cutscene delays)
+soundChan0EffectTimer	= $a2	; Sound Effect ID/Timer for Channel 0
+soundChan1EffectTimer	= $a3	; Sound Effect ID/Timer for Channel 1
+soundTimer				= $a4	; Duration timer for complex sounds (Theme song)
 
 ;----------------------------------------------------------------------------
 ; Scoring & Bonuses (Used in getFinalScore)
 ;----------------------------------------------------------------------------
-grenadeOpeningPenalty   = $a5   ; Penalty collision: Blasting Entrance Room wall
-escapePrisonPenalty     = $a6   ; Penalty collision: Escaping Shining Light dungeon
-findingArkBonus         = $a7   ; Bonus: Found the Ark
-usingParachuteBonus     = $a8   ; Bonus: Successfully used Parachute
-ankhUsedBonus           = $a9   ; Penalty/Cost: Using Ankh to warp to Mesa
-yarFoundBonus           = $aa   ; Bonus: Found Yar (Easter Egg)
-mapRoomBonus            = $ab   ; Bonus: Used Head of Ra in Map Room
-thiefShotPenalty        = $ac   ; Penalty: Shot the thief
-mesaLandingBonus        = $ad   ; Bonus: Landed on Mesa
-UnusedBonus             = $ae   ; Unused slot
-treasureIndex           = $af   ; Index/State of treasure appearance in Treasure Room
-unused_B0               = $b0   ; Unused
-entranceRoomState       = $b1   ; State: Wall blown open? Whips taken?
-blackMarketState        = $b2   ; State: Bribed lunatic? Shovel purchase?
-mapRoomState            = $b3   ; State: Sun position / Beam reveal
-mesaSideState           = $b4   ; State: Parachute active? Gravity logic
-entranceRoomEventState  = $b5   ; Visual state for entrance room (Wall debris)
-spiderRoomState         = $b6   ; State: Spider aggression / Web collision
+grenadeOpeningPenalty	= $a5	; Penalty collision: Blasting Entrance Room wall
+escapePrisonPenalty		= $a6	; Penalty collision: Escaping Shining Light dungeon
+findingArkBonus			= $a7	; Bonus: Found the Ark
+usingParachuteBonus		= $a8	; Bonus: Successfully used Parachute
+ankhUsedBonus			= $a9	; Penalty/Cost: Using Ankh to warp to Mesa
+yarFoundBonus			= $aa	; Bonus: Found Yar (Easter Egg)
+mapRoomBonus			= $ab	; Bonus: Used Head of Ra in Map Room
+thiefShotPenalty		= $ac	; Penalty: Shot the thief
+mesaLandingBonus		= $ad	; Bonus: Landed on Mesa
+UnusedBonus				= $ae	; Unused slot
+treasureIndex			= $af	; Index/State of treasure appearance in Treasure Room
+unused_B0				= $b0	; Unused
+entranceRoomState		= $b1	; State: Wall blown open? Whips taken?
+blackMarketState		= $b2	; State: Bribed lunatic? Shovel purchase?
+mapRoomState			= $b3	; State: Sun position / Beam reveal
+mesaSideState			= $b4	; State: Parachute active? Gravity logic
+entranceRoomEventState	= $b5	; Visual state for entrance room (Wall debris)
+spiderRoomState			= $b6	; State: Spider aggression / Web collision
 
 ;----------------------------------------------------------------------------
 ; Inventory System
 ;----------------------------------------------------------------------------
-invSlotLo               = $b7   ; Inventory Slot 1 (Sprite Ptr Low)
-invSlotHi               = $b8   ; Inventory Slot 1 (Sprite Ptr High)
-invSlotLo2              = $b9   ; Inventory Slot 2
-invSlotHi2              = $ba   ; ...
-invSlotLo3              = $bb   ; Inventory Slot 3
-invSlotHi3              = $bc   ; ...
-invSlotLo4              = $bd   ; Inventory Slot 4
-invSlotHi4              = $be   ; ...
-invSlotLo5              = $bf   ; Inventory Slot 5
-invSlotHi5              = $c0   ; ...
-invSlotLo6              = $c1   ; Inventory Slot 6
-invSlotHi6              = $c2   ; ...
-selectedItemSlot        = $c3   ; Index (0-10) of currently highlighted slot
-inventoryItemCount      = $c4   ; Number of items currently held
-selectedInventoryId     = $c5   ; ID of the item currently selected (e.g. ID_INVENTORY_WHIP)
-basketItemStatus        = $c6   ; Bitmask: Items remaining in baskets
-pickupItemsStatus       = $c7   ; Bitmask: Global "Has item been found" flags
+invSlotLo				= $b7	; Inventory Slot 1 (Sprite Ptr Low)
+invSlotHi				= $b8	; Inventory Slot 1 (Sprite Ptr High)
+invSlotLo2				= $b9	; Inventory Slot 2
+invSlotHi2				= $ba	; ...
+invSlotLo3				= $bb	; Inventory Slot 3
+invSlotHi3				= $bc	; ...
+invSlotLo4				= $bd	; Inventory Slot 4
+invSlotHi4				= $be	; ...
+invSlotLo5				= $bf	; Inventory Slot 5
+invSlotHi5				= $c0	; ...
+invSlotLo6				= $c1	; Inventory Slot 6
+invSlotHi6				= $c2	; ...
+selectedItemSlot		= $c3	; Index (0-10) of currently highlighted slot
+inventoryItemCount		= $c4	; Number of items currently held
+selectedInventoryId		= $c5	; ID of the item currently selected (e.g. ID_INVENTORY_WHIP)
+basketItemStatus		= $c6	; Bitmask: Items remaining in baskets
+pickupItemsStatus		= $c7	; Bitmask: Global "Has item been found" flags
 
 ;----------------------------------------------------------------------------
 ; Object Positioning (Kernel Variables)
 ;----------------------------------------------------------------------------
-p0PosX                  = $c8   ; Player 0 (Usually Enemy/Object) X Position
-indyPosX                = $c9   ; Player 1 (Indy) X Position
-m0PosX                  = $ca   ; Missile 0 (Web/Swarm/Bullet) X Position
-weaponPosX              = $cb   ; Missile 1 (Whip/Bullet/Grapple) X Position
-indyPosXSet             = $cc   ; Target X position for forced movement events
-unused_CD               = $cd   ; Unused / Temp
-p0PosY                  = $ce   ; Player 0 Y Position
-indyPosY                = $cf   ; Player 1 (Indy) Y Position
-m0PosY                  = $d0   ; Missile 0 Y Position
-weaponPosY              = $d1   ; Missile 1 Y Position (Whip tip/Bullet)
-ballPosY                = $d2   ; Ball Y Position (Snake/Timepiece graphics)
-targetPosY              = $d3   ; Target Y position for AI movement logic
-objectState             = $d4   ; General object animation phase / state
-snakePosY               = $d5   ; Vertical position specifically for Snake/Dungeon Guardian
-auxDataPtrLo			= $d6   ; Generic Pointer Low
-auxDataPtrHi			= $d7   ; Generic Pointer High
-auxDataIndex 			= $d8   ; Generic Index/Offset
+p0PosX					= $c8	; Player 0 (Usually Enemy/Object) X Position
+indyPosX				= $c9	; Player 1 (Indy) X Position
+m0PosX					= $ca	; Missile 0 (Web/Swarm/Bullet) X Position
+weaponPosX				= $cb	; Missile 1 (Whip/Bullet/Grapple) X Position
+indyPosXSet				= $cc	; Target X position for forced movement events
+unused_CD				= $cd	; Unused / Temp
+p0PosY					= $ce	; Player 0 Y Position
+indyPosY				= $cf	; Player 1 (Indy) Y Position
+m0PosY					= $d0	; Missile 0 Y Position
+weaponPosY				= $d1	; Missile 1 Y Position (Whip tip/Bullet)
+ballPosY				= $d2	; Ball Y Position (Snake/Timepiece graphics)
+targetPosY				= $d3	; Target Y position for AI movement logic
+objectState				= $d4	; General object animation phase / state
+snakePosY				= $d5	; Vertical position specifically for Snake/Dungeon Guardian
+auxDataPtrLo			= $d6	; Generic Pointer Low
+auxDataPtrHi			= $d7	; Generic Pointer High
+auxDataIndex			= $d8	; Generic Index/Offset
 
 ;----------------------------------------------------------------------------
 ; Graphics Pointers & Buffers
 ;----------------------------------------------------------------------------
-indyGfxPtrLo            = $d9   ; Indy Sprite Pointer Low
-indyGfxPtrHi            = $da   ; Indy Sprite Pointer High
-indySpriteHeight        = $db   ; Height of Indy sprite (Walking vs Standing)
-p0SpriteHeight          = $dc   ; Height of Player 0 sprite
-p0GfxPtrLo              = $dd   ; Player 0 Sprite Pointer Low
-p0GfxPtrHi              = $de   ; Player 0 Sprite Pointer High
-p0OffsetPosY            = $df   ; Vertical offset for P0 drawing
-p0GfxState              = $e0   ; Graphics state control for P0
-PF1GfxPtrLo             = $e1   ; Playfield 1 Pointer Low
-PF1GfxPtrHi             = $e2   ; Playfield 1 Pointer High
-PF2GfxPtrLo             = $e3   ; Playfield 2 Pointer Low
-PF2GfxPtrHi             = $e4   ; Playfield 2 Pointer High
-dynamicGfxData          = $e5   ; RAM buffer for mutable graphics (Dungeon walls)
-dungeonBlock1           = $e6   ; Dungeon Wall Segment 1
-dungeonBlock2           = $e7   ; Dungeon Wall Segment 2
-dungeonBlock3           = $e8   ; Dungeon Wall Segment 3
-dungeonBlock4           = $e9   ; Dungeon Wall Segment 4
-dungeonBlock5           = $ea   ; Dungeon Wall Segment 5
+indyGfxPtrLo			= $d9	; Indy Sprite Pointer Low
+indyGfxPtrHi			= $da	; Indy Sprite Pointer High
+indySpriteHeight		= $db	; Height of Indy sprite (Walking vs Standing)
+p0SpriteHeight			= $dc	; Height of Player 0 sprite
+p0GfxPtrLo				= $dd	; Player 0 Sprite Pointer Low
+p0GfxPtrHi				= $de	; Player 0 Sprite Pointer High
+p0OffsetPosY			= $df	; Vertical offset for P0 drawing
+p0GfxState				= $e0	; Graphics state control for P0
+PF1GfxPtrLo				= $e1	; Playfield 1 Pointer Low
+PF1GfxPtrHi				= $e2	; Playfield 1 Pointer High
+PF2GfxPtrLo				= $e3	; Playfield 2 Pointer Low
+PF2GfxPtrHi				= $e4	; Playfield 2 Pointer High
+dynamicGfxData			= $e5	; RAM buffer for mutable graphics (Dungeon walls)
+dungeonBlock1			= $e6	; Dungeon Wall Segment 1
+dungeonBlock2			= $e7	; Dungeon Wall Segment 2
+dungeonBlock3			= $e8	; Dungeon Wall Segment 3
+dungeonBlock4			= $e9	; Dungeon Wall Segment 4
+dungeonBlock5			= $ea	; Dungeon Wall Segment 5
 
 ;----------------------------------------------------------------------------
 ; Temporary / Room Specific (Thieves Den & Mesa Side)
 ;----------------------------------------------------------------------------
-savedThiefPosY          = $eb   ; Context save: Thief Y
-savedIndyPosY           = $ec   ; Context save: Indy Y
-savedIndyPosX           = $ed   ; Context save: Indy X
-thiefPosX               = $ee   ; Base address for Thief X array (Thieves Den)
+savedThiefPosY			= $eb	; Context save: Thief Y
+savedIndyPosY			= $ec	; Context save: Indy Y
+savedIndyPosX			= $ed	; Context save: Indy X
+thiefPosX				= $ee	; Base address for Thief X array (Thieves Den)
 
 
 ;--------------------
@@ -319,7 +319,7 @@ GRENADE_OPENING_IN_WALL				= %00000010
 INDY_NOT_CARRYING_COINS				= %10000000
 INDY_CARRYING_SHOVEL				= %00000001
 
-BASKET_STATUS_MARKET_GRENADE 		= %00000001
+BASKET_STATUS_MARKET_GRENADE		= %00000001
 BASKET_STATUS_BLACK_MARKET_GRENADE	= %00000010
 BACKET_STATUS_REVOLVER				= %00001000
 BASKET_STATUS_COINS					= %00010000
@@ -331,7 +331,7 @@ PICKUP_ITEM_STATUS_HEAD_OF_RA		= %00000100
 PICKUP_ITEM_STATUS_TIME_PIECE		= %00001000
 PICKUP_ITEM_STATUS_HOUR_GLASS		= %00100000
 PICKUP_ITEM_STATUS_ANKH				= %01000000
-PICKUP_ITEM_STATUS_CHAI 			= %10000000
+PICKUP_ITEM_STATUS_CHAI				= %10000000
 
 PENALTY_GRENADE_OPENING				= 2
 PENALTY_SHOOTING_THIEF				= 4
@@ -385,7 +385,7 @@ SET_PLAYER_0_HMOVE			= %10000001
 XMAX						= 160
 
 BULLET_OR_WHIP_ACTIVE		= %10000000
-USING_GRENADE_OR_PARACHUTE 	= %00000010
+USING_GRENADE_OR_PARACHUTE	= %00000010
 
 ENTRANCE_ROOM_CAVE_VERT_POS = 9
 ENTRANCE_ROOM_ROCK_VERT_POS = 53
@@ -414,30 +414,30 @@ coldStart
 setObjPosX
 	ldx		#<RESBL - RESP0
 moveObjectLoop
-	sta		WSYNC					; wait for next scan line
-	lda		p0PosX,x			; get object's horizontal position
+	sta		WSYNC						; wait for next scan line
+	lda		p0PosX,x					; get object's horizontal position
 	tay
-	lda		HMOVETable,y	; get fine motion/coarse position value
-	sta		HMP0,x					; set object's fine motion value
-	and		#$0f					; mask off fine motion value
-	tay								; move coarse move value to y
+	lda		HMOVETable,y				; get fine motion/coarse position value
+	sta		HMP0,x						; set object's fine motion value
+	and		#$0f						; mask off fine motion value
+	tay									; move coarse move value to y
 coarseMoveObj
 	dey
-	bpl		coarseMoveObj			; set object's coarse position
+	bpl		coarseMoveObj				; set object's coarse position
 	sta		RESP0,x
 	dex
 	bpl		moveObjectLoop
-	sta		WSYNC					; wait for next scan line
+	sta		WSYNC						; wait for next scan line
 	sta		HMOVE
 	jmp		jmpDisplayKernel
 
 checkObjectHit:
-	bit		CXM1P					; check player collision with Indy bullet
-	bpl		checkWeaponHit		; branch if no player collision
-	ldx		currentRoomId			; get the current screen id
-	cpx		#ID_VALLEY_OF_POISON	; are we in the valley of poison?
+	bit		CXM1P						; check player collision with Indy bullet
+	bpl		checkWeaponHit				; branch if no player collision
+	ldx		currentRoomId				; get the current screen id
+	cpx		#ID_VALLEY_OF_POISON		; are we in the valley of poison?
 	bcc		checkWeaponHit
-	beq		weaponHitThief		; branch if Indy in the Valley of Poison
+	beq		weaponHitThief				; branch if Indy in the Valley of Poison
 
 	; --------------------------------------------------------------------------
 	; CALCULATE STRUCK THIEF INDEX
@@ -446,35 +446,35 @@ checkObjectHit:
 	; --------------------------------------------------------------------------
 
 
-	lda		weaponPosY			; Load Weapon Vertical Position.
-	adc		#$01					; Adjust for offset (Carry set assumed).
-	lsr							; Divide by 2.
-	lsr							; Divide by 4.
-	lsr							; Divide by 8.
-	lsr							; Divide by 16.
-	tax							; Move result (Index 0-3?) to X.
+	lda		weaponPosY					; Load Weapon Vertical Position.
+	adc		#$01						; Adjust for offset (Carry set assumed).
+	lsr									; Divide by 2.
+	lsr									; Divide by 4.
+	lsr									; Divide by 8.
+	lsr									; Divide by 16.
+	tax									; Move result (Index 0-3?) to X.
 
 	; --------------------------------------------------------------------------
 	; FLIP THIEF DIRECTION
 	; Hitting a thief makes them reverse direction.
 	; --------------------------------------------------------------------------
 
-	lda		#REFLECT				; Load Reflect Bit.
-	eor		p0OffsetPosY,x			; XOR with current state (Toggle Direction).
-	sta		p0OffsetPosY,x			; Save new state.
+	lda		#REFLECT					; Load Reflect Bit.
+	eor		p0OffsetPosY,x				; XOR with current state (Toggle Direction).
+	sta		p0OffsetPosY,x				; Save new state.
 
 weaponHitThief:
-	lda		weaponStatus			; get bullet or whip status
-	bpl		setThiefShotPenalty	; branch if bullet or whip not active
+	lda		weaponStatus				; get bullet or whip status
+	bpl		setThiefShotPenalty			; branch if bullet or whip not active
 	and		#~BULLET_OR_WHIP_ACTIVE
-	sta		weaponStatus			; clear BULLET_OR_WHIP_ACTIVE bit
+	sta		weaponStatus				; clear BULLET_OR_WHIP_ACTIVE bit
 	lda		pickupStatusFlags
-	and		#%00011111			; Mask check.
+	and		#%00011111					; Mask check.
 	beq		finishItemPickup
 	jsr		placeItemInInventory
 
 finishItemPickup:
-	lda		#%01000000			; Set Bit 6.
+	lda		#%01000000					; Set Bit 6.
 	sta		pickupStatusFlags
 
 setThiefShotPenalty
@@ -482,29 +482,29 @@ setThiefShotPenalty
 	; PENALTY FOR SHOOTING THIEF
 	; Killing a thief is dishonorable (or noise?). Deducts adventurePoints.
 	; --------------------------------------------------------------------------
-	lda		#~BULLET_OR_WHIP_ACTIVE	; Clear Active Bit mask.
-	sta		weaponPosY				; Invalidates weapon Y (effectively removing it).
+	lda		#~BULLET_OR_WHIP_ACTIVE		; Clear Active Bit mask.
+	sta		weaponPosY					; Invalidates weapon Y (effectively removing it).
 	lda		#PENALTY_SHOOTING_THIEF		; Load Penalty Value.
-	sta		thiefShotPenalty					; Apply penalty.
+	sta		thiefShotPenalty			; Apply penalty.
 
 checkWeaponHit:
-	bit		CXM1FB					; check missile 1 and playfield collisions
+	bit		CXM1FB						; check missile 1 and playfield collisions
 	bpl		weaponObjHit				; if playfield is not hit try snake hit
 	ldx		currentRoomId				; get the current screen id
-	cpx		#ID_MESA_FIELD			; are we in the mesa field?
-	beq		handleIndyVsObjHit		; see what we hit
-	cpx		#ID_TEMPLE_ENTRANCE		; are we in the temple entrance?
-	beq		checkDungeonWallHit		; check for dungeon wall hit
+	cpx		#ID_MESA_FIELD				; are we in the mesa field?
+	beq		handleIndyVsObjHit			; see what we hit
+	cpx		#ID_TEMPLE_ENTRANCE			; are we in the temple entrance?
+	beq		checkDungeonWallHit			; check for dungeon wall hit
 	cpx		#ID_ROOM_OF_SHINING_LIGHT	; are we in the room of shining light?
 	bne		weaponObjHit				; did we hit the snake?
 checkDungeonWallHit:
-	lda		weaponPosY				; get bullet or whip vertical position
-	sbc		objectState				; subtract dungeon wall height
+	lda		weaponPosY					; get bullet or whip vertical position
+	sbc		objectState					; subtract dungeon wall height
 	lsr									; divide by 4 total
 	lsr
-	beq		handleLeftWall			; if zero, left wall hit
+	beq		handleLeftWall				; if zero, left wall hit
 	tax
-	ldy		weaponPosX			; get weapon horizontal position
+	ldy		weaponPosX					; get weapon horizontal position
 	cpy		#$12
 	bcc		clearWeaponState			; branch if too far left
 	cpy		#$8d
@@ -514,44 +514,44 @@ checkDungeonWallHit:
 	beq		clearWeaponState			; unconditional branch
 
 handleLeftWall:
-	lda		weaponPosX			; get bullet or whip horizontal position
-	cmp		#$30							; Compare it to 48 (left side boundary threshold)
-	bcs		handleRighrWall			; If bullet is at or beyond 48, branch to right-side logic
+	lda		weaponPosX					; get bullet or whip horizontal position
+	cmp		#$30						; Compare it to 48 (left side boundary threshold)
+	bcs		handleRighrWall				; If bullet is at or beyond 48, branch to right-side logic
 	sbc		#$10						; Subtract 16 from position
 										; (adjusting to fit into the masking table index range)
-	eor		#$1f							; XOR with 31 to mirror or normalize the range
+	eor		#$1f						; XOR with 31 to mirror or normalize the range
 										; (helps align to bitmask values)
 
 maskDungeonWall:
-	lsr								; Divide by 4 Total
+	lsr									; Divide by 4 Total
 	lsr									;
 	tax									; Move result to X to use as index into mask table
 	lda		itemStatusMaskTable,x		; Load a mask value from the
 										; itemStatusMaskTable table
 										; (mask used to disable a wall segment)
-	and		dynamicGfxData			; Apply the mask to the current
+	and		dynamicGfxData				; Apply the mask to the current
 										; dungeon graphic state
 										; (clear bits to "erase" part of it)
-	sta		dynamicGfxData			; Store the updated graphic
+	sta		dynamicGfxData				; Store the updated graphic
 										; state back (modifying visual representation
 										; of the wall)
 	jmp		clearWeaponState			; unconditional branch
 
 handleRighrWall:
-	sbc		#$71							; Subtract 113 from bullet/whip horizontal position
-	cmp		#$20							; Compare result to 32
-	bcc		maskDungeonWall			; apply wall mask
+	sbc		#$71						; Subtract 113 from bullet/whip horizontal position
+	cmp		#$20						; Compare result to 32
+	bcc		maskDungeonWall				; apply wall mask
 clearWeaponState:
-	ldy		#~BULLET_OR_WHIP_ACTIVE	; Invert BULLET_OR_WHIP_ACTIVE
+	ldy		#~BULLET_OR_WHIP_ACTIVE		; Invert BULLET_OR_WHIP_ACTIVE
 	sty		weaponStatus				; clear BULLET_OR_WHIP_ACTIVE status
-	sty		weaponPosY				; set vertical position out of range
+	sty		weaponPosY					; set vertical position out of range
 weaponObjHit:
 	bit		CXM1FB						; check if snake hit with bullet or whip
-	bvc		handleIndyVsObjHit		; branch if object not hit
+	bvc		handleIndyVsObjHit			; branch if object not hit
 	bit		screenEventState
 	bvc		handleIndyVsObjHit
-	lda		#$5a							; set object y position high byte
-	sta		ballPosY		; move offscreen (?)
+	lda		#$5a						; set object y position high byte
+	sta		ballPosY					; move offscreen
 	sta		p0SpriteHeight
 	sta		weaponStatus				; clear BULLET_OR_WHIP_ACTIVE status
 	sta		weaponPosY
@@ -561,12 +561,12 @@ handleIndyVsObjHit:
 	bit		CXP1FB						; Check P1 (Indy) vs Playfield/Ball Collision.
 	bvc		handleMesaSideSecretExit	; Branch if no collision (Bit 6 clear).
 	ldx		currentRoomId				; Get Room ID.
-	cpx		#ID_TEMPLE_ENTRANCE		; Are we in Temple Entrance?
-	beq		timePieceTouch			; If yes, handle Time Piece pickup.
+	cpx		#ID_TEMPLE_ENTRANCE			; Are we in Temple Entrance?
+	beq		timePieceTouch				; If yes, handle Time Piece pickup.
 
 	; --- Flute Immunity Check ---
-	lda		selectedInventoryId		; Get currently selected item.
-	cmp		#ID_INVENTORY_FLUTE		; Is it the Flute?
+	lda		selectedInventoryId			; Get currently selected item.
+	cmp		#ID_INVENTORY_FLUTE			; Is it the Flute?
 	beq		handleMesaSideSecretExit	; If Flute is selected, IGNORE collision
 										; (Immunity to Snakes/Flies)
 
@@ -576,16 +576,16 @@ handleIndyVsObjHit:
 										; Jump to Death Logic.
 	; --- Tsetse Fly Paralysis ---
 	; If Bit 7 is SET, it implies Tsetse Flies (Spider Room / Valley).
-	lda		timeOfDay				; Get Timer.
-	and		#$07							; Mask for random duration?
+	lda		timeOfDay					; Get Timer.
+	and		#$07						; Mask for random duration
 	ora		#$80						; Set Bit 7.
-	sta		eventTimer				; Set "Paralysis" Timer (Indy freezes).
+	sta		eventTimer					; Set "Paralysis" Timer (Indy freezes).
 	bne		handleMesaSideSecretExit	; Return.
 
 setWellOfSoulsEntryEvent:
 	bvc		handleMesaSideSecretExit	; Fail-safe?
-	lda		#$80							; Set Bit 7.
-	sta		majorEventFlag			; Trigger Major Event
+	lda		#$80						; Set Bit 7.
+	sta		majorEventFlag				; Trigger Major Event
 	bne		handleMesaSideSecretExit	; Return.
 
 timePieceTouch:
@@ -600,7 +600,7 @@ handleMesaSideSecretExit:
 	cpx		currentRoomId				; are we on the mesa side?
 	bne		dispatchHits				; branch if not
 	bit		CXM0P						; check missile 0 and player collisions
-	bpl		handleMesaFall			; branch if Indy not entering WELL_OF_SOULS
+	bpl		handleMesaFall				; branch if Indy not entering WELL_OF_SOULS
 	stx		indyPosY					; set Indy vertical position (i.e. x = 5)
 	lda		#ID_WELL_OF_SOULS
 	sta		currentRoomId				; move Indy to the Well of Souls
@@ -616,26 +616,26 @@ handleMesaFall:
 										; branch to CheckAndDispatchCollisions
 										; (don't fall)
 	lda		#ID_VALLEY_OF_POISON		; Otherwise, load Valley of Poison
-	sta		currentRoomId			; Set the current screen to Valley of Poison
-	jsr		initRoomState		; initialize rooom state
-	lda		savedThiefPosY			; get saved thief vertical position
+	sta		currentRoomId				; Set the current screen to Valley of Poison
+	jsr		initRoomState				; initialize rooom state
+	lda		savedThiefPosY				; get saved thief vertical position
 	sta		p0OffsetPosY				; set thief vertical position
 	lda		savedIndyPosY				; get saved Indy vertical position
 	sta		indyPosY					; set Indy vertical position
 	lda		savedIndyPosX				; get saved Indy horizontal position
 	sta		indyPosX					; set Indy horizontal position
-	lda		#$fd							; Load bitmask value
+	lda		#$fd						; Load bitmask value
 	and		mesaSideState				; Apply bitmask to a status/control flag
 	sta		mesaSideState				; Store the result back
 	bmi		clearHits					; If the result has bit 7 set,
 										; skip setting major event
-	lda		#$80							; Otherwise, set major event flag
+	lda		#$80						; Otherwise, set major event flag
 	sta		majorEventFlag
 clearHits:
-	sta		CXCLR							; clear all collisions
+	sta		CXCLR						; clear all collisions
 dispatchHits:
 	bit		CXPPMM						; check player / missile collisions
-	bmi		collectTreasure			; branch if player touched treasure
+	bmi		collectTreasure				; branch if player touched treasure
 	ldx		#$00
 	stx		moveDirection				; Clear movement direction
 	dex									; X = $FF
@@ -652,11 +652,11 @@ collectTreasure:
 	lda		treasureIndex
 	and		#$07
 	tax
-	lda		marketBasketItems,x		; get items from market basket
+	lda		marketBasketItems,x			; get items from market basket
 	jsr		placeItemInInventory		; place basket item in inventory
 	bcc		continueToHitDispatch
 	lda		#$01
-	sta		p0OffsetPosY					; mark treasure as collected
+	sta		p0OffsetPosY				; mark treasure as collected
 	bne		continueToHitDispatch		; unconditional branch
 
 jumpPlayerHit:
@@ -688,7 +688,7 @@ playerHitInWellOfSouls:
 	lda		diggingState				; Load Dirt Pile State
 	cmp		#$54						; Is the pile fully cleared?
 	bne		resumeHitDispatch			; If not empty ($54), you can't find Ark yet.
-	lda		secretArkMesaID			; Load Secret Ark Location (Game RNG)
+	lda		secretArkMesaID				; Load Secret Ark Location (Game RNG)
 	cmp		activeMesaID				; Compare to Current Mesa Region
 	bne		arkNotFound					; If wrong mesa, nothing is here.
 
@@ -841,7 +841,7 @@ tryAwardHeadOfRa:
 	; Sometimes, a basket contains the Head of Ra instead of its usual item.
 	lda		#$40
 	sta		screenEventState			; Set flag
-	lda		timeOfDay				; get global timer
+	lda		timeOfDay					; get global timer
 	and		#$1f						; Mask to 0-31 seconds cycle
 	cmp		#$02						; Check if time is < 2
 	bcs		checkAddItemToInv			; If Time >= 2, give the standard item
@@ -875,7 +875,7 @@ resumeScreenLogic:
 
 pickMarketItemByTime:
 	ldx		#ID_BLACK_MARKET_GRENADE	; Load X with the grenade item ID (for black market)
-	lda		timeOfDay				; Load the global seconds timer
+	lda		timeOfDay					; Load the global seconds timer
 	cmp		#$40						; Check if >= 64 seconds have passed
 	bcs		checkAddItemToInv			; If yes, continue with grenade
 	ldx		#ID_INVENTORY_KEY			; If not, switch to the key as the item to give
@@ -907,12 +907,12 @@ playerHitInTempleEntrance:
 	bne		playerHitDefaut		; Resume
 
 playerHitInEntranceRoom:
-    ; -----------------------------------------------------------------------
-    ; ENTRANCE ROOM COLLISION HANDLER
-    ; -----------------------------------------------------------------------
-    ; The "Yellow Object" (Player 0) represents both the Rock and the Whip.
-    ; The code strictly checks Y position to see what Indy touched.
-    ; -----------------------------------------------------------------------
+	; -----------------------------------------------------------------------
+	; ENTRANCE ROOM COLLISION HANDLER
+	; -----------------------------------------------------------------------
+	; The "Yellow Object" (Player 0) represents both the Rock and the Whip.
+	; The code strictly checks Y position to see what Indy touched.
+	; -----------------------------------------------------------------------
 	lda		indyPosY					; get Indy's vertical position
 	cmp		#$3f						; Check Pickup Threshold >= 63
 	bcc		checkRockRange
@@ -932,12 +932,12 @@ playerHitInEntranceRoom:
 	bne		playerHitDefaut		; Resume
 
 checkRockRange:
-    ; --- Rock Collision Logic ---
-    ; Determines if Indy is hitting the solid part of the rock.
+	; --- Rock Collision Logic ---
+	; Determines if Indy is hitting the solid part of the rock.
 	cmp		#$16						; Top Boundary Check (22)
 	bcc		pushIndyOutOfRock			; If Y < 22, Hit "Top Edge" of Rock
 	cmp		#$1f						; Bottom Bound
-	bcc		playerHitDefaut				; If 22 <= Y < 31, WALK THROUGH 
+	bcc		playerHitDefaut				; If 22 <= Y < 31, WALK THROUGH
 
 	; If Y >= 31 (and < 63 from earlier check), fall through to push left.
 pushIndyOutOfRock:
@@ -958,15 +958,15 @@ playerHitDefaut:
 	rts									; jump to Player / Playfield collision strategy
 
 screenIdleLogicDispatcher:
-	lda		roomIdleHandlerJumpTable+1,x	; Load high byte of default screen behavior routine
+	lda		roomleHandlerJmpTable+1,x	; Load high byte of default screen behavior routine
 	pha									;push to stack
-	lda		roomIdleHandlerJumpTable,x		; Load low byte of default screen behavior routine
+	lda		roomleHandlerJmpTable,x		; Load low byte of default screen behavior routine
 	pha									; push to stack
 	rts									; Indirect jump to it (no collision case)
 
 warpToMesaSide:
-	lda		p0OffsetPosY					; Load vertical position of an object
-	sta		savedThiefPosY			; Store it to temp variable savedThiefPosY
+	lda		p0OffsetPosY				; Load vertical position of an object
+	sta		savedThiefPosY				; Store it to temp variable savedThiefPosY
 	lda		indyPosY					; get Indy's vertical position
 	sta		savedIndyPosY				; Store to temp variable savedIndyVertPo
 	lda		indyPosX
@@ -1001,20 +1001,20 @@ initFallbackEntryPosition:
 										; and continue to position saving logic
 
 stopIndyMovInTemple:
-    ; --------------------------------------------------------------------------
-    ; HALLWAY CONSTRAINT LOGIC
-    ; --------------------------------------------------------------------------
-    ; The Temple Entrance is a narrow corridor. If Indy touches the walls (Playfield),
-    ; this routine forces his X/Y coordinates back into the safe "Hallway" zone.
-    ; --------------------------------------------------------------------------
+	; --------------------------------------------------------------------------
+	; HALLWAY CONSTRAINT LOGIC
+	; --------------------------------------------------------------------------
+	; The Temple Entrance is a narrow corridor. If Indy touches the walls (Playfield),
+	; this routine forces his X/Y coordinates back into the safe "Hallway" zone.
+	; --------------------------------------------------------------------------
 	ldy		indyPosX
 	cpy		#$2c						; Is Indy too far left? (< 44)
 	bcc		nudgeIndyRight				; Yes, nudge him right
-	
+
 	cpy		#$6b						; Is Indy too far right? (= 107)
 	bcs		nudgeIndyLeft				; Yes, nudge him left
 
-	    ; --- Vertical Entrance Constraint ---
+		; --- Vertical Entrance Constraint ---
 	ldy		indyPosY					; get Indy's vertical position
 	iny									; Try to move Indy down 1 px (Reject Up movement)
 	cpy		#$1e						; Top of Corridor Entrance ($1E)
@@ -1035,9 +1035,9 @@ nudgeIndyLeft:
 	bne		setIndyToNormalMove			; Continue
 
 exitToTempleEnterance:
-    ; -----------------------------------------------------------------------
-    ; RIGHT WALL COLLISION (EXIT TO TEMPLE ENTRANCE)
-    ; -----------------------------------------------------------------------
+	; -----------------------------------------------------------------------
+	; RIGHT WALL COLLISION (EXIT TO TEMPLE ENTRANCE)
+	; -----------------------------------------------------------------------
 	lda		#GRENADE_OPENING_IN_WALL	; check flag: Is the wall blown open? ($02)
 	and		entranceRoomState
 	beq		indyPixelLeft				; If Bit 1 is 0 (Wall Intact), Physics Push Left.
@@ -1078,7 +1078,7 @@ indyMoveOnInput:
 	and		#$0f						; Isolate lower 4 bits (D-pad direction)
 	tay									; Use as index
 	lda		indyMoveDeltaTable,y		; Get movement delta from direction lookup table
-	ldx		#<indyPosY - p0PosY		; X = offset to Indy in object array
+	ldx		#<indyPosY - p0PosY			; X = offset to Indy in object array
 	jsr		getMoveDir					; Move Indy accordingly
 
 setIndyToNormalMove:
@@ -1154,7 +1154,7 @@ updateEntranceRoomEventState:
 	ldx		#ID_ENTRANCE_ROOM
 	cpx		currentRoomId
 	bne		skipUpdate					; branch if not in the ENTRANCE_ROOM
-	jsr		initRoomState		; Refresh screen visuals
+	jsr		initRoomState				; Refresh screen visuals
 skipUpdate
 	sec
 	jsr		removeItem					; carry set...take away selected item
@@ -1175,7 +1175,7 @@ updateTimers
 	lda		#$3f
 	and		frameCount					; every 63 frames
 	bne		firstLineOfVerticalSync		; branch if roughly 60 frames haven't passed
-	inc		timeOfDay				; increment every second
+	inc		timeOfDay					; increment every second
 	lda		eventTimer					; If eventTimer is positive, skip
 	bpl		firstLineOfVerticalSync
 	dec		eventTimer					; Else, decrement it
@@ -1201,7 +1201,7 @@ frameFirstLine
 	jsr		getFinalScore				; set adventurePoints to minimum
 	lda		#ID_ARK_ROOM				; set ark title screen
 	sta		currentRoomId				; to the current room
-	jsr		initRoomState		; Transition to Ark Room
+	jsr		initRoomState				; Transition to Ark Room
 gotoArkRoomLogic:
 	jmp		setupNewRoom
 
@@ -1241,14 +1241,14 @@ slowlyLowerIndy:
 	bne		gotoArkRoomLogic			; unconditional branch
 
 setIndyArkDescentState
-	bit		arkRoomStateFlag				; Check bit 7 of arkRoomStateFlag
+	bit		arkRoomStateFlag			; Check bit 7 of arkRoomStateFlag
 	bmi		checkArkInput				; If bit 7 is set, skip (reset enabled)
 	lda		#$0e
-	sta		soundChan0EffectTimer				; Set Indys state to 0E
+	sta		soundChan0EffectTimer		; Set Indys state to 0E
 
 checkArkInput
 	lda		#$80
-	sta		arkRoomStateFlag				; Set bit 7 to enable reset logic
+	sta		arkRoomStateFlag			; Set bit 7 to enable reset logic
 	bit		INPT5|$30					; Check action button on right controller
 	bmi		gotoArkRoomLogic			; If not pressed, skip
 	lda		frameCount					; get current frame count
@@ -1256,7 +1256,7 @@ checkArkInput
 	bne		setArkActionCode			; If not at correct frame, skip
 	lda		#$05
 setArkActionCode
-	sta		secretArkMesaID			; Store action/state code
+	sta		secretArkMesaID				; Store action/state code
 	jmp		initGameVars				; Clear game variables
 
 HandleEasterEgg
@@ -1280,7 +1280,7 @@ advanceArkSeq
 	bcs		setIndyArkLevel				; If Indy is right of x=$20, skip
 	lda		#$20
 setIndyArkLevel
-	sta		indyPosXSet				; Store Indys forced horizontal position?
+	sta		indyPosXSet					; Store Indys forced horizontal position?
 incrementArkSeq
 	inx
 	stx		p0SpriteHeight				; Increment and store progression
@@ -1290,9 +1290,9 @@ incrementArkSeq
 	bpl		snakeMove
 	lda		#$00
 snakeMove
-    ; -----------------------------------------------------------------------
-    ; SNAKE MOVEMENT AI
-    ; -----------------------------------------------------------------------
+	; -----------------------------------------------------------------------
+	; SNAKE MOVEMENT AI
+	; -----------------------------------------------------------------------
 
 	sta		ballPosY					; Update Snake Vertical Position
 	and		#$f8						; Mask for coarse alignment
@@ -1300,9 +1300,9 @@ snakeMove
 	beq		configSnake					; If not, skip position logic
 	sta		snakePosY					; Update internal Y
 
-    ; --- Steering Calculation ---
-    ; The snake "Steers" by adding offsets to the 'indyPosXSet' variable.
-    ; It tries to align its center column with Indy.
+	; --- Steering Calculation ---
+	; The snake "Steers" by adding offsets to the 'indyPosXSet' variable.
+	; It tries to align its center column with Indy.
 	lda		objectState					; Load current Wiggle Frame
 	and		#$03
 	tax
@@ -1360,16 +1360,16 @@ updateSnakeMove
 	sta		objectState					; Save
 
 configSnake
-    ; -----------------------------------------------------------------------
-    ; SNAKE / BALL GRAPHICS SETUP
-    ; -----------------------------------------------------------------------
-    ; The Snake is not a standard sprite. It is the "Ball" object drawn on
-    ; every scanline. To make it look like a snake, we change the 
-    ; Horizontal Motion (HMBL) register on every single line.
-    ;
-    ; This routine sets up the pointer to the "Wiggle Table" (snakeMotionTable)
-    ; so the Kernel knows how much to shift the ball left/right.
-    ; -----------------------------------------------------------------------
+	; -----------------------------------------------------------------------
+	; SNAKE / BALL GRAPHICS SETUP
+	; -----------------------------------------------------------------------
+	; The Snake is not a standard sprite. It is the "Ball" object drawn on
+	; every scanline. To make it look like a snake, we change the
+	; Horizontal Motion (HMBL) register on every single line.
+	;
+	; This routine sets up the pointer to the "Wiggle Table" (snakeMotionTable)
+	; so the Kernel knows how much to shift the ball left/right.
+	; -----------------------------------------------------------------------
 	lda		objectState
 	and		#$03						; Mask Frame (0-3)
 	tax
@@ -1379,9 +1379,9 @@ configSnake
 	sta		auxDataPtrHi				; Store High Byte
 
 	; -----------------------------------------------------------------------
-    ; CALCULATE VERTICAL OFFSET
-    ; -----------------------------------------------------------------------
-    ; Determine where in the table to start reading based on animation state.
+	; CALCULATE VERTICAL OFFSET
+	; -----------------------------------------------------------------------
+	; Determine where in the table to start reading based on animation state.
 	lda		objectState
 	lsr
 	lsr
@@ -1395,12 +1395,12 @@ checkMajorEventDone
 	bit		majorEventFlag
 	bpl		checkGameScriptTimer		; If major event not complete
 										; continue sequence
-	jmp		finishedScrollUpdate				; Else, jump to end
+	jmp		finishedScrollUpdate		; Else, jump to end
 
 checkGameScriptTimer
 	bit		eventTimer
 	bpl		branchOnFrameParity			; If timer still counting or inactive, proceed
-	jmp		setIndyStandSprite		; Else, jump to alternate script path
+	jmp		setIndyStandSprite			; Else, jump to alternate script path
 
 branchOnFrameParity
 	lda		frameCount					; get current frame count
@@ -1462,7 +1462,7 @@ stopWeaponEvent
 	jmp		HandleIInventorySelect
 
 handleIndyMove
-	ldx		#<indyPosY - p0PosY		; Get index of Indy in object list
+	ldx		#<indyPosY - p0PosY			; Get index of Indy in object list
 	lda		SWCHA						; read joystick values
 	sta		tempGfxHolder				; Store raw joystick input
 	and		#P1_NO_MOVE
@@ -1521,7 +1521,7 @@ checkScanBoundaryOrContinue
 
 triggerScreenTransition
 	sty		currentRoomId				; Set new screen based on event result
-	jsr		initRoomState		; Load new room or area
+	jsr		initRoomState				; Load new room or area
 
 HandleIInventorySelect
 	bit		INPT4|$30					; read action button from left controller
@@ -1644,17 +1644,17 @@ exitItemUseHandler
 	jmp		updateIndyParachuteSprite
 
 calculateMesaGrapple
-    ; -----------------------------------------------------------------------
-    ; GRAPPLE LANDING CALCULATOR
-    ; -----------------------------------------------------------------------
-    ; Converts the Hook's Screen Position (Pixels) into a Map Grid ID.
-    ; The Mesa Field is essentially a grid of regions.
-    ;
-    ; Formula:
-    ; RegionY = ((HookY - 6) + WorldScrollOffset) / 16
-    ; RegionX = ((HookX - 16) / 32)
-    ; TableIndex = RegionY + RegionX
-    ; -----------------------------------------------------------------------
+	; -----------------------------------------------------------------------
+	; GRAPPLE LANDING CALCULATOR
+	; -----------------------------------------------------------------------
+	; Converts the Hook's Screen Position (Pixels) into a Map Grid ID.
+	; The Mesa Field is essentially a grid of regions.
+	;
+	; Formula:
+	; RegionY = ((HookY - 6) + WorldScrollOffset) / 16
+	; RegionX = ((HookX - 16) / 32)
+	; TableIndex = RegionY + RegionX
+	; -----------------------------------------------------------------------
 	lda		weaponPosY					; get bullet or whip vertical position
 	lsr									; Divide by 2 (fine-tune for tile mapping)
 	sec									; Set carry for subtraction
@@ -1682,22 +1682,22 @@ hookAndMoveIndy
 	tay									; Y = Final Grid Index
 
 	; -----------------------------------------------------------------------
-    ; DETERMINE DESTINATION
-    ; -----------------------------------------------------------------------
+	; DETERMINE DESTINATION
+	; -----------------------------------------------------------------------
 	lda		mesaGridMapTable,y			; Look up the "Region ID" for this grid cell.
 	sta		activeMesaID				; Store logical location (Used for
 										; determining if we found the target mesa)
 
-    ; -----------------------------------------------------------------------
-    ; "SWINGING" INDY TO THE HOOK
-    ; -----------------------------------------------------------------------
+	; -----------------------------------------------------------------------
+	; "SWINGING" INDY TO THE HOOK
+	; -----------------------------------------------------------------------
 	ldx		weaponPosY					; Get Hook position
 	dex									; Adjust slightly
 	stx		weaponPosY
 	stx		indyPosY					; TELEPORT INDY to Hook Y
 
 	ldx		weaponPosX					; Get Hook Position
-	dex									
+	dex
 	dex
 	stx		weaponPosX
 	stx		indyPosX					; TELEPORT INDY to Hook X
@@ -1717,7 +1717,7 @@ attemptArkDig
 	bcc		exitItemUseHandler			; If not, exit (can't dig here)
 
 	; 2. Collision Check (Must be touching the Dirt Pile)
-    ; The Dirt Pile is Player 0. Indy is Player 1.
+	; The Dirt Pile is Player 0. Indy is Player 1.
 	bit		CXPPMM|$30					; Check P0-P1 Collision (Bit 7)
 	bpl		exitItemUseHandler			; If no collision, exit.
 
@@ -1726,8 +1726,8 @@ attemptArkDig
 	bne		exitItemUseHandler			; Only dig on overflow (0) to slow animation.
 
 	; 4. Update Dirt Pile "Frame"
-    ; The state variable acts as the Low Byte for the graphics pointer.
-    ; Decrementing it moves the pointer to the "Smaller Pile" sprite data.
+	; The state variable acts as the Low Byte for the graphics pointer.
+	; Decrementing it moves the pointer to the "Smaller Pile" sprite data.
 	ldy		diggingState				; Load current graphics offset ($5C start)
 	dey									; Shrink pile
 	cpy		#$54						; Have we reached the "Cleared" state?
@@ -1870,14 +1870,14 @@ handleMesaScroll
 	bne		finishedScrollUpdate			; If neither, continue to Bank 1 routines
 
 checkMesaCameraUpdate
-    ; -----------------------------------------------------------------------
-    ; MESA SCROLLING LOGIC (CAMERA PAN)
-    ; -----------------------------------------------------------------------
-    ; This routine handles the vertical scrolling. It creates the illusion
-    ; of a larger map by shifting the "World Offset" (p0OffsetPosY) and
-    ; all relative object positions when Indy pushes against the top or
-    ; bottom edges of the screen.
-    ; -----------------------------------------------------------------------
+	; -----------------------------------------------------------------------
+	; MESA SCROLLING LOGIC (CAMERA PAN)
+	; -----------------------------------------------------------------------
+	; This routine handles the vertical scrolling. It creates the illusion
+	; of a larger map by shifting the "World Offset" (p0OffsetPosY) and
+	; all relative object positions when Indy pushes against the top or
+	; bottom edges of the screen.
+	; -----------------------------------------------------------------------
 	lda		frameCount					; get current frame count
 	bit		playerInputState			; Check movement input flags
 	bpl		tryScrollSouth				; If bit 7 of playerInputState is clear
@@ -1885,7 +1885,7 @@ checkMesaCameraUpdate
 
 tryScrollSouth
 	ldy		indyPosY					; get Indy's vertical position
-	cpy		#MESA_SCROLL_TRIGGER_BOTTOM	; Check Lower Scroll Boundary 
+	cpy		#MESA_SCROLL_TRIGGER_BOTTOM	; Check Lower Scroll Boundary
 										; (Bottom of screen)
 	beq		finishedScrollUpdate				; If at bottom, stop scrolling
 
@@ -1893,12 +1893,12 @@ tryScrollSouth
 	bcs		tryScrollNorth				; If Indy Y >= $27, he is near the bottom.
 										; (Carry Set = Check Downward Scroll/Reverse)
 
-	; --- SCROLLING DOWN (Walking towards bottom) ---							
+	; --- SCROLLING DOWN (Walking towards bottom) ---
 	beq		finishedScrollUpdate				; If Offset is 0, we are at
 										; the very bottom of the map.
 										; Stop scrolling.
 
-	; Perform the "Camera Move":									
+	; Perform the "Camera Move":
 	inc		indyPosY					; Nudge Indy Down (Keep him pinned to edge)
 	inc		weaponPosY					; Move Weapon DOWN with him
 	and		#$02						; Check Frame Timing every 2 frames
@@ -1917,7 +1917,7 @@ tryScrollSouth
 
 tryScrollNorth
 	; --- SCROLLING UP (Walking towards top) ---
-	cpx		#MESA_MAP_MAX_HEIGHT 		; Check Upper World Limit (Offset $50)
+	cpx		#MESA_MAP_MAX_HEIGHT		; Check Upper World Limit (Offset $50)
 	bcs		finishedScrollUpdate		; If at top of map, Stop scrolling.
 	dec		indyPosY					; Nudge Indy UP (Keep him pinned to edge)
 	dec		weaponPosY					; Move Weapon UP
@@ -1984,7 +1984,7 @@ initArkRoomObjPos
 	lda		#$4d						; Set Indy's X position in the Ark Room
 	sta		indyPosX
 	lda		#$48
-	sta		p0PosX					; Set object X position
+	sta		p0PosX						; Set object X position
 	lda		#$1f
 	sta		indyPosY					; Set Indy's Y position in the Ark Room
 	rts
@@ -2054,7 +2054,7 @@ loadRoomGfx
 	lda		p0SpriteHeightData,x
 	sta		p0SpriteHeight				; Set sprite height for P0
 	lda		objectPosXTable,x
-	sta		p0PosX					; Set default object X position
+	sta		p0PosX						; Set default object X position
 	lda		m0PosXTable,x
 	sta		m0PosX						; Set default missile X position
 	lda		m0PosYTable,x
@@ -2072,7 +2072,7 @@ loadRoomGfx
 	lda		PF2GfxDataHi,x
 	sta		PF2GfxPtrHi					; Load PF2 graphics pointer MSB.
 	lda		#$55
-	sta		ballPosY			; Init object vertical parameter
+	sta		ballPosY					; Init object vertical parameter
 	sta		weaponPosY					; Reset Weapon vertical parameter
 	cpx		#ID_TEMPLE_ENTRANCE			; If Temple Entrance or later,
 	bcs		initTempleAndShiningLight	; jump to specific initialization.
@@ -2103,7 +2103,7 @@ setTreasureRoomObjPosY
 	and		#$78						; Mask off all but bits 3-6
 	sta		treasureIndex				; Save the updated control state
 	lda		#$1a
-	sta		p0PosY					; Set Y Pos for the top object
+	sta		p0PosY						; Set Y Pos for the top object
 	lda		#$26
 	sta		p0OffsetPosY					; Set vertical position for the bottom object
 	rts									; Return
@@ -2125,20 +2125,20 @@ initTempleAndShiningLight
 	cpx		#ID_ROOM_OF_SHINING_LIGHT	; Is this the Room of Shining Light?
 	beq		initRoomOfShiningLight		; If so, jump to its specific init routine
 	; --------------------------------------------------------------------------
-    ; TEMPLE GRAPHICS INIT
-    ; --------------------------------------------------------------------------
+	; TEMPLE GRAPHICS INIT
+	; --------------------------------------------------------------------------
 	cpx		#ID_TEMPLE_ENTRANCE			; If not, is it the Temple Entrance?
 	bne		initMesaFieldScrollState	; If neither, skip this routine
 
 	ldy		#$00
-	sty		auxDataIndex				; Clear Timepiece Sprite Index 
+	sty		auxDataIndex				; Clear Timepiece Sprite Index
 
 	ldy		#$40
 	sty		dynamicGfxData				; Set visual reference
 	bne		enableDungeonWalls			;Always taken
 
 initRoomOfShiningLight
-	ldy		#$ff						
+	ldy		#$ff
 	sty		dynamicGfxData				; Set mask to FF (Draw full bars)
 	iny									; y = 0
 	sty		auxDataIndex				; Clear pointers
@@ -2335,7 +2335,7 @@ dropParachute:
 	and		mesaSideState				; Remove parachute bit from game state flag
 	sta		mesaSideState
 finishDrop:
-	jmp		dropItem			; Go to general item removal cleanup
+	jmp		dropItem					; Go to general item removal cleanup
 
 dropGrappleItem:
 	stx		eventState					; Store current room ID
@@ -2390,7 +2390,7 @@ dropWhip:
 	cpx		#ID_ENTRANCE_ROOM
 	bne		finishWhipDrop
 	lda		#$4e
-	sta		p0OffsetPosY					; Reset Whip position below rock
+	sta		p0OffsetPosY				; Reset Whip position below rock
 finishWhipDrop:
 	bne		dropItem					; unconditional branch
 
@@ -2404,7 +2404,7 @@ dropShovel:
 	cpx		#ID_BLACK_MARKET			; Is Indy currently in the Black Market?
 	bne		finishShovelDrop			; If not, skip
 	lda		#$4f
-	sta		p0OffsetPosY					; Reset Shovel position
+	sta		p0OffsetPosY				; Reset Shovel position
 	lda		#$4b
 	sta		m0PosY
 finishShovelDrop:
@@ -2428,7 +2428,7 @@ finishCoinDrop:
 
 dropItem:
 	dec		inventoryItemCount			; reduce number of inventory items
-	bne		selectNextAvailableItem				; branch if Indy has remaining items
+	bne		selectNextAvailableItem		; branch if Indy has remaining items
 	lda		#ID_INVENTORY_EMPTY
 	sta		selectedInventoryId			; clear the current selected invendory id
 	beq		finishInventorySelect		; unconditional branch
@@ -2455,24 +2455,24 @@ finishInventorySelect
 	sec									; Set carry to indicate success
 	rts
 
-	.byte	$00,$00,$00				; $dafd (*)
+	.byte	$00,$00,$00					; $dafd (*)
 
 
 HMOVETable
-	.byte MSBL_SIZE1 | ONE_COPY		; Treasure Room
-	.byte MSBL_SIZE1 | ONE_COPY		; Marketplace
-	.byte MSBL_SIZE8 | DOUBLE_SIZE	; Entrance Room
-	.byte MSBL_SIZE2 | ONE_COPY		; Black Market
-	.byte MSBL_SIZE2 | QUAD_SIZE	; Map Room
-	.byte MSBL_SIZE8 | ONE_COPY		; Mesa Side
-	.byte MSBL_SIZE1 | ONE_COPY		; Temple Entrance
-	.byte MSBL_SIZE1 | ONE_COPY		; Spider Room
-	.byte MSBL_SIZE1 | ONE_COPY		; Room of Shining Light
-	.byte MSBL_SIZE1 | ONE_COPY		; Mesa Field
-	.byte MSBL_SIZE1 | ONE_COPY		; Valley of Poison
-	.byte MSBL_SIZE1 | ONE_COPY		; Thieves Den
-	.byte MSBL_SIZE1 | ONE_COPY		; Well of Souls
-	.byte MSBL_SIZE1 | DOUBLE_SIZE	; Ark Room
+	.byte MSBL_SIZE1 | ONE_COPY			; Treasure Room
+	.byte MSBL_SIZE1 | ONE_COPY			; Marketplace
+	.byte MSBL_SIZE8 | DOUBLE_SIZE		; Entrance Room
+	.byte MSBL_SIZE2 | ONE_COPY			; Black Market
+	.byte MSBL_SIZE2 | QUAD_SIZE		; Map Room
+	.byte MSBL_SIZE8 | ONE_COPY			; Mesa Side
+	.byte MSBL_SIZE1 | ONE_COPY			; Temple Entrance
+	.byte MSBL_SIZE1 | ONE_COPY			; Spider Room
+	.byte MSBL_SIZE1 | ONE_COPY			; Room of Shining Light
+	.byte MSBL_SIZE1 | ONE_COPY			; Mesa Field
+	.byte MSBL_SIZE1 | ONE_COPY			; Valley of Poison
+	.byte MSBL_SIZE1 | ONE_COPY			; Thieves Den
+	.byte MSBL_SIZE1 | ONE_COPY			; Well of Souls
+	.byte MSBL_SIZE1 | DOUBLE_SIZE		; Ark Room
 
 COARSE_MOTION SET 0
 
@@ -2762,7 +2762,7 @@ playfieldHitJumpTable:
 	.word defaultIdleHandler-1				; Thieves Den
 	.word defaultIdleHandler-1				; Well of Souls
 
-roomIdleHandlerJumpTable:
+roomleHandlerJmpTable:
 	.word defaultIdleHandler-1				; Treasure Room
 	.word defaultIdleHandler-1				; Marketplace
 	.word setIndyToTriggeredState-1			; Entrance Room
@@ -2778,84 +2778,84 @@ roomIdleHandlerJumpTable:
 	.word defaultIdleHandler-1				; Well of Souls
 
 placeItemInInventory
-	ldx		inventoryItemCount		; get number of inventory items
-	cpx		#MAX_INVENTORY_ITEMS	; is Indy carrying fill inventory? (6)
-	bcc		getSpaceForItem			; branch if Indy has room to carry more items
+	ldx		inventoryItemCount				; get number of inventory items
+	cpx		#MAX_INVENTORY_ITEMS			; is Indy carrying fill inventory? (6)
+	bcc		getSpaceForItem					; branch if Indy has room to carry more items
 	clc
 	rts
 
 getSpaceForItem
-	ldx		#$0a					; start from last inventory slot (10)
+	ldx		#$0a							; start from last inventory slot (10)
 invSearchLoop
-	ldy		invSlotLo,x				; get the LSB for the inventory graphic
-	beq		addItem					; branch if current slot is free
+	ldy		invSlotLo,x						; get the LSB for the inventory graphic
+	beq		addItem							; branch if current slot is free
 	dex
-	dex								; Move to the previous slot
+	dex										; Move to the previous slot
 	bpl		invSearchLoop
-	brk								; break if no more items can be carried
-									; (Should never happen -- if ItemCount < Max)
+	brk										; break if no more items can be carried
+											; (Should never happen -- if ItemCount < Max)
 
 addItem
-	tay								; move item number to y
-	asl								; multiply object number by 8 for gfx
-	asl								;...
-	asl								;...
-	sta		invSlotLo,x				; place graphic LSB in inventory
-	lda		inventoryItemCount		; get number of inventory items
-	bne		updateInventory			; branch if Indy carrying items
-	stx		selectedItemSlot		; set index to newly picked up item
-	sty		selectedInventoryId		; set the current selected inventory id
+	tay										; move item number to y
+	asl										; multiply object number by 8 for gfx
+	asl										;...
+	asl										;...
+	sta		invSlotLo,x						; place graphic LSB in inventory
+	lda		inventoryItemCount				; get number of inventory items
+	bne		updateInventory					; branch if Indy carrying items
+	stx		selectedItemSlot				; set index to newly picked up item
+	sty		selectedInventoryId				; set the current selected inventory id
 updateInventory
-	inc		inventoryItemCount		; increment number of inventory items
-	cpy		#ID_INVENTORY_COINS		; If ID < Coins'
-	bcc		finishInventoryUpdate	; ex Flute, Parachute, skip marking as "Taken"
-	tya								; move item number to accumulator
-	tax								; move item number to x
-	jsr		showItemAsTaken			; Mark item as taken in global bitmasks
+	inc		inventoryItemCount				; increment number of inventory items
+	cpy		#ID_INVENTORY_COINS				; If ID < Coins'
+	bcc		finishInventoryUpdate			; ex Flute, Parachute, skip marking as "Taken"
+	tya										; move item number to accumulator
+	tax										; move item number to x
+	jsr		showItemAsTaken					; Mark item as taken in global bitmasks
 finishInventoryUpdate
-	lda		#$0c					; Make sound
-	sta		soundChan0EffectTimer		; play with Indy's footstep sound
+	lda		#$0c							; Make sound
+	sta		soundChan0EffectTimer			; play with Indy's footstep sound
 	sec
 	rts
 
 setItemAsNotTaken
-	lda		itemIndexTable,x		; get the item index value
-	lsr								; shift D0 to carry
+	lda		itemIndexTable,x				; get the item index value
+	lsr										; shift D0 to carry
 	tay
-	lda		itemStatusMaskTable,y	; branch if item not a basket item
+	lda		itemStatusMaskTable,y			; branch if item not a basket item
 	bcs		showItemAsNotTaken
 	and		basketItemStatus
-	sta		basketItemStatus		; clear status bit showing item not taken
+	sta		basketItemStatus				; clear status bit showing item not taken
 	rts
 
 showItemAsNotTaken
 	and		pickupItemsStatus
-	sta		pickupItemsStatus		; clear status bit showing item not taken
+	sta		pickupItemsStatus				; clear status bit showing item not taken
 	rts
 
 showItemAsTaken
-	lda		itemIndexTable,x		; get the item index value
-	lsr								; shift D0 to carry
+	lda		itemIndexTable,x				; get the item index value
+	lsr										; shift D0 to carry
 	tax
-	lda		itemStatusBitValues,x	; get item bit value
-	bcs		pickUpItemTaken			; branch if item not a basket item
+	lda		itemStatusBitValues,x			; get item bit value
+	bcs		pickUpItemTaken					; branch if item not a basket item
 	ora		basketItemStatus
-	sta		basketItemStatus		; show item taken
+	sta		basketItemStatus				; show item taken
 	rts
 
 pickUpItemTaken
 	ora		pickupItemsStatus
-	sta		pickupItemsStatus		; show item taken
+	sta		pickupItemsStatus				; show item taken
 	rts
 
 isItemAlreadyTaken:
-	lda		itemIndexTable,x		; get the item index value
-	lsr								; shift D0 to carry
+	lda		itemIndexTable,x				; get the item index value
+	lsr										; shift D0 to carry
 	tay
-	lda		itemStatusBitValues,y	; get item bit value
-	bcs		isItemTaken				; branch if item not a basket item
-	and		basketItemStatus		; branch if item not taken from basket
-	beq		finishIsItemTaken		; set carry for item taken already
+	lda		itemStatusBitValues,y			; get item bit value
+	bcs		isItemTaken						; branch if item not a basket item
+	and		basketItemStatus				; branch if item not taken from basket
+	beq		finishIsItemTaken				; set carry for item taken already
 	sec
 finishIsItemTaken:
 	rts
@@ -2863,7 +2863,7 @@ finishIsItemTaken:
 isItemTaken:
 	and		pickupItemsStatus
 	bne		finishIsItemTaken
-	clc								; clear carry for item not taken already
+	clc										; clear carry for item not taken already
 	rts
 
 
@@ -2881,17 +2881,17 @@ doneRoomEventState
 startGame
 ; Set up everything so the power up state is known.
 ;
-	sei								; turn off interrupts
-	cld								; clear decimal flag (no bcd)
-	ldx		#$ff					; Load X with $FF.
-	txs								; reset the stack pointer
-	inx								; clear x
-	txa								; clear a
+	sei										; turn off interrupts
+	cld										; clear decimal flag (no bcd)
+	ldx		#$ff							; Load X with $FF.
+	txs										; reset the stack pointer
+	inx										; clear x
+	txa										; clear a
 clearZeroPage
-	sta		VSYNC,x					; clear zero page variables and TIA regs
-	dex								; Decrement X.
-	bne		clearZeroPage			; Loop until all 256 bytes are cleared.
-	dex								; x = $ff
+	sta		VSYNC,x							; clear zero page variables and TIA regs
+	dex										; Decrement X.
+	bne		clearZeroPage					; Loop until all 256 bytes are cleared.
+	dex										; x = $ff
 	stx		adventurePoints					; reset adventurePoints
 	; -------------------------------------------------------------------------
 	; INITIALIZE INVENTORY WITH COPYRIGHT
@@ -2900,13 +2900,13 @@ clearZeroPage
 	; Inventory Strip at the very beginning of the game or after a reset.
 	; It manually populates the `inventoryGfxPtrs` with the Copyright_X sprites.
 	; -------------------------------------------------------------------------
-	lda		#>emptySprite			; blank inventory
-	sta		invSlotHi				; slot 1
-	sta		invSlotHi2				; slot 2
-	sta		invSlotHi3				; slot 3
-	sta		invSlotHi4				; slot 4
-	sta		invSlotHi5				; slot 5
-	sta		invSlotHi6				; slot 6
+	lda		#>emptySprite					; blank inventory
+	sta		invSlotHi						; slot 1
+	sta		invSlotHi2						; slot 2
+	sta		invSlotHi3						; slot 3
+	sta		invSlotHi4						; slot 4
+	sta		invSlotHi5						; slot 5
+	sta		invSlotHi6						; slot 6
 
 	;fill with copyright text
 	lda		#<copyrightGfx0
@@ -2919,12 +2919,12 @@ clearZeroPage
 	sta		invSlotLo3
 	lda		#<copyrightGfx4
 	sta		invSlotLo5
-	lda		#ID_ARK_ROOM				; set "ark elevator room" (room 13)
-	sta		currentRoomId				; as current room
-	lsr									; A = ID_ARK_ROOM / 2 (becomes 6)
-	sta		bulletCount					; load 6 bullets
-	jsr		initRoomState				; Init various screen and game state
-	jmp		startNewFrame				; Jump to the main game loop.
+	lda		#ID_ARK_ROOM					; set "ark elevator room" (room 13)
+	sta		currentRoomId					; as current room
+	lsr										; A = ID_ARK_ROOM / 2 (becomes 6)
+	sta		bulletCount						; load 6 bullets
+	jsr		initRoomState					; Init various screen and game state
+	jmp		startNewFrame					; Jump to the main game loop.
 
 initGameVars:
 	lda		#<invCoinsSprite
@@ -2963,22 +2963,22 @@ initGameVars:
 ; possible to lower Indy's position on the pedestal.
 ;
 getFinalScore
-	lda		adventurePoints					; load adventurePoints
-	sec								; positve actions...
-	sbc		findingArkBonus			; found the ark
-	sbc		usingParachuteBonus		; parachute used
-	sbc		ankhUsedBonus			; ankh used (Mesa Skip)
-	sbc		yarFoundBonus			; yar found
-	sbc		livesLeft				; lives left
-	sbc		mapRoomBonus			; used the Head of Ra in the Map Room
-	sbc		mesaLandingBonus		; landed in Mesa
-	sbc		UnusedBonus				; never used
-	clc								; negitive actions...
-	adc		grenadeOpeningPenalty	; gernade used on wall (2 points)
-	adc		escapePrisonPenalty		; escape hatch used (13 points)
-	adc		thiefShotPenalty		; thief shot (4 points)
-	sta		adventurePoints					; store in final adventurePoints
-	rts								; return
+	lda		adventurePoints				; load adventurePoints
+	sec									; positve actions...
+	sbc		findingArkBonus				; found the ark
+	sbc		usingParachuteBonus			; parachute used
+	sbc		ankhUsedBonus				; ankh used (Mesa Skip)
+	sbc		yarFoundBonus				; yar found
+	sbc		livesLeft					; lives left
+	sbc		mapRoomBonus				; used the Head of Ra in the Map Room
+	sbc		mesaLandingBonus			; landed in Mesa
+	sbc		UnusedBonus					; never used
+	clc									; negitive actions...
+	adc		grenadeOpeningPenalty		; gernade used on wall (2 points)
+	adc		escapePrisonPenalty			; escape hatch used (13 points)
+	adc		thiefShotPenalty			; thief shot (4 points)
+	sta		adventurePoints				; store in final adventurePoints
+	rts									; return
 
 	;Padding for tables
 	.byte	$00,$00,$00,$00,$00,$00,$00,$00 ; $ddf8 (*)
@@ -3054,7 +3054,7 @@ marketBasketItems
 	.byte ID_INVENTORY_ANKH, ID_INVENTORY_HOUR_GLASS
 
 
-mesaGridMapTable 
+mesaGridMapTable
 	.byte	$07,$03,$05,$06,$09,$0b,$0e,$00 ; $df7c (*)
 	.byte	$01,$03,$05,$00,$09,$0c,$0e,$00 ; $df84 (*)
 	.byte	$01,$04,$05,$00,$0a,$0c,$0f,$00 ; $df8c (*)
@@ -3171,12 +3171,12 @@ DungeonWallScanlineHandler
 	tax									; Transfer A to X.
 	cpx		snakePosY					; Compare with Snake vertical position.
 	bcc		drawDungeonWall				; Branch if X < Snake Pos.
-	ldx		auxDataIndex		; Load Timepiece sprite data pointer.
+	ldx		auxDataIndex				; Load Timepiece sprite data pointer.
 	lda		#$00
 	beq		setDungeonWall				; Unconditional branch to store 0.
 drawDungeonWall
 	lda		dynamicGfxData,x			; Load dungeon graphics data.
-	ldx		auxDataIndex		; Restore X.
+	ldx		auxDataIndex				; Restore X.
 setDungeonWall
 	sta		PF1,x						; Store graphics (or 0) to PF1 using X
 										; as offset
@@ -3195,7 +3195,7 @@ drawIndySprite
 drawP0Sprite
 	lda		scanline					; Reload scanline.
 	sec									; Set carry.
-	sbc		p0PosY					; Subtract Player 0 vertical position.
+	sbc		p0PosY						; Subtract Player 0 vertical position.
 	cmp		p0SpriteHeight				; Compare with P0 height
 	bcs		skipDrawP0Sprite			; Skip if outside drawing range.
 	tay									; Transfer index to Y.
@@ -3214,11 +3214,11 @@ nextPFScanline
 	stx		GRP1						; Update GRP1 (Indy graphics).
 	sty		GRP0						; Update GRP0 (P0 graphics).
 	sec									; Set carry.
-	sbc		ballPosY			; Adjust for object Y.
+	sbc		ballPosY					; Adjust for object Y.
 	cmp		#$08						; Check height range
 	bcs		goNextPFScanline			; Skip if outside range.
 	tay									; Transfer to Y.
-	lda		(auxDataPtrLo),y		; Load timepiece graphics.
+	lda		(auxDataPtrLo),y			; Load timepiece graphics.
 	sta		ENABL						; Enable/Disable Ball.
 	sta		HMBL						; Set Horizontal Motion for Ball.
 goNextPFScanline
@@ -3255,7 +3255,7 @@ drawStillP0Sprite
 	;									; bit 7), jump to setting values.
 	cpy		p0OffsetPosY				; Compare Y with offset.
 	bcs		drawStillPlayerKernel		; Branch if greater or equal
-	cpy		p0PosY					; Compare Y with P0 vertical position.
+	cpy		p0PosY						; Compare Y with P0 vertical position.
 	bcc		skipP0Draw					; Skip if below.
 	sta		GRP0						; Store to GRP0.
 	bcs		nextStillPlayerScanline		; Unconditional branch.
@@ -3294,11 +3294,11 @@ drawStillPlayer
 	bcs		burn19Cycles				; Branch if snake not active here.
 	tay									; Transfer to Y.
 	cmp		#$08						; Compare with 8.
-	bcc		burn5Cycles				; Branch if < 8.
-	lda		auxDataIndex		; Load pointer to timepiece sprite data.
-	sta		auxDataPtrLo			; Store in graphics pointer.
+	bcc		burn5Cycles					; Branch if < 8.
+	lda		auxDataIndex				; Load pointer to timepiece sprite data.
+	sta		auxDataPtrLo				; Store in graphics pointer.
 drawTimepieceSprite
-	lda		(auxDataPtrLo),y		; Load timepiece graphics.
+	lda		(auxDataPtrLo),y			; Load timepiece graphics.
 	sta		HMBL						; Store in Ball Horizontal Motion check.
 
 setMissile1Enable
@@ -3323,7 +3323,7 @@ drawStillPlayer1Sprite
 ;---------------------------------------
 	sta		HMOVE						; Execute HMOVE.
 	lda		#ENABLE_BM					; Load Enable Ball value.
-	cpx		ballPosY			; Compare scanline with Snake Y.
+	cpx		ballPosY					; Compare scanline with Snake Y.
 	bcc		skipDrawingTheBall			; Branch if below.
 	cpx		p0SpriteHeight				; Compare with p0SpriteHeight
 	bcc		setBallEnable				; Enable ball.
@@ -3358,7 +3358,7 @@ AdvanceStillKernelScanline
 	inx									; Increment scanline counter.
 	sta		HMCLR						; Clear horizontal motion.
 	cpx		#HEIGHT_KERNEL				; Check limit.
-	bcc		drawThieves	; Branch if not done.
+	bcc		drawThieves					; Branch if not done.
 	jmp		drawInventoryKernel			; Jump to Inventory Kernel.
 
 thiefKernel
@@ -3378,7 +3378,7 @@ thiefKernel
 										; $01xx -> $00xx.
 	tax									; Move scanline to X.
 	lsr									; Divide Scanline by 2.
-	cmp		ballPosY			; Compare with Ball Y.
+	cmp		ballPosY					; Compare with Ball Y.
 	php									; Push Status (Writes P to ENABL
 										; at $1F). If Equal (Z=1),
 										; Bit 1 is set -> Enabled.
@@ -3433,12 +3433,12 @@ animateThieves
 	tay									; Transfer directly to Y index for graphics.
 	lda		(p0GfxPtrLo),y				; Load P0 Graphics data (Indirect Y).
 	sta		GRP0						; Store to GRP0 (Draw).
-	lda		(auxDataPtrLo),y		; Load P0 Color data.
+	lda		(auxDataPtrLo),y			; Load P0 Color data.
 	sta		COLUP0						; Store to COLUP0.
 	iny									; Next line of sprite data.
 	lda		(p0GfxPtrLo),y				; Look ahead: Load next graphics line.
 	sta		loopCounter					; store loop cpunter
-	lda		(auxDataPtrLo),y		; Look ahead: Load next color line.
+	lda		(auxDataPtrLo),y			; Look ahead: Load next color line.
 	sta		tempGfxHolder				; Store in temp
 	cpy		p0SpriteHeight				; Check if we have drawn the full
 										; height of the sprite.
@@ -3471,7 +3471,7 @@ updateThiefAnimation
 	bpl		finishThiefAnimate			; If Bit 7 clear, jump
 
 	; Special "Digging" state - removes pile of dirt
-    ; This block replaces the Thief Sprite with the Dirt Pile Sprite.
+	; This block replaces the Thief Sprite with the Dirt Pile Sprite.
 	lda		diggingState				; Load the variable that was modified by Shovel.
 										; (e.g., $5C, $5B, ... $54)
 	sta		p0GfxPtrLo					; Set as Low Byte of Sprite Pointer.
@@ -3509,7 +3509,7 @@ pickThiefSpriteFrame
 	lda		thiefSpriteValueLo,y		; Load LSB for Sprite Graphic.
 	sta		p0GfxPtrLo					; Set Graphic Pointer LSB.
 	lda		#<thiefColors				; Load Colors Base Address.
-	sta		auxDataPtrLo			; Set Color Pointer LSB.
+	sta		auxDataPtrLo				; Set Color Pointer LSB.
 	lda		#HEIGHT_THIEF - 1			; Load Height for Thief (-1).
 	sta		p0SpriteHeight				; Set Height.
 	lsr		objectState					; Shift state.
@@ -3709,13 +3709,13 @@ updateSoundFreq
 dispatchMusicType
 	cmp		#RAIDERS_MARCH				; Check for "Main Theme" Sound ID
 	bne		playFluteMelody				; If not $9C, play "Snake Charmer Song"
-										
-    ; -----------------------------------------------------------------------
-    ; RAIDERS MARCH (Title Screen / End Game)
-    ; -----------------------------------------------------------------------
-    ; The theme loops based on a timer ($A4) that counts down.
-    ; -----------------------------------------------------------------------
-	lda		#$0f						
+
+	; -----------------------------------------------------------------------
+	; RAIDERS MARCH (Title Screen / End Game)
+	; -----------------------------------------------------------------------
+	; The theme loops based on a timer ($A4) that counts down.
+	; -----------------------------------------------------------------------
+	lda		#$0f
 	and		frameCount					; Slow tick
 	bne		playRaidersMarch			; If not tick, just verify timer
 	dec		soundTimer					; Decrement timer
@@ -3725,14 +3725,14 @@ dispatchMusicType
 
 playRaidersMarch
 	ldy		soundTimer					; Get timer value
-	lda		raidersMarchFreqTable ,y			; Look up Frequency from Table
+	lda		raidersMarchFreqTable ,y	; Look up Frequency from Table
 	bne		updateSoundFreq				; Go to write Frequency
 
-    ; -----------------------------------------------------------------------
-    ; FLUTE MELODY (Snake Charmer)
-    ; -----------------------------------------------------------------------
-    ; Procedurally generates music based on the master frame counter.
-    ; -----------------------------------------------------------------------
+	; -----------------------------------------------------------------------
+	; FLUTE MELODY (Snake Charmer)
+	; -----------------------------------------------------------------------
+	; Procedurally generates music based on the master frame counter.
+	; -----------------------------------------------------------------------
 playFluteMelody							; get global frame counter
 	lda		frameCount
 	lsr									; Divide by 16 (Plays note for ~16 frames)
@@ -3767,7 +3767,7 @@ updateTimepieceSprite
 	; The timepiece in the inventory shows the passing of time by hand rotation.
 	; Uses timeOfDay to select the correct graphic frame.
 	; --------------------------------------------------------------------------
-	lda		timeOfDay				; Load seconds counter.
+	lda		timeOfDay					; Load seconds counter.
 	and		#$e0						; Keep top 3 bits for the 8 sprites
 	lsr
 	lsr
@@ -3810,7 +3810,7 @@ UpdateInvEventState
 	and		#$06						; Mask bits 1 and 2.
 	asl									; Shift left
 	asl
-	sta		auxDataPtrLo			; Update Timepiece Graphics Pointer
+	sta		auxDataPtrLo				; Update Timepiece Graphics Pointer
 	lda		#$fd						; Load $FD.
 	sta		auxDataPtrHi				; Set auxDataPtrHi (?)
 
@@ -4103,7 +4103,7 @@ drawPlayer1Sprite
 nextArkRoomScanline
 	inx									; Increment scanline counter
 	cpx		#$90						; check if kernel finished (144 scanlines)
-	bcs		drawArkBody				; Branch if >= 144 to finish up
+	bcs		drawArkBody					; Branch if >= 144 to finish up
 	bcc		drawArkRoom					; Loop back if not done
 
 checkToDrawArk
@@ -4189,51 +4189,51 @@ mesaFieldRoomHandler:
 	; --------------------------------------------------------------------------
 		lda		#$7f						; Y screen center
 		sta		p0PosY						; Pin Player 0 to Center Y
-		sta		m0PosY					; Pin Missile 0 to Center Y
+		sta		m0PosY						; Pin Missile 0 to Center Y
 		sta		ballPosY					; Pin Ball to Center Y
 		bne		finishRoomHandle			; Exit
 
 spiderRoomHandler:
 		ldx		#$00						; X = 0 (Spider Object / Player 0 Index)
 		ldy		#$01						; Y = Offset to Indy's Y Position in array
-		bit		CXP1FB					; Check P1 (Indy) vs Playfield (Walls) hit
+		bit		CXP1FB						; Check P1 (Indy) vs Playfield (Walls) hit
 		bmi		updateMoveSpider			; If Indy touches walls, Agro Spider
-		bit		spiderRoomState			; ; Check bit 7 of spiderRoomState
-										; (Set if Indy touches the Web/M0)
+		bit		spiderRoomState				; Check bit 7 of spiderRoomState
+											; (Set if Indy touches the Web/M0)
 		bmi		updateMoveSpider			; If Indy trapped in web, Spider
-										; enters "Aggressive Mode" (Chases Indy)
+											; enters "Aggressive Mode" (Chases Indy)
 	; Mode: Passive (Guard Nest)
 	; Spider moves slowly (once every 8 frames) back to the top of the screen.
-		lda		frameCount				; Get global frame counter
+		lda		frameCount					; Get global frame counter
 		and		#$07						; check every 8th frame
 		bne		animateSpider				; If not the 8th frame, skip movement update
 		ldy		#$05						; Set Target Index to 5 (a unused/static slot?)
 		lda		#$4c						; Load Passive Target X?
 		sta		unused_CD					; (Unused write)
 		lda		#$23						; Set Passive home Target Y = $23
-		sta		targetPosY				; Store in target variable for
+		sta		targetPosY					; Store in target variable for
 updateMoveSpider:
 	; Calls generic handler to move Object[X] towards Object[Y].
 	; Valid inputs at this point:
 	;	Aggressive: X=0(Spider), Y=Indy Offset. Result: Spider moves to Indy.
 	;	Passive:	X=0(Spider), Y=5(Static).	Result: Spider moves to Home ($23)
-		jsr		updateMoveToTarget		; Execute movement logic
+		jsr		updateMoveToTarget			; Execute movement logic
 animateSpider:
 		lda		#$80						; Set bit 7
 		sta		screenEventState			; Update screen event flags
 	; Animation Logic
 	; Calculates a sprite frame based on position to simulate scuttling.
-		lda		p0PosY					; Load Spider Vertical Position
+		lda		p0PosY						; Load Spider Vertical Position
 		and		#$01						; Check LSB (Odd/Even pixel)
-		ror		p0PosX				; Rotate Spider X into Carry
-		rol								; Rotate Carry into A
-		tay								; Use result as index into sprite table
-		ror								; Restore Carry
-		rol		p0PosX				; Restore Spider X Position
-		lda		spiderSpriteTable,y		; Load the appropriate Spider Sprite frame
-		sta		p0GfxPtrLo				; Store Low Byte of sprite pointer
-		lda		#>spiderSprites			; Start at first spider frame
-		sta		p0GfxPtrHi				; Store High Byte of sprite pointer
+		ror		p0PosX						; Rotate Spider X into Carry
+		rol									; Rotate Carry into A
+		tay									; Use result as index into sprite table
+		ror									; Restore Carry
+		rol		p0PosX						; Restore Spider X Position
+		lda		spiderSpriteTable,y			; Load the appropriate Spider Sprite frame
+		sta		p0GfxPtrLo					; Store Low Byte of sprite pointer
+		lda		#>spiderSprites				; Start at first spider frame
+		sta		p0GfxPtrHi					; Store High Byte of sprite pointer
 
 	; Web (Missile 0) Logic
 	; The "Web" is represented by Missile 0 held in a fixed position.
@@ -4245,127 +4245,127 @@ animateSpider:
 		stx		m0PosY
 
 		; State / Animation Timer Logic
-		lda		spiderRoomState			; Check main state
+		lda		spiderRoomState				; Check main state
 		bmi		finishRoomHandle			; If Bit 7 set (Aggressive/Caught),
-										; skip passive animation updates
-		bit		majorEventFlag			; Check if a major event
+											; skip passive animation updates
+		bit		majorEventFlag				; Check if a major event
 		bmi		finishRoomHandle			; If so, skip
 		and		#$07						; Mask lower 3 bits (Animation Timer)
 		bne		updateSpiderSpriteState	; If timer != 0, go update sprite state shadow
 		ldy		#$06						; Reset timer/state to 6
-		sty		spiderRoomState			; Store back
+		sty		spiderRoomState				; Store back
 
 updateSpiderSpriteState:
-		tax								; Use A (masked spiderRoomState) as index
+		tax									; Use A (masked spiderRoomState) as index
 		lda		TreasureRoomItemStateTable,x	; Load a value from table
 		sta		m0PosYShadow				; Update the shadow variable
-		dec		spiderRoomState			; Decrement the timer/state counter
+		dec		spiderRoomState				; Decrement the timer/state counter
 
 finishRoomHandle:
-		jmp		jmpSetupNewRoom		; Return to Bank 0 Dispatcher
+		jmp		jmpSetupNewRoom				; Return to Bank 0 Dispatcher
 
 ; Screen ID 06: Valley of Poison
 valleyOfPoisonRoomHandler:
 		lda		#$80						; Set Bit 7 ($80) in Screen Event State.
 		sta		screenEventState			; screenEventState = $80 (Active).
 		ldx		#$00						; X = 0.
-		bit		majorEventFlag			; Check Major Event Flag
-		bmi		thiefEscape				;  If Major Event Set (Negative),
-										; Enter thief escape mode.
+		bit		majorEventFlag				; Check Major Event Flag
+		bmi		thiefEscape					;  If Major Event Set (Negative),
+											; Enter thief escape mode.
 		bit		pickupStatusFlags			; Check Pickup Status (Bit 6 = Overflow).
-		bvc		thiefChase				; If Overflow Clear (No Item Stolen),
-										; Enter thief chase Mode.
+		bvc		thiefChase					; If Overflow Clear (No Item Stolen),
+											; Enter thief chase Mode.
 thiefEscape:
 	; Mode: Thief Escape (Man in Black leaves with item or during death)
 		ldy		#$05						; Target Index = 5.
 		lda		#$55						; Target Y = $55 (Escape Point).
 		sta		unused_CD					; Store unused temp.
-		sta		targetPosY				; Set Target Vertical Position to $55.
+		sta		targetPosY					; Set Target Vertical Position to $55.
 		lda		#$01						; Speed Mask = 1
-										; (Update every ODD frame - Fast).
-		bne		updateThiefMove			; Unconditional branch.
+											; (Update every ODD frame - Fast).
+		bne		updateThiefMove				; Unconditional branch.
 
 thiefChase:
 	; Mode: Thief Chase (Man in Black chases Indy)
-		ldy		#<indyPosY - p0PosY		; Target Index = Indy's Y Position.
+		ldy		#<indyPosY - p0PosY			; Target Index = Indy's Y Position.
 		lda		#$03						; Speed Mask = 3
-										; (Update every 4th frame - Slow).
+											; (Update every 4th frame - Slow).
 updateThiefMove:
-		and		frameCount				; Apply Speed Mask.
-		bne		checkEscape				; If Mask != 0 (Skip Frame),
-										; Check Scrolling/Boundary
-		jsr		updateMoveToTarget		; Update Object Position
-										; (Move P0 towards Target).
-		lda		p0PosY					; Load Thief Vertical Position
-		bpl		checkEscape				; If Positive, Skip.
+		and		frameCount					; Apply Speed Mask.
+		bne		checkEscape					; If Mask != 0 (Skip Frame),
+											; Check Scrolling/Boundary
+		jsr		updateMoveToTarget			; Update Object Position
+											; (Move P0 towards Target).
+		lda		p0PosY						; Load Thief Vertical Position
+		bpl		checkEscape					; If Positive, Skip.
 		cmp		#$a0						; Check against 16
-		bcc		checkEscape				; If < 16, Skip.
-		inc		p0PosY					; Nudge Up (for scrolling effect)
-		inc		p0PosY					; Nudge Up again
+		bcc		checkEscape					; If < 16, Skip.
+		inc		p0PosY						; Nudge Up (for scrolling effect)
+		inc		p0PosY						; Nudge Up again
 checkEscape:
 		bvc		updateThiefDirection		; If Overflow Clear (Chase Mode),
-										; Skip Escape Check
-		lda		p0PosY					; Load Thief Vertical Position.
+											; Skip Escape Check
+		lda		p0PosY						; Load Thief Vertical Position.
 		cmp		#$51						; Check against Escape Line
 		bcc		updateThiefDirection		; If < $51 (Not there yet), Continue.
 
 		; Thief has escaped with the item.
 		lda		pickupStatusFlags			; Load Flags.
-		sta		screenInitFlag			; Trigger initialization/state change?
+		sta		screenInitFlag				; Trigger initialization/state change?
 		lda		#$00						; Clear A.
 		sta		pickupStatusFlags			; Clear Stolen Status (Reset Theft)
 
 updateThiefDirection:
-		lda		p0PosX					; Load Thief X.
+		lda		p0PosX						; Load Thief X.
 		cmp		indyPosX					; Compare with Indy X.
 		bcs		faceThiefLeft				; If Thief >= Indy, Face Left.
-		dex								; Decrement X (0->FF).
+		dex									; Decrement X (0->FF).
 		eor		#$03						; Toggle bits.
 
 faceThiefLeft:
 		stx		REFP0						; Set P0 Reflection.
 		and		#$03						; Mask Low bits of X-Diff.
-		asl								; Shift Left x3 (Multiply by 8).
+		asl									; Shift Left x3 (Multiply by 8).
 		asl
 		asl
-		asl								; Calculate Animation Offset.
-		sta		p0GfxPtrLo				; Store P0 Graphics Pointer.
+		asl									; Calculate Animation Offset.
+		sta		p0GfxPtrLo					; Store P0 Graphics Pointer.
 
 		; Missile 0 (Swarm) Update
 		lda		frameCount
 		and		#$7f
-		bne		swarmOffscreen			; Skip update most frames (Slow update).
-		lda		p0PosY					; Load Thief Y
+		bne		swarmOffscreen				; Skip update most frames (Slow update).
+		lda		p0PosY						; Load Thief Y
 		cmp		#$4a						; Check Bound.
-		bcs		swarmOffscreen			; If >= $4A, Skip.
+		bcs		swarmOffscreen				; If >= $4A, Skip.
 		ldy		EventStateOffset			; Load Swarm Timer/State.
-		beq		swarmOffscreen			; If 0, Skip.
-		dey								; Decrement.
+		beq		swarmOffscreen				; If 0, Skip.
+		dey									; Decrement.
 		sty		EventStateOffset			; Update State.
 		ldy		#$8e						; Default Y.
 		adc		#$03						; Add 3 to thief Y location
-		sta		m0PosY					; Set swarm Y near Thief.
+		sta		m0PosY						; Set swarm Y near Thief.
 		cmp		indyPosY					; Compare swarm Y vs Indy Y.
-		bcs		updateSwarm				; If swarm >= Indy, Move X.
-		dey								; Adjust Y
+		bcs		updateSwarm					; If swarm >= Indy, Move X.
+		dey									; Adjust Y
 
 updateSwarm:
-		lda		p0PosX					; Load Thief X.
+		lda		p0PosX						; Load Thief X.
 		adc		#$04						; Add Offset.
-		sta		m0PosX					; Set swarm X.
+		sta		m0PosX						; Set swarm X.
 		sty		m0PosYShadow				; Store Y to Shadow.
 
 swarmOffscreen:
 		ldy		#$7f						; Load $7F.
 		lda		m0PosYShadow				; Load shadow.
 		bmi		weaponUse					; Branch if negative.
-		sty		m0PosY					; Set M0 to $7F (offscreen)
+		sty		m0PosY						; Set M0 to $7F (offscreen)
 
 weaponUse:
-		lda		weaponPosY				; Get bullet/whip vertical position.
+		lda		weaponPosY					; Get bullet/whip vertical position.
 		cmp		#$52						; Compare.
 		bcc		finishValleyOfPoison		; Branch if <.
-		sty		weaponPosY				; Store Y to weapon pos.
+		sty		weaponPosY					; Store Y to weapon pos.
 
 finishValleyOfPoison:
 		jmp		jmpSetupNewRoom		; Return.
@@ -4378,8 +4378,8 @@ WellOfSoulsRoomHandler:
 		ldx		#$3a						; Load Initial X Position ($3A = 58).
 		stx		dungeonBlock4				; Set Position of Object 4
 		ldx		#$85						; Load Initial Value
-		stx		PF2GfxPtrLo				; Set playfield graphics pointer
-		ldx		#BONUS_LANDING_IN_MESA	; Load Value 3.
+		stx		PF2GfxPtrLo					; Set playfield graphics pointer
+		ldx		#BONUS_LANDING_IN_MESA		; Load Value 3.
 		stx		mesaLandingBonus			; Set Flag
 		bne		checkToMoveThieves
 
@@ -4389,38 +4389,38 @@ thievesDenRoomHandler
 	; Controls the movement of 5 Thieves patroling the screen.
 	; --------------------------------------------------------------------------
 		ldx		#$04						; Load loop counter
-										; (5 thieves, Indices 4 down to 0).
+											; (5 thieves, Indices 4 down to 0).
 checkToMoveThieves:
 		lda		thiefMoveDelayTable,x		; Get speed mask for Thief X.
-		and		frameCount				; Apply mask.
+		and		frameCount					; Apply mask.
 		bne		moveNextThief				;  If result != 0, skip this frame.
 		ldy		dynamicGfxData,x			; Get current horizontal position
 		lda		#REFLECT					; Load Reflect Bit (Direction Check).
-		and		p0OffsetPosY,x			; Check thief state.
-		bne		moveThiefRight			; If Bit Set (Reflected), Moving Right.
+		and		p0OffsetPosY,x				; Check thief state.
+		bne		moveThiefRight				; If Bit Set (Reflected), Moving Right.
 	; Moving left
-		dey								; Decrement position (Move Left).
+		dey									; Decrement position (Move Left).
 		cpy		#$14						; Check Left Boundary (X=20).
-		bcs		setNewThiefPosX			; If >= 20, still in bounds, update Position.
-										; Else, fall through to Change Direction.
+		bcs		setNewThiefPosX				; If >= 20, still in bounds, update Position.
+											; Else, fall through to Change Direction.
 changeThiefDirection:
 		lda		#$08						; Load Reflect mask.
-		eor		p0OffsetPosY,x			; XOR with current state
-		sta		p0OffsetPosY,x			; Update state.
+		eor		p0OffsetPosY,x				; XOR with current state
+		sta		p0OffsetPosY,x				; Update state.
 
 setNewThiefPosX:
 		sty		dynamicGfxData,x			; Save new Horizontal Position.
 
 moveNextThief:
-		dex								; Decrement thief index.
-		bpl		checkToMoveThieves		; If X >= 0, Loop for next thief.
-		jmp		jmpSetupNewRoom		; All thieves done. Return.
+		dex									; Decrement thief index.
+		bpl		checkToMoveThieves			; If X >= 0, Loop for next thief.
+		jmp		jmpSetupNewRoom				; All thieves done. Return.
 
 moveThiefRight:
-		iny								; Increment position (Move Right).
+		iny									; Increment position (Move Right).
 		cpy		#$85						; Check Right Boundary (X=133).
 		bcs		changeThiefDirection		; If >= 133, Hit edge. Change Direction.
-		bcc		setNewThiefPosX			; Else, Update Position.
+		bcc		setNewThiefPosX				; Else, Update Position.
 
 
 mesaSideRoomHandler
@@ -4429,69 +4429,69 @@ mesaSideRoomHandler
 	; Controls the movement of 5 Thieves patroling the screen.
 	; --------------------------------------------------------------------------
 		bit		mesaSideState				; Check Mesa Side State.
-										; Bit 7 = Parachute Active.
-		bpl		updateMesaSideRoom		; Branch if Bit 7 clear
-										; (Parachute NOT active -> Freefall).
+											; Bit 7 = Parachute Active.
+		bpl		updateMesaSideRoom			; Branch if Bit 7 clear
+											; (Parachute NOT active -> Freefall).
 		bvc		getMesaSideRoomInput		; Branch if Overflow clear (Bit 6?).
 		dec		indyPosX					; Decrement Indy X
-		bne		updateMesaSideRoom		; Unconditional branch.
+		bne		updateMesaSideRoom			; Unconditional branch.
 
 getMesaSideRoomInput:
-		lda		frameCount				; Get current frame count.
-		ror								; Rotate bit 0 into Carry.
-		bcc		updateMesaSideRoom		; Branch on even frame (Limit speed).
+		lda		frameCount					; Get current frame count.
+		ror									; Rotate bit 0 into Carry.
+		bcc		updateMesaSideRoom			; Branch on even frame (Limit speed).
 		lda		SWCHA						; Get Joystick Inputs
-		sta		indyDir					; Store input.
-		ror								; Bit 0 (P1 Up) -> Carry.
-		ror								; Bit 1 (P1 Down) -> Carry.
-		ror								; Bit 2 (P1 Left) -> Carry.
+		sta		indyDir						; Store input.
+		ror									; Bit 0 (P1 Up) -> Carry.
+		ror									; Bit 1 (P1 Down) -> Carry.
+		ror									; Bit 2 (P1 Left) -> Carry.
 		bcs		ifRightInput				; Branch if Left NOT pressed
 
 ; If Left Input
 		dec		indyPosX					; Move Left.
-		bne		updateMesaSideRoom		; Unconditional branch.
+		bne		updateMesaSideRoom			; Unconditional branch.
 
 ifRightInput:
-		ror								; Bit 3 (P1 Right) -> Carry.
-		bcs		updateMesaSideRoom		; Branch if Right NOT pressed.
+		ror									; Bit 3 (P1 Right) -> Carry.
+		bcs		updateMesaSideRoom			; Branch if Right NOT pressed.
 		inc		indyPosX					; Move Right.
 
 updateMesaSideRoom:
 		lda		#$02						; Load 2.
 		and		mesaSideState				; Check Bit 1 of state.
 		bne		indyVsGravity				; Branch if set.
-		sta		eventState				; Clear eventState if bit 1 was clear
+		sta		eventState					; Clear eventState if bit 1 was clear
 		lda		#$0b						; Load $0B.
-		sta		p0PosY					; Set Object Vertical Position?
+		sta		p0PosY						; Set Object Vertical Position?
 
 indyVsGravity:
 		ldx		indyPosY					; Get Indy Vertical.
-		lda		frameCount				; Get Frame Count.
+		lda		frameCount					; Get Frame Count.
 		bit		mesaSideState				; Check state.
-		bmi		updateParachuteFall		; Branch if Bit 7 set
-										; (Parachute Active = Slow Fall).
+		bmi		updateParachuteFall			; Branch if Bit 7 set
+											; (Parachute Active = Slow Fall).
 		cpx		#$15						; Compare Y with $15.
-		bcc		updateParachuteFall		; Branch if Y < $15
-										; (slow fall initially)
+		bcc		updateParachuteFall			; Branch if Y < $15
+											; (slow fall initially)
 		cpx		#$30						; Compare Y with $30.
 		bcc		finshMesaGravity			; Branch if Y < $30.
 		bcs		increaseFall				; Unconditional branch (>= $30).
 
 updateParachuteFall:
-		ror								; Rotate A (Frame Count - slow decent)
+		ror									; Rotate A (Frame Count - slow decent)
 		bcc		finshMesaGravity			; Branch on even frames
-										; (Slower fall: 0.5px/frame).
+											; (Slower fall: 0.5px/frame).
 
 finishMesaSide:
-		jmp		jmpSetupNewRoom		; Return.
+		jmp		jmpSetupNewRoom				; Return.
 
 increaseFall:
-		inx								; Increment Y (Accel fall).
+		inx									; Increment Y (Accel fall).
 
 finshMesaGravity:
-		inx								; Increment Y (Move Down).
+		inx									; Increment Y (Move Down).
 		stx		indyPosY					; Update Indy Y.
-		bne		finishMesaSide			; Return.
+		bne		finishMesaSide				; Return.
 
 
 blackMarketRoomHandler:
@@ -4502,7 +4502,7 @@ blackMarketRoomHandler:
 		cmp		#$64						; Compare 100.
 		bcc		inLunaticZone				; Branch if < 100 (Left Side/Lunatic Zone).
 		rol		blackMarketState			; Rotate Black Market state left.
-		clc								; Clear Carry.
+		clc									; Clear Carry.
 		ror		blackMarketState			; Rotate right (preserves high bit).
 		bpl		finishRoomHandler			; Branch if positive.
 
@@ -4515,21 +4515,21 @@ inLunaticZone:
 
 bribeCheck:
 		bit		blackMarketState			; Check Black Market state
-										; (Did we drop Gold?)
+											; (Did we drop Gold?)
 		bmi		finishRoomHandler			; Branch if Bit 7 set (No Bribe).
 		lda		#$30						; Load 48.
-		sta		indyPosXSet				; Teleport Indy to X=48
+		sta		indyPosXSet					; Teleport Indy to X=48
 		ldy		#$00
 		sty		ballPosY					; Clear Lunatic Y  (Remove Lunatic).
 		ldy		#$7f						; Load $7F.
-		sty		p0SpriteHeight			; set p0SpriteHeight
+		sty		p0SpriteHeight				; set p0SpriteHeight
 		sty		snakePosY					; Set snakeVertPos.
 		inc		indyPosX					; Increment Indy X (49).
 		lda		#$80						; Set Bit 7.
-		sta		majorEventFlag			; Trigger Major Event (bribe success)
+		sta		majorEventFlag				; Trigger Major Event (bribe success)
 
 finishRoomHandler:
-		jmp		jmpSetupNewRoom			; Return.
+		jmp		jmpSetupNewRoom				; Return.
 
 treasureRoomHandler:
 	; --------------------------------------------------------------------------
@@ -4537,41 +4537,41 @@ treasureRoomHandler:
 	; Handles the appearance of items (Medallion, Key, etc.) in the baskets.
 	; --------------------------------------------------------------------------
 		ldy		p0OffsetPosY				; Get Offset (Used as a state counter)
-		dey								; Decrement.
+		dey									; Decrement.
 		bne		finishRoomHandler			; If not 1, return (Delay loop).
 
 		lda		treasureIndex				; Get Treasure Index/State.
 		and		#$07						; Mask bits 0-2.
-		bne		finishTreasureRoomHandler ; Branch if not 0
-										; (Item processing active).
+		bne		finishTreasureRoomHandler	; Branch if not 0
+											; (Item processing active).
 ; ITEM CYCLE LOGIC
 		lda		#$40						; Load Bit 6 ($40).
 		sta		screenEventState			; Update screen event state.
-		lda		timeOfDay				; Divide by 32 (Shift Right 5 times).
+		lda		timeOfDay					; Divide by 32 (Shift Right 5 times).
 		lsr
 		lsr
 		lsr
 		lsr
 		lsr
-		tax								; Use result as Index.
+		tax									; Use result as Index.
 		ldy		treasureRoomStateIndex,x	; Lookup Index from table.
 		ldx		treasureRoomStateTable,y	; Lookup "Basket State" / Item ID.
-		sty		loopCounter				; Store Y in loopCounter
+		sty		loopCounter					; Store Y in loopCounter
 		jsr		checkBaskets				; Check if Item is Valid/Available.
-		bcc		updateTreasureRoomState	; If Carry Clear (Valid), Update State.
+		bcc		updateTreasureRoomState		; If Carry Clear (Valid), Update State.
 incTreasureOffset:
 		inc		p0OffsetPosY				; Increment offset
 		bne		finishRoomHandler			; Return.
 
-		brk								; Break (Should not happen).
+		brk									; Break (Should not happen).
 
 updateTreasureRoomState:
-		ldy		loopCounter				; Restore Y
-		tya								; Move to A.
+		ldy		loopCounter					; Restore Y
+		tya									; Move to A.
 		ora		treasureIndex				; Combine with current Index.
 		sta		treasureIndex				; Update Treasure Index.
-		lda		treasureRoomItemPosY,y	; Get Vertical Position for Item.
-		sta		p0PosY					; Set P0 Vertical Position (Item).
+		lda		treasureRoomItemPosY,y		; Get Vertical Position for Item.
+		sta		p0PosY						; Set P0 Vertical Position (Item).
 		lda		treasureRoomItemOffset,y	; Get Graphic Offset for Item.
 		sta		p0OffsetPosY				; Set Graphic Offset.
 		bne		finishRoomHandler			; Return.
@@ -4580,32 +4580,32 @@ finishTreasureRoomHandler:
 		cmp		#$04						; Check State Phase.
 		bcs		incTreasureOffset			; Branch if >= 4 (Reset).
 		rol		treasureIndex				; Rotate State
-		sec								; Set Carry.
+		sec									; Set Carry.
 		ror		treasureIndex				; Rotate State.
 		bmi		incTreasureOffset			; Branch if Negative.
 
 mapRoomHandler:
-    ; --------------------------------------------------------------------------
-    ; MAP ROOM LOGIC (Room ID 04)
-    ; --------------------------------------------------------------------------
-    ; The Map Room contains the core puzzle of the game.
-    ; 1.  Movement Lock: Indy is constrained to specific paths.
-    ; 2.  Day/Night Cycle: The "Sun" (Player 0 Object) rises and sets based on
-    ;     the 'timeOfDay' variable.
-    ; 3.  The Reveal: If Indy holds the Head of Ra at the right time (Sun is high),
-    ;     a beam of light (Missile 1) points to the location of the Ark.
-    ; --------------------------------------------------------------------------
+	; --------------------------------------------------------------------------
+	; MAP ROOM LOGIC (Room ID 04)
+	; --------------------------------------------------------------------------
+	; The Map Room contains the core puzzle of the game.
+	; 1.  Movement Lock: Indy is constrained to specific paths.
+	; 2.  Day/Night Cycle: The "Sun" (Player 0 Object) rises and sets based on
+	;	  the 'timeOfDay' variable.
+	; 3.  The Reveal: If Indy holds the Head of Ra at the right time (Sun is high),
+	;	  a beam of light (Missile 1) points to the location of the Ark.
+	; --------------------------------------------------------------------------
 		ldy		#$00
 		sty		ballPosY					; Clear Ball (Snake/Timepiece not used here)
 		ldy		#$7f						; Initialize Y to Off-screen
 		sty		p0SpriteHeight				; Reset Sun height logic
 		sty		snakePosY					; Ensure snake is off-screen.
 
-    ; --------------------------------------------------------------------------
-    ; MOVEMENT CONSTRAINTS
-    ; --------------------------------------------------------------------------
-    ; Indy cannot walk freely horizontally here. His X position is snapped
-    ; to center ($71) unless specific conditions are met.
+	; --------------------------------------------------------------------------
+	; MOVEMENT CONSTRAINTS
+	; --------------------------------------------------------------------------
+	; Indy cannot walk freely horizontally here. His X position is snapped
+	; to center ($71) unless specific conditions are met.
 		lda		#$71
 		sta		indyPosXSet					; Force Center X alignment
 		ldy		#$4f						; Default Graphic Offset (Inactive State)
@@ -4617,7 +4617,7 @@ mapRoomHandler:
 
 		; Check Inventory for Puzzle Triggers
 		lda		selectedInventoryId
-		cmp		#ID_INVENTORY_KEY			; Is Key selected? 
+		cmp		#ID_INVENTORY_KEY			; Is Key selected?
 		beq		mapRoomActive				; If Key, Grant Access.
 
 		; Check if Indy is already positioned correctly (X=$5E)
@@ -4629,293 +4629,293 @@ checkMapRoomEntry:
 		ldy		#$0d						; Load "Empty/Inactive" Graphic Offset.
 
 mapRoomActive:
-    ; --------------------------------------------------------------------------
-    ; SUN HEIGHT CALCULATION (TIME OF DAY)
-    ; --------------------------------------------------------------------------
-    ; This routine converts the linear 'timeOfDay' counter (0-255) into a 
-    ; "Ping-Pong" value to simulate the Sun rising and setting.
-    ; --------------------------------------------------------------------------
-		sty		p0OffsetPosY			; Set graphic offset based on active check.
-		lda		timeOfDay				; Load Global Timer.
+	; --------------------------------------------------------------------------
+	; SUN HEIGHT CALCULATION (TIME OF DAY)
+	; --------------------------------------------------------------------------
+	; This routine converts the linear 'timeOfDay' counter (0-255) into a
+	; "Ping-Pong" value to simulate the Sun rising and setting.
+	; --------------------------------------------------------------------------
+		sty		p0OffsetPosY				; Set graphic offset based on active check.
+		lda		timeOfDay					; Load Global Timer.
 		sec
-		sbc		#$10					; Subtract 16.
-		bpl		mapRoomTimer			; If Timer >= 16,  Sun is "Rising/High"
+		sbc		#$10						; Subtract 16.
+		bpl		mapRoomTimer				; If Timer >= 16,  Sun is "Rising/High"
 
 		; Time is < 16 (0-15). Create rising edge.
-		eor		#$ff					; Invert bits to flip curve.
-		sec								; (0..15 -> becomes 15..0 - Sunset).
+		eor		#$ff						; Invert bits to flip curve.
+		sec									; (0..15 -> becomes 15..0 - Sunset).
 		adc		#$00
 mapRoomTimer:
-		cmp		#$0b					; Is Sun "Height" > 11?
-		bcc		updateSunPos			; If < 11, use value.
+		cmp		#$0b						; Is Sun "Height" > 11?
+		bcc		updateSunPos				; If < 11, use value.
 		lda		#$0b
 
 updateSunPos:
-		sta		p0PosY					; Set Sun Object Verification Position.
+		sta		p0PosY						; Set Sun Object Verification Position.
 
-		bit		mapRoomState			; Check "Eye State"
-										; (Is Indy standing in the right spot to see?)
-		bpl		viewAreaActive			; If Bit 7 Clear, Sun doesn't reveal anything.
+		bit		mapRoomState				; Check "Eye State"
+											; (Is Indy standing in the right spot to see?)
+		bpl		viewAreaActive				; If Bit 7 Clear, Sun doesn't reveal anything.
 
-    ; --------------------------------------------------------------------------
-    ; THE REVEAL (BEAM OF LIGHT)
-    ; --------------------------------------------------------------------------
-    ; If Sun Height < 8 AND Player is holding Head of Ra...
-    ; Draw the Beam (Missile 1) pointing to the secret Mesa.
-    ; --------------------------------------------------------------------------
+	; --------------------------------------------------------------------------
+	; THE REVEAL (BEAM OF LIGHT)
+	; --------------------------------------------------------------------------
+	; If Sun Height < 8 AND Player is holding Head of Ra...
+	; Draw the Beam (Missile 1) pointing to the secret Mesa.
+	; --------------------------------------------------------------------------
 
-		cmp		#$08					; Compare Sun Height.
-		bcs		hideBeam				; If >= 8 (Too Low/Night), Hide Beam.
+		cmp		#$08						; Compare Sun Height.
+		bcs		hideBeam					; If >= 8 (Too Low/Night), Hide Beam.
 
 		ldx		selectedInventoryId
 		cpx		#ID_INVENTORY_HEAD_OF_RA	; Is Player holding Head of Ra?
-		bne		hideBeam				; If not, Hide Beam.
-		stx		mapRoomBonus			; Set Flag: Player used Head of Ra (Bonus!)
-	
+		bne		hideBeam					; If not, Hide Beam.
+		stx		mapRoomBonus				; Set Flag: Player used Head of Ra (Bonus!)
+
 		; Flicker Effect
 		lda		#$04
 		and		frameCount
-		bne		hideBeam				; Flicker beam (draw 3 of 4 frames).
+		bne		hideBeam					; Flicker beam (draw 3 of 4 frames).
 
-        ; -----------------------------------------------------------------------
-        ; CALCULATE BEAM TARGET
-        ; -----------------------------------------------------------------------
-        ; Uses the secret 'secretArkMesaID' to look up X/Y coordinates 
-        ; on the map wall where the beam should point to.
-		lda		secretArkMesaID		; Load Secret Ark ID.
-		and		#$0f					; Mask ID.
-		tax								; Use as index.
-		lda		mapRoomArkLocX,x		; Lookup Beam X Coordinate from table.
-		sta		weaponPosX				; Set Beam (Missile 1) X.
-		lda		mapRoomArkLocY,x		; Lookup target Y on map.
-		bne		updateBeamPos			; Update Beam Position.
+		; -----------------------------------------------------------------------
+		; CALCULATE BEAM TARGET
+		; -----------------------------------------------------------------------
+		; Uses the secret 'secretArkMesaID' to look up X/Y coordinates
+		; on the map wall where the beam should point to.
+		lda		secretArkMesaID				; Load Secret Ark ID.
+		and		#$0f						; Mask ID.
+		tax									; Use as index.
+		lda		mapRoomArkLocX,x			; Lookup Beam X Coordinate from table.
+		sta		weaponPosX					; Set Beam (Missile 1) X.
+		lda		mapRoomArkLocY,x			; Lookup target Y on map.
+		bne		updateBeamPos				; Update Beam Position.
 
 hideBeam:
-		lda		#$70					; Move Beam Offscreen.
+		lda		#$70						; Move Beam Offscreen.
 
 updateBeamPos:
-		sta		weaponPosY				; Set Beam Y.
+		sta		weaponPosY					; Set Beam Y.
 
-    ; --------------------------------------------------------------------------
-    ; VIEW AREA VALIDATION
-    ; --------------------------------------------------------------------------
-    ; Updates 'mapRoomState' bit 7. This flag indicates if Indy is standing
-    ; in the correct "View Zone" to activate the puzzle logic next frame.
+	; --------------------------------------------------------------------------
+	; VIEW AREA VALIDATION
+	; --------------------------------------------------------------------------
+	; Updates 'mapRoomState' bit 7. This flag indicates if Indy is standing
+	; in the correct "View Zone" to activate the puzzle logic next frame.
 viewAreaActive:
-		rol		mapRoomState			; Roll State (History).
+		rol		mapRoomState				; Roll State (History).
 
 		; Check Alignment Y
 		lda		#$3a
 		cmp		indyPosY
-		bne		invalidateView			; If Y != $3A, Invalid.
+		bne		invalidateView				; If Y != $3A, Invalid.
 
 		; Check Graphic State
 		cpy		#$4f
-		beq		confirmView				; If Offset == $4F (Active), Valid.
+		beq		confirmView					; If Offset == $4F (Active), Valid.
 
 		; Check Alignment X
 		lda		#$5e
-		cmp		indyPosX				; Check X if Indy is in the view room
+		cmp		indyPosX					; Check X if Indy is in the view room
 		bne		invalidateView
 
 confirmView:
-		sec								; Set Carry (Valid!).
-		ror		mapRoomState			; Rotate into State (Bit 7 becomes 1).
-		bmi		finishMapRoom			; Done.
+		sec									; Set Carry (Valid!).
+		ror		mapRoomState				; Rotate into State (Bit 7 becomes 1).
+		bmi		finishMapRoom				; Done.
 
 invalidateView:
-		clc								; Clear Carry (Invalid).
-		ror		mapRoomState			; Rotate into State (Bit 7 becomes 0).
+		clc									; Clear Carry (Invalid).
+		ror		mapRoomState				; Rotate into State (Bit 7 becomes 0).
 finishMapRoom:
-		jmp		jmpSetupNewRoom			; Return.
+		jmp		jmpSetupNewRoom				; Return.
 
 templeEntranceRoomHandler:
-    ; --------------------------------------------------------------------------
-    ; TEMPLE ENTRANCE / TIMEPIECE ROOM (Bank 1)
-    ; --------------------------------------------------------------------------
-    ; This room contains the Time Piece (displayed as the Ball object).
-    ; If the item has been taken, we must hide the graphic.
-    ; --------------------------------------------------------------------------
+	; --------------------------------------------------------------------------
+	; TEMPLE ENTRANCE / TIMEPIECE ROOM (Bank 1)
+	; --------------------------------------------------------------------------
+	; This room contains the Time Piece (displayed as the Ball object).
+	; If the item has been taken, we must hide the graphic.
+	; --------------------------------------------------------------------------
 		lda		#PICKUP_ITEM_STATUS_TIME_PIECE	; Load Time Piece mask.
-		and		pickupItemsStatus		; Check if player already has it.
+		and		pickupItemsStatus			; Check if player already has it.
 
-		bne		timepieceTaken			; If Result != 0 (Item Taken), hide it.
-    ; --------------------------------------------------------------------------
-    ; TIMEPIECE PRESENT STATE
-    ; --------------------------------------------------------------------------
-    ; Use default Ball Position (set in initRoomState or loadRoomGfx)
-		lda		#$4c					
-		sta		indyPosXSet				; Set position to Center Screen
+		bne		timepieceTaken				; If Result != 0 (Item Taken), hide it.
+	; --------------------------------------------------------------------------
+	; TIMEPIECE PRESENT STATE
+	; --------------------------------------------------------------------------
+	; Use default Ball Position (set in initRoomState or loadRoomGfx)
+		lda		#$4c
+		sta		indyPosXSet					; Set position to Center Screen
 		lda		#$2a
-		sta		ballPosY				; Set Timepiece Graphics (Ball Sprite) 
+		sta		ballPosY					; Set Timepiece Graphics (Ball Sprite)
 		lda		#<timeSprite
 		sta		auxDataPtrLo
-		lda		#>timeSprite	
+		lda		#>timeSprite
 		sta		auxDataPtrLo + 1
 		bne		finishTempleEntrance
 
 timepieceTaken:
-		lda		#$f0					; Move "Timepiece" Offscreen vertically
+		lda		#$f0						; Move "Timepiece" Offscreen vertically
 		sta		ballPosY
 finishTempleEntrance:
 	; --------------------------------------------------------------------------
 	; ROOM GRAPHICS SETUP
-	; Uses entranceRoomEventState to determine the graphical layout 
+	; Uses entranceRoomEventState to determine the graphical layout
 	; --------------------------------------------------------------------------
-		lda		entranceRoomEventState	; Get event state.
-		and		#$0f					; Mask lower nibble.
-		beq		jmpSetupNewRoom			; Branch if 0 (Invalid?).
-		sta		p0SpriteHeight			; Store state.
-		ldy		#$14					; P0 Height 
-		sty		p0PosY					; Set P0 Vertical Position
-		ldy		#$3b					; P0 Graphics Data
-		sty		p0GfxState				; store in graphics state
-		iny								; becomes $3C
-		sty		objectState				; Store state
+		lda		entranceRoomEventState		; Get event state.
+		and		#$0f						; Mask lower nibble.
+		beq		jmpSetupNewRoom				; Branch if 0 (Invalid?).
+		sta		p0SpriteHeight				; Store state.
+		ldy		#$14						; P0 Height
+		sty		p0PosY						; Set P0 Vertical Position
+		ldy		#$3b						; P0 Graphics Data
+		sty		p0GfxState					; store in graphics state
+		iny									; becomes $3C
+		sty		objectState					; Store state
 
 		; Calculate P0 Graphics Pointer based on State
 		; $C1 - State -> P0 Ptr Low
 		lda		#$c1
 		sec
 		sbc		p0SpriteHeight
-		sta		p0GfxPtrLo				; Set P0 Graphics Pointer Low 
-		bne		jmpSetupNewRoom			; Return via standard exit
+		sta		p0GfxPtrLo					; Set P0 Graphics Pointer Low
+		bne		jmpSetupNewRoom				; Return via standard exit
 
 roomOfShiningLightHandler:
-    ; --------------------------------------------------------------------------
-    ; ROOM OF SHINING LIGHT SCENE LOGIC
-    ; --------------------------------------------------------------------------
-    ; This room contains the "Shining Light" object (Player 0).
-    ; It also hides the secret "Dungeon" exit interaction.
-    ; --------------------------------------------------------------------------
-		lda		frameCount				; Get current frame count.
-		and		#$18					; Mask for update rate.
-		adc		#<shiningLightSprites	; Add sprite base.
-		sta		p0GfxPtrLo				; Set P0 GFX Low.
-		lda		frameCount				; Get frame count.
-		and		#$07					; Screen update every 8 frames
+	; --------------------------------------------------------------------------
+	; ROOM OF SHINING LIGHT SCENE LOGIC
+	; --------------------------------------------------------------------------
+	; This room contains the "Shining Light" object (Player 0).
+	; It also hides the secret "Dungeon" exit interaction.
+	; --------------------------------------------------------------------------
+		lda		frameCount					; Get current frame count.
+		and		#$18						; Mask for update rate.
+		adc		#<shiningLightSprites		; Add sprite base.
+		sta		p0GfxPtrLo					; Set P0 GFX Low.
+		lda		frameCount					; Get frame count.
+		and		#$07						; Screen update every 8 frames
 		bne		dungeonCheck				; Branch if not frame.
-		ldx		#$00					; Index X for P0.
-		ldy		 #<indyPosY - p0PosY	; Index Y for Indy.
-		lda		indyPosY				; Get Indy's vertical position.
-		cmp		#$3a					; Compare 58.
-		bcc		moveShiningLight		; Branch if Y < 58.
-		lda		indyPosX				; Get Indy's horizontal position.
-		cmp		#$2b					; Compare $2B.
-		bcc		roslStateHandeler		; Branch if < $2B.
-		cmp		#$6d					; Compare $6D.
-		bcc		moveShiningLight		; Branch if < $6D.
+		ldx		#$00						; Index X for P0.
+		ldy		 #<indyPosY - p0PosY		; Index Y for Indy.
+		lda		indyPosY					; Get Indy's vertical position.
+		cmp		#$3a						; Compare 58.
+		bcc		moveShiningLight			; Branch if Y < 58.
+		lda		indyPosX					; Get Indy's horizontal position.
+		cmp		#$2b						; Compare $2B.
+		bcc		roslStateHandeler			; Branch if < $2B.
+		cmp		#$6d						; Compare $6D.
+		bcc		moveShiningLight			; Branch if < $6D.
 
 roslStateHandeler:
-		ldy		#$05					; Set Y to 5 so updateMoveToTarget
-										; keeps light static
-		lda		#$4c					; X Target = Center
-		sta		unused_CD				; Set Temp (unused)
-		lda		#$0b					; Y Target
-		sta		targetPosY				; Set Temp Y
+		ldy		#$05						; Set Y to 5 so updateMoveToTarget
+											; keeps light static
+		lda		#$4c						; X Target = Center
+		sta		unused_CD					; Set Temp (unused)
+		lda		#$0b						; Y Target
+		sta		targetPosY					; Set Temp Y
 
 moveShiningLight:
-		jsr		updateMoveToTarget		; Keep the Shining Light object positioned.
+		jsr		updateMoveToTarget			; Keep the Shining Light object positioned.
 
 dungeonCheck:
-    ; --------------------------------------------------------------------------
-    ; DUNGEON ENTRANCE CHECK
-    ; --------------------------------------------------------------------------
-    ; Checks if Indy is standing in the correct spot to find the secret exit.
-    ; --------------------------------------------------------------------------
-		ldx		#$4e					; Target Y Position
-		cpx		indyPosY				; Is Indy at the correct vertical line?
-		bne		jmpSetupNewRoom			; If not, exit.
+	; --------------------------------------------------------------------------
+	; DUNGEON ENTRANCE CHECK
+	; --------------------------------------------------------------------------
+	; Checks if Indy is standing in the correct spot to find the secret exit.
+	; --------------------------------------------------------------------------
+		ldx		#$4e						; Target Y Position
+		cpx		indyPosY					; Is Indy at the correct vertical line?
+		bne		jmpSetupNewRoom				; If not, exit.
 
-		ldx		indyPosX				; Get Indy's X.
-		cpx		#$76					; Check Right Wall boundary?
-		beq		dungeonWallHit			; If touching right wall, check input.
-		cpx		#$14					; Check Left Wall boundary?
-		bne		jmpSetupNewRoom			; If neither, exit.
+		ldx		indyPosX					; Get Indy's X.
+		cpx		#$76						; Check Right Wall boundary?
+		beq		dungeonWallHit				; If touching right wall, check input.
+		cpx		#$14						; Check Left Wall boundary?
+		bne		jmpSetupNewRoom				; If neither, exit.
 
 dungeonWallHit:
-		lda		SWCHA					; Read joystick.
-		and		#P1_NO_MOVE				; Mask for movement.
-		cmp		#(MOVE_DOWN >> 4)		; Is Player pressing DOWN?
-		bne		jmpSetupNewRoom			; If not pressing Down, no interaction.
+		lda		SWCHA						; Read joystick.
+		and		#P1_NO_MOVE					; Mask for movement.
+		cmp		#(MOVE_DOWN >> 4)			; Is Player pressing DOWN?
+		bne		jmpSetupNewRoom				; If not pressing Down, no interaction.
 
 		; --- Trigger Dungeon Entry ---
-		sta		escapePrisonPenalty		; Apply Penalty (13 points).
-		lda		#$4c					; Load $4C.
-		sta		indyPosX				; Teleport Indy to Center X.
+		sta		escapePrisonPenalty			; Apply Penalty (13 points).
+		lda		#$4c						; Load $4C.
+		sta		indyPosX					; Teleport Indy to Center X.
 
-		ror		entranceRoomEventState	; Rotate Event State (Modify flags).
-		sec								; Set Carry.
-		rol		entranceRoomEventState	; Rotate Event State
+		ror		entranceRoomEventState		; Rotate Event State (Modify flags).
+		sec									; Set Carry.
+		rol		entranceRoomEventState		; Rotate Event State
 
 jmpSetupNewRoom
-		lda		#<setupNewRoom			; Load Return Address Low.
-		sta		bankSwitchJMPAddrLo		; Store Return Addr Low.
-		lda		#>setupNewRoom			; Load Return Address High.
-		sta		bankSwitchJMPAddrHi		; Store Return Addr High.
-		jmp		JumpToBank0				; Jump to Bank 0.
+		lda		#<setupNewRoom				; Load Return Address Low.
+		sta		bankSwitchJMPAddrLo			; Store Return Addr Low.
+		lda		#>setupNewRoom				; Load Return Address High.
+		sta		bankSwitchJMPAddrHi			; Store Return Addr High.
+		jmp		JumpToBank0					; Jump to Bank 0.
 
 entranceRoomHandler
 	; --------------------------------------------------------------------------
 	; Enterance Room
 	; --------------------------------------------------------------------------
-		lda		#$40					; Load $40.
-		sta		screenEventState		; Set screenEventState.
-		bne		jmpSetupNewRoom			; Unconditional branch.
+		lda		#$40						; Load $40.
+		sta		screenEventState			; Set screenEventState.
+		bne		jmpSetupNewRoom				; Unconditional branch.
 
 drawScreen
-		sta		WSYNC					; Wait for Sync.
+		sta		WSYNC						; Wait for Sync.
 ;---------------------------------------
-		sta		HMCLR					; Clear Horizontal Motion.
-		sta		CXCLR					; Clear Collisions.
-		ldy		#$ff					; Load $FF.
-		sty		PF1						; Set playfield 1 (Full Right).
-		sty		PF2						; Set playfiled 2 (Full Left).
-		ldx		currentRoomId			; Get Room ID.
-		lda		roomPF0Gfx,x			; Get PF0 Data.
-		sta		PF0						; Set PF0.
-		iny								; Y=0
-		sta		WSYNC					; Wait for Sync.
+		sta		HMCLR						; Clear Horizontal Motion.
+		sta		CXCLR						; Clear Collisions.
+		ldy		#$ff						; Load $FF.
+		sty		PF1							; Set playfield 1 (Full Right).
+		sty		PF2							; Set playfiled 2 (Full Left).
+		ldx		currentRoomId				; Get Room ID.
+		lda		roomPF0Gfx,x				; Get PF0 Data.
+		sta		PF0							; Set PF0.
+		iny									; Y=0
+		sta		WSYNC						; Wait for Sync.
 ;---------------------------------------
-		sta		HMOVE					; Move Objects.
-		sty		VBLANK					; Enable TIA (Y=0, VBLANK Off).
-		sty		scanline				; Zero Scanline Counter.
-		cpx		#ID_MAP_ROOM			; Check Map Room.
-		bne		enableBall				; If not Map Room, enable ball
+		sta		HMOVE						; Move Objects.
+		sty		VBLANK						; Enable TIA (Y=0, VBLANK Off).
+		sty		scanline					; Zero Scanline Counter.
+		cpx		#ID_MAP_ROOM				; Check Map Room.
+		bne		enableBall					; If not Map Room, enable ball
 		dey
 enableBall
 		sty		ENABL
 
-		cpx		#ID_ARK_ROOM			; Check Ark Room.
-		beq		initKernalJumps			; Branch if Ark Room.
-		bit		majorEventFlag			; Check Major Event.
-		bmi		initKernalJumps			; Branch if Negative (Bit 7 Set).
-		ldy		SWCHA					; Read Joystick.
-		sty		REFP1					; Set Reflection P1
+		cpx		#ID_ARK_ROOM				; Check Ark Room.
+		beq		initKernalJumps				; Branch if Ark Room.
+		bit		majorEventFlag				; Check Major Event.
+		bmi		initKernalJumps				; Branch if Negative (Bit 7 Set).
+		ldy		SWCHA						; Read Joystick.
+		sty		REFP1						; Set Reflection P1
 initKernalJumps
-		sta		WSYNC					; Wait for Sync.
+		sta		WSYNC						; Wait for Sync.
 ;--------------------------------------
-		sta		HMOVE					; Move Objects.
-		sta		WSYNC					; Wait for Sync.
+		sta		HMOVE						; Move Objects.
+		sta		WSYNC						; Wait for Sync.
 ;--------------------------------------
-		sta		HMOVE					; Move Objects.
-		ldy		currentRoomId			; Get Room ID.
-		sta		WSYNC					; Wait for Sync.
+		sta		HMOVE						; Move Objects.
+		ldy		currentRoomId				; Get Room ID.
+		sta		WSYNC						; Wait for Sync.
 ;--------------------------------------
-		sta		HMOVE					; Move Objects.
-		lda		roomPF1Gfx,y			; Get PF1 Data.
-		sta		PF1						; Set PF1
-		lda		roomPF2Gfx,y			; Get PF2 Data.
-		sta		PF2						; Set PF2
-		ldx		KernelJumpTableIndex,y	; Get Kernel Index.
-		lda		kernelJumpTable+1,x		; Get High Byte.
-		pha								; Push High.
-		lda		kernelJumpTable,x		; Get Low Byte.
-		pha								; Push Low.
-		lda		#$00					; Clear A
-		tax								; Clear X
-		sta		loopCounter				; Clear Loop Counter
-		rts								; Jump to Kernel section
+		sta		HMOVE						; Move Objects.
+		lda		roomPF1Gfx,y				; Get PF1 Data.
+		sta		PF1							; Set PF1
+		lda		roomPF2Gfx,y				; Get PF2 Data.
+		sta		PF2							; Set PF2
+		ldx		KernelJumpTableIndex,y		; Get Kernel Index.
+		lda		kernelJumpTable+1,x			; Get High Byte.
+		pha									; Push High.
+		lda		kernelJumpTable,x			; Get Low Byte.
+		pha									; Push Low.
+		lda		#$00						; Clear A
+		tax									; Clear X
+		sta		loopCounter					; Clear Loop Counter
+		rts									; Jump to Kernel section
 
 checkBaskets:
 	; --------------------------------------------------------------------------
@@ -4938,7 +4938,7 @@ notInBasket
 		rts									; Return.
 
 checkPickupStatus
-		; Check if Player already has the item.							
+		; Check if Player already has the item.
 		and		pickupItemsStatus			; Mask with Pickup Status.
 		bne		notInBasket					; ; If result != 0 (Already have it),
 											; Return Failure.
@@ -4968,7 +4968,7 @@ moveP0PosYUp
 updateP0PosX
 	lda		p0PosX,x						; Get Follower X.
 	cmp.wy	p0PosX,y						; Compare Target X.
-	bne		moveP0PosXRight					; Branch if different. 
+	bne		moveP0PosXRight					; Branch if different.
 	cpy		#$05							; Check Bounds
 	bcs		finishFollow					; Branch if >= 5.
 moveP0PosXRight
@@ -4985,9 +4985,9 @@ UpdateObjBoundPos
 	cmp		#$53							; Compare $53 (Bottom/Top Boundary).
 	bcc		UpdateObjClampPos				; Branch if < $53.
 UpdateObjBoundClamp
-	rol		secretArkMesaID,x			; Rotate State/Flags.
+	rol		secretArkMesaID,x				; Rotate State/Flags.
 	clc										; Clear Carry.
-	ror		secretArkMesaID,x			; Rotate Back (Clear Bit 7).
+	ror		secretArkMesaID,x				; Rotate Back (Clear Bit 7).
 	lda		#$78							; Load $78.
 	sta		p0PosY,x						; into p0 Y Position
 	rts										; Return.
@@ -5494,16 +5494,16 @@ mapRoomArkLocY
 	.byte	$21,$26,$26,$2b,$2a,$2b,$31,$31 ; $fada (*)
 
 kernelJumpTable:
-	.word drawStillPlayer-1 ; $fae2/3
-	.word drawPlayField-1 ; $fae4/5
-	.word drawThieves-1 ; $fae6/7
-	.word drawArkRoom-1 ; $fae8/9
+	.word drawStillPlayer-1
+	.word drawPlayField-1
+	.word drawThieves-1
+	.word drawArkRoom-1
 
 spiderSpriteTable: ;tarantula animation table
-	.byte <spiderGfxFrame1 ; $faea
-	.byte <spiderGfxFrame2 ; $faeb
-	.byte <spiderGfxFrame3 ; $faec
-	.byte <spiderGfxFrame4 ; $faed
+	.byte <spiderGfxFrame1
+	.byte <spiderGfxFrame2
+	.byte <spiderGfxFrame3
+	.byte <spiderGfxFrame4
 
 ; ---------------------------------------------------------------------------
 ; SNAKE CHARMER SONG DATA (FLUTE)
@@ -5512,10 +5512,10 @@ spiderSpriteTable: ;tarantula animation table
 ; The values are read by 'playFluteMelody' based on the frame counter.
 ; Lower values = Higher Pitch.
 ; ---------------------------------------------------------------------------
-snakeCharmFreqTable 
-	.byte	$1b,$18,$17,$17,$18,$18,$1b,$1b ; $faee (*)
-	.byte	$1d,$18,$17,$12,$18,$17,$1b,$1d ; $faf6 (*)
-	.byte	$00,$00							; $fafe (*)
+snakeCharmFreqTable
+	.byte	$1b,$18,$17,$17,$18,$18,$1b,$1b
+	.byte	$1d,$18,$17,$12,$18,$17,$1b,$1d
+	.byte	$00,$00
 
 
 ;inventory gfx...
@@ -5821,7 +5821,7 @@ copyrightGfx4: ;copyright5
 ; Indexed by `soundEffectTimer` (counts down from $17).
 ;
 
-raidersMarchFreqTable 
+raidersMarchFreqTable
 	.byte $14 ; |...X.X..|
 	.byte $14 ; |...X.X..|
 	.byte $14 ; |...X.X..|
@@ -5851,73 +5851,73 @@ raidersMarchFreqTable
 
 thiefSprites
 ThiefSprite_0
-	.byte $14 ; |...X.X..| $FC00
-	.byte $3C ; |..XXXX..| $FC01
-	.byte $7E ; |.XXXXXX.| $FC02
-	.byte $00 ; |........| $FC03
-	.byte $30 ; |..XX....| $FC04
-	.byte $38 ; |..XXX...| $FC05
-	.byte $3C ; |..XXXX..| $FC06
-	.byte $3E ; |..XXXXX.| $FC07
-	.byte $3F ; |..XXXXXX| $FC08
-	.byte $7F ; |.XXXXXXX| $FC09
-	.byte $7F ; |.XXXXXXX| $FC0A
-	.byte $7F ; |.XXXXXXX| $FC0B
-	.byte $11 ; |...X...X| $FC0C
-	.byte $11 ; |...X...X| $FC0D
-	.byte $33 ; |..XX..XX| $FC0E
-	.byte $00 ; |........| $FC0F
+	.byte $14 ; |...X.X..|
+	.byte $3C ; |..XXXX..|
+	.byte $7E ; |.XXXXXX.|
+	.byte $00 ; |........|
+	.byte $30 ; |..XX....|
+	.byte $38 ; |..XXX...|
+	.byte $3C ; |..XXXX..|
+	.byte $3E ; |..XXXXX.|
+	.byte $3F ; |..XXXXXX|
+	.byte $7F ; |.XXXXXXX|
+	.byte $7F ; |.XXXXXXX|
+	.byte $7F ; |.XXXXXXX|
+	.byte $11 ; |...X...X|
+	.byte $11 ; |...X...X|
+	.byte $33 ; |..XX..XX|
+	.byte $00 ; |........|
 ThiefSprite_1
-	.byte $14 ; |...X.X..| $FC10
-	.byte $3C ; |..XXXX..| $FC11
-	.byte $7E ; |.XXXXXX.| $FC12
-	.byte $00 ; |........| $FC13
-	.byte $30 ; |..XX....| $FC14
-	.byte $38 ; |..XXX...| $FC15
-	.byte $3C ; |..XXXX..| $FC16
-	.byte $3E ; |..XXXXX.| $FC17
-	.byte $3F ; |..XXXXXX| $FC18
-	.byte $7F ; |.XXXXXXX| $FC19
-	.byte $7F ; |.XXXXXXX| $FC1A
-	.byte $7F ; |.XXXXXXX| $FC1B
-	.byte $22 ; |..X...X.| $FC1C
-	.byte $22 ; |..X...X.| $FC1D
-	.byte $66 ; |.XX..XX.| $FC1E
-	.byte $00 ; |........| $FC1F
+	.byte $14 ; |...X.X..|
+	.byte $3C ; |..XXXX..|
+	.byte $7E ; |.XXXXXX.|
+	.byte $00 ; |........|
+	.byte $30 ; |..XX....|
+	.byte $38 ; |..XXX...|
+	.byte $3C ; |..XXXX..|
+	.byte $3E ; |..XXXXX.|
+	.byte $3F ; |..XXXXXX|
+	.byte $7F ; |.XXXXXXX|
+	.byte $7F ; |.XXXXXXX|
+	.byte $7F ; |.XXXXXXX|
+	.byte $22 ; |..X...X.|
+	.byte $22 ; |..X...X.|
+	.byte $66 ; |.XX..XX.|
+	.byte $00 ; |........|
 ThiefSprite_2
-	.byte $14 ; |...X.X..| $FC20
-	.byte $3C ; |..XXXX..| $FC21
-	.byte $7E ; |.XXXXXX.| $FC22
-	.byte $00 ; |........| $FC23
-	.byte $30 ; |..XX....| $FC24
-	.byte $38 ; |..XXX...| $FC25
-	.byte $3C ; |..XXXX..| $FC26
-	.byte $3E ; |..XXXXX.| $FC27
-	.byte $3F ; |..XXXXXX| $FC28
-	.byte $7F ; |.XXXXXXX| $FC29
-	.byte $7F ; |.XXXXXXX| $FC2A
-	.byte $7F ; |.XXXXXXX| $FC2B
-	.byte $44 ; |.X...X..| $FC2C
-	.byte $44 ; |.X...X..| $FC2D
-	.byte $CC ; |XX..XX..| $FC2E
-	.byte $00 ; |........| $FC2F
+	.byte $14 ; |...X.X..|
+	.byte $3C ; |..XXXX..|
+	.byte $7E ; |.XXXXXX.|
+	.byte $00 ; |........|
+	.byte $30 ; |..XX....|
+	.byte $38 ; |..XXX...|
+	.byte $3C ; |..XXXX..|
+	.byte $3E ; |..XXXXX.|
+	.byte $3F ; |..XXXXXX|
+	.byte $7F ; |.XXXXXXX|
+	.byte $7F ; |.XXXXXXX|
+	.byte $7F ; |.XXXXXXX|
+	.byte $44 ; |.X...X..|
+	.byte $44 ; |.X...X..|
+	.byte $CC ; |XX..XX..|
+	.byte $00 ; |........|
 ThiefSprite_3
-	.byte $14 ; |...X.X..| $FC30
-	.byte $3C ; |..XXXX..| $FC31
-	.byte $7E ; |.XXXXXX.| $FC32
-	.byte $00 ; |........| $FC33
-	.byte $30 ; |..XX....| $FC34
-	.byte $38 ; |..XXX...| $FC35
-	.byte $3C ; |..XXXX..| $FC36
-	.byte $3E ; |..XXXXX.| $FC37
-	.byte $3F ; |..XXXXXX| $FC38
-	.byte $7F ; |.XXXXXXX| $FC39
-	.byte $7F ; |.XXXXXXX| $FC3A
-	.byte $7F ; |.XXXXXXX| $FC3B
-	.byte $08 ; |....X...| $FC3C
-	.byte $08 ; |....X...| $FC3D
-	.byte $18 ; |...XX...| $FC3E
-	.byte $00 ; |........| $FC3F
+	.byte $14 ; |...X.X..|
+	.byte $3C ; |..XXXX..|
+	.byte $7E ; |.XXXXXX.|
+	.byte $00 ; |........|
+	.byte $30 ; |..XX....|
+	.byte $38 ; |..XXX...|
+	.byte $3C ; |..XXXX..|
+	.byte $3E ; |..XXXXX.|
+	.byte $3F ; |..XXXXXX|
+	.byte $7F ; |.XXXXXXX|
+	.byte $7F ; |.XXXXXXX|
+	.byte $7F ; |.XXXXXXX|
+	.byte $08 ; |....X...|
+	.byte $08 ; |....X...|
+	.byte $18 ; |...XX...|
+	.byte $00 ; |........|
 
 thiefSpriteValueLo
 	.byte <ThiefSprite_0, <ThiefSprite_1
@@ -5931,61 +5931,60 @@ thiefColors
 
 
 
-		.byte $00 ; |		| $fc54
-		.byte $00 ; |		| $fc55
-		.byte $00 ; |		| $fc56
-		.byte $00 ; |		| $fc57
-		.byte $00 ; |		| $fc58
-		.byte $00 ; |		| $fc59
-		.byte $00 ; |		| $fc5a
-		.byte $00 ; |		| $fc5b
-		.byte $00 ; |		| $fc5c
-		.byte $00 ; |		| $fc5d
-		.byte $00 ; |		| $fc5e
-		.byte $08 ; |	x	| $fc5f
-		.byte $1c ; |   xxx	| $fc60
-		.byte $3c ; |  xxxx	| $fc61
-		.byte $3e ; |  xxxxx | $fc62
-		.byte $7f ; | xxxxxxx| $fc63
-		.byte $ff ; |xxxxxxxx| $fc64
-		.byte $ff ; |xxxxxxxx| $fc65
-		.byte $ff ; |xxxxxxxx| $fc66
-		.byte $ff ; |xxxxxxxx| $fc67
-		.byte $ff ; |xxxxxxxx| $fc68
-		.byte $ff ; |xxxxxxxx| $fc69
-		.byte $ff ; |xxxxxxxx| $fc6a
-		.byte $ff ; |xxxxxxxx| $fc6b
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $08 ; |....X...|
+	.byte $1C ; |...XXX..|
+	.byte $3C ; |..XXXX..|
+	.byte $3E ; |..XXXXX.|
+	.byte $7F ; |.XXXXXXX|
+	.byte $FF ; |XXXXXXXX|
+	.byte $FF ; |XXXXXXXX|
+	.byte $FF ; |XXXXXXXX|
+	.byte $FF ; |XXXXXXXX|
+	.byte $FF ; |XXXXXXXX|
+	.byte $FF ; |XXXXXXXX|
+	.byte $FF ; |XXXXXXXX|
+	.byte $FF ; |XXXXXXXX|
+	.byte $3E ; |..XXXXX.|
+	.byte $3C ; |..XXXX..|
+	.byte $3A ; |..XXX.X.|
+	.byte $38 ; |..XXX...|
+	.byte $36 ; |..XX.XX.|
+	.byte $34 ; |..XX.X..|
+	.byte $32 ; |..XX..X.|
+	.byte $20 ; |..X.....|
+	.byte $10 ; |...X....|
 
-		.byte $3e ; |  xxxxx | $fc6c
-		.byte $3c ; |  xxxx	| $fc6d
-		.byte $3a ; |  xxx x | $fc6e
-		.byte $38 ; |  xxx	| $fc6f
-		.byte $36 ; |  xx xx | $fc70
-		.byte $34 ; |  xx x	| $fc71
-		.byte $32 ; |  xx  x | $fc72
-
-		.byte $20 ; |  x		| $fc73
-		.byte $10 ; |   x	| $fc74
 possibleTreasureItemID
-		.byte $00 ; |		| $fc75
-		.byte $00 ; |		| $fc76
-		.byte $00 ; |		| $fc77
-		.byte $00 ; |		| $fc78
-		.byte $08 ; |	x	| $fc79
-		.byte $00 ; |		| $fc7a
-		.byte $02 ; |		x | $fc7b
-		.byte $0a ; |	x x | $fc7c
-		.byte $0c ; |	xx	| $fc7d
-		.byte $0e ; |	xxx | $fc7e
-		.byte $01 ; |		x| $fc7f
-		.byte $03 ; |		xx| $fc80
-		.byte $04 ; |	 x	| $fc81
-		.byte $06 ; |	 xx | $fc82
-		.byte $05 ; |	 x x| $fc83
-		.byte $07 ; |	 xxx| $fc84
-		.byte $0d ; |	xx x| $fc85
-		.byte $0f ; |	xxxx| $fc86
-		.byte $0b ; |	x xx| $fc87
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $08 ; |....X...|
+	.byte $00 ; |........|
+	.byte $02 ; |......X.|
+	.byte $0A ; |....X.X.|
+	.byte $0C ; |....XX..|
+	.byte $0E ; |....XXX.|
+	.byte $01 ; |.......X|
+	.byte $03 ; |......XX|
+	.byte $04 ; |.....X..|
+	.byte $06 ; |.....XX.|
+	.byte $05 ; |.....X.X|
+	.byte $07 ; |.....XXX|
+	.byte $0D ; |....XX.X|
+	.byte $0F ; |....XXXX|
+	.byte $0B ; |....X.XX|
 
 roomHandlerJmpTable:
 		.word treasureRoomHandler-1
@@ -6014,48 +6013,48 @@ treasureRoomStateTable
 
 spiderSprites
 spiderGfxFrame1
-	.byte	$54 ; |.#.#.#..|			$fcae (g)
-	.byte	$fc ; |######..|			$fcaf (g)
-	.byte	$5f ; |.#.#####|			$fcb0 (g)
-	.byte	$fe ; |#######.|			$fcb1 (g)
-	.byte	$7f ; |.#######|			$fcb2 (g)
-	.byte	$fa ; |#####.#.|			$fcb3 (g)
-	.byte	$3f ; |..######|			$fcb4 (g)
-	.byte	$2a ; |..#.#.#.|			$fcb5 (g)
-	.byte	$00 ; |........|			$fcb6 (g)
+	.byte	$54 ; |.#.#.#..|
+	.byte	$fc ; |######..|
+	.byte	$5f ; |.#.#####|
+	.byte	$fe ; |#######.|
+	.byte	$7f ; |.#######|
+	.byte	$fa ; |#####.#.|
+	.byte	$3f ; |..######|
+	.byte	$2a ; |..#.#.#.|
+	.byte	$00 ; |........|
 
 spiderGfxFrame3
-	.byte	$54 ; |.#.#.#..|			$fcb7 (g)
-	.byte	$5f ; |.#.#####|			$fcb8 (g)
-	.byte	$fc ; |######..|			$fcb9 (g)
-	.byte	$7f ; |.#######|			$fcba (g)
-	.byte	$fe ; |#######.|			$fcbb (g)
-	.byte	$3f ; |..######|			$fcbc (g)
-	.byte	$fa ; |#####.#.|			$fcbd (g)
-	.byte	$2a ; |..#.#.#.|			$fcbe (g)
-	.byte	$00 ; |........|			$fcbf (g)
+	.byte	$54 ; |.#.#.#..|
+	.byte	$5f ; |.#.#####|
+	.byte	$fc ; |######..|
+	.byte	$7f ; |.#######|
+	.byte	$fe ; |#######.|
+	.byte	$3f ; |..######|
+	.byte	$fa ; |#####.#.|
+	.byte	$2a ; |..#.#.#.|
+	.byte	$00 ; |........|
 
 spiderGfxFrame2
-	.byte	$2a ; |..#.#.#.|			$fcc0 (g)
-	.byte	$fa ; |#####.#.|			$fcc1 (g)
-	.byte	$3f ; |..######|			$fcc2 (g)
-	.byte	$fe ; |#######.|			$fcc3 (g)
-	.byte	$7f ; |.#######|			$fcc4 (g)
-	.byte	$fa ; |#####.#.|			$fcc5 (g)
-	.byte	$5f ; |.#.#####|			$fcc6 (g)
-	.byte	$54 ; |.#.# #..|			$fcc7 (g)
-	.byte	$00 ; |........|			$fcc8 (g)
+	.byte	$2a ; |..#.#.#.|
+	.byte	$fa ; |#####.#.|
+	.byte	$3f ; |..######|
+	.byte	$fe ; |#######.|
+	.byte	$7f ; |.#######|
+	.byte	$fa ; |#####.#.|
+	.byte	$5f ; |.#.#####|
+	.byte	$54 ; |.#.# #..|
+	.byte	$00 ; |........|
 
 spiderGfxFrame4
-	.byte	$2a ; |..#.#.#.|			$fcc9 (g)
-	.byte	$3f ; |..######|			$fcca (g)
-	.byte	$fa ; |#####.#.|			$fccb (g)
-	.byte	$7f ; |.#######|			$fccc (g)
-	.byte	$fe ; |#######.|			$fccd (g)
-	.byte	$5f ; |.#.#####|			$fcce (g)
-	.byte	$fc ; |######..|			$fccf (g)
-	.byte	$54 ; |.#.#.#..|			$fcd0 (g)
-	.byte	$00 ; |........|			$fcd1
+	.byte	$2a ; |..#.#.#.|
+	.byte	$3f ; |..######|
+	.byte	$fa ; |#####.#.|
+	.byte	$7f ; |.#######|
+	.byte	$fe ; |#######.|
+	.byte	$5f ; |.#.#####|
+	.byte	$fc ; |######..|
+	.byte	$54 ; |.#.#.#..|
+	.byte	$00 ; |........|
 
 TreasureRoomItemStateTable
 	.byte $8B,$8A,$86,$87,$85,$89
@@ -6090,532 +6089,532 @@ finishInvSelectAdj
 	rts
 
 
-	.byte $00 ; |........| $FCFF
-	.byte $F2 ; |XXXX..X.| $FD00
-	.byte $40 ; |.X......| $FD01
-	.byte $F2 ; |XXXX..X.| $FD02
-	.byte $C0 ; |XX......| $FD03
-	.byte $12 ; |...X..X.| $FD04
-	.byte $10 ; |...X....| $FD05
-	.byte $F2 ; |XXXX..X.| $FD06
-	.byte $00 ; |........| $FD07
-	.byte $12 ; |...X..X.| $FD08
-	.byte $20 ; |..X.....| $FD09
-	.byte $02 ; |......X.| $FD0A
-	.byte $B0 ; |X.XX....| $FD0B
-	.byte $F2 ; |XXXX..X.| $FD0C
-	.byte $30 ; |..XX....| $FD0D
-	.byte $12 ; |...X..X.| $FD0E
-	.byte $00 ; |........| $FD0F
-	.byte $F2 ; |XXXX..X.| $FD10
-	.byte $40 ; |.X......| $FD11
-	.byte $F2 ; |XXXX..X.| $FD12
-	.byte $D0 ; |XX.X....| $FD13
-	.byte $12 ; |...X..X.| $FD14
-	.byte $10 ; |...X....| $FD15
-	.byte $02 ; |......X.| $FD16
-	.byte $00 ; |........| $FD17
-	.byte $02 ; |......X.| $FD18
-	.byte $30 ; |..XX....| $FD19
-	.byte $12 ; |...X..X.| $FD1A
-	.byte $B0 ; |X.XX....| $FD1B
-	.byte $02 ; |......X.| $FD1C
-	.byte $20 ; |..X.....| $FD1D
-	.byte $12 ; |...X..X.| $FD1E
-	.byte $00 ; |........| $FD1F
+	.byte $00 ; |........|
+	.byte $F2 ; |XXXX..X.|
+	.byte $40 ; |.X......|
+	.byte $F2 ; |XXXX..X.|
+	.byte $C0 ; |XX......|
+	.byte $12 ; |...X..X.|
+	.byte $10 ; |...X....|
+	.byte $F2 ; |XXXX..X.|
+	.byte $00 ; |........|
+	.byte $12 ; |...X..X.|
+	.byte $20 ; |..X.....|
+	.byte $02 ; |......X.|
+	.byte $B0 ; |X.XX....|
+	.byte $F2 ; |XXXX..X.|
+	.byte $30 ; |..XX....|
+	.byte $12 ; |...X..X.|
+	.byte $00 ; |........|
+	.byte $F2 ; |XXXX..X.|
+	.byte $40 ; |.X......|
+	.byte $F2 ; |XXXX..X.|
+	.byte $D0 ; |XX.X....|
+	.byte $12 ; |...X..X.|
+	.byte $10 ; |...X....|
+	.byte $02 ; |......X.|
+	.byte $00 ; |........|
+	.byte $02 ; |......X.|
+	.byte $30 ; |..XX....|
+	.byte $12 ; |...X..X.|
+	.byte $B0 ; |X.XX....|
+	.byte $02 ; |......X.|
+	.byte $20 ; |..X.....|
+	.byte $12 ; |...X..X.|
+	.byte $00 ; |........|
 
 RoomPF1GraphicData_6:
-	.byte $FF ; |XXXXXXXX| $FD20
-	.byte $FF ; |XXXXXXXX| $FD21
-	.byte $FC ; |XXXXXX..| $FD22
-	.byte $F0 ; |XXXX....| $FD23
-	.byte $E0 ; |XXX.....| $FD24
-	.byte $E0 ; |XXX.....| $FD25
-	.byte $C0 ; |XX......| $FD26
-	.byte $80 ; |X.......| $FD27
-	.byte $00 ; |........| $FD28
-	.byte $00 ; |........| $FD29
-	.byte $00 ; |........| $FD2A
-	.byte $00 ; |........| $FD2B
-	.byte $00 ; |........| $FD2C
-	.byte $00 ; |........| $FD2D
-	.byte $00 ; |........| $FD2E
-	.byte $00 ; |........| $FD2F
-	.byte $00 ; |........| $FD30
-	.byte $00 ; |........| $FD31
-	.byte $00 ; |........| $FD32
-	.byte $00 ; |........| $FD33
-	.byte $00 ; |........| $FD34
-	.byte $00 ; |........| $FD35
-	.byte $00 ; |........| $FD36
-	.byte $00 ; |........| $FD37
-	.byte $00 ; |........| $FD38
-	.byte $00 ; |........| $FD39
-	.byte $00 ; |........| $FD3A
-	.byte $00 ; |........| $FD3B
-	.byte $00 ; |........| $FD3C
-	.byte $00 ; |........| $FD3D
-	.byte $00 ; |........| $FD3E
-	.byte $00 ; |........| $FD3F
-	.byte $00 ; |........| $FD40
-	.byte $80 ; |X.......| $FD41
-	.byte $80 ; |X.......| $FD42
-	.byte $C0 ; |XX......| $FD43
-	.byte $E0 ; |XXX.....| $FD44
-	.byte $E0 ; |XXX.....| $FD45
-	.byte $F0 ; |XXXX....| $FD46
-	.byte $FE ; |XXXXXXX.| $FD47
+	.byte $FF ; |XXXXXXXX|
+	.byte $FF ; |XXXXXXXX|
+	.byte $FC ; |XXXXXX..|
+	.byte $F0 ; |XXXX....|
+	.byte $E0 ; |XXX.....|
+	.byte $E0 ; |XXX.....|
+	.byte $C0 ; |XX......|
+	.byte $80 ; |X.......|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $80 ; |X.......|
+	.byte $80 ; |X.......|
+	.byte $C0 ; |XX......|
+	.byte $E0 ; |XXX.....|
+	.byte $E0 ; |XXX.....|
+	.byte $F0 ; |XXXX....|
+	.byte $FE ; |XXXXXXX.|
 
 RoomPF1GraphicData_7:
-	.byte $FF ; |XXXXXXXX| $FD48
-	.byte $FF ; |XXXXXXXX| $FD49
-	.byte $FF ; |XXXXXXXX| $FD4A
-	.byte $FF ; |XXXXXXXX| $FD4B
-	.byte $FC ; |XXXXXX..| $FD4C
-	.byte $F0 ; |XXXX....| $FD4D
-	.byte $E0 ; |XXX.....| $FD4E
-	.byte $E0 ; |XXX.....| $FD4F
-	.byte $C0 ; |XX......| $FD50
-	.byte $80 ; |X.......| $FD51
-	.byte $00 ; |........| $FD52
-	.byte $00 ; |........| $FD53
-	.byte $00 ; |........| $FD54
-	.byte $00 ; |........| $FD55
-	.byte $00 ; |........| $FD56
-	.byte $00 ; |........| $FD57
-	.byte $00 ; |........| $FD58
-	.byte $00 ; |........| $FD59
-	.byte $00 ; |........| $FD5A
-	.byte $00 ; |........| $FD5B
-	.byte $00 ; |........| $FD5C
-	.byte $C0 ; |XX......| $FD5D
-	.byte $F0 ; |XXXX....| $FD5E
-	.byte $F8 ; |XXXXX...| $FD5F
-	.byte $FE ; |XXXXXXX.| $FD60
-	.byte $FE ; |XXXXXXX.| $FD61
-	.byte $F8 ; |XXXXX...| $FD62
-	.byte $F0 ; |XXXX....| $FD63
-	.byte $E0 ; |XXX.....| $FD64
-	.byte $C0 ; |XX......| $FD65
-	.byte $80 ; |X.......| $FD66
-	.byte $00 ; |........| $FD67
+	.byte $FF ; |XXXXXXXX|
+	.byte $FF ; |XXXXXXXX|
+	.byte $FF ; |XXXXXXXX|
+	.byte $FF ; |XXXXXXXX|
+	.byte $FC ; |XXXXXX..|
+	.byte $F0 ; |XXXX....|
+	.byte $E0 ; |XXX.....|
+	.byte $E0 ; |XXX.....|
+	.byte $C0 ; |XX......|
+	.byte $80 ; |X.......|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $C0 ; |XX......|
+	.byte $F0 ; |XXXX....|
+	.byte $F8 ; |XXXXX...|
+	.byte $FE ; |XXXXXXX.|
+	.byte $FE ; |XXXXXXX.|
+	.byte $F8 ; |XXXXX...|
+	.byte $F0 ; |XXXX....|
+	.byte $E0 ; |XXX.....|
+	.byte $C0 ; |XX......|
+	.byte $80 ; |X.......|
+	.byte $00 ; |........|
 
 RoomPF1GraphicData_8:
-	.byte $00 ; |........| $FD68
-	.byte $00 ; |........| $FD69
-	.byte $00 ; |........| $FD6A
-	.byte $00 ; |........| $FD6B
-	.byte $00 ; |........| $FD6C
-	.byte $00 ; |........| $FD6D
-	.byte $00 ; |........| $FD6E
-	.byte $00 ; |........| $FD6F
-	.byte $02 ; |......X.| $FD70
-	.byte $07 ; |.....XXX| $FD71
-	.byte $07 ; |.....XXX| $FD72
-	.byte $0F ; |....XXXX| $FD73
-	.byte $0F ; |....XXXX| $FD74
-	.byte $0F ; |....XXXX| $FD75
-	.byte $07 ; |.....XXX| $FD76
-	.byte $07 ; |.....XXX| $FD77
-	.byte $02 ; |......X.| $FD78
-	.byte $00 ; |........| $FD79
-	.byte $00 ; |........| $FD7A
-	.byte $00 ; |........| $FD7B
-	.byte $00 ; |........| $FD7C
-	.byte $00 ; |........| $FD7D
-	.byte $00 ; |........| $FD7E
-	.byte $00 ; |........| $FD7F
-	.byte $00 ; |........| $FD80
-	.byte $04 ; |.....X..| $FD81
-	.byte $0E ; |....XXX.| $FD82
-	.byte $0E ; |....XXX.| $FD83
-	.byte $0F ; |....XXXX| $FD84
-	.byte $0E ; |....XXX.| $FD85
-	.byte $06 ; |.....XX.| $FD86
-	.byte $00 ; |........| $FD87
-	.byte $00 ; |........| $FD88
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $02 ; |......X.|
+	.byte $07 ; |.....XXX|
+	.byte $07 ; |.....XXX|
+	.byte $0F ; |....XXXX|
+	.byte $0F ; |....XXXX|
+	.byte $0F ; |....XXXX|
+	.byte $07 ; |.....XXX|
+	.byte $07 ; |.....XXX|
+	.byte $02 ; |......X.|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $04 ; |.....X..|
+	.byte $0E ; |....XXX.|
+	.byte $0E ; |....XXX.|
+	.byte $0F ; |....XXXX|
+	.byte $0E ; |....XXX.|
+	.byte $06 ; |.....XX.|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
 
 RoomPF1GraphicData_9:
-	.byte $00 ; |........| $FD89
-	.byte $00 ; |........| $FD8A
-	.byte $00 ; |........| $FD8B
-	.byte $00 ; |........| $FD8C
-	.byte $00 ; |........| $FD8D
-	.byte $00 ; |........| $FD8E
-	.byte $00 ; |........| $FD8F
-	.byte $00 ; |........| $FD90
-	.byte $02 ; |......X.| $FD91
-	.byte $07 ; |.....XXX| $FD92
-	.byte $07 ; |.....XXX| $FD93
-	.byte $0F ; |....XXXX| $FD94
-	.byte $1F ; |...XXXXX| $FD95
-	.byte $0F ; |....XXXX| $FD96
-	.byte $07 ; |.....XXX| $FD97
-	.byte $07 ; |.....XXX| $FD98
-	.byte $02 ; |......X.| $FD99
-	.byte $00 ; |........| $FD9A
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $02 ; |......X.|
+	.byte $07 ; |.....XXX|
+	.byte $07 ; |.....XXX|
+	.byte $0F ; |....XXXX|
+	.byte $1F ; |...XXXXX|
+	.byte $0F ; |....XXXX|
+	.byte $07 ; |.....XXX|
+	.byte $07 ; |.....XXX|
+	.byte $02 ; |......X.|
+	.byte $00 ; |........|
 
 RoomPF2GraphicData_6:
-	.byte $00 ; |........| $FD9B
-	.byte $00 ; |........| $FD9C
-	.byte $00 ; |........| $FD9D
-	.byte $00 ; |........| $FD9E
-	.byte $00 ; |........| $FD9F
-	.byte $00 ; |........| $FDA0
-	.byte $00 ; |........| $FDA1
-	.byte $00 ; |........| $FDA2
-	.byte $00 ; |........| $FDA3
-	.byte $00 ; |........| $FDA4
-	.byte $00 ; |........| $FDA5
-	.byte $01 ; |.......X| $FDA6
-	.byte $03 ; |......XX| $FDA7
-	.byte $01 ; |.......X| $FDA8
-	.byte $00 ; |........| $FDA9
-	.byte $00 ; |........| $FDAA
-	.byte $00 ; |........| $FDAB
-	.byte $00 ; |........| $FDAC
-	.byte $00 ; |........| $FDAD
-	.byte $80 ; |X.......| $FDAE
-	.byte $80 ; |X.......| $FDAF
-	.byte $C0 ; |XX......| $FDB0
-	.byte $E0 ; |XXX.....| $FDB1
-	.byte $F8 ; |XXXXX...| $FDB2
-	.byte $E0 ; |XXX.....| $FDB3
-	.byte $C0 ; |XX......| $FDB4
-	.byte $80 ; |X.......| $FDB5
-	.byte $80 ; |X.......| $FDB6
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $01 ; |.......X|
+	.byte $03 ; |......XX|
+	.byte $01 ; |.......X|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $80 ; |X.......|
+	.byte $80 ; |X.......|
+	.byte $C0 ; |XX......|
+	.byte $E0 ; |XXX.....|
+	.byte $F8 ; |XXXXX...|
+	.byte $E0 ; |XXX.....|
+	.byte $C0 ; |XX......|
+	.byte $80 ; |X.......|
+	.byte $80 ; |X.......|
 
 RoomPF2GraphicData_7:
-	.byte $00 ; |........| $FDB7
-	.byte $00 ; |........| $FDB8
-	.byte $00 ; |........| $FDB9
-	.byte $C0 ; |XX......| $FDBA
-	.byte $E0 ; |XXX.....| $FDBB
-	.byte $E0 ; |XXX.....| $FDBC
-	.byte $C0 ; |XX......| $FDBD
-	.byte $00 ; |........| $FDBE
-	.byte $00 ; |........| $FDBF
-	.byte $00 ; |........| $FDC0
-	.byte $00 ; |........| $FDC1
-	.byte $00 ; |........| $FDC2
-	.byte $00 ; |........| $FDC3
-	.byte $00 ; |........| $FDC4
-	.byte $00 ; |........| $FDC5
-	.byte $00 ; |........| $FDC6
-	.byte $00 ; |........| $FDC7
-	.byte $80 ; |X.......| $FDC8
-	.byte $80 ; |X.......| $FDC9
-	.byte $80 ; |X.......| $FDCA
-	.byte $80 ; |X.......| $FDCB
-	.byte $80 ; |X.......| $FDCC
-	.byte $80 ; |X.......| $FDCD
-	.byte $00 ; |........| $FDCE
-	.byte $00 ; |........| $FDCF
-	.byte $00 ; |........| $FDD0
-	.byte $00 ; |........| $FDD1
-	.byte $00 ; |........| $FDD2
-	.byte $00 ; |........| $FDD3
-	.byte $00 ; |........| $FDD4
-	.byte $00 ; |........| $FDD5
-	.byte $00 ; |........| $FDD6
-	.byte $00 ; |........| $FDD7
-	.byte $C0 ; |XX......| $FDD8
-	.byte $E0 ; |XXX.....| $FDD9
-	.byte $E0 ; |XXX.....| $FDDA
-	.byte $C0 ; |XX......| $FDDB
-	.byte $00 ; |........| $FDDC
-	.byte $00 ; |........| $FDDD
-	.byte $00 ; |........| $FDDE
-	.byte $00 ; |........| $FDDF
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $C0 ; |XX......|
+	.byte $E0 ; |XXX.....|
+	.byte $E0 ; |XXX.....|
+	.byte $C0 ; |XX......|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $80 ; |X.......|
+	.byte $80 ; |X.......|
+	.byte $80 ; |X.......|
+	.byte $80 ; |X.......|
+	.byte $80 ; |X.......|
+	.byte $80 ; |X.......|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $C0 ; |XX......|
+	.byte $E0 ; |XXX.....|
+	.byte $E0 ; |XXX.....|
+	.byte $C0 ; |XX......|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
 
 shiningLightSprites
 shiningLightFrame0
-	.byte $22 ; |..X...X.| $FDE0
-	.byte $41 ; |.X.....X| $FDE1
-	.byte $08 ; |....X...| $FDE2
-	.byte $14 ; |...X.X..| $FDE3
-	.byte $08 ; |....X...| $FDE4
-	.byte $41 ; |.X.....X| $FDE5
-	.byte $22 ; |..X...X.| $FDE6
-	.byte $00 ; |........| $FDE7
+	.byte $22 ; |..X...X.|
+	.byte $41 ; |.X.....X|
+	.byte $08 ; |....X...|
+	.byte $14 ; |...X.X..|
+	.byte $08 ; |....X...|
+	.byte $41 ; |.X.....X|
+	.byte $22 ; |..X...X.|
+	.byte $00 ; |........|
 shiningLightFrame1
-	.byte $41 ; |.X.....X| $FDE8
-	.byte $08 ; |....X...| $FDE9
-	.byte $14 ; |...X.X..| $FDEA
-	.byte $2A ; |..X.X.X.| $FDEB
-	.byte $14 ; |...X.X..| $FDEC
-	.byte $08 ; |....X...| $FDED
-	.byte $41 ; |.X.....X| $FDEE
-	.byte $00 ; |........| $FDEF
+	.byte $41 ; |.X.....X|
+	.byte $08 ; |....X...|
+	.byte $14 ; |...X.X..|
+	.byte $2A ; |..X.X.X.|
+	.byte $14 ; |...X.X..|
+	.byte $08 ; |....X...|
+	.byte $41 ; |.X.....X|
+	.byte $00 ; |........|
 shiningLightFrame2
-	.byte $08 ; |....X...| $FDF0
-	.byte $14 ; |...X.X..| $FDF1
-	.byte $3E ; |..XXXXX.| $FDF2
-	.byte $55 ; |.X.X.X.X| $FDF3
-	.byte $3E ; |..XXXXX.| $FDF4
-	.byte $14 ; |...X.X..| $FDF5
-	.byte $08 ; |....X...| $FDF6
-	.byte $00 ; |........| $FDF7
+	.byte $08 ; |....X...|
+	.byte $14 ; |...X.X..|
+	.byte $3E ; |..XXXXX.|
+	.byte $55 ; |.X.X.X.X|
+	.byte $3E ; |..XXXXX.|
+	.byte $14 ; |...X.X..|
+	.byte $08 ; |....X...|
+	.byte $00 ; |........|
 shiningLightFrame3
-	.byte $14 ; |...X.X..| $FDF8
-	.byte $3E ; |..XXXXX.| $FDF9
-	.byte $63 ; |.XX...XX| $FDFA
-	.byte $2A ; |..X.X.X.| $FDFB
-	.byte $63 ; |.XX...XX| $FDFC
-	.byte $3E ; |..XXXXX.| $FDFD
-	.byte $14 ; |...X.X..| $FDFE
-	.byte $00 ; |........| $FDFF
+	.byte $14 ; |...X.X..|
+	.byte $3E ; |..XXXXX.|
+	.byte $63 ; |.XX...XX|
+	.byte $2A ; |..X.X.X.|
+	.byte $63 ; |.XX...XX|
+	.byte $3E ; |..XXXXX.|
+	.byte $14 ; |...X.X..|
+	.byte $00 ; |........|
 
 
 RoomPF1GraphicData_10:
-	.byte $07 ; |.....XXX| $FE00
-	.byte $07 ; |.....XXX| $FE01
-	.byte $07 ; |.....XXX| $FE02
-	.byte $03 ; |......XX| $FE03
-	.byte $03 ; |......XX| $FE04
-	.byte $03 ; |......XX| $FE05
-	.byte $01 ; |.......X| $FE06
-	.byte $00 ; |........| $FE07
-	.byte $00 ; |........| $FE08
-	.byte $00 ; |........| $FE09
-	.byte $00 ; |........| $FE0A
-	.byte $00 ; |........| $FE0B
-	.byte $00 ; |........| $FE0C
-	.byte $00 ; |........| $FE0D
-	.byte $00 ; |........| $FE0E
-	.byte $30 ; |..XX....| $FE0F
-	.byte $78 ; |.XXXX...| $FE10
-	.byte $7C ; |.XXXXX..| $FE11
-	.byte $3C ; |..XXXX..| $FE12
-	.byte $3C ; |..XXXX..| $FE13
-	.byte $18 ; |...XX...| $FE14
-	.byte $08 ; |....X...| $FE15
-	.byte $00 ; |........| $FE16
-	.byte $00 ; |........| $FE17
-	.byte $00 ; |........| $FE18
-	.byte $00 ; |........| $FE19
-	.byte $00 ; |........| $FE1A
-	.byte $00 ; |........| $FE1B
-	.byte $00 ; |........| $FE1C
-	.byte $00 ; |........| $FE1D
-	.byte $00 ; |........| $FE1E
-	.byte $00 ; |........| $FE1F
-	.byte $00 ; |........| $FE20
-	.byte $00 ; |........| $FE21
-	.byte $00 ; |........| $FE22
-	.byte $00 ; |........| $FE23
-	.byte $00 ; |........| $FE24
-	.byte $00 ; |........| $FE25
-	.byte $00 ; |........| $FE26
-	.byte $00 ; |........| $FE27
-	.byte $00 ; |........| $FE28
-	.byte $00 ; |........| $FE29
-	.byte $00 ; |........| $FE2A
-	.byte $00 ; |........| $FE2B
-	.byte $00 ; |........| $FE2C
-	.byte $00 ; |........| $FE2D
-	.byte $01 ; |.......X| $FE2E
-	.byte $0F ; |....XXXX| $FE2F
-	.byte $01 ; |.......X| $FE30
-	.byte $00 ; |........| $FE31
-	.byte $00 ; |........| $FE32
-	.byte $00 ; |........| $FE33
-	.byte $00 ; |........| $FE34
-	.byte $00 ; |........| $FE35
-	.byte $00 ; |........| $FE36
-	.byte $00 ; |........| $FE37
-	.byte $80 ; |X.......| $FE38
-	.byte $C0 ; |XX......| $FE39
-	.byte $E0 ; |XXX.....| $FE3A
-	.byte $F8 ; |XXXXX...| $FE3B
-	.byte $FC ; |XXXXXX..| $FE3C
-	.byte $FE ; |XXXXXXX.| $FE3D
-	.byte $FC ; |XXXXXX..| $FE3E
-	.byte $F0 ; |XXXX....| $FE3F
-	.byte $E0 ; |XXX.....| $FE40
-	.byte $C0 ; |XX......| $FE41
-	.byte $C0 ; |XX......| $FE42
-	.byte $80 ; |X.......| $FE43
-	.byte $80 ; |X.......| $FE44
-	.byte $00 ; |........| $FE45
-	.byte $00 ; |........| $FE46
-	.byte $00 ; |........| $FE47
-	.byte $00 ; |........| $FE48
-	.byte $00 ; |........| $FE49
-	.byte $00 ; |........| $FE4A
-	.byte $00 ; |........| $FE4B
-	.byte $00 ; |........| $FE4C
-	.byte $00 ; |........| $FE4D
-	.byte $00 ; |........| $FE4E
-	.byte $00 ; |........| $FE4F
-	.byte $03 ; |......XX| $FE50
-	.byte $07 ; |.....XXX| $FE51
-	.byte $03 ; |......XX| $FE52
-	.byte $01 ; |.......X| $FE53
-	.byte $00 ; |........| $FE54
-	.byte $00 ; |........| $FE55
-	.byte $00 ; |........| $FE56
-	.byte $00 ; |........| $FE57
-	.byte $00 ; |........| $FE58
-	.byte $80 ; |X.......| $FE59
-	.byte $E0 ; |XXX.....| $FE5A
-	.byte $F8 ; |XXXXX...| $FE5B
-	.byte $F8 ; |XXXXX...| $FE5C
-	.byte $F8 ; |XXXXX...| $FE5D
-	.byte $F8 ; |XXXXX...| $FE5E
-	.byte $F0 ; |XXXX....| $FE5F
-	.byte $C0 ; |XX......| $FE60
-	.byte $80 ; |X.......| $FE61
-	.byte $00 ; |........| $FE62
-	.byte $00 ; |........| $FE63
-	.byte $00 ; |........| $FE64
-	.byte $00 ; |........| $FE65
-	.byte $00 ; |........| $FE66
-	.byte $00 ; |........| $FE67
-	.byte $00 ; |........| $FE68
-	.byte $00 ; |........| $FE69
-	.byte $03 ; |......XX| $FE6A
-	.byte $0F ; |....XXXX| $FE6B
-	.byte $1F ; |...XXXXX| $FE6C
-	.byte $3F ; |..XXXXXX| $FE6D
-	.byte $3E ; |..XXXXX.| $FE6E
-	.byte $3C ; |..XXXX..| $FE6F
-	.byte $38 ; |..XXX...| $FE70
-	.byte $30 ; |..XX....| $FE71
-	.byte $00 ; |........| $FE72
-	.byte $00 ; |........| $FE73
-	.byte $00 ; |........| $FE74
-	.byte $00 ; |........| $FE75
-	.byte $00 ; |........| $FE76
-	.byte $00 ; |........| $FE77
+	.byte $07 ; |.....XXX|
+	.byte $07 ; |.....XXX|
+	.byte $07 ; |.....XXX|
+	.byte $03 ; |......XX|
+	.byte $03 ; |......XX|
+	.byte $03 ; |......XX|
+	.byte $01 ; |.......X|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $30 ; |..XX....|
+	.byte $78 ; |.XXXX...|
+	.byte $7C ; |.XXXXX..|
+	.byte $3C ; |..XXXX..|
+	.byte $3C ; |..XXXX..|
+	.byte $18 ; |...XX...|
+	.byte $08 ; |....X...|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $01 ; |.......X|
+	.byte $0F ; |....XXXX|
+	.byte $01 ; |.......X|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $80 ; |X.......|
+	.byte $C0 ; |XX......|
+	.byte $E0 ; |XXX.....|
+	.byte $F8 ; |XXXXX...|
+	.byte $FC ; |XXXXXX..|
+	.byte $FE ; |XXXXXXX.|
+	.byte $FC ; |XXXXXX..|
+	.byte $F0 ; |XXXX....|
+	.byte $E0 ; |XXX.....|
+	.byte $C0 ; |XX......|
+	.byte $C0 ; |XX......|
+	.byte $80 ; |X.......|
+	.byte $80 ; |X.......|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $03 ; |......XX|
+	.byte $07 ; |.....XXX|
+	.byte $03 ; |......XX|
+	.byte $01 ; |.......X|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $80 ; |X.......|
+	.byte $E0 ; |XXX.....|
+	.byte $F8 ; |XXXXX...|
+	.byte $F8 ; |XXXXX...|
+	.byte $F8 ; |XXXXX...|
+	.byte $F8 ; |XXXXX...|
+	.byte $F0 ; |XXXX....|
+	.byte $C0 ; |XX......|
+	.byte $80 ; |X.......|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $03 ; |......XX|
+	.byte $0F ; |....XXXX|
+	.byte $1F ; |...XXXXX|
+	.byte $3F ; |..XXXXXX|
+	.byte $3E ; |..XXXXX.|
+	.byte $3C ; |..XXXX..|
+	.byte $38 ; |..XXX...|
+	.byte $30 ; |..XX....|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
 
 RoomPF2GraphicData_9:
-	.byte $07 ; |.....XXX| $FE78
-	.byte $07 ; |.....XXX| $FE79
-	.byte $07 ; |.....XXX| $FE7A
-	.byte $03 ; |......XX| $FE7B
-	.byte $03 ; |......XX| $FE7C
-	.byte $03 ; |......XX| $FE7D
-	.byte $01 ; |.......X| $FE7E
-	.byte $00 ; |........| $FE7F
-	.byte $00 ; |........| $FE80
-	.byte $00 ; |........| $FE81
-	.byte $00 ; |........| $FE82
-	.byte $00 ; |........| $FE83
-	.byte $00 ; |........| $FE84
-	.byte $80 ; |X.......| $FE85
-	.byte $80 ; |X.......| $FE86
-	.byte $C0 ; |XX......| $FE87
-	.byte $E0 ; |XXX.....| $FE88
-	.byte $E0 ; |XXX.....| $FE89
-	.byte $C0 ; |XX......| $FE8A
-	.byte $C0 ; |XX......| $FE8B
-	.byte $80 ; |X.......| $FE8C
-	.byte $00 ; |........| $FE8D
-	.byte $00 ; |........| $FE8E
-	.byte $00 ; |........| $FE8F
-	.byte $00 ; |........| $FE90
-	.byte $00 ; |........| $FE91
-	.byte $00 ; |........| $FE92
-	.byte $00 ; |........| $FE93
-	.byte $00 ; |........| $FE94
-	.byte $00 ; |........| $FE95
-	.byte $00 ; |........| $FE96
-	.byte $30 ; |..XX....| $FE97
-	.byte $38 ; |..XXX...| $FE98
-	.byte $1C ; |...XXX..| $FE99
-	.byte $1E ; |...XXXX.| $FE9A
-	.byte $0E ; |....XXX.| $FE9B
-	.byte $0C ; |....XX..| $FE9C
-	.byte $0C ; |....XX..| $FE9D
-	.byte $00 ; |........| $FE9E
-	.byte $00 ; |........| $FE9F
-	.byte $00 ; |........| $FEA0
-	.byte $80 ; |X.......| $FEA1
-	.byte $80 ; |X.......| $FEA2
-	.byte $C0 ; |XX......| $FEA3
-	.byte $F0 ; |XXXX....| $FEA4
-	.byte $FC ; |XXXXXX..| $FEA5
-	.byte $FF ; |XXXXXXXX| $FEA6
-	.byte $FF ; |XXXXXXXX| $FEA7
-	.byte $FF ; |XXXXXXXX| $FEA8
-	.byte $FF ; |XXXXXXXX| $FEA9
-	.byte $FE ; |XXXXXXX.| $FEAA
-	.byte $FC ; |XXXXXX..| $FEAB
-	.byte $F8 ; |XXXXX...| $FEAC
-	.byte $F0 ; |XXXX....| $FEAD
-	.byte $E0 ; |XXX.....| $FEAE
-	.byte $00 ; |........| $FEAF
-	.byte $00 ; |........| $FEB0
-	.byte $00 ; |........| $FEB1
-	.byte $00 ; |........| $FEB2
-	.byte $00 ; |........| $FEB3
-	.byte $00 ; |........| $FEB4
-	.byte $00 ; |........| $FEB5
-	.byte $00 ; |........| $FEB6
-	.byte $00 ; |........| $FEB7
-	.byte $00 ; |........| $FEB8
-	.byte $80 ; |X.......| $FEB9
-	.byte $E0 ; |XXX.....| $FEBA
-	.byte $F0 ; |XXXX....| $FEBB
-	.byte $E0 ; |XXX.....| $FEBC
-	.byte $80 ; |X.......| $FEBD
-	.byte $00 ; |........| $FEBE
-	.byte $00 ; |........| $FEBF
-	.byte $00 ; |........| $FEC0
-	.byte $00 ; |........| $FEC1
-	.byte $00 ; |........| $FEC2
-	.byte $00 ; |........| $FEC3
-	.byte $00 ; |........| $FEC4
-	.byte $00 ; |........| $FEC5
-	.byte $00 ; |........| $FEC6
-	.byte $03 ; |......XX| $FEC7
-	.byte $07 ; |.....XXX| $FEC8
-	.byte $03 ; |......XX| $FEC9
-	.byte $03 ; |......XX| $FECA
-	.byte $01 ; |.......X| $FECB
-	.byte $01 ; |.......X| $FECC
-	.byte $00 ; |........| $FECD
-	.byte $00 ; |........| $FECE
-	.byte $00 ; |........| $FECF
-	.byte $80 ; |X.......| $FED0
-	.byte $C0 ; |XX......| $FED1
-	.byte $F0 ; |XXXX....| $FED2
-	.byte $F0 ; |XXXX....| $FED3
-	.byte $E0 ; |XXX.....| $FED4
-	.byte $E0 ; |XXX.....| $FED5
-	.byte $C0 ; |XX......| $FED6
-	.byte $C0 ; |XX......| $FED7
-	.byte $80 ; |X.......| $FED8
-	.byte $80 ; |X.......| $FED9
-	.byte $00 ; |........| $FEDA
-	.byte $00 ; |........| $FEDB
-	.byte $00 ; |........| $FEDC
-	.byte $00 ; |........| $FEDD
-	.byte $00 ; |........| $FEDE
-	.byte $00 ; |........| $FEDF
-	.byte $00 ; |........| $FEE0
-	.byte $03 ; |......XX| $FEE1
-	.byte $07 ; |.....XXX| $FEE2
-	.byte $07 ; |.....XXX| $FEE3
-	.byte $03 ; |......XX| $FEE4
-	.byte $01 ; |.......X| $FEE5
-	.byte $00 ; |........| $FEE6
-	.byte $00 ; |........| $FEE7
-	.byte $C0 ; |XX......| $FEE8
-	.byte $E0 ; |XXX.....| $FEE9
-	.byte $F0 ; |XXXX....| $FEEA
-	.byte $F8 ; |XXXXX...| $FEEB
-	.byte $F8 ; |XXXXX...| $FEEC
-	.byte $FC ; |XXXXXX..| $FEED
-	.byte $FC ; |XXXXXX..| $FEEE
-	.byte $FC ; |XXXXXX..| $FEEF
+	.byte $07 ; |.....XXX|
+	.byte $07 ; |.....XXX|
+	.byte $07 ; |.....XXX|
+	.byte $03 ; |......XX|
+	.byte $03 ; |......XX|
+	.byte $03 ; |......XX|
+	.byte $01 ; |.......X|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $80 ; |X.......|
+	.byte $80 ; |X.......|
+	.byte $C0 ; |XX......|
+	.byte $E0 ; |XXX.....|
+	.byte $E0 ; |XXX.....|
+	.byte $C0 ; |XX......|
+	.byte $C0 ; |XX......|
+	.byte $80 ; |X.......|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $30 ; |..XX....|
+	.byte $38 ; |..XXX...|
+	.byte $1C ; |...XXX..|
+	.byte $1E ; |...XXXX.|
+	.byte $0E ; |....XXX.|
+	.byte $0C ; |....XX..|
+	.byte $0C ; |....XX..|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $80 ; |X.......|
+	.byte $80 ; |X.......|
+	.byte $C0 ; |XX......|
+	.byte $F0 ; |XXXX....|
+	.byte $FC ; |XXXXXX..|
+	.byte $FF ; |XXXXXXXX|
+	.byte $FF ; |XXXXXXXX|
+	.byte $FF ; |XXXXXXXX|
+	.byte $FF ; |XXXXXXXX|
+	.byte $FE ; |XXXXXXX.|
+	.byte $FC ; |XXXXXX..|
+	.byte $F8 ; |XXXXX...|
+	.byte $F0 ; |XXXX....|
+	.byte $E0 ; |XXX.....|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $80 ; |X.......|
+	.byte $E0 ; |XXX.....|
+	.byte $F0 ; |XXXX....|
+	.byte $E0 ; |XXX.....|
+	.byte $80 ; |X.......|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $03 ; |......XX|
+	.byte $07 ; |.....XXX|
+	.byte $03 ; |......XX|
+	.byte $03 ; |......XX|
+	.byte $01 ; |.......X|
+	.byte $01 ; |.......X|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $80 ; |X.......|
+	.byte $C0 ; |XX......|
+	.byte $F0 ; |XXXX....|
+	.byte $F0 ; |XXXX....|
+	.byte $E0 ; |XXX.....|
+	.byte $E0 ; |XXX.....|
+	.byte $C0 ; |XX......|
+	.byte $C0 ; |XX......|
+	.byte $80 ; |X.......|
+	.byte $80 ; |X.......|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $03 ; |......XX|
+	.byte $07 ; |.....XXX|
+	.byte $07 ; |.....XXX|
+	.byte $03 ; |......XX|
+	.byte $01 ; |.......X|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $C0 ; |XX......|
+	.byte $E0 ; |XXX.....|
+	.byte $F0 ; |XXXX....|
+	.byte $F8 ; |XXXXX...|
+	.byte $F8 ; |XXXXX...|
+	.byte $FC ; |XXXXXX..|
+	.byte $FC ; |XXXXXX..|
+	.byte $FC ; |XXXXXX..|
 
 pedestalSprite
-	.byte $3C ; |..XXXX..| $FEF0
-	.byte $3C ; |..XXXX..| $FEF1
-	.byte $7E ; |.XXXXXX.| $FEF2
-	.byte $FF ; |XXXXXXXX| $FEF3
+	.byte $3C ; |..XXXX..|
+	.byte $3C ; |..XXXX..|
+	.byte $7E ; |.XXXXXX.|
+	.byte $FF ; |XXXXXXXX|
 
 UpdateInvObjPos
 	lda		secretArkMesaID,x
@@ -6646,165 +6645,165 @@ devInitialsGfx1 ;programmer's initials #2
 
 
 	.byte SET_PLAYER_0_COLOR | (GREEN_BLUE + 12) >> 1 ; D6
-	.byte $1C ; |...XXX..| $FF0B
-	.byte $36 ; |..XX.XX.| $FF0C
-	.byte $1C ; |...XXX..| $FF0D
-	.byte $49 ; |.X..X..X| $FF0E
-	.byte $7F ; |.XXXXXXX| $FF0F
-	.byte $49 ; |.X..X..X| $FF10
-	.byte $1C ; |...XXX..| $FF11
-	.byte $3E ; |..XXXXX.| $FF12
-	.byte $00 ; |........| $FF13
+	.byte $1C ; |...XXX..|
+	.byte $36 ; |..XX.XX.|
+	.byte $1C ; |...XXX..|
+	.byte $49 ; |.X..X..X|
+	.byte $7F ; |.XXXXXXX|
+	.byte $49 ; |.X..X..X|
+	.byte $1C ; |...XXX..|
+	.byte $3E ; |..XXXXX.|
+	.byte $00 ; |........|
 	.byte SET_PLAYER_0_HMOVE | HMOVE_L7 >> 1 ;$B9
 	.byte SET_PLAYER_0_COLOR | (YELLOW + 4) >> 1;$8A
 	.byte SET_PLAYER_0_HMOVE | HMOVE_L4 >> 1;$A1
 	.byte SET_PLAYER_0_HMOVE | HMOVE_0 >> 1;$81
-	.byte $00 ; |........| $FF18
-	.byte $00 ; |........| $FF19
-	.byte $00 ; |........| $FF1A
-	.byte $00 ; |........| $FF1B
-	.byte $00 ; |........| $FF1C
-	.byte $00 ; |........| $FF1D
-	.byte $1C ; |...XXX..| $FF1E
-	.byte $70 ; |.XXX....| $FF1F
-	.byte $07 ; |.....XXX| $FF20
-	.byte $70 ; |.XXX....| $FF21
-	.byte $0E ; |....XXX.| $FF22
-	.byte $00 ; |........| $FF23
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $1C ; |...XXX..|
+	.byte $70 ; |.XXX....|
+	.byte $07 ; |.....XXX|
+	.byte $70 ; |.XXX....|
+	.byte $0E ; |....XXX.|
+	.byte $00 ; |........|
 	.byte SET_PLAYER_0_HMOVE | (HMOVE_R7 | 14) >> 1;$CF
 	.byte SET_PLAYER_0_COLOR | (ORANGE + 12) >> 1;$A6
-	.byte $00 ; |........| $FF26
+	.byte $00 ; |........|
 	.byte SET_PLAYER_0_HMOVE | HMOVE_0 >> 1;$81
-	.byte $77 ; |.XXX.XXX| $FF28
-	.byte $36 ; |..XX.XX.| $FF29
-	.byte $14 ; |...X.X..| $FF2A
-	.byte $22 ; |..X...X.| $FF2B
+	.byte $77 ; |.XXX.XXX|
+	.byte $36 ; |..XX.XX.|
+	.byte $14 ; |...X.X..|
+	.byte $22 ; |..X...X.|
 	.byte SET_PLAYER_0_COLOR | (DK_PINK + 12) >> 1;$AE
-	.byte $14 ; |...X.X..| $FF2D
-	.byte $36 ; |..XX.XX.| $FF2E
-	.byte $77 ; |.XXX.XXX| $FF2F
-	.byte $00 ; |........| $FF30
-	.byte $BF ; |X.XXXXXX| $FF31
-	.byte $CE ; |XX..XXX.| $FF32
-	.byte $00 ; |........| $FF33
-	.byte $EF ; |XXX.XXXX| $FF34
+	.byte $14 ; |...X.X..|
+	.byte $36 ; |..XX.XX.|
+	.byte $77 ; |.XXX.XXX|
+	.byte $00 ; |........|
+	.byte $BF ; |X.XXXXXX|
+	.byte $CE ; |XX..XXX.|
+	.byte $00 ; |........|
+	.byte $EF ; |XXX.XXXX|
 	.byte SET_PLAYER_0_HMOVE | HMOVE_0 >> 1;$81
-	.byte $00 ; |........| $FF36
-	.byte $00 ; |........| $FF37
-	.byte $00 ; |........| $FF38
-	.byte $00 ; |........| $FF39
-	.byte $00 ; |........| $FF3A
-	.byte $00 ; |........| $FF3B
-	.byte $68 ; |.XX.X...| $FF3C
-	.byte $2F ; |..X.XXXX| $FF3D
-	.byte $0A ; |....X.X.| $FF3E
-	.byte $0C ; |....XX..| $FF3F
-	.byte $08 ; |....X...| $FF40
-	.byte $00 ; |........| $FF41
-	.byte $80 ; |X.......| $FF42
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $68 ; |.XX.X...|
+	.byte $2F ; |..X.XXXX|
+	.byte $0A ; |....X.X.|
+	.byte $0C ; |....XX..|
+	.byte $08 ; |....X...|
+	.byte $00 ; |........|
+	.byte $80 ; |X.......|
 	.byte SET_PLAYER_0_HMOVE | HMOVE_0 >> 1;$81
-	.byte $00 ; |........| $FF44
-	.byte $00 ; |........| $FF45
+	.byte $00 ; |........|
+	.byte $00 ; |........|
 
 
 
 devInitialsGfx0
-	.byte $07 ; |.....XXX| $FF46
-	.byte $01 ; |.......X| $FF47
-	.byte $57 ; |.X.X.XXX| $FF48
-	.byte $54 ; |.X.X.X..| $FF49
-	.byte $77 ; |.XXX.XXX| $FF4A
-	.byte $50 ; |.X.X....| $FF4B
-	.byte $50 ; |.X.X....| $FF4C
-	.byte $00 ; |........| $FF4D
-	.byte $00 ; |........| $FF4E
-	.byte $00 ; |........| $FF4F
-	.byte $00 ; |........| $FF50
+	.byte $07 ; |.....XXX|
+	.byte $01 ; |.......X|
+	.byte $57 ; |.X.X.XXX|
+	.byte $54 ; |.X.X.X..|
+	.byte $77 ; |.XXX.XXX|
+	.byte $50 ; |.X.X....|
+	.byte $50 ; |.X.X....|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
 
 
 
 MarketplacePlayerGraphics
-	.byte $80 ; |X.......| $FF51
-	.byte $7E ; |.XXXXXX.| $FF52
-	.byte $86 ; |X....XX.| $FF53
-	.byte $80 ; |X.......| $FF54
-	.byte $A6 ; |X.X..XX.| $FF55
-	.byte $5A ; |.X.XX.X.| $FF56
-	.byte $7E ; |.XXXXXX.| $FF57
-	.byte $80 ; |X.......| $FF58
-	.byte $7F ; |.XXXXXXX| $FF59
-	.byte $00 ; |........| $FF5A
-	.byte $B1 ; |X.XX...X| $FF5B
-	.byte $F9 ; |XXXXX..X| $FF5C
+	.byte $80 ; |X.......|
+	.byte $7E ; |.XXXXXX.|
+	.byte $86 ; |X....XX.|
+	.byte $80 ; |X.......|
+	.byte $A6 ; |X.X..XX.|
+	.byte $5A ; |.X.XX.X.|
+	.byte $7E ; |.XXXXXX.|
+	.byte $80 ; |X.......|
+	.byte $7F ; |.XXXXXXX|
+	.byte $00 ; |........|
+	.byte $B1 ; |X.XX...X|
+	.byte $F9 ; |XXXXX..X|
 
-	.byte $F6 ; |XXXX.XX.| $FF5D
-	.byte $06 ; |.....XX.| $FF5E
-	.byte $1E ; |...XXXX.| $FF5F
-	.byte $12 ; |...X..X.| $FF60
-	.byte $1E ; |...XXXX.| $FF61
-	.byte $12 ; |...X..X.| $FF62
-	.byte $1E ; |...XXXX.| $FF63
-	.byte $7F ; |.XXXXXXX| $FF64
-	.byte $00 ; |........| $FF65
-	.byte $B9 ; |X.XXX..X| $FF66
-	.byte $00 ; |........| $FF67
-	.byte $D4 ; |XX.X.X..| $FF68
-	.byte $00 ; |........| $FF69
+	.byte $F6 ; |XXXX.XX.|
+	.byte $06 ; |.....XX.|
+	.byte $1E ; |...XXXX.|
+	.byte $12 ; |...X..X.|
+	.byte $1E ; |...XXXX.|
+	.byte $12 ; |...X..X.|
+	.byte $1E ; |...XXXX.|
+	.byte $7F ; |.XXXXXXX|
+	.byte $00 ; |........|
+	.byte $B9 ; |X.XXX..X|
+	.byte $00 ; |........|
+	.byte $D4 ; |XX.X.X..|
+	.byte $00 ; |........|
 	.byte SET_PLAYER_0_HMOVE | HMOVE_0 >> 1;$81
-	.byte $1C ; |...XXX..| $FF6B
-	.byte $2A ; |..X.X.X.| $FF6C
-	.byte $55 ; |.X.X.X.X| $FF6D
-	.byte $2A ; |..X.X.X.| $FF6E
-	.byte $14 ; |...X.X..| $FF6F
-	.byte $3E ; |..XXXXX.| $FF70
-	.byte $00 ; |........| $FF71
-	.byte $C1 ; |XX.....X| $FF72
-	.byte $E6 ; |XXX..XX.| $FF73
-	.byte $00 ; |........| $FF74
-	.byte $00 ; |........| $FF75
-	.byte $00 ; |........| $FF76
+	.byte $1C ; |...XXX..|
+	.byte $2A ; |..X.X.X.|
+	.byte $55 ; |.X.X.X.X|
+	.byte $2A ; |..X.X.X.|
+	.byte $14 ; |...X.X..|
+	.byte $3E ; |..XXXXX.|
+	.byte $00 ; |........|
+	.byte $C1 ; |XX.....X|
+	.byte $E6 ; |XXX..XX.|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
 	.byte SET_PLAYER_0_HMOVE | HMOVE_0 >> 1;$81
-	.byte $7F ; |.XXXXXXX| $FF78
-	.byte $55 ; |.X.X.X.X| $FF79
-	.byte $2A ; |..X.X.X.| $FF7A
-	.byte $55 ; |.X.X.X.X| $FF7B
-	.byte $2A ; |..X.X.X.| $FF7C
-	.byte $3E ; |..XXXXX.| $FF7D
-	.byte $00 ; |........| $FF7E
-	.byte $B9 ; |X.XXX..X| $FF7F
-	.byte $86 ; |X....XX.| $FF80
-	.byte $91 ; |X..X...X| $FF81
+	.byte $7F ; |.XXXXXXX|
+	.byte $55 ; |.X.X.X.X|
+	.byte $2A ; |..X.X.X.|
+	.byte $55 ; |.X.X.X.X|
+	.byte $2A ; |..X.X.X.|
+	.byte $3E ; |..XXXXX.|
+	.byte $00 ; |........|
+	.byte $B9 ; |X.XXX..X|
+	.byte $86 ; |X....XX.|
+	.byte $91 ; |X..X...X|
 	.byte SET_PLAYER_0_HMOVE | HMOVE_0 >> 1;$81
-	.byte $7E ; |.XXXXXX.| $FF83
-	.byte $80 ; |X.......| $FF84
-	.byte $86 ; |X....XX.| $FF85
-	.byte $A6 ; |X.X..XX.| $FF86
-	.byte $5A ; |.X.XX.X.| $FF87
-	.byte $7E ; |.XXXXXX.| $FF88
-	.byte $86 ; |X....XX.| $FF89
-	.byte $7F ; |.XXXXXXX| $FF8A
-	.byte $00 ; |........| $FF8B
-	.byte $D6 ; |XX.X.XX.| $FF8C
-	.byte $77 ; |.XXX.XXX| $FF8D
-	.byte $77 ; |.XXX.XXX| $FF8E
-	.byte $80 ; |X.......| $FF8F
-	.byte $D6 ; |XX.X.XX.| $FF90
-	.byte $77 ; |.XXX.XXX| $FF91
-	.byte $00 ; |........| $FF92
-	.byte $C1 ; |XX.....X| $FF93
-	.byte $B6 ; |X.XX.XX.| $FF94
-	.byte $A1 ; |X.X....X| $FF95
+	.byte $7E ; |.XXXXXX.|
+	.byte $80 ; |X.......|
+	.byte $86 ; |X....XX.|
+	.byte $A6 ; |X.X..XX.|
+	.byte $5A ; |.X.XX.X.|
+	.byte $7E ; |.XXXXXX.|
+	.byte $86 ; |X....XX.|
+	.byte $7F ; |.XXXXXXX|
+	.byte $00 ; |........|
+	.byte $D6 ; |XX.X.XX.|
+	.byte $77 ; |.XXX.XXX|
+	.byte $77 ; |.XXX.XXX|
+	.byte $80 ; |X.......|
+	.byte $D6 ; |XX.X.XX.|
+	.byte $77 ; |.XXX.XXX|
+	.byte $00 ; |........|
+	.byte $C1 ; |XX.....X|
+	.byte $B6 ; |X.XX.XX.|
+	.byte $A1 ; |X.X....X|
 	.byte SET_PLAYER_0_HMOVE | HMOVE_0 >> 1;$81
-	.byte $1C ; |...XXX..| $FF97
-	.byte $2A ; |..X.X.X.| $FF98
-	.byte $55 ; |.X.X.X.X| $FF99
-	.byte $2A ; |..X.X.X.| $FF9A
-	.byte $14 ; |...X.X..| $FF9B
-	.byte $3E ; |..XXXXX.| $FF9C
-	.byte $00 ; |........| $FF9D
-	.byte $00 ; |........| $FF9E
-	.byte $00 ; |........| $FF9F
-	.byte $00 ; |........| $FFA0
+	.byte $1C ; |...XXX..|
+	.byte $2A ; |..X.X.X.|
+	.byte $55 ; |.X.X.X.X|
+	.byte $2A ; |..X.X.X.|
+	.byte $14 ; |...X.X..|
+	.byte $3E ; |..XXXXX.|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
 
 
 
