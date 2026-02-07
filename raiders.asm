@@ -3696,7 +3696,7 @@ UpdateInvItemPos
 	ldx		#$02						; Start at Index 2.
 
 invObjPosLoop
-	jsr		lfef4						; Update Position for Item X.
+	jsr		UpdateInvObjPos						; Update Position for Item X.
 	inx									; Next Item.
 	cpx		#$05						; Loop until 5.
 	bcc		invObjPosLoop				; Loop.
@@ -5911,23 +5911,26 @@ itemMaskTable
 		.byte $80 ; |x		| $fce9
 
 invSelectAdjHandler
+;invDecP0PosY
 	ror
-	bcs		lfcef
+	bcs		invIncP0PosY
 	dec		p0PosY,x
-lfcef
+invIncP0PosY
 	ror
-	bcs		lfcf4
+	bcs		invDecP0PosX
 	inc		p0PosY,x
-lfcf4
+invDecP0PosX
 	ror
-	bcs		lfcf9
+	bcs		invIncP0PosX
 	dec		p0PosX,x
-lfcf9
+invIncP0PosX
 	ror
-	bcs		lfcfe
+	bcs		finishInvSelectAdj
 	inc		p0PosX,x
-lfcfe
+finishInvSelectAdj
 	rts
+
+
 	.byte $00 ; |........| $FCFF
 	.byte $F2 ; |XXXX..X.| $FD00
 	.byte $40 ; |.X......| $FD01
@@ -6455,12 +6458,12 @@ pedestalSprite
 	.byte $7E ; |.XXXXXX.| $FEF2
 	.byte $FF ; |XXXXXXXX| $FEF3
 
-lfef4
+UpdateInvObjPos
 	lda		arkLocationRegionId,x
-	bmi		lfef9
+	bmi		UpdateInvObjPosBound
 	rts
 
-lfef9
+UpdateInvObjPosBound
 	jsr		invSelectAdjHandler
 	jsr		UpdateObjBoundPos
 	rts
