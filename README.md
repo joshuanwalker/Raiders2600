@@ -2,7 +2,7 @@
 
 **Original Game (1982) by Atari, Inc.**  
 **Original Designer:** Howard Scott Warshaw  
-**Disassembly & Analysis:** Dennis Debro & Halkun
+**Disassembly & Analysis:** Dennis Debro & Halkun (That's me!)
 
 ---
 
@@ -18,7 +18,7 @@ The project has been reorganized for a clean development workflow:
 
 *   **`src/`**: Contains the main assembly source (`raiders.asm`) and header files (`tia_constants.h`).
 *   **`bin/`**: Contains build tools (DASM) and emulator executable (Stella).
-*   **`out/`**: Destination for compiled binaries (`.bin`), symbol files (`.sym`), and listing files (`.lst`).
+*   **`out/`**: Destination for compiled binaries (`.bin`), symbol files (`.sym`), and listing files (`.lst`). (auto generated at compile time)
 *   **`make.bat`**: Windows batch script to compile the project.
 *   **`run.bat`**: Windows batch script to launch the compiled game.
 
