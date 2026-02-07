@@ -1,23 +1,27 @@
-; disassembly of ~\projects\programming\reversing\6502\raiders\raiders.bin
-; disassembled 07/02/23 15:14:09
-; using stella 6.7
+
+; ***  R A I D E R S  O F  T H E  L O S T  A R K  ***
+; Copyright 1982 Atari, Inc.
+; Designer: Howard Scott Warshaw
+; Artist:	Jerome Domurat
+
+; Originally Analyzed, labeled and commented
+;  by Dennis Debro
+; Furthur coding and comments
+;  by Halkun
+; 	Last Update: Feb, 7th 2026
 ;
-; rom properties name : raiders of the lost ark (1982) (atari)
-; rom properties md5  : f724d3dd2471ed4cf5f191dbb724b69f
-; bankswitch type		: f8* (8k)
 ;
-; legend: *	 = code not yet run (tentative code)
-;			d	 = data directive (referenced in some way)
-;			g	 = gfx directive, shown as '#' (stored in player, missile, ball)
-;			p	 = pgfx directive, shown as '*' (stored in playfield)
-;			c	 = col directive, shown as color constants (stored in player color)
-;			cp = pcol directive, shown as color constants (stored in playfield color)
-;			cb = bcol directive, shown as color constants (stored in background color)
-;			a	 = aud directive (stored in audio registers)
-;			i	 = indexed accessed only
-;			c	 = used by code executed in ram
-;			s	 = used by stack
-;			!	 = page crossed, 1 cycle penalty
+; ==============================================================================
+; = THIS REVERSE-ENGINEERING PROJECT IS BEING SUPPLIED TO THE PUBLIC DOMAIN		=
+; = FOR EDUCATIONAL PURPOSES ONLY. THOUGH THE CODE WILL ASSEMBLE INTO THE		=
+; = EXACT GAME ROM, THE LABELS AND COMMENTS ARE THE INTERPRETATION OF MY OWN	=
+; = AND MAY NOT REPRESENT THE ORIGINAL VISION OF THE AUTHOR.					=
+; =																				=
+; = THE ASSEMBLED CODE IS  1982, ATARI, INC.								 	=
+; =																				=
+; ==============================================================================
+;
+; This is Howard Scott Warshaw's second game with Atari.
 
 	processor 6502
 
