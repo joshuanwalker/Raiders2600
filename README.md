@@ -10,7 +10,6 @@
 
 This repository contains the fully reverse-engineered and commented source code for the Atari 2600 classic, *Raiders of the Lost Ark*.
 
-Unlike a raw disassembly, this project aims to provide a **semantic understanding** of the game logic. Variables, constants, and subroutines have been renamed and heavily commented to explain *how* the game works, from the procedural flute music to the complex collision logic in the Map Room.
 
 ## Project Structure
 
@@ -50,10 +49,10 @@ run.bat
 
 ### ROM Architecture
 
-The game uses a **2-bank ROM** (8KB total) with bank-switching via strobes at `BANK0STROBE` (`$FFF8`) and `BANK1STROBE` (`$FFF9`). Bank switching is done through a self-modifying code technique — opcodes like `LDA_ABS` and `JMP_ABS` are written into zero-page RAM variables (`bankSwitchJMPOpcode`, `bankSwitchJMPAddr`, etc.) and executed in-place.
+The game uses a **2-bank ROM** (8KB total) with bank-switching via strobes at `BANK0STROBE` (`$FFF8`) and `BANK1STROBE` (`$FFF9`). Bank switching is done through a self-modifying code technique whare opcodes are written into zero-page RAM variables and executed in-place.
 
-- **Bank 0** (`BANK0TOP` = `$1000`, reorg'd to `$D000`): Contains game logic — collision handling, inventory management, room event handlers, scoring, movement, input processing, and sound.
-- **Bank 1** (`BANK1TOP` = `$2000`, reorg'd to `$F000`): Contains the display kernels, sprite data, playfield graphics, room handler dispatch, and music frequency tables.
+- **Bank 0** (`BANK0TOP` = `$D000`): Contains game logic — collision handling, inventory management, room event handlers, scoring, movement, input processing, and sound.
+- **Bank 1** (`BANK1TOP` = `$F000`): Contains the display kernels, sprite data, playfield graphics, room handler dispatch, and music frequency tables.
 
 ### Game Loop
 
@@ -132,7 +131,7 @@ This is the largest block of game code, executing in order every frame:
 | 1 | `frameFirstLine` | **Game-over check**: if `gameEventFlag` overflows to 0, call `getFinalScore` and transition to the Ark Room. |
 | 2 | `checkShowDevInitials` | **Ark Room / title screen**: if in the Ark Room, play Raiders March, check Yar bonus for HSW initials easter egg. Otherwise skip. |
 | 3 | *(Ark Room only)* | **Pedestal elevator**: slowly lower Indy to his score height. Check fire button for restart. Set `arkRoomStateFlag` to enable RESET. |
-| 4 | `HandleEasterEgg` | **Cutscene check**: if `screenEventState` bit 6 is set, advance the Ark/snake reveal sequence. |
+| 4 | `HandleEasterEgg` | **Cutscene check**: if `screenEventState` bit 6 is set, advance the Arkbreveal sequence. |
 | 5 | `advanceArkSeq` | **Snake AI**: every 4th frame, grow snake sprite, steer toward Indy using `snakePosXOffsetTable`, update `ballPosX`/`ballPosY` and `kernelRenderState`. |
 | 6 | `configSnake` | **Snake kernel setup**: load `kernelDataPtrLo/Hi` and `kernelDataIndex` from `snakeMotionTable` for the wiggling ball sprite. |
 | 7 | `checkMajorEventDone` | If `gameEventFlag` bit 7 is set (death in progress), skip to `finishedScrollUpdate` — bypass normal input. |
