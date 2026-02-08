@@ -237,8 +237,13 @@ invSlotHi6				= $c2	; Inventory Slot 6 (Sprite Ptr High)
 selectedItemSlot		= $c3	; Byte offset (0,2,4,6,8,10) into invSlot array for selected item
 inventoryItemCount		= $c4	; Number of items currently held (0-6)
 selectedInventoryId		= $c5	; ID of the item currently selected (e.g. ID_INVENTORY_WHIP)
-basketItemStatus		= $c6	; Bitmask: Basket item collection flags (1=taken, 0=available)
-pickupItemStatus		= $c7	; Bitmask: Global "has item been found" flags (1=found)
+basketItemStatus		= $c6	; Bitmask: spawnable item collection state (1=taken, 0=available)
+									;   "Basket" items are those found at fixed world locations:
+									;   Marketplace baskets (grenade, revolver, key) and the
+									;   Treasure Room cycling item. These can respawn when dropped.
+pickupItemStatus		= $c7	; Bitmask: unique item collection state (1=found)
+									;   "Pickup" items are one-of-a-kind items found in the world:
+									;   whip, shovel, head of Ra, timepiece, hourglass, ankh, chai.
 
 ;----------------------------------------------------------------------------
 ; Object Positioning (Kernel Variables)
@@ -354,12 +359,18 @@ GRENADE_OPENING_IN_WALL				= %00000010
 INDY_NOT_CARRYING_COINS				= %10000000
 INDY_CARRYING_SHOVEL				= %00000001
 
+; Spawnable item status bits (basketItemStatus)
+; These track items found at fixed world locations (marketplace baskets,
+; treasure room). Bit set = Indy has taken the item.
 BASKET_STATUS_MARKET_GRENADE		= %00000001
 BASKET_STATUS_BLACK_MARKET_GRENADE	= %00000010
 BASKET_STATUS_REVOLVER				= %00001000
 BASKET_STATUS_COINS					= %00010000
 BASKET_STATUS_KEY					= %00100000
 
+; Unique item status bits (pickupItemStatus)
+; These track one-of-a-kind items placed in the world.
+; Bit set = Indy has found/taken the item.
 PICKUP_ITEM_STATUS_WHIP				= %00000001
 PICKUP_ITEM_STATUS_SHOVEL			= %00000010
 PICKUP_ITEM_STATUS_HEAD_OF_RA		= %00000100
@@ -470,12 +481,14 @@ coarseMoveObj
 	jmp		jmpDisplayKernel
 
 checkWeaponPlayerHit:
-	bit		CXM1P						; check player collision with Indy bullet
-	bpl		checkWeaponHit				; branch if no player collision
-	ldx		currentRoomId				; get the current screen id
-	cpx		#ID_VALLEY_OF_POISON		; are we in the valley of poison?
-	bcc		checkWeaponHit
-	beq		weaponHitThief				; branch if Indy in the Valley of Poison
+; Check if weapon (M1) hit a player sprite (thief).
+; Only relevant in rooms with thieves (Valley of Poison, Thieves' Den, Well of Souls).
+	bit		CXM1P						; check weapon (M1) vs player collision
+	bpl		checkWeaponPlayfieldHit				; branch if no collision
+	ldx		currentRoomId				; get the current room id
+	cpx		#ID_VALLEY_OF_POISON		; rooms with thieves are >= Valley of Poison
+	bcc		checkWeaponPlayfieldHit				; branch if room has no thieves
+	beq		weaponHitThief				; Valley of Poison has only one thief
 
 	; --------------------------------------------------------------------------
 	; CALCULATE STRUCK THIEF INDEX
@@ -508,10 +521,10 @@ weaponHitThief:
 	sta		weaponStatus				; clear BULLET_OR_WHIP_ACTIVE bit
 	lda		pickupStatusFlags
 	and		#%00011111					; Mask check.
-	beq		finishItemPickup
+	beq		markPickupProcessed
 	jsr		placeItemInInventory
 
-finishItemPickup:
+markPickupProcessed:
 	lda		#%01000000					; Set Bit 6.
 	sta		pickupStatusFlags
 
@@ -525,16 +538,19 @@ setThiefShotPenalty
 	lda		#PENALTY_SHOOTING_THIEF		; Load Penalty Value.
 	sta		thiefShotPenalty			; Apply penalty.
 
-checkWeaponHit:
-	bit		CXM1FB						; check missile 1 and playfield collisions
-	bpl		weaponObjHit				; if playfield is not hit try snake hit
-	ldx		currentRoomId				; get the current screen id
-	cpx		#ID_MESA_FIELD				; are we in the mesa field?
-	beq		handleIndyVsObjHit			; see what we hit
-	cpx		#ID_TEMPLE_ENTRANCE			; are we in the temple entrance?
-	beq		checkDungeonWallHit			; check for dungeon wall hit
-	cpx		#ID_ROOM_OF_SHINING_LIGHT	; are we in the room of shining light?
-	bne		weaponObjHit				; did we hit the snake?
+checkWeaponPlayfieldHit:
+; Check if weapon (M1) hit the playfield. In dungeon rooms (Temple Entrance,
+; Room of Shining Light), this destroys wall segments. In Mesa Field, skip
+; to Indy's ball collision check instead.
+	bit		CXM1FB						; check weapon (M1) vs playfield/ball collision
+	bpl		checkWeaponBallHit				; branch if no playfield hit — check ball next
+	ldx		currentRoomId				; get the current room id
+	cpx		#ID_MESA_FIELD				; Mesa Field has no destructible walls
+	beq		checkIndyBallHit			; skip wall logic, check Indy vs ball
+	cpx		#ID_TEMPLE_ENTRANCE			; Temple Entrance has dungeon walls
+	beq		checkDungeonWallHit			; handle wall destruction
+	cpx		#ID_ROOM_OF_SHINING_LIGHT	; Room of Shining Light also has dungeon walls
+	bne		checkWeaponBallHit				; no destructible walls in other rooms
 checkDungeonWallHit:
 	lda		weaponPosY					; get bullet or whip vertical position
 	sbc		kernelRenderState					; subtract dungeon wall height
@@ -580,79 +596,83 @@ handleRightWall:
 	cmp		#$20						; Compare result to 32
 	bcc		maskDungeonWall				; apply wall mask
 clearWeaponState:
-	ldy		#~BULLET_OR_WHIP_ACTIVE		; Invert BULLET_OR_WHIP_ACTIVE
+	ldy		#~BULLET_OR_WHIP_ACTIVE		; deactivate weapon
 	sty		weaponStatus				; clear BULLET_OR_WHIP_ACTIVE status
-	sty		weaponPosY					; set vertical position out of range
-weaponObjHit:
-	bit		CXM1FB						; check if snake hit with bullet or whip
-	bvc		handleIndyVsObjHit			; branch if object not hit
-	bit		screenEventState
-	bvc		handleIndyVsObjHit
-	lda		#$5a						; set object y position high byte
-	sta		ballPosY					; move offscreen
-	sta		p0SpriteHeight
-	sta		weaponStatus				; clear BULLET_OR_WHIP_ACTIVE status
-	sta		weaponPosY
+	sty		weaponPosY					; move weapon off-screen
+checkWeaponBallHit:
+; Check if weapon (M1) hit the ball sprite (snake).
+; Bit 6 of CXM1FB indicates M1-ball collision.
+	bit		CXM1FB						; check weapon (M1) vs ball (snake) collision
+	bvc		checkIndyBallHit			; branch if no ball hit (bit 6 clear)
+	bit		screenEventState			; is snake active on screen?
+	bvc		checkIndyBallHit			; branch if no snake present
+	lda		#$5a						; kill the snake — move everything off-screen
+	sta		ballPosY					; move ball (snake body) off-screen
+	sta		p0SpriteHeight				; collapse snake sprite height
+	sta		weaponStatus				; deactivate weapon
+	sta		weaponPosY					; move weapon off-screen
 
-handleIndyVsObjHit:
-	; Handles collision with Snakes, Tsetse Flies, or Items (Time Piece).
-	bit		CXP1FB						; Check P1 (Indy) vs Playfield/Ball Collision.
-	bvc		handleMesaSideSecretExit	; Branch if no collision (Bit 6 clear).
-	ldx		currentRoomId				; Get Room ID.
-	cpx		#ID_TEMPLE_ENTRANCE			; Are we in Temple Entrance?
-	beq		timePieceTouch				; If yes, handle Time Piece pickup.
+checkIndyBallHit:
+; Check if Indy (P1) collided with the ball sprite.
+; The ball represents different things per room: snake, tsetse flies, or timepiece.
+; Bit 6 of CXP1FB indicates P1-ball collision.
+	bit		CXP1FB						; check Indy (P1) vs ball collision
+	bvc		checkMesaSideExit			; branch if no ball collision (bit 6 clear)
+	ldx		currentRoomId				; get current room id
+	cpx		#ID_TEMPLE_ENTRANCE			; in Temple Entrance, ball = timepiece
+	beq		timePieceTouch				; handle timepiece pickup
 
 	; --- Flute Immunity Check ---
 	lda		selectedInventoryId			; Get currently selected item.
 	cmp		#ID_INVENTORY_FLUTE			; Is it the Flute?
-	beq		handleMesaSideSecretExit	; If Flute is selected, IGNORE collision
+	beq		checkMesaSideExit	; If Flute is selected, IGNORE collision
 										; (Immunity to Snakes/Flies)
 
-	; --- Damage / Effect Logic --
-	bit		screenEventState			; Check Event State (Snakes vs Flies?)
-	bpl		triggerSnakeDeathEvent	; If Bit 7 is CLEAR, it's a Snake/Lethal
-										; Jump to Death Logic.
+	; --- Determine collision type: snake or tsetse fly ---
+	bit		screenEventState			; bit 7: 0 = snake (lethal), 1 = tsetse fly
+	bpl		triggerSnakeDeathEvent		; bit 7 clear → snake contact → death
+
 	; --- Tsetse Fly Paralysis ---
-	; If Bit 7 is SET, it implies Tsetse Flies (Spider Room / Valley).
+	; Bit 7 set means tsetse flies (Spider Room / Valley of Poison).
 	lda		timeOfDay					; Get Timer.
 	and		#$07						; Mask for random duration
 	ora		#$80						; Set Bit 7.
 	sta		eventTimer					; Set "Paralysis" Timer (Indy freezes).
-	bne		handleMesaSideSecretExit	; Return.
+	bne		checkMesaSideExit	; Return.
 
 triggerSnakeDeathEvent:
-	bvc		handleMesaSideSecretExit	; Fail-safe?
-	lda		#$80						; Set Bit 7.
-	sta		gameEventFlag				; Trigger major event
-	bne		handleMesaSideSecretExit	; Return.
+	bvc		checkMesaSideExit			; bit 6 must be set (snake visible) or skip
+	lda		#$80						; set death flag
+	sta		gameEventFlag				; trigger Indy death sequence
+	bne		checkMesaSideExit			; continue collision chain
 
 timePieceTouch:
 	lda		kernelDataPtrLo
 	cmp		#<timeSprite
-	bne		handleMesaSideSecretExit
+	bne		checkMesaSideExit
 	lda		#ID_INVENTORY_TIME_PIECE
 	jsr		placeItemInInventory
 
-handleMesaSideSecretExit:
+checkMesaSideExit:
+; Mesa Side has two exits: M0 collision (grapple point) enters Well of Souls,
+; falling off the bottom (Indy Y >= $4F) enters Valley of Poison.
 	ldx		#ID_MESA_SIDE
-	cpx		currentRoomId				; are we on the mesa side?
-	bne		dispatchHits				; branch if not
-	bit		CXM0P						; check missile 0 and player collisions
-	bpl		handleMesaFall				; branch if Indy not entering WELL_OF_SOULS
+	cpx		currentRoomId				; are we on the Mesa Side?
+	bne		checkPlayerCollision		; branch if not — skip to player-player check
+	bit		CXM0P						; check M0 (grapple point) vs Indy collision
+	bpl		handleMesaFall				; no M0 hit — check if Indy fell off
 	stx		indyPosY					; set Indy vertical position (i.e. x = 5)
 	lda		#ID_WELL_OF_SOULS
 	sta		currentRoomId				; move Indy to the Well of Souls
 	jsr		initRoomState
 	lda		#(XMAX / 2) - 4
 	sta		indyPosX					; place Indy in horizontal middle
-	bne		clearHits					; unconditional branch
+	bne		clearCollisionLatches					; unconditional branch
 
 handleMesaFall:
 	ldx		indyPosY					; get Indy vertical position
-	cpx		#$4f							; Compare it to 79
-	bcc		dispatchHits				; If Indy is above this threshold,
-										; branch to CheckAndDispatchCollisions
-										; (don't fall)
+	cpx		#$4f							; has Indy reached the bottom? (Y >= 79)
+	bcc		checkPlayerCollision		; not at bottom yet — continue collision chain
 	lda		#ID_VALLEY_OF_POISON		; Otherwise, load Valley of Poison
 	sta		currentRoomId				; Set the current screen to Valley of Poison
 	jsr		initRoomState				; initialize rooom state
@@ -665,15 +685,17 @@ handleMesaFall:
 	lda		#$fd						; Load bitmask value
 	and		mesaSideState				; Apply bitmask to a status/control flag
 	sta		mesaSideState				; Store the result back
-	bmi		clearHits					; If the result has bit 7 set,
+	bmi		clearCollisionLatches					; If the result has bit 7 set,
 										; skip setting major event
 	lda		#$80						; Otherwise, set major event flag
 	sta		gameEventFlag
-clearHits:
-	sta		CXCLR						; clear all collisions
-dispatchHits:
-	bit		CXPPMM						; check player / missile collisions
-	bmi		handlePlayerObjCollision	; branch if player touched treasure
+clearCollisionLatches:
+	sta		CXCLR						; clear all collision latches
+checkPlayerCollision:
+; Check if Indy (P1) collided with P0 (room object / treasure / thief).
+; Bit 7 of CXPPMM indicates player-player collision.
+	bit		CXPPMM						; check player-player (P0 vs P1) collision
+	bmi		dispatchPlayerHit			; branch if collision detected
 	ldx		#$00
 	stx		inputActionState			; Clear input action state
 	dex									; X = $FF
@@ -681,30 +703,35 @@ dispatchHits:
 	rol		pickupStatusFlags
 	clc
 	ror		pickupStatusFlags
-continueToHitDispatch:
+continueToPlayerHitDefault:
 	jmp		playerHitDefault
 
-handlePlayerObjCollision:
-	lda		currentRoomId				; get the current screen id
-	bne		jumpPlayerHit				; branch if not Treasure Room
+dispatchPlayerHit:
+; Dispatch to room-specific player-player collision handler via playerHitJumpTable.
+; Treasure Room (ID 0) is handled inline; all others jump through the table.
+	lda		currentRoomId				; get the current room id
+	bne		jumpPlayerHit				; branch if not Treasure Room (use jump table)
+	; --- Treasure Room: inline item pickup ---
+	; The Treasure Room cycles through items via treasureRoomState.
+	; P0 displays the current item; touching it picks it up.
 	lda		treasureRoomState
-	and		#$07
+	and		#$07						; item index (0-7)
 	tax
-	lda		marketBasketItems,x			; get items from market basket
-	jsr		placeItemInInventory		; place basket item in inventory
-	bcc		continueToHitDispatch
+	lda		marketBasketItems,x			; get the cycling item's inventory ID
+	jsr		placeItemInInventory		; attempt to add to Indy's inventory
+	bcc		continueToPlayerHitDefault	; carry clear = inventory full, skip
 	lda		#$01
-	sta		roomObjectVar				; mark treasure as collected
-	bne		continueToHitDispatch		; unconditional branch
+	sta		roomObjectVar				; mark item as collected (hides P0)
+	bne		continueToPlayerHitDefault		; unconditional branch
 
 jumpPlayerHit:
-	asl									; multiply screen id by 2
+	asl									; multiply room id by 2 (word table index)
 	tax
 	lda		playerHitJumpTable+1,x
-	pha									; push MSB to stack
+	pha									; push handler address MSB
 	lda		playerHitJumpTable,x
-	pha									; push LSB to stack
-	rts									; jump to player collision routine
+	pha									; push handler address LSB
+	rts									; dispatch to room-specific collision handler
 
 ;-playerHitInWellOfSouls
 ;
@@ -714,7 +741,7 @@ jumpPlayerHit:
 ; Win Logic:
 ; 1. Checks if Indy is at the correct vertical depth (Y >= 63).
 ; 2. Checks if a specific "digging/action" state is active ($54).
-; 3. Checks if Indy is aligned with the Ark's position (secretArkMesaID == arkImpactRegionId).
+; 3. Checks if Indy is aligned with the Ark's position (secretArkMesaID == activeMesaID).
 ; 4. If all true, sets arkRoomStateFlag to a positive value, which triggers the End Game sequence.
 
 
@@ -725,7 +752,7 @@ playerHitInWellOfSouls:
 
 	lda		dirtPileGfxState			; Load dirt pile graphics state
 	cmp		#$54						; Is the pile fully cleared?
-	bne		resumeHitDispatch			; If not empty ($54), you can't find Ark yet.
+	bne		resumeCollisionChain			; If not empty ($54), you can't find Ark yet.
 	lda		secretArkMesaID				; Load Secret Ark Location (Game RNG)
 	cmp		activeMesaID				; Compare to Current Mesa Region
 	bne		arkNotFound					; If wrong mesa, nothing is here.
@@ -742,7 +769,7 @@ playerHitInWellOfSouls:
 	jmp		newFrame					; Finish frame cleanly and transition visually
 
 arkNotFound:
-	jmp		putIndyInMesaSide
+	jmp		enterMesaSide
 
 takeAwayShovel:
 	lda		#ID_INVENTORY_SHOVEL
@@ -756,13 +783,13 @@ playerHitInValleyOfPoison:
 	lda		#ID_INVENTORY_COINS
 takeItemFromInv:
 	bit		pickupStatusFlags
-	bmi		resumeHitDispatch
+	bmi		resumeCollisionChain
 	clc									; Carry clear
 	jsr		removeItem					; take away specified item
 	bcs		updateAfterItemRemove
 	sec									; Carry set
 	jsr		removeItem
-	bcc		resumeHitDispatch
+	bcc		resumeCollisionChain
 updateAfterItemRemove:
 	cpy		#$0b
 	bne		setPickupProcessedFlag
@@ -775,14 +802,14 @@ setPickupProcessedFlag:
 	tya
 	ora		#$c0
 	sta		pickupStatusFlags
-	bne		resumeHitDispatch			; unconditional branch
+	bne		resumeCollisionChain			; unconditional branch
 
 playerHitInSpiderRoom:
 	ldx		#$00						; Set X to 0
 	stx		spiderRoomState				; Clear spider room state
 	lda		#%10000000					; Set Bit 7
 	sta		gameEventFlag				; Trigger major event flag
-resumeHitDispatch:
+resumeCollisionChain:
 	jmp		playerHitDefault
 
 playerHitInMesaSide:
@@ -908,7 +935,7 @@ resetInteractionFlags:
 	lda		#$00
 	sta		inputActionState
 
-resumeScreenLogic:
+exitToPlayerHitDefault:
 	jmp		playerHitDefault
 
 pickMarketItemByTime:
@@ -928,7 +955,7 @@ checkIndyPosForMarketFlags:
 	ora		#%00001011					; Set bits 0, 1, and 3
 setBlackMarketFlags:
 	sta		inputActionState			; Store the updated value back into inputActionState
-	bne		resumeScreenLogic			; Always branch to resume game logic
+	bne		exitToPlayerHitDefault			; Always branch to resume game logic
 
 checkMiddleMarketZone:
 	cpy		#$20
@@ -982,61 +1009,71 @@ pushIndyOutOfRock:
 	dec		indyPosX					; Push Indy Left
 
 playerHitDefault:
-	lda		currentRoomId				; get the current screen id
-	asl									; multiply screen id by 2 (word table)
-	tax									; Move the result to X
-										; X is the index into a jump table
-	bit		CXP1FB						; check Indy collision with playfield
-	bpl		screenIdleLogicDispatcher	; If no collision (bit 7 is clear),
-										; branch to non-collision handler
-	lda		playfieldHitJumpTable+1,x	; Load high byte of handler address
-	pha									; Push it to the return stack
-	lda		playfieldHitJumpTable,x		; Load low byte of handler address
-	pha									; Push it to the return stack
-	rts									; jump to Player / Playfield collision strategy
+; Secondary collision dispatch. Checks Indy (P1) vs playfield (bit 7 of CXP1FB).
+; If collision: dispatch via playfieldHitJumpTable (wall/boundary reactions).
+; If no collision: dispatch via roomIdleHandlerJmpTable (room idle behavior).
+	lda		currentRoomId				; get the current room id
+	asl									; multiply by 2 (word table index)
+	tax
+	bit		CXP1FB						; check Indy (P1) vs playfield collision
+	bpl		dispatchRoomIdleHandler		; no collision — dispatch idle handler
+	lda		playfieldHitJumpTable+1,x	; load handler address MSB
+	pha
+	lda		playfieldHitJumpTable,x		; load handler address LSB
+	pha
+	rts									; dispatch to playfield collision handler
 
-screenIdleLogicDispatcher:
-	lda		roomIdleHandlerJmpTable+1,x	; Load high byte of default screen behavior routine
-	pha									; push to stack
-	lda		roomIdleHandlerJmpTable,x		; Load low byte of default screen behavior routine
-	pha									; push to stack
-	rts									; Indirect jump to it (no collision case)
+dispatchRoomIdleHandler:
+; No playfield collision — dispatch via roomIdleHandlerJmpTable for
+; room-specific idle/background behavior (warp logic, state checks, etc.).
+	lda		roomIdleHandlerJmpTable+1,x	; load handler address MSB
+	pha
+	lda		roomIdleHandlerJmpTable,x	; load handler address LSB
+	pha
+	rts									; dispatch to room idle handler
 
 warpToMesaSide:
-	lda		roomObjectVar				; Load vertical position of an object
-	sta		savedScrollOffset				; Store it to temp variable savedScrollOffset
-	lda		indyPosY					; get Indy's vertical position
-	sta		savedIndyPosY				; Store to temp variable savedIndyVertPo
+; Save current position state and transition to Mesa Side.
+; Called from Mesa Field and Valley of Poison idle handlers.
+	lda		roomObjectVar				; save current scroll offset
+	sta		savedScrollOffset
+	lda		indyPosY					; save Indy's vertical position
+	sta		savedIndyPosY
 	lda		indyPosX
-SaveIndyAndThiefPosition:
-	sta		savedIndyPosX				; Store to temp variable savedIndyHorizPos
-putIndyInMesaSide:
-	lda		#ID_MESA_SIDE				; Change screen to Mesa Side
+saveIndyPosAndEnterMesa:
+	sta		savedIndyPosX				; save Indy's horizontal position
+enterMesaSide:
+; Transition to Mesa Side room and place Indy at the top.
+	lda		#ID_MESA_SIDE
 	sta		currentRoomId
 	jsr		initRoomState
 	lda		#$05
-	sta		indyPosY					; Set Indy's vertical position on entry to Mesa Side
+	sta		indyPosY					; place Indy near top of screen
 	lda		#$50
-	sta		indyPosX					; Set Indy's horizontal position on entry
+	sta		indyPosX					; center Indy horizontally
 	tsx
-	cpx		#$fe
-	bcs		FailSafeToCollisionCheck	;If X = $FE, jump to FailSafeToCollisionCheck
-	rts									; Otherwise, return
+	cpx		#$fe						; check if stack is nearly empty (called via jmp)
+	bcs		fallThroughToMissile0Check	; if so, can't rts — jump to collision chain tail
+	rts									; otherwise return normally
 
-FailSafeToCollisionCheck:
+fallThroughToMissile0Check:
+; Safety net: when enterMesaSide was reached via jmp (not jsr),
+; the stack has no return address. Jump directly to checkMissile0Hit
+; to continue the collision chain.
 	jmp		checkMissile0Hit
 
 
 initFallbackEntryPosition:
+; Map Room idle handler: if mapRoomState bit 7 is clear, save a default
+; position and transition to Mesa Side.
 	bit		mapRoomState
-	bmi		FailSafeToCollisionCheck	; Check status bits
+	bmi		fallThroughToMissile0Check	; bit 7 set — skip (already transitioning)
 	lda		#$50
-	sta		savedScrollOffset			; Store a fixed vertical position into savedScrollOffset
+	sta		savedScrollOffset			; default scroll offset
 	lda		#$41
-	sta		savedIndyPosY				; Store a fixed vertical position into savedIndyPosY
+	sta		savedIndyPosY				; default vertical position
 	lda		#$4c
-	bne		SaveIndyAndThiefPosition	; Store fixed horizontal position
-										; and continue to position saving logic
+	bne		saveIndyPosAndEnterMesa		; save horizontal position and enter Mesa Side
 
 stopIndyMovInTemple:
 	; --------------------------------------------------------------------------
@@ -1062,15 +1099,15 @@ stopIndyMovInTemple:
 
 setFrozenPosY:
 	sty		indyPosY					; Apply vertical adjustment (Sliding along wall)
-	jmp		setIndyToNormalMove			; Continue to Indy-snake interaction check
+	jmp		playWalkSoundAndContinue		; apply walk sound, then continue to M0 check
 
 nudgeIndyRight:
 	iny
-	iny									; Nudge Indy right 2 px (Bounce off wall)
+	iny									; nudge Indy right 2 px (bounce off wall)
 nudgeIndyLeft:
 	dey
-	sty		indyPosX					; Apply horizontal adjustment
-	bne		setIndyToNormalMove			; Continue
+	sty		indyPosX					; apply horizontal adjustment
+	bne		playWalkSoundAndContinue	; continue to M0 check
 
 exitToTempleEntrance:
 	; -----------------------------------------------------------------------
@@ -1089,7 +1126,7 @@ exitToTempleEntrance:
 
 indyPixelLeft:
 	dec		$c9							; Push Indy Left
-	bne		setIndyToNormalMove
+	bne		playWalkSoundAndContinue
 
 playerHitInRoomOfShiningLight:
 	ldx		#$1a
@@ -1109,7 +1146,7 @@ setIndyInDungeon:
 	stx		dungeonBlock3
 	stx		dungeonBlock4
 	stx		dungeonBlock5
-	bne		setIndyToNormalMove			; unconditional branch
+	bne		playWalkSoundAndContinue	; unconditional — play walk sound, continue chain
 
 indyMoveOnInput:
 	lda		indyDir						; Load movement direction from Indy's direction state
@@ -1119,10 +1156,11 @@ indyMoveOnInput:
 	ldx		#<indyPosY - p0PosY			; X = offset to Indy in object array
 	jsr		getMoveDir					; Move Indy accordingly
 
-setIndyToNormalMove:
+playWalkSoundAndContinue:
+; Play walk/movement sound effect, then fall through to checkMissile0Hit.
 	lda		#$05
-	sta		soundChan0Effect			; Set Indy walk state
-	bne		checkMissile0Hit			; unconditional branch
+	sta		soundChan0Effect			; trigger walk sound effect
+	bne		checkMissile0Hit			; unconditional — continue to M0 collision check
 
 indyEnterHole:
 	rol		playerInputState
@@ -1137,15 +1175,17 @@ undoInputBitShift:
 	ror		playerInputState
 
 checkMissile0Hit:
-	bit		CXM0P						; check player collisions with missile0
-	bpl		checkGrenadeDetonation		; branch if didn't collide with Indy
-	ldx		currentRoomId				; get the current screen id
-	cpx		#ID_SPIDER_ROOM				; Are we in the Spider Room?
-	beq		clearInputBit0ForSpiderRoom	; Yes, go to clearInputBit0ForSpiderRoom
-	bcc		checkGrenadeDetonation		; If screen ID is lower than Spider Room, skip
-	lda		#$80						; Trigger a major event (Death/Capture)
-	sta		gameEventFlag				; Set flag.
-	bne		despawnMissile0				; unconditional branch
+; Check if M0 (spider web / tsetse swarm) hit Indy.
+; In Spider Room: sets capture state. In rooms above Spider Room ID: triggers death.
+	bit		CXM0P						; check M0 vs Indy (P1) collision
+	bpl		checkGrenadeDetonation		; no M0 collision — check grenade timer
+	ldx		currentRoomId				; get the current room id
+	cpx		#ID_SPIDER_ROOM				; Spider Room?
+	beq		clearInputBit0ForSpiderRoom	; handle spider web capture
+	bcc		checkGrenadeDetonation		; rooms below Spider Room have no M0 hazard
+	lda		#$80						; rooms above Spider Room: M0 is lethal
+	sta		gameEventFlag				; trigger Indy death
+	bne		despawnMissile0				; unconditional — remove M0 from screen
 
 clearInputBit0ForSpiderRoom:
 	rol		playerInputState			; Rotate input left, bit 7 ? carry
@@ -1156,19 +1196,21 @@ clearInputBit0ForSpiderRoom:
 	ror		spiderRoomState				; Rotate right, carry -> bit 7 (bit 0 lost)
 despawnMissile0:
 	lda		#$7f
-	sta		m0PosYShadow				; Possibly related state or shadow position
-	sta		m0PosY						; Move missile0 offscreen (to y=127)
+	sta		m0PosYShadow				; update shadow position
+	sta		m0PosY						; move M0 off-screen (Y = 127)
 
 checkGrenadeDetonation:
-	bit		grenadeState				; Check status flags
-	bpl		newFrame					; If bit 7 is clear, skip (no grenade active)
-	bvs		applyGrenadeWallEffect		; If bit 6 is set, jump
-	lda		timeOfDay					; get seconds time value
-	cmp		grenadeDetonateTime			; Compare with grenade detonation time
-	bne		newFrame					; branch if not time to detinate grenade
+; Check if an active grenade has reached its detonation time.
+; grenadeState bit 7: grenade active. bit 6: wall effect pending.
+	bit		grenadeState				; check grenade status flags
+	bpl		newFrame					; bit 7 clear — no active grenade
+	bvs		applyGrenadeWallEffect		; bit 6 set — wall destruction already triggered
+	lda		timeOfDay					; get current time
+	cmp		grenadeDetonateTime			; has detonation time been reached?
+	bne		newFrame					; not yet — wait
 	lda		#$a0
-	sta		weaponPosY					; Move grenade offscreen
-	sta		gameEventFlag				; Trigger major event (explosion happened)
+	sta		weaponPosY					; move grenade sprite off-screen
+	sta		gameEventFlag				; trigger explosion event (Indy death)
 applyGrenadeWallEffect:
 	lsr		grenadeState				; Logical shift right: bit 0 -> carry
 	bcc		skipUpdate					; If bit 0 was clear, skip this
@@ -2857,51 +2899,56 @@ finishInventoryUpdate
 	rts
 
 setItemAsNotTaken
+; Mark an item as available again (not taken). Uses itemIndexTable bit 0
+; to determine which bitmask: even index = basketItemStatus (spawnable),
+; odd index = pickupItemStatus (unique).
 	lda		itemIndexTable,x				; get the item index value
-	lsr										; shift D0 to carry
+	lsr										; shift bit 0 to carry (even=basket, odd=pickup)
 	tay
-	lda		itemStatusMaskTable,y			; branch if item not a basket item
-	bcs		showItemAsNotTaken
+	lda		itemStatusMaskTable,y			; load clear-mask for this item
+	bcs		showItemAsNotTaken				; carry set = unique pickup item
 	and		basketItemStatus
-	sta		basketItemStatus				; clear status bit showing item not taken
+	sta		basketItemStatus				; clear bit — item available at world location again
 	rts
 
 showItemAsNotTaken
 	and		pickupItemStatus
-	sta		pickupItemStatus				; clear status bit showing item not taken
+	sta		pickupItemStatus				; clear bit — unique item returned to world
 	rts
 
 showItemAsTaken
+; Mark an item as taken. Uses itemIndexTable bit 0 to select bitmask.
 	lda		itemIndexTable,x				; get the item index value
-	lsr										; shift D0 to carry
+	lsr										; shift bit 0 to carry (even=basket, odd=pickup)
 	tax
-	lda		itemStatusBitValues,x			; get item bit value
-	bcs		pickUpItemTaken					; branch if item not a basket item
+	lda		itemStatusBitValues,x			; get item's status bit
+	bcs		pickUpItemTaken					; carry set = unique pickup item
 	ora		basketItemStatus
-	sta		basketItemStatus				; show item taken
+	sta		basketItemStatus				; set bit — item taken from world location
 	rts
 
 pickUpItemTaken
 	ora		pickupItemStatus
-	sta		pickupItemStatus				; show item taken
+	sta		pickupItemStatus				; set bit — unique item collected
 	rts
 
 isItemAlreadyTaken:
+; Check if an item has already been collected. Returns carry set if taken.
 	lda		itemIndexTable,x				; get the item index value
-	lsr										; shift D0 to carry
+	lsr										; shift bit 0 to carry (even=basket, odd=pickup)
 	tay
-	lda		itemStatusBitValues,y			; get item bit value
-	bcs		isItemTaken						; branch if item not a basket item
-	and		basketItemStatus				; branch if item not taken from basket
-	beq		finishIsItemTaken				; set carry for item taken already
-	sec
+	lda		itemStatusBitValues,y			; get item's status bit
+	bcs		isItemTaken						; carry set = unique pickup item
+	and		basketItemStatus				; check if spawnable item was taken
+	beq		finishIsItemTaken				; zero = not taken
+	sec										; set carry = item already taken
 finishIsItemTaken:
 	rts
 
 isItemTaken:
-	and		pickupItemStatus
-	bne		finishIsItemTaken
-	clc										; clear carry for item not taken already
+	and		pickupItemStatus				; check if unique item was collected
+	bne		finishIsItemTaken				; nonzero = already taken
+	clc										; clear carry = item not yet taken
 	rts
 
 
@@ -4966,19 +5013,19 @@ checkBaskets:
 		tay									; Transfer to Y (Index for Mask Table).
 		lda		itemMaskTable,y	; Get Bitmask for this item type.
 
-		; Even Index? Check Basket Availability status.
-		bcs		checkPickupStatus			; If Carry Set (Odd Index?),
-											; check Pickup Status.
-		and		basketItemStatus			; Check if the item is picked up
-		beq		notInBasket					; If 0 (Not in basket), Return Failure.
-		sec									; Set Carry (Success - Item Available).
+		; Even Index? Check spawnable item availability.
+		bcs		checkPickupStatus			; If Carry Set (Odd Index),
+											; check unique pickup status.
+		and		basketItemStatus			; Check if this spawnable item has been taken
+		beq		notInBasket					; If 0 (not yet taken), item is still available
+		sec									; Set Carry (item already taken).
 notInBasket
 		rts									; Return.
 
 checkPickupStatus
-		; Check if Player already has the item.
-		and		pickupItemStatus			; Mask with Pickup Status.
-		bne		notInBasket					; ; If result != 0 (Already have it),
+		; Check if player already has this unique item.
+		and		pickupItemStatus			; Mask with unique item status.
+		bne		notInBasket					; If nonzero (already collected),
 											; Return Failure.
 		clc									; Clear Carry
 											; (Success - Item Available to take).

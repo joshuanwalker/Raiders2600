@@ -256,11 +256,11 @@ At `jmpObjHitHandeler`, the code bank-switches to Bank 0 and enters the collisio
 | Step | Label | Collision Register | Description |
 |------|-------|--------------------|-------------|
 | 1 | `checkWeaponPlayerHit` | `CXM1P` | Weapon (M1) hit player/thief → flip thief direction, clear weapon, apply `thiefShotPenalty`. |
-| 2 | `checkWeaponHit` | `CXM1FB` | Weapon hit playfield → destroy dungeon wall segment (modify `dynamicGfxData` bitmask). |
-| 3 | `weaponObjHit` | `CXM1FB` bit 6 | Weapon hit ball/snake → kill the snake. |
-| 4 | `handleIndyVsObjHit` | `CXP1FB` | Indy hit playfield/ball → timepiece pickup, flute immunity check, tsetse fly paralysis, snake death. |
-| 5 | `handleMesaSideSecretExit` | `CXM0P` | Mesa Side: M0 collision enters Well of Souls; falling off (Indy Y ≥ `$4F`) enters Valley of Poison. |
-| 6 | `dispatchHits` | `CXPPMM` | Player-player collision → dispatches to room-specific handlers via `playerHitJumpTable` for pickups and interactions (whip, key, baskets, shovel, parachute landing, etc.). |
+| 2 | `checkWeaponPlayfieldHit` | `CXM1FB` | Weapon hit playfield → destroy dungeon wall segment (modify `dynamicGfxData` bitmask). |
+| 3 | `checkWeaponBallHit` | `CXM1FB` bit 6 | Weapon hit ball/snake → kill the snake. |
+| 4 | `checkIndyBallHit` | `CXP1FB` | Indy hit playfield/ball → timepiece pickup, flute immunity check, tsetse fly paralysis, snake death. |
+| 5 | `checkMesaSideExit` | `CXM0P` | Mesa Side: M0 collision enters Well of Souls; falling off (Indy Y ≥ `$4F`) enters Valley of Poison. |
+| 6 | `checkPlayerCollision` | `CXPPMM` | Player-player collision → dispatches to room-specific handlers via `playerHitJumpTable` for pickups and interactions (whip, key, baskets, shovel, parachute landing, etc.). |
 | 7 | `playerHitDefault` | `CXP1FB` | Secondary dispatch → `playfieldHitJumpTable` for wall/boundary collisions and idle room logic. |
 | 8 | `checkMissile0Hit` | `CXM0P` | M0-player collisions (spider web capture, tsetse swarm death), grenade detonation timer check. |
 
@@ -369,7 +369,16 @@ Key items and their IDs include:
 | Hourglass | `ID_INVENTORY_HOUR_GLASS` |
 | Shovel | `ID_INVENTORY_SHOVEL` |
 
-Selection uses the left joystick. `selectedItemSlot` tracks the cursor position (byte offset 0,2,4,6,8,10 into the slot array), and `selectedInventoryId` holds the current item's ID. Items are added via `placeItemInInventory` and removed via `removeItem`. Global pickup tracking uses `pickupItemStatus` and `basketItemStatus` bitmasks.
+Selection uses the left joystick. `selectedItemSlot` tracks the cursor position (byte offset 0,2,4,6,8,10 into the slot array), and `selectedInventoryId` holds the current item's ID. Items are added via `placeItemInInventory` and removed via `removeItem`.
+
+**Item Tracking Bitmasks:**
+
+The game tracks which items have been collected using two separate bitmasks:
+
+- **`basketItemStatus`** — Tracks **spawnable items** found at fixed world locations. In the Marketplace, these are the three literal baskets that contain the Key, Grenades, and Revolver. In the Treasure Room, the term "basket" is a code abstraction — it simply means the item is in its original, non-picked-up state (P0 displays the cycling item, and touching it picks it up). These items can respawn when dropped.
+- **`pickupItemStatus`** — Tracks **unique items** that exist as one-of-a-kind objects in the world: Whip, Shovel, Head of Ra, Timepiece, Hourglass, Ankh, and Chai. Once collected, their world placement changes.
+
+The `itemIndexTable` determines which bitmask applies to each item: even indices use `basketItemStatus`, odd indices use `pickupItemStatus`. The helper routines `showItemAsTaken`, `setItemAsNotTaken`, and `isItemAlreadyTaken` handle the bit manipulation transparently.
 
 ### Scoring System
 
