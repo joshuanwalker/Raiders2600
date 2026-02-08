@@ -137,12 +137,22 @@ scanline				= $80	; Current scanline counter for the kernel
 currentRoomId			= $81	; ID of the room Indy is currently in (e.g., ID_ENTRANCE_ROOM)
 frameCount				= $82	; Master frame counter, used for animation timing and random seeds
 timeOfDay				= $83	; Clock/Sun position (Manual: "Timepiece... shows you the current time")
-loopCounter				= $84	; (c) General purpose loop counter
-tempGfxHolder			= $85	; (c) Temporary storage for graphics data/masks
-bankSwitchJMPOpcode		= $86	; (c) RAM code: Opcode for bankswitch (LDA ABS / $AD)
-bankSwitchJMPAddr		= $87	; (c) RAM code: Address for bankswitch strobe
-bankSwitchJMPAddrLo		= $88	; (c) Low byte of return address after bankswitch
-bankSwitchJMPAddrHi		= $89	; (c) High byte of return address after bankswitch
+
+; ---- General Purpose Temps / Bank-Switch Trampoline ----
+; $84-$89 serve as general-purpose scratch registers throughout the code.
+; They are also used as a 6-byte executable RAM stub for bank switching:
+;   $84: LDA opcode ($AD)     $87: JMP opcode ($4C)
+;   $85: strobe addr lo       $88: jump target lo
+;   $86: strobe addr hi       $89: jump target hi
+; The trampoline is only constructed immediately before execution,
+; so these locations are safely reused between bank switches.
+temp0					= $84	; (c) General purpose temp
+temp1					= $85	; (c) General purpose temp
+temp2					= $86	; (c) General purpose temp
+temp3					= $87	; (c) General purpose temp
+temp4					= $88	; (c) General purpose temp
+temp5					= $89	; (c) General purpose temp
+
 playerInputState		= $8a	; Input flags (Direction + Button state processing)
 
 ;----------------------------------------------------------------------------
@@ -1345,7 +1355,7 @@ updateSnakeMove
 	txa									; Move Sway/Steering Factor to A
 	asl
 	asl
-	sta		loopCounter					; Store in loopCounter as Upper Nibble
+	sta		temp0						; Store steering factor upper nibble
 	lda		objectState
 	and		#$03
 	tax
@@ -1358,7 +1368,7 @@ updateSnakeMove
 	lda		objectState
 	lsr
 	lsr
-	ora		loopCounter					; Combine new Steering Factor
+	ora		temp0						; Combine new Steering Factor
 										; (High Nibble) with old state
 	sta		objectState					; Save
 
@@ -1467,7 +1477,7 @@ stopWeaponEvent
 handleIndyMove
 	ldx		#<indyPosY - p0PosY			; Get index of Indy in object list
 	lda		SWCHA						; read joystick values
-	sta		tempGfxHolder				; Store raw joystick input
+	sta		temp1						; Store raw joystick input
 	and		#P1_NO_MOVE
 	cmp		#P1_NO_MOVE
 	beq		stopWeaponEvent				; Skip if no movement
@@ -1475,34 +1485,34 @@ handleIndyMove
 	jsr		getMoveDir					; Move Indy according to input
 	ldx		currentRoomId				; get the current screen id
 	ldy		#$00
-	sty		loopCounter					; Reset scan index/counter
+	sty		temp0						; Reset scan index/counter
 	beq		setIndyPosForEvent			; Unconditional (Y=0, so BNE not taken)
 incEventScanIndex
 	tax									; Transfer A to X
-	inc		loopCounter					; increase index
+	inc		temp0						; increase index
 setIndyPosForEvent
 	lda		indyPosX
 	pha									; Temporarily store horizontal position
 	lda		indyPosY					; get Indy's vertical position
-	ldy		loopCounter					; Load current scan/event index
+	ldy		temp0						; Load current scan/event index
 	cpy		#$02
 	bcs		reversePosOrder				; If index >= 2, store in reverse order
-	sta		bankSwitchJMPOpcode			; Vertical position
+	sta		temp2						; Vertical position
 	pla
-	sta		bankSwitchJMPAddr			; Horizontal position
+	sta		temp3						; Horizontal position
 	jmp		applyEventOffsetToIndy
 
 reversePosOrder
-	sta		bankSwitchJMPAddr			; Vertical -> $87
+	sta		temp3						; Vertical -> $87
 	pla
-	sta		bankSwitchJMPOpcode			; Horizontal -> $86
+	sta		temp2						; Horizontal -> $86
 applyEventOffsetToIndy
-	ror		tempGfxHolder				; Rotate player input to extract direction
+	ror		temp1						; Rotate player input to extract direction
 	bcs		checkScanBoundaryOrContinue	; If carry set, skip
 	jsr		CheckRoomOverrideCondition	; Run event/collision subroutine
 	bcs		triggerScreenTransition		; If failed/blocked, exit
 	bvc		checkScanBoundaryOrContinue	; If no vertical/horizontal event flag, skip
-	ldy		loopCounter					; Event index
+	ldy		temp0						; Event index
 	lda		roomEventOffsetTable,y		; Get movement offset from table
 	cpy		#$02
 	bcs		applyHorizontalOffset		; If index = 2, move horizontally
@@ -1674,14 +1684,14 @@ calculateMesaGrapple
 	lda		#$07						; Clamp to max value (7) if out of bounds
 
 hookAndMoveIndy
-	sta		loopCounter					; Store Row Index (0-7)
+	sta		temp0						; Store Row Index (0-7)
 	lda		weaponPosX					; Get Hook Horizontal Position
 	sec
 	sbc		#$10						; Left Margin Offset
 	and		#$60						; Mask bits 5/6 (Coarse X bucket)
 	lsr
 	lsr									; Shift to get Column Index (0, 8, 16...)
-	adc		loopCounter					; Add Row Index to Column Offset
+	adc		temp0						; Add Row Index to Column Offset
 	tay									; Y = Final Grid Index
 
 	; -----------------------------------------------------------------------
@@ -1938,9 +1948,9 @@ tryScrollNorth
 
 finishedScrollUpdate
 	lda		#<selectRoomHandler			; Load low byte of Bank 1 Kernel address
-	sta		bankSwitchJMPAddrLo			; Store in Bank Switch JMP Addr Low
+	sta		temp4						; Store bank-switch jump target lo
 	lda		#>selectRoomHandler			; Load high byte of Bank 1 Kernel address
-	sta		bankSwitchJMPAddrHi			; Store in Bank Switch JMP Addr High
+	sta		temp5						; Store bank-switch jump target hi
 	jmp		jumpToBank1					; Jump to Bank 1 Kernel
 
 setupNewRoom
@@ -2173,7 +2183,7 @@ finishRoomSpecificInit
 CheckRoomOverrideCondition
 	ldy		roomOverrideTable,x			; Load room override index based on
 										; current screen ID
-	cpy		bankSwitchJMPOpcode			; Compare with current override
+	cpy		temp2						; Compare with current override
 	beq		applyOverrideIfMatch		; If it matches, apply special overrides
 	clc									; Clear carry (no override occurred)
 	clv									; Clear overflow
@@ -2202,7 +2212,7 @@ checkOverrideConditions
 	bne		evalRangeXOverride			; If not $FE, jump to advanced evaluation
 	; Case where Y = $FE
 	ldy		overrideLowXBoundTable,x	; Load lower horizontal boundary
-	cpy		bankSwitchJMPAddr			; Compare with current horizontal state
+	cpy		temp3						; Compare with current horizontal state
 	bcc		cmpWithExtRoomThreshold		; If below lower limit, use another check
 	ldy		overrideHighXBoundTable,x	; Load upper horizontal boundary
 	bmi		checkFlagforFixedY			; If negative, apply default vertical
@@ -2213,7 +2223,7 @@ cmpWithExtRoomThreshold
 	bmi		checkFlagforFixedY			; If negative, jump to handle special override
 	bpl		checkPosYlOverride			; Always taken
 evalRangeXOverride
-	lda		bankSwitchJMPAddr			; Load current horizontal position
+	lda		temp3						; Load current horizontal position
 	cmp		overrideLowXBoundTable,x	; Compare with lower limit
 	bcc		rtsNoOverrideSideEffect
 	cmp		overrideHighXBoundTable,x	; Compare with upper limit
@@ -3072,19 +3082,19 @@ waitTime
 	sta		WSYNC
 ;---------------------------------------
 	lda		#<drawScreen
-	sta		bankSwitchJMPAddrLo
+	sta		temp4
 	lda		#>drawScreen
-	sta		bankSwitchJMPAddrHi
+	sta		temp5
 jumpToBank1
 	lda		#LDA_ABS
-	sta		loopCounter
+	sta		temp0
 	lda		#<BANK1STROBE
-	sta		tempGfxHolder
+	sta		temp1
 	lda		#>BANK1STROBE
-	sta		bankSwitchJMPOpcode
+	sta		temp2
 	lda		#JMP_ABS
-	sta		bankSwitchJMPAddr
-	jmp.w	loopCounter
+	sta		temp3
+	jmp.w	temp0
 
 getMoveDir
 	ror								;move first bit into carry
@@ -3369,9 +3379,9 @@ thiefKernel
 ;---------------------------------------
 	sta		HMOVE						; Execute HMOVE.
 	inx									; Increment scanline counter.
-	lda		loopCounter					; Load loop counter.
+	lda		temp0						; Load thief gfx line.
 	sta		GRP0						; Store to GRP0 (Thief/Player 0).
-	lda		tempGfxHolder				; Load value from temp
+	lda		temp1						; Load thief color line
 	sta		COLUP0						; Store to COLUP0.
 	txa									; Move scanline to A.
 	ldx		#<ENABL						; Load address of ENABL
@@ -3411,8 +3421,8 @@ multiplexedSpriteKernel
 	; THIEF POSITIONING LOGIC
 	; If Bit 7 of snakeDungeonState is SET, we are in the "Positioning" phase.
 	; --------------------------------------------------------------------------
-	ldy		bankSwitchJMPAddrHi			; Load Fine position timing value
-	lda		bankSwitchJMPAddrLo			; Load Coarse position value (HMOVE).
+	ldy		temp5						; Load Fine position timing value
+	lda		temp4						; Load Coarse position value (HMOVE).
 	lsr		objectState					; Shift state right (clears Bit 7,
 										; moves to next state).
 ThiefPosTimingLoop
@@ -3440,9 +3450,9 @@ animateThieves
 	sta		COLUP0						; Store to COLUP0.
 	iny									; Next line of sprite data.
 	lda		(p0GfxPtrLo),y				; Look ahead: Load next graphics line.
-	sta		loopCounter					; store loop cpunter
+	sta		temp0						; Store next thief gfx line
 	lda		(auxDataPtrLo),y			; Look ahead: Load next color line.
-	sta		tempGfxHolder				; Store in temp
+	sta		temp1						; Store next thief color line
 	cpy		p0SpriteHeight				; Check if we have drawn the full
 										; height of the sprite.
 	bcc		returnToThiefKernel			; If Y < Height, continue drawing next line.
@@ -3466,11 +3476,11 @@ updateThiefAnimation
 	lsr
 	bcs		thiefKernel					; If Carry Set
 	tay									; Y = Thief Index (0-4).
-	sty		bankSwitchJMPAddr			; Store Index in temp
+	sty		temp3						; Store thief index
 	lda.wy	p0OffsetPosY,y				; Load State for this Thief.
 	sta		REFP0						; Set Reflection (Direction).
 	sta		NUSIZ0						; Set Number/Size
-	sta		bankSwitchJMPOpcode			; Store State in temp
+	sta		temp2						; Store thief state
 	bpl		finishThiefAnimate			; If Bit 7 clear, jump
 
 	; Special "Digging" state - removes pile of dirt
@@ -3498,9 +3508,9 @@ thiefFrameSetup
 	lsr									; Shift A
 	bit		objectState					; Check state (Bit 4?).
 	beq		thiefSpecialAnimate			; If zero, jump to Special Case.
-	ldy		bankSwitchJMPAddr			; Restore Thief Index.
+	ldy		temp3						; Restore Thief Index.
 	lda		#$08						; Load Bit 3 mask.
-	and		bankSwitchJMPOpcode			; Check temp state
+	and		temp2						; Check thief state
 	beq		pickThiefSpriteFrame		; If Bit 3 clear, jump.
 	lda		#$03						; Load Offset 3
 
@@ -3526,11 +3536,11 @@ thiefSpecialAnimate
 	jmp		thiefKernel					; Jump back.
 
 thiefSpriteHandeler
-	ldy		bankSwitchJMPAddr			; Load temp
+	ldy		temp3						; Load thief index
 	lda.wy	thiefPosX,y					; Load horizontal position.
-	sta		bankSwitchJMPAddrLo			; Store coarse.
+	sta		temp4						; Store coarse position.
 	and		#$0f						; Mask low nibble.
-	sta		bankSwitchJMPAddrHi			; Store fine.
+	sta		temp5						; Store fine position.
 	lda		#$80						; Load $80.
 	sta		objectState					; Store state.
 	jmp		thiefKernel					; Jump back.
@@ -3625,10 +3635,10 @@ updateInventoryMenu
 	sta		WSYNC						;
 ;--------------------------------------
 	lda		#HEIGHT_ITEM_SPRITES - 1	; Load Height-1.
-	sta		loopCounter					; Set loop counter.
+	sta		temp0						; Set loop counter.
 
 drawInventoryItems
-	ldy		loopCounter					; Load Y with index.
+	ldy		temp0						; Load Y with index.
 	lda		(invSlotLo),y				; Load inv item 1.
 	sta		GRP0						; Store GRP0.
 	sta		WSYNC
@@ -3638,17 +3648,17 @@ drawInventoryItems
 	lda		(invSlotLo3),y				; Load inv item 3.
 	sta		GRP0						; Store GRP0
 	lda		(invSlotLo4),y				; Load inv item 4.
-	sta		tempGfxHolder				; Save to temp.
+	sta		temp1						; Save to temp.
 	lda		(invSlotLo5),y				; Load inv item 5.
 	tax									; Save to X.
 	lda		(invSlotLo6),y				; Load inv item 6.
 	tay									; Save to Y
-	lda		tempGfxHolder				; Restore item 4.
+	lda		temp1						; Restore item 4.
 	sta		GRP1						; Store GRP1
 	stx		GRP0						; Store item 5 to GRP0.
 	sty		GRP1						; Store item 6 to GRP1.
 	sty		GRP0						; Store item 6 to GRP0
-	dec		loopCounter					; Decrement counter.
+	dec		temp0						; Decrement counter.
 	bpl		drawInventoryItems			; Loop.
 	lda		#$00						; Load 0.
 	sta		WSYNC
@@ -3891,9 +3901,9 @@ invItemSelectCycle
 
 jmpToNewFrame
 	lda		#<newFrame					; Load LSB address to start new frame
-	sta		bankSwitchJMPAddrLo			; store to dynamic jump
+	sta		temp4						; Store bank-switch jump target lo
 	lda		#>newFrame					; Load MSB address to start new frame
-	sta		bankSwitchJMPAddrHi			; store to dynamic jump
+	sta		temp5						; Store bank-switch jump target hi
 	jmp		JumpToBank0					; Jump to routine in Bank 0
 
 checkInvCycle
@@ -4052,19 +4062,19 @@ jmpObjHitHandeler
 	; Return to CheckObjectCollisions in Bank 0.
 	; --------------------------------------------------------------------------
 	lda		#<checkObjectHit
-	sta		bankSwitchJMPAddrLo
+	sta		temp4
 	lda		#>checkObjectHit
-	sta		bankSwitchJMPAddrHi
+	sta		temp5
 JumpToBank0
 	lda		#LDA_ABS
-	sta		loopCounter
+	sta		temp0
 	lda		#<BANK0STROBE
-	sta		tempGfxHolder
+	sta		temp1
 	lda		#>BANK0STROBE
-	sta		bankSwitchJMPOpcode
+	sta		temp2
 	lda		#JMP_ABS
-	sta		bankSwitchJMPAddr
-	jmp.w	loopCounter
+	sta		temp3
+	jmp.w	temp0
 
 
 ;
@@ -4559,7 +4569,7 @@ treasureRoomHandler:
 		tax									; Use result as Index.
 		ldy		treasureRoomStateIndex,x	; Lookup Index from table.
 		ldx		treasureRoomStateTable,y	; Lookup "Basket State" / Item ID.
-		sty		loopCounter					; Store Y in loopCounter
+		sty		temp0						; Save Y index
 		jsr		checkBaskets				; Check if Item is Valid/Available.
 		bcc		spawnTreasureItem			; If Carry Clear (Valid), spawn treasre.
 resetTreasureCountdown:
@@ -4569,7 +4579,7 @@ resetTreasureCountdown:
 		brk									; Break (Should not happen).
 
 spawnTreasureItem:
-		ldy		loopCounter					; Restore Y
+		ldy		temp0						; Restore Y index
 		tya									; Move to A.
 		ora		treasureIndex				; Combine with current Index.
 		sta		treasureIndex				; Update Treasure Index.
@@ -4853,9 +4863,9 @@ dungeonWallHit:
 
 jmpSetupNewRoom
 		lda		#<setupNewRoom				; Load Return Address Low.
-		sta		bankSwitchJMPAddrLo			; Store Return Addr Low.
+		sta		temp4						; Store bank-switch jump target lo.
 		lda		#>setupNewRoom				; Load Return Address High.
-		sta		bankSwitchJMPAddrHi			; Store Return Addr High.
+		sta		temp5						; Store bank-switch jump target hi.
 		jmp		JumpToBank0					; Jump to Bank 0.
 
 entranceRoomHandler
@@ -4917,7 +4927,7 @@ initKernalJumps
 		pha									; Push Low.
 		lda		#$00						; Clear A
 		tax									; Clear X
-		sta		loopCounter					; Clear Loop Counter
+		sta		temp0						; Clear temp
 		rts									; Jump to Kernel section
 
 checkBaskets:
