@@ -61,12 +61,17 @@ The game uses **4 different scanline kernels** selected via `KernelJumpTableInde
 
 | Index | Kernel | Rooms |
 |-------|--------|-------|
-| 0 | `drawStillPlayer` | Treasure Room, Marketplace, Entrance Room, Black Market, Map Room, Mesa Side |
-| 1 | `drawPlayField` | Temple Entrance, Spider Room, Shining Light, Mesa Field, Valley of Poison |
-| 2 | `drawThieves` (thiefKernel) | Thieves' Den, Well of Souls |
-| 3 | `drawArkRoom` | Ark Room (title/ending) |
+| 0 | `staticSpriteKernel` | Treasure Room, Marketplace, Entrance Room, Black Market, Map Room, Mesa Side |
+| 1 | `scrollingPlayfieldKernel` | Temple Entrance, Spider Room, Shining Light, Mesa Field, Valley of Poison |
+| 2 | `multiplexedSpriteKernel` (thiefKernel) | Thieves' Den, Well of Souls |
+| 3 | `arkPedestalKernel` | Ark Room (title/ending) |
 
 Each kernel handles TIA register writes differently to accommodate the visual needs of those rooms — the thief kernel manages multiple P0 objects across scanlines, while the playfield kernel handles scrolling dungeon walls.
+
+- **`staticSpriteKernel`**: P0's data stream is dual-purpose — bit 7 encodes direct TIA register writes (color/HMOVE) instead of graphics. Simplest kernel.
+- **`scrollingPlayfieldKernel`**: Full PF1/PF2 rendering from pointer tables, dynamic dungeon wall segments, conventional P0/P1 drawing, ball object for timepiece. Supports scrollable rooms.
+- **`multiplexedSpriteKernel`**: P0 is repositioned and redrawn multiple times per frame via coarse timing loops — classic scanline multiplexing to display several enemies from one hardware sprite.
+- **`arkPedestalKernel`**: Single-purpose kernel for the title/ending screen — draws the Ark sprite and Indy on a height-adjustable pedestal.
 
 ### Room System
 
@@ -159,7 +164,7 @@ Implemented in `playerHitInWellOfSouls`. All three conditions must be true:
 2. `diggingState == $54` — dirt fully cleared via shovel
 3. `secretArkMesaID == activeMesaID` — correct mesa (discovered via Map Room)
 
-When all three are met, `arkRoomStateFlag` is set positive, triggering the endgame sequence in `drawArkRoom` which shows the Ark above Indy's pedestal.
+When all three are met, `arkRoomStateFlag` is set positive, triggering the endgame sequence in `arkPedestalKernel` which shows the Ark above Indy's pedestal.
 
 ### Key Game Mechanics
 

@@ -350,16 +350,16 @@ BONUS_USING_HEAD_OF_RA_IN_MAPROOM	= 14
 ID_TREASURE_ROOM		 = $00 ;--
 ID_MARKETPLACE			 = $01 ; |
 ID_ENTRANCE_ROOM		 = $02 ; |
-ID_BLACK_MARKET			 = $03 ; | -- JumpIntoStationaryPlayerKernel
+ID_BLACK_MARKET			 = $03 ; | -- staticSpriteKernel
 ID_MAP_ROOM				 = $04 ; |
 ID_MESA_SIDE			 = $05 ;--
 ID_TEMPLE_ENTRANCE		 = $06 ;--
 ID_SPIDER_ROOM			 = $07 ;  |
-ID_ROOM_OF_SHINING_LIGHT = $08 ;  | -- DrawPlayfieldKernel
+ID_ROOM_OF_SHINING_LIGHT = $08 ;  | -- scrollingPlayfieldKernel
 ID_MESA_FIELD			 = $09 ;  |
 ID_VALLEY_OF_POISON		 = $0A ;--
-ID_THIEVES_DEN			 = $0B ;-- ThievesDenWellOfSoulsScanlineHandler
-ID_WELL_OF_SOULS		 = $0C ;-- ThievesDenWellOfSoulsScanlineHandler
+ID_THIEVES_DEN			 = $0B ;-- multiplexedSpriteKernel
+ID_WELL_OF_SOULS		 = $0C ;-- multiplexedSpriteKernel
 ID_ARK_ROOM				 = $0D
 
 
@@ -638,7 +638,7 @@ clearHits:
 	sta		CXCLR						; clear all collisions
 dispatchHits:
 	bit		CXPPMM						; check player / missile collisions
-	bmi		collectTreasure				; branch if player touched treasure
+	bmi		handlePlayerObjCollision	; branch if player touched treasure
 	ldx		#$00
 	stx		moveDirection				; Clear movement direction
 	dex									; X = $FF
@@ -649,7 +649,7 @@ dispatchHits:
 continueToHitDispatch:
 	jmp		playerHitDefaut
 
-collectTreasure:
+handlePlayerObjCollision:
 	lda		currentRoomId				; get the current screen id
 	bne		jumpPlayerHit				; branch if not Treasure Room
 	lda		treasureIndex
@@ -2081,7 +2081,7 @@ loadRoomGfx
 	bcs		initTempleAndShiningLight	; jump to specific initialization.
 	lda		#$00						; Load 0
 	cpx		#ID_TREASURE_ROOM			; Is this the Treasure Room?
-	beq		setTreasureRoomObjPosY		; Special setup for Treasure Room.
+	beq		initTreasureRoom			; Special setup for Treasure Room.
 	cpx		#ID_ENTRANCE_ROOM
 	beq		setEntranceRoomObjPosY		; Special setup for Enterance Room.
 	sta		p0PosY
@@ -2101,7 +2101,7 @@ finishScreenInit
 	sty		p0OffsetPosY					; Store the final vertical object
 	rts									; Return from subroutine.
 
-setTreasureRoomObjPosY
+initTreasureRoom
 	lda		treasureIndex				; Load screen control byte
 	and		#$78						; Mask off all but bits 3-6
 	sta		treasureIndex				; Save the updated control state
@@ -3147,7 +3147,7 @@ eventStateOffsetTable
 BANK1Start
 	lda		BANK0STROBE
 
-drawPlayField
+scrollingPlayfieldKernel
 ; This loop draws the main playfield area.
 ; It handles walls, background graphics, and player sprites.
 	cmp		p0GfxState					; Check against graphics data/state.
@@ -3228,7 +3228,7 @@ goNextPFScanline
 	inc		scanline					; Increment scanline counter.
 	lda		scanline
 	cmp		#(HEIGHT_KERNEL / 2)		; Compare with kernel height/2.
-	bcc		drawPlayField				; Loop if not done.
+	bcc		scrollingPlayfieldKernel	; Loop if not done.
 	jmp		drawInventoryKernel			; jump to draw the inventory zone.
 
 skipIndyDraw
@@ -3239,7 +3239,7 @@ skipDrawP0Sprite
 	ldy		#$00						; Load 0.
 	beq		nextPFScanline				; Proceed to next scanline.
 
-drawStillPlayerKernel
+staticSpriteKernelCheck
 ;
 ; This is used when the player is stationary (or fewer sprites moving).
 ; Optimizes TIA updates.
@@ -3252,12 +3252,12 @@ skipP0Draw
 	lda		#$00						; Load 0
 	beq		nextStillPlayerScanline		; Unconditional branch.
 
-drawStillP0Sprite
+staticP0Sprite
 	lda		(p0GfxPtrLo),y				; Load P0 graphics.
 	bmi		setP0Values					; If negative (special flag
 	;									; bit 7), jump to setting values.
 	cpy		p0OffsetPosY				; Compare Y with offset.
-	bcs		drawStillPlayerKernel		; Branch if greater or equal
+	bcs		staticSpriteKernelCheck		; Branch if greater or equal
 	cpy		p0PosY						; Compare Y with P0 vertical position.
 	bcc		skipP0Draw					; Skip if below.
 	sta		GRP0						; Store to GRP0.
@@ -3286,7 +3286,7 @@ skipM0Draw
 setMissleEnable
 	sta		ENAM0						; Store to ENAM0.
 
-drawStillPlayer
+staticSpriteKernel
 	sta		WSYNC
 ;---------------------------------------
 	sta		HMOVE						; Execute horizontal move.
@@ -3315,11 +3315,11 @@ UpdateMissile1Enable
 	sec									; Set carry.
 	sbc		indyPosY					; Subtract Indy vertical position.
 	cmp		indySpriteHeight			; Compare with sprite height.
-	bcs		skipDrawStillPlayer1Sprite	; Skip if outside sprite.
+	bcs		skipStaticPlayer1Sprite		; Skip if outside sprite.
 	tay									; Transfer to Y (sprite index).
 	lda		(indyGfxPtrLo),y			; Load Indy graphics.
 
-drawStillPlayer1Sprite
+staticPlayer1Sprite
 	ldy		scanline					; Restore scanline counter to Y.
 	sta		GRP1						; Store in GRP1.
 	sta		WSYNC
@@ -3336,7 +3336,7 @@ skipBallDraw
 
 setBallEnable
 	sta		ENABL						; Update Ball Enable.
-	bcc		drawStillP0Sprite			; Unconditional branch back to loop start.
+	bcc		staticP0Sprite				; Unconditional branch back to loop start.
 
 skipDrawingTheBall
 	bcc		skipBallDraw				; Unconditional branch.
@@ -3353,15 +3353,15 @@ burn19Cycles
 	nop
 	jmp		setMissile1Enable			; Jump back.
 
-skipDrawStillPlayer1Sprite
+skipStaticPlayer1Sprite
 	lda		#$00						; Load 0 (clear graphics).
-	beq		drawStillPlayer1Sprite		; Jump back to store 0 in GRP1.
+	beq		staticPlayer1Sprite			; Jump back to store 0 in GRP1.
 
 AdvanceStillKernelScanline
 	inx									; Increment scanline counter.
 	sta		HMCLR						; Clear horizontal motion.
 	cpx		#HEIGHT_KERNEL				; Check limit.
-	bcc		drawThieves					; Branch if not done.
+	bcc		multiplexedSpriteKernel		; Branch if not done.
 	jmp		drawInventoryKernel			; Jump to Inventory Kernel.
 
 thiefKernel
@@ -3399,7 +3399,7 @@ thiefKernel
 	inx									; Increment scanline.
 	sta		GRP1						; Store Indy graphics.
 
-drawThieves
+multiplexedSpriteKernel
 	sta		WSYNC
 ;---------------------------------------
 	sta		HMOVE						; Execute HMOVE.
@@ -4077,7 +4077,7 @@ JumpToBank0
 ;	 - The Ark is only drawn if arkRoomStateFlag is positive (indicating Win State).
 ; 2. Mid/Bottom Section: Draws Indy standing on the Lifting Pedestal.
 
-drawArkRoom
+arkPedestalKernel
 	sta		WSYNC
 ;---------------------------------------
 	cpx		#$12						; Compare scanline with 18.
@@ -4107,7 +4107,7 @@ nextArkRoomScanline
 	inx									; Increment scanline counter
 	cpx		#$90						; check if kernel finished (144 scanlines)
 	bcs		drawArkBody					; Branch if >= 144 to finish up
-	bcc		drawArkRoom					; Loop back if not done
+	bcc		arkPedestalKernel			; Loop back if not done
 
 checkToDrawArk
 	bit		arkRoomStateFlag				; Check Game State Flag
@@ -4127,7 +4127,7 @@ checkToDrawArk
 skipArkDraw
 	inx									; Increment scanline
 	cpx		#$0f						; Compare with 15
-	bcc		drawArkRoom					; Loop
+	bcc		arkPedestalKernel			; Loop
 
 drawArkBody
 	sta		WSYNC
@@ -4154,7 +4154,7 @@ arkDrawLoop
 	lda		#$00						; Load 0.
 	sta		GRP0						; Clear GRP0.
 	sta		GRP1						; Clear GRP1.
-	beq		drawArkRoom					; Jump back to main loop.
+	beq		arkPedestalKernel			; Jump back to main loop.
 
 checkToDrawPedestal
 	txa									; Move scanline to A.
@@ -4545,7 +4545,7 @@ treasureRoomHandler:
 
 		lda		treasureIndex				; Get Treasure Index/State.
 		and		#$07						; Mask bits 0-2.
-		bne		finishTreasureRoomHandler	; Branch if not 0
+		bne		advanceTreasureState		; Branch if not 0
 											; (Item processing active).
 ; ITEM CYCLE LOGIC
 		lda		#$40						; Load Bit 6 ($40).
@@ -4561,14 +4561,14 @@ treasureRoomHandler:
 		ldx		treasureRoomStateTable,y	; Lookup "Basket State" / Item ID.
 		sty		loopCounter					; Store Y in loopCounter
 		jsr		checkBaskets				; Check if Item is Valid/Available.
-		bcc		updateTreasureRoomState		; If Carry Clear (Valid), Update State.
-incTreasureOffset:
+		bcc		spawnTreasureItem			; If Carry Clear (Valid), spawn treasre.
+resetTreasureCountdown:
 		inc		p0OffsetPosY				; Increment offset
 		bne		finishRoomHandler			; Return.
 
 		brk									; Break (Should not happen).
 
-updateTreasureRoomState:
+spawnTreasureItem:
 		ldy		loopCounter					; Restore Y
 		tya									; Move to A.
 		ora		treasureIndex				; Combine with current Index.
@@ -4579,13 +4579,13 @@ updateTreasureRoomState:
 		sta		p0OffsetPosY				; Set Graphic Offset.
 		bne		finishRoomHandler			; Return.
 
-finishTreasureRoomHandler:
+advanceTreasureState:
 		cmp		#$04						; Check State Phase.
-		bcs		incTreasureOffset			; Branch if >= 4 (Reset).
+		bcs		resetTreasureCountdown			; Branch if >= 4 (Reset).
 		rol		treasureIndex				; Rotate State
 		sec									; Set Carry.
 		ror		treasureIndex				; Rotate State.
-		bmi		incTreasureOffset			; Branch if Negative.
+		bmi		resetTreasureCountdown			; Branch if Negative.
 
 mapRoomHandler:
 	; --------------------------------------------------------------------------
@@ -5497,10 +5497,10 @@ mapRoomArkLocY
 	.byte	$21,$26,$26,$2b,$2a,$2b,$31,$31 ; $fada (*)
 
 kernelJumpTable:
-	.word drawStillPlayer-1
-	.word drawPlayField-1
-	.word drawThieves-1
-	.word drawArkRoom-1
+	.word staticSpriteKernel-1
+	.word scrollingPlayfieldKernel-1
+	.word multiplexedSpriteKernel-1
+	.word arkPedestalKernel-1
 
 spiderSpriteTable: ;tarantula animation table
 	.byte <spiderGfxFrame1
