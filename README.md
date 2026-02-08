@@ -421,7 +421,7 @@ RegionX = (HookX - 16) / 32
 In `mapRoomHandler`, when Indy holds the Head of Ra and the sun (driven by `timeOfDay`) is at the correct position, a beam reveals the Ark's mesa using data from `mapRoomArkLocX` / `mapRoomArkLocY`.
 
 #### Time System
-`timeOfDay` increments every ~63 frames (roughly once per second), driven in the VBLANK section. It controls the timepiece display, basket item rotation, sun position, and Head of Ra timing.
+`timeOfDay` increments every ~63 frames (roughly once per second), driven in the VBLANK section. It controls the timepiece display, treasure room rotation, sun position, and Head of Ra timing.
 
 #### Scrolling (Mesa Field)
 Handled in `handleMesaScroll` — the camera offset `roomObjectVar` shifts all object positions when Indy nears screen edges, bounded by `MESA_MAP_MAX_HEIGHT` (`$50`).
