@@ -153,7 +153,7 @@ At `finishedScrollUpdate`, the code writes `selectRoomHandler` as the target add
 
 | Room | Handler | Key Logic |
 |------|---------|-----------|
-| Treasure Room | `treasureRoomHandler` | Item cycle timer, basket availability, treasure spawning |
+| Treasure Room | `treasureRoomHandler` | Item cycle timer, treasure availability, treasure spawning |
 | Marketplace | *(none — immediate return)* | — |
 | Entrance Room | `entranceRoomHandler` | Sets `screenEventState = $40` |
 | Black Market | `blackMarketRoomHandler` | Lunatic/blocker positioning, bribe check |
