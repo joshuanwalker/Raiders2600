@@ -160,52 +160,58 @@ playerInputState		= $8a	; Input flags (Direction + Button state processing)
 ;----------------------------------------------------------------------------
 activeMesaID			= $8b	; The ID of the Mesa the player is currently exploring/grappled to.
 secretArkMesaID			= $8c	; The specific Mesa ID where the Ark is hidden.
-eventState				= $8d	; General state for room-specific events (e.g. Grapple swing stage)
+grappleWhipState		= $8d	; State machine for grapple swing / whip attack sequence
 m0PosYShadow			= $8e	; Shadow copy of Missile 0 Y position (Webs/Swarm)
 weaponStatus			= $8f	; Status of Indy's weapon (Bit 7: Active/Cooldown)
-unused_90				= $90	; Screen flags cleared on room change
-moveDirection			= $91	; Direction Indy is moving (Joystick input mask)
+unused_90				= $90	; Screen flags cleared on room change (result unused)
+inputActionState		= $91	; Combined joystick direction + collision response flags
 indyDir					= $92	; Direction Indy is facing (for Sprite selection)
 screenEventState		= $93	; Flags for screen events (e.g., Snake/Fly active)
 roomPFControlFlags		= $94	; Playfield priority and reflection flags (CTRLPF)
 pickupStatusFlags		= $95	; Bitmask: Items taken in current room (prevents infinite pickup)
-diggingState			= $96	; Tracks progress of digging in Well of Souls
-digAttemptCounter		= $97	; Counter for dig attempts
-EventStateOffset		= $98	; Offset index for room event tables (Swarm behavior)
+dirtPileGfxState		= $96	; Graphics pointer offset for dirt pile sprite (shrinks as Indy digs)
+digSpeedLimiter			= $97	; Overflow counter limiting dig speed (digs only on wrap to 0)
+swarmEventCounter		= $98	; Countdown for tsetse swarm spawns in Valley of Poison
 screenInitFlag			= $99	; Non-zero if the screen needs initialization logic
 grenadeState			= $9a	; Status: Bit 7=Active, Bit 6=Wall Effect Trigger
-grenadeCookTime			= $9b	; Timer until grenade explosion
+grenadeDetonateTime		= $9b	; timeOfDay value at which active grenade detonates
 arkRoomStateFlag		= $9c	; bit7 = RESET enabled & Ark hidden; bit7 clear = Ark visible & RESET ignored.
-globalStateFlag			= $9d	; Flags for Cutscenes (Death, Capture, End Game)
+gameEventFlag			= $9d	; Flags for cutscene events (death, capture, end game)
 adventurePoints			= $9e	; (Manual: "Adventure Points") Score/Pedestal Height
 livesLeft				= $9f	; (Manual: Starts with 3 lives)
 bulletCount				= $a0	; (Manual: Max 6 bullets)
 eventTimer				= $a1	; General event timer (Tsetse paralysis / Cutscene delays)
-soundChan0EffectTimer	= $a2	; Sound Effect ID/Timer for Channel 0
-soundChan1EffectTimer	= $a3	; Sound Effect ID/Timer for Channel 1
-soundTimer				= $a4	; Duration timer for complex sounds (Theme song)
+soundChan0Effect		= $a2	; Sound effect control byte for TIA channel 0
+soundChan1Effect		= $a3	; Sound effect control byte for TIA channel 1
+musicNoteIndex			= $a4	; Index into Raiders March frequency table (counts down)
 
 ;----------------------------------------------------------------------------
 ; Scoring & Bonuses (Used in getFinalScore)
+; Lower adventurePoints = better ranking on the pedestal.
+; Bonuses are SUBTRACTED (reward), penalties are ADDED (punishment).
 ;----------------------------------------------------------------------------
-grenadeOpeningPenalty	= $a5	; Penalty collision: Blasting Entrance Room wall
-escapePrisonPenalty		= $a6	; Penalty collision: Escaping Shining Light dungeon
-findingArkBonus			= $a7	; Bonus: Found the Ark
-usingParachuteBonus		= $a8	; Bonus: Successfully used Parachute
-ankhUsedBonus			= $a9	; Penalty/Cost: Using Ankh to warp to Mesa
-yarFoundBonus			= $aa	; Bonus: Found Yar (Easter Egg)
-mapRoomBonus			= $ab	; Bonus: Used Head of Ra in Map Room
-thiefShotPenalty		= $ac	; Penalty: Shot the thief
-mesaLandingBonus		= $ad	; Bonus: Landed on Mesa
-UnusedBonus				= $ae	; Unused slot
-treasureIndex			= $af	; Index/State of treasure appearance in Treasure Room
-unused_B0				= $b0	; Unused
-entranceRoomState		= $b1	; State: Wall blown open? Whips taken?
-blackMarketState		= $b2	; State: Bribed lunatic? Shovel purchase?
-mapRoomState			= $b3	; State: Sun position / Beam reveal
-mesaSideState			= $b4	; State: Parachute active? Gravity logic
-entranceRoomEventState	= $b5	; Visual state for entrance room (Wall debris)
-spiderRoomState			= $b6	; State: Spider aggression / Web collision
+grenadeOpeningPenalty	= $a5	; Penalty: Blasted Entrance Room wall open (2 pts)
+escapePrisonPenalty		= $a6	; Penalty: Used secret exit in Shining Light dungeon (13 pts)
+findingArkBonus			= $a7	; Bonus: Found the Ark (10 pts)
+usingParachuteBonus		= $a8	; Bonus: Successfully used Parachute (3 pts)
+ankhUsedBonus			= $a9	; Bonus: Warped to Mesa via Ankh (9 pts)
+yarFoundBonus			= $aa	; Bonus: Found Yar Easter Egg (5 pts, also gates HSW initials)
+mapRoomBonus			= $ab	; Bonus: Used Head of Ra in Map Room (14 pts)
+thiefShotPenalty		= $ac	; Penalty: Shot the thief (4 pts)
+mesaLandingBonus		= $ad	; Bonus: Reached Well of Souls via Mesa (3 pts)
+unusedBonus				= $ae	; Unused scoring slot (never written, always 0)
+
+; ---- Per-Room State Array ----
+; $af-$b6 form an indexed array: roomStateBase + roomId
+; Accessed as treasureRoomState,x where x = room ID.
+treasureRoomState		= $af	; State: Treasure Room item cycle (bits 0-2=phase, bit 7=spawned)
+marketplaceState		= $b0	; Marketplace room state (unused, no persistent state needed)
+entranceRoomState		= $b1	; State: Whip taken (bit 0), wall blown open (bit 1)
+blackMarketState		= $b2	; State: Bribe status (bit 7), coin/shovel carrying flags
+mapRoomState			= $b3	; State: Indy in view zone (bit 7) / Head of Ra beam activation
+mesaSideState			= $b4	; State: Parachute (bit 7), landing (bit 6), gravity/grapple (bit 1)
+entranceRoomEventState	= $b5	; State: Entrance Room wall debris animation (lower nibble)
+spiderRoomState			= $b6	; State: Animation timer (bits 0-2) / Aggressive mode (bit 7)
 
 ;----------------------------------------------------------------------------
 ; Inventory System
@@ -598,7 +604,7 @@ handleIndyVsObjHit:
 setWellOfSoulsEntryEvent:
 	bvc		handleMesaSideSecretExit	; Fail-safe?
 	lda		#$80						; Set Bit 7.
-	sta		globalStateFlag				; Trigger Major Event
+	sta		gameEventFlag				; Trigger major event
 	bne		handleMesaSideSecretExit	; Return.
 
 timePieceTouch:
@@ -643,16 +649,16 @@ handleMesaFall:
 	bmi		clearHits					; If the result has bit 7 set,
 										; skip setting major event
 	lda		#$80						; Otherwise, set major event flag
-	sta		globalStateFlag
+	sta		gameEventFlag
 clearHits:
 	sta		CXCLR						; clear all collisions
 dispatchHits:
 	bit		CXPPMM						; check player / missile collisions
 	bmi		handlePlayerObjCollision	; branch if player touched treasure
 	ldx		#$00
-	stx		moveDirection				; Clear movement direction
+	stx		inputActionState			; Clear input action state
 	dex									; X = $FF
-	stx		digAttemptCounter			; Set dig attempt counter to max value
+	stx		digSpeedLimiter				; Reset dig speed limiter to $FF
 	rol		pickupStatusFlags
 	clc
 	ror		pickupStatusFlags
@@ -662,7 +668,7 @@ continueToHitDispatch:
 handlePlayerObjCollision:
 	lda		currentRoomId				; get the current screen id
 	bne		jumpPlayerHit				; branch if not Treasure Room
-	lda		treasureIndex
+	lda		treasureRoomState
 	and		#$07
 	tax
 	lda		marketBasketItems,x			; get items from market basket
@@ -698,7 +704,7 @@ playerHitInWellOfSouls:
 	cmp		#$3f						; Depth Threshold
 	bcc		takeAwayShovel				; If Indy is above this threshold,
 
-	lda		diggingState				; Load Dirt Pile State
+	lda		dirtPileGfxState			; Load dirt pile graphics state
 	cmp		#$54						; Is the pile fully cleared?
 	bne		resumeHitDispatch			; If not empty ($54), you can't find Ark yet.
 	lda		secretArkMesaID				; Load Secret Ark Location (Game RNG)
@@ -756,7 +762,7 @@ playerHitInSpiderRoom:
 	ldx		#$00						; Set X to 0
 	stx		spiderRoomState				; Clear spider room state
 	lda		#%10000000					; Set Bit 7
-	sta		globalStateFlag				; Trigger major event flag
+	sta		gameEventFlag				; Trigger major event flag
 resumeHitDispatch:
 	jmp		playerHitDefaut
 
@@ -799,9 +805,9 @@ playerHitInMarket:
 
 	; Zone 1: Below $3A (Bottom of screen)
 	lda		#$e0						; Mask Top 3 bits
-	and		moveDirection				; Preserve current movement
+	and		inputActionState			; Preserve current movement
 	ora		#$43						; Force bits 6, 1, and 0 ($43).
-	sta		moveDirection				; Set "Bumping/Shoving"
+	sta		inputActionState			; Set "Bumping/Shoving"
 	jmp		playerHitDefaut		; Resume
 
 checkIndyYForMarketFlags:
@@ -811,16 +817,16 @@ checkIndyYForMarketFlags:
 clearMarketFlags:
 	; Zone 2: Between $20 and $3A (Middle path)
 	lda		#$00
-	sta		moveDirection				; Clear movement modification flags.
+	sta		inputActionState			; Clear movement modification flags.
 	jmp		playerHitDefaut		; Resume
 
 setMarketFlags:
 	cpy		#$09						; Check Topmost Boundary ($09)
 	bcc		clearMarketFlags			; If Y < $09 (Very top), clear flags.
 	lda		#$e0						; Mask Top 3 bits
-	and		moveDirection
+	and		inputActionState
 	ora		#$42						; Force bits 6 and 1 ($42).
-	sta		moveDirection				; Apply "Shove" physics.
+	sta		inputActionState			; Apply "Shove" physics.
 	jmp		playerHitDefaut		; Resume
 
 indyTouchMarketBaskets:
@@ -881,7 +887,7 @@ playerHitInBlackMarket:
 	ror		blackMarketState			; rotate right to show Indy carrying coins
 resetInteractionFlags:
 	lda		#$00
-	sta		moveDirection
+	sta		inputActionState
 
 resumeScreenLogic:
 	jmp		playerHitDefaut
@@ -899,10 +905,10 @@ checkIndyPosForMarketFlags:
 	cpy		#$44
 	bcc		checkMiddleMarketZone		; If Indy is above row 68, jump to alternate logic
 	lda		#$e0
-	and		moveDirection				; Mask moveDirection to preserve top 3 bits
+	and		inputActionState			; Mask inputActionState to preserve top 3 bits
 	ora		#%00001011					; Set bits 0, 1, and 3
 setBlackMarketFlags:
-	sta		moveDirection				; Store the updated value back into moveDirection
+	sta		inputActionState			; Store the updated value back into inputActionState
 	bne		resumeScreenLogic			; Always branch to resume game logic
 
 checkMiddleMarketZone:
@@ -911,7 +917,7 @@ checkMiddleMarketZone:
 	cpy		#$0b
 	bcc		resetInteractionFlags		; If Y < 11, exit via reset logic
 	lda		#$e0
-	and		moveDirection
+	and		inputActionState
 	ora		#%01000001					; Set bits 7 and 0
 	bne		setBlackMarketFlags			; Go apply and resume logic
 
@@ -1096,7 +1102,7 @@ indyMoveOnInput:
 
 setIndyToNormalMove:
 	lda		#$05
-	sta		soundChan0EffectTimer		; Set Indy walk state
+	sta		soundChan0Effect			; Set Indy walk state
 	bne		defaultIdleHandler			; unconditional branch
 
 indyEnterHole:
@@ -1119,7 +1125,7 @@ defaultIdleHandler:
 	beq		clearInputBit0ForSpiderRoom	; Yes, go to clearInputBit0ForSpiderRoom
 	bcc		checkGrenadeDetonation		; If screen ID is lower than Spider Room, skip
 	lda		#$80						; Trigger a major event (Death/Capture)
-	sta		globalStateFlag				; Set flag.
+	sta		gameEventFlag				; Set flag.
 	bne		despawnMissile0				; unconditional branch
 
 clearInputBit0ForSpiderRoom:
@@ -1139,11 +1145,11 @@ checkGrenadeDetonation:
 	bpl		newFrame				; If bit 7 is clear, skip (no grenade active)
 	bvs		applyGrenadeWallEffect		; If bit 6 is set, jump
 	lda		timeOfDay				; get seconds time value
-	cmp		grenadeCookTime				; compare with grenade detination time
+	cmp		grenadeDetonateTime			; Compare with grenade detonation time
 	bne		newFrame				; branch if not time to detinate grenade
 	lda		#$a0
 	sta		weaponPosY				; Move grenade offscreen
-	sta		globalStateFlag				; Trigger major event (explosion happened)
+	sta		gameEventFlag				; Trigger major event (explosion happened)
 applyGrenadeWallEffect:
 	lsr		grenadeState				; Logical shift right: bit 0 -> carry
 	bcc		skipUpdate					; If bit 0 was clear, skip this
@@ -1207,10 +1213,10 @@ frameFirstLine
 	sta		WSYNC						; last line of vertical sync
 	sta		VSYNC						; end vertical sync (D1 = 0)
 	stx		TIM64T						; set timer for vertical blanking period
-	ldx		globalStateFlag
+	ldx		gameEventFlag
 	inx									; Increment counter
 	bne		checkShowDevInitials		; If not overflowed, check initials display
-	stx		globalStateFlag				; Overflowed: zero -> set globalStateFlag to 0
+	stx		gameEventFlag				; Overflowed: zero -> set gameEventFlag to 0
 	jsr		getFinalScore				; set adventurePoints to minimum
 	lda		#ID_ARK_ROOM				; set ark title screen
 	sta		currentRoomId				; to the current room
@@ -1223,7 +1229,7 @@ checkShowDevInitials:
 	cmp		#ID_ARK_ROOM				; are we in the ark room?
 	bne		HandleEasterEgg				; branch if not in ID_ARK_ROOM
 	lda		#RAIDERS_MARCH				; Ch1 control = distortion + volume, signals "Raiders March"
-	sta		soundChan1EffectTimer
+	sta		soundChan1Effect
 	ldy		yarFoundBonus				; check if yar was found
 	beq		checkEasterEggFail			; If not in Yar's Easter Egg mode, skip
 	bit		arkRoomStateFlag
@@ -1257,7 +1263,7 @@ setIndyArkDescentState
 	bit		arkRoomStateFlag			; Check bit 7 of arkRoomStateFlag
 	bmi		checkArkInput				; If bit 7 is set, skip (reset enabled)
 	lda		#$0e
-	sta		soundChan0EffectTimer		; Set Indys state to 0E
+	sta		soundChan0Effect			; Set Indy's state to 0E
 
 checkArkInput
 	lda		#$80
@@ -1285,7 +1291,7 @@ advanceArkSeq
 	ldx		p0SpriteHeight
 	cpx		#$60
 	bcc		incrementArkSeq				; If sprite height < $60, branch
-	bit		globalStateFlag
+	bit		gameEventFlag
 	bmi		continueArkSeq				; If bit 7 is set, jump to continue logic
 	ldx		#$00						; Reset X
 	lda		indyPosX
@@ -1405,7 +1411,7 @@ configSnake
 	sta		auxDataIndex				; Store in Generic Index ($D8)
 
 checkMajorEventDone
-	bit		globalStateFlag
+	bit		gameEventFlag
 	bpl		checkGameScriptTimer		; If major event not complete
 										; continue sequence
 	jmp		finishedScrollUpdate		; Else, jump to end
@@ -1425,7 +1431,7 @@ gatePlayerTriggeredEvent
 	ldx		currentRoomId				; get the current screen id
 	cpx		#ID_MESA_SIDE
 	beq		stopWeaponEvent				; If on Mesa Side, use a different handler
-	bit		eventState
+	bit		grappleWhipState
 	bvc		checkInputAndStateForEvent	; If no event/collision flag set, skip
 	ldx		weaponPosX					; get bullet or whip horizontal position
 	txa
@@ -1553,7 +1559,7 @@ normalizeplayerInput
 	clc
 	rol		playerInputState
 handleIInventoryUpdate
-	lda		moveDirection
+	lda		inputActionState
 	bpl		ExitItemHandler				; If no item queued, exit
 	and		#$1f
 	cmp		#$01
@@ -1576,7 +1582,7 @@ placeGenericItem
 	jsr		placeItemInInventory
 clearItemUseFlag
 	lda		#$00
-	sta		moveDirection				; Clear item pickup/use state
+	sta		inputActionState			; Clear item pickup/use state
 ExitItemHandler
 	jmp		updateIndyParachuteSprite
 
@@ -1613,7 +1619,7 @@ startGrenadeThrow
 	sty		weaponPosX					; Set grenade's starting horizontal position
 	lda		timeOfDay					; get the seconds timer
 	adc		#5 - 1						; increment value by 5...carry set
-	sta		grenadeCookTime				; detinate grenade 5 seconds from now
+	sta		grenadeDetonateTime			; Detonate grenade 5 seconds from now
 	lda		#$80						; Prepare base grenade state value (bit 7 set)
 	cpx		#ENTRANCE_ROOM_ROCK_VERT_POS  ; Is Indy below the rock's vertical line?
 	bcs		setGrenadeState
@@ -1647,7 +1653,7 @@ fixParachuteStartY
 	sta		indyPosY
 	bpl		finishGrapple				; unconditional branch
 handleSpecialItemUseCases
-	bit		eventState					; Check special state flags
+	bit		grappleWhipState			; Check grapple/whip state flags
 	bvc		attemptArkDig				; If bit 6 is clear , skip to further checks
 	bit		CXM1FB|$30					; Check collision between missile 1 and playfield
 	bmi		calculateMesaGrapple		; If collision occurred (bit 7 set),
@@ -1716,7 +1722,7 @@ hookAndMoveIndy
 	stx		indyPosX					; TELEPORT INDY to Hook X
 
 	lda		#$46						; Re-assert Grapple Mode state
-	sta		eventState					; Likely a flag used by event logic
+	sta		grappleWhipState			; Set grapple swing active state
 finishGrapple
 	jmp		triggerWhipEffect			; Clean up frame
 
@@ -1735,13 +1741,13 @@ attemptArkDig
 	bpl		exitItemUseHandler			; If no collision, exit.
 
 	; 3. Dig Speed Limiter
-	inc		digAttemptCounter			; Increment counter
+	inc		digSpeedLimiter				; Increment counter
 	bne		exitItemUseHandler			; Only dig on overflow (0) to slow animation.
 
 	; 4. Update Dirt Pile "Frame"
 	; The state variable acts as the Low Byte for the graphics pointer.
 	; Decrementing it moves the pointer to the "Smaller Pile" sprite data.
-	ldy		diggingState				; Load current graphics offset ($5C start)
+	ldy		dirtPileGfxState			; Load current graphics offset ($5C start)
 	dey									; Shrink pile
 	cpy		#$54						; Have we reached the "Cleared" state?
 	bcs		clampDigDepth				; If State >= $54, save it.
@@ -1749,7 +1755,7 @@ attemptArkDig
 
 
 clampDigDepth
-	sty		diggingState				; Save new appearance.
+	sty		dirtPileGfxState				; Save new appearance.
 	lda		#BONUS_FINDING_ARK
 	sta		findingArkBonus				; Set bonus flag
 	bne		exitItemUseHandler			; Resume.
@@ -1770,7 +1776,7 @@ ankhWarpToMesa
 	lda		#$46						; Fixed vertical position value (mesa starting Y)
 	sta		indyPosY					; Set Indy's vertical position
 	sta		weaponPosY					; Set projectile's vertical position
-	sta		eventState					; Set event/state flag0
+	sta		grappleWhipState			; Set grapple state for mesa warp
 	lda		#$1d						; Set initial Y for object
 	sta		p0OffsetPosY					; set object vertical position
 	bne		updateIndyParachuteSprite	; Unconditional jump to common handler
@@ -1801,7 +1807,7 @@ checkUsingWhip
 	cpx		#ID_INVENTORY_WHIP			; Is Indy using the whip?
 	bne		updateIndyParachuteSprite	; branch if Indy not using whip
 	ora		#$80						; Set a status bit (bit 7) to indicate whip is active
-	sta		eventState					; Store it in the game state/event flags
+	sta		grappleWhipState			; Set whip active in grapple/whip state
 	ldy		#$04						; Default vertical offset (X)
 	ldx		#$05						; Default horizontal offset (Y)
 	ror									; shift MOVE_UP to carry
@@ -1830,7 +1836,7 @@ applyWhipStrikePosition
 	sta		weaponPosY					; Set whip strike vertical position
 triggerWhipEffect
 	lda		#$0f						; Set effect timer for whip (15 frames)
-	sta		soundChan1EffectTimer			; Animate or time whip
+	sta		soundChan1Effect			; Animate or time whip
 updateIndyParachuteSprite
 	bit		mesaSideState				; Check game status flags
 	bpl		setIndySpriteIfStill		; If parachute bit (bit 7) is clear,
@@ -1870,7 +1876,7 @@ checkAnimationTiming
 	cmp		#<IndyStandSprite			; Check if we've reached the end of walkcycle
 	bcc		setIndySpriteLSBValue		; If not, update walking frame
 	lda		#$02						; Set a short animation timer
-	sta		soundChan1EffectTimer
+	sta		soundChan1Effect
 	lda		#<Indy_0					; Reset animation back to first walking frame
 	bcs		setIndySpriteLSBValue		; Unconditional jump to store new sprite pointer
 
@@ -2031,8 +2037,8 @@ initRoomState
 	ora		#$40						; Set bit 6 to indicate re-entry or warp status.
 	sta		grenadeState				; Update the state.
 resetRoomFlags
-	lda		#$5c						; Load default value for digging state
-	sta		diggingState
+	lda		#$5c						; Load default value for dirt pile graphics
+	sta		dirtPileGfxState
 	ldx		#$00						; Initialize X to 0 for clearing.
 	stx		screenEventState			; Clear screen event state.
 	stx		spiderRoomState				; Clear spider room state.
@@ -2099,7 +2105,7 @@ setObjPosY
 	ldy		#$4f						; Load default vertical offset ($4F).
 	cpx		#ID_ENTRANCE_ROOM			; If ID < Entrance Room
 	bcc		finishScreenInit			; keep default and return.
-	lda		treasureIndex,x				; Load treasure index
+	lda		treasureRoomState,x			; Load per-room state byte
 	ror									; Rotate bit 0 into carry.
 	bcc		finishScreenInit			; If carry clear, use default offset.
 	ldy		roomObjPosYTable,x			; Load room-specific vertical offset.
@@ -2112,9 +2118,9 @@ finishScreenInit
 	rts									; Return from subroutine.
 
 initTreasureRoom
-	lda		treasureIndex				; Load screen control byte
+	lda		treasureRoomState			; Load treasure room state
 	and		#$78						; Mask off all but bits 3-6
-	sta		treasureIndex				; Save the updated control state
+	sta		treasureRoomState			; Save the updated state
 	lda		#$1a
 	sta		p0PosY						; Set Y Pos for the top object
 	lda		#$26
@@ -2234,7 +2240,7 @@ checkFlagforFixedY
 	iny
 	bmi		eventStateOverride			; If negative, special flag check
 	ldy		#$08						; Use a fixed override value
-	bit		treasureIndex				; Check room flag register
+	bit		treasureRoomState			; Check treasure room state flags
 	bpl		checkPosYlOverride			; If bit 7 is clear, proceed
 	lda		#$41
 	bne		applyPosYOverride			; Always taken	apply forced vertical position
@@ -2351,7 +2357,7 @@ finishDrop:
 	jmp		dropItem					; Go to general item removal cleanup
 
 dropGrappleItem:
-	stx		eventState					; Store current room ID
+	stx		grappleWhipState			; Clear grapple state (drop grapple item)
 										; (cheking for Mesa Field)
 	lda		#$70						; set X position to offscreen
 	sta		weaponPosY					; move grapple crosshair offscreen
@@ -2364,7 +2370,7 @@ dropChai:
 	; If dropped with a specific movement vector ($42), it triggers a warp and bonuses.
 	; --------------------------------------------------------------------------
 	lda		#$42						; Check for specific movement direction command.
-	cmp		moveDirection				; Check if player is pushing against boundary?
+	cmp		inputActionState			; Check if player is pushing against boundary?
 	bne		checkMarketYar				; If not $42, skip the main warp.
 
 	; --------------------------------------------------------------------------
@@ -2434,10 +2440,10 @@ dropCoins:
 	sec									; set carry (Successful Purchase)
 	ror		blackMarketState			; rotate right to clear coin flag
 finishCoinDrop:
-	lda		moveDirection
+	lda		inputActionState
 	clc
 	adc		#$40						; Update UI/event state
-	sta		moveDirection
+	sta		inputActionState
 
 dropItem:
 	dec		inventoryItemCount			; reduce number of inventory items
@@ -2464,7 +2470,7 @@ selectNextItem:
 	sta		selectedInventoryId			; set inventory id
 finishInventorySelect
 	lda		#$0d						; Possibly sets UI state
-	sta		soundChan0EffectTimer
+	sta		soundChan0Effect
 	sec									; Set carry to indicate success
 	rts
 
@@ -2827,7 +2833,7 @@ updateInventory
 	jsr		showItemAsTaken					; Mark item as taken in global bitmasks
 finishInventoryUpdate
 	lda		#$0c							; Make sound
-	sta		soundChan0EffectTimer			; play with Indy's footstep sound
+	sta		soundChan0Effect			; play with Indy's footstep sound
 	sec
 	rts
 
@@ -2883,11 +2889,11 @@ isItemTaken:
 updateRoomEventState
 	and		#$1f
 	tax
-	lda		EventStateOffset
+	lda		swarmEventCounter
 	cpx		#$0c
 	bcs		doneRoomEventState
-	adc		eventStateOffsetTable,x
-	sta		EventStateOffset
+	adc		swarmEventCounterTable,x
+	sta		swarmEventCounter
 doneRoomEventState
 	rts
 
@@ -2985,7 +2991,7 @@ getFinalScore
 	sbc		livesLeft					; lives left
 	sbc		mapRoomBonus				; used the Head of Ra in the Map Room
 	sbc		mesaLandingBonus			; landed in Mesa
-	sbc		UnusedBonus					; never used
+	sbc		unusedBonus					; never used (always 0)
 	clc									; negitive actions...
 	adc		grenadeOpeningPenalty		; gernade used on wall (2 points)
 	adc		escapePrisonPenalty			; escape hatch used (13 points)
@@ -3134,7 +3140,7 @@ indyMoveDeltaTable
 	.byte $0F
 
 
-eventStateOffsetTable
+swarmEventCounterTable
 	.byte $00,$06,$03,$03,$03,$00,$00,$06,$00,$00,$00,$06
 
 
@@ -3485,7 +3491,7 @@ updateThiefAnimation
 
 	; Special "Digging" state - removes pile of dirt
 	; This block replaces the Thief Sprite with the Dirt Pile Sprite.
-	lda		diggingState				; Load the variable that was modified by Shovel.
+	lda		dirtPileGfxState			; Load the dirt pile offset modified by Shovel.
 										; (e.g., $5C, $5B, ... $54)
 	sta		p0GfxPtrLo					; Set as Low Byte of Sprite Pointer.
 										; High Byte is inherited from current context
@@ -3705,13 +3711,13 @@ updateSelector
 	ldx		#$01
 
 updateSoundRegisters
-	lda		soundChan0EffectTimer,x		; Load Sound Control Byte (Channel 0)
+	lda		soundChan0Effect,x			; Load sound control byte
 	sta		AUDC0,x						; Set Distortion Type (Uses Low Nibble)
 	sta		AUDV0,x						; Set Volume (Uses Low Nibble)
 	bmi		dispatchMusicType			; If Bit 7 Set -> Sustain/Sequence Logic
 	; --- One-Shot / Decay Logic ---
 	ldy		#$00						; Prepare 0
-	sty		soundChan0EffectTimer,x		; Clear the source variable
+	sty		soundChan0Effect,x			; Clear the source variable
 
 updateSoundFreq
 	sta		AUDF0,x						; Set Frequency
@@ -3731,13 +3737,13 @@ dispatchMusicType
 	lda		#$0f
 	and		frameCount					; Slow tick
 	bne		playRaidersMarch			; If not tick, just verify timer
-	dec		soundTimer					; Decrement timer
+	dec		musicNoteIndex				; Decrement note index
 	bpl		playRaidersMarch			; If still positive, play
 	lda		#$17						; Reset timer to start (Loop)
-	sta		soundTimer
+	sta		musicNoteIndex
 
 playRaidersMarch
-	ldy		soundTimer					; Get timer value
+	ldy		musicNoteIndex				; Get current note index
 	lda		raidersMarchFreqTable ,y	; Look up Frequency from Table
 	bne		updateSoundFreq				; Go to write Frequency
 
@@ -3765,7 +3771,7 @@ finishUpdateSound
 
 	; --- Flute Music Logic ---
 	lda		#SNAKE_CHARM_SONG			; Load Sound/Frequency Value
-	sta		soundChan1EffectTimer		; Store in effect timer
+	sta		soundChan1Effect			; Store sound effect control
 	bne		updateEventState			; Unconditional branch.
 
 openTimepiece
@@ -3792,7 +3798,7 @@ StoreTimepieceSprite
 
 resetInventoryState
 	lda		#$00						; Clear A.
-	sta		soundChan1EffectTimer		; Reset Timer
+	sta		soundChan1Effect			; Reset sound effect
 
 updateEventState
 	bit		screenEventState			; Check for special inventory event.
@@ -3807,7 +3813,7 @@ updateEventState
 	bcc		UpdateInvEventState			; If < 5, Update Animation State.
 	ldx		#$04						; X = 4.
 	ldy		#$01						; Y = 1.
-	bit		globalStateFlag				; Check Major Event Flag
+	bit		gameEventFlag				; Check major event flag
 	bmi		setInvEventStateTo3			; If Set (Minus), Set Y=3.
 	bit		eventTimer					; Check event Timer
 	bpl		updateInvEventStateAfterYSet	; If positive, skip.
@@ -3839,7 +3845,7 @@ invObjPosLoop
 	inx									; Next Item.
 	cpx		#$05						; Loop until 5.
 	bcc		invObjPosLoop				; Loop.
-	bit		globalStateFlag				; Check Major Event (Death).
+	bit		gameEventFlag				; Check major event (death).
 	bpl		invItemSelectCycle			; If Clear, Normal Gameplay
 										; (Selection Allowed).
 
@@ -3853,7 +3859,7 @@ invObjPosLoop
 	bne		jmpToNewFrame				; If not 0 (Speed control), Skip.
 	ldx		indySpriteHeight			; Load Indy Height.
 	dex									; Decrease Height (delete Indy part)
-	stx		soundChan1EffectTimer		; sound update
+	stx		soundChan1Effect			; Sound update (death sequence)
 	cpx		#$03						; Check if height is at hat (3 lines).
 	bcc		removeIndySpriteLine		; If < 3, delete hat
 	lda		#$8f						; Load Y Position?
@@ -3863,12 +3869,12 @@ invObjPosLoop
 removeIndySpriteLine
 	sta		frameCount					; Reset Frame Count
 	sec									; Set Carry
-	ror		globalStateFlag				; Rotate Major Event Flag
+	ror		gameEventFlag				; Rotate major event flag
 indyHatPause
 	cmp		#$3c						; Compare A with 60
 	bcc		resetIndyAfterDeath			; If < 60, Continue.
 	bne		indyvanish					; If != 60, Reset.
-	sta		soundChan1EffectTimer		; Store in Timer.
+	sta		soundChan1Effect			; Store sound effect.
 indyvanish
 	ldy		#$00						; Clear Y.
 	sty		indySpriteHeight			; Set Height 0 (Invisible)
@@ -3882,12 +3888,12 @@ resetIndyAfterDeath
 	; --------------------------------------------------------------------------
 	lda		#HEIGHT_INDY_SPRITE			; Reset Height default.
 	sta		indySpriteHeight			; Store.
-	sta		soundChan1EffectTimer		; Store.
-	sta		globalStateFlag				; Reset Flag.
+	sta		soundChan1Effect			; Store sound effect.
+	sta		gameEventFlag				; Reset flag.
 	dec		livesLeft					; Decrement Lives.
 	bpl		jmpToNewFrame				; If Lives >= 0, Continue Game.
 	lda		#$ff						; Game Over State?
-	sta		globalStateFlag				; Set Flag.
+	sta		gameEventFlag				; Set flag (game over).
 	bne		jmpToNewFrame				; Exit.
 
 invItemSelectCycle
@@ -3907,7 +3913,7 @@ jmpToNewFrame
 	jmp		JumpToBank0					; Jump to routine in Bank 0
 
 checkInvCycle
-	bit		eventState					; Check general event state.
+	bit		grappleWhipState			; Check grapple/whip state.
 	bvs		finishInvCycle				; If Overflow Set (Bit 6?), Block Selection.
 	bit		mesaSideState				; Check Mesa State.
 	bmi		finishInvCycle				; If Bit 7 Set (Parachuting), Block.
@@ -3975,7 +3981,7 @@ setSelectedInvSlot
 	; Positions the "Weapon" (grapple crosshair) relative to Indy.
 	; --------------------------------------------------------------------------
 	lda		#$49						; Load Event State value.
-	sta		eventState					; Set State.
+	sta		grappleWhipState			; Set grapple state.
 	lda		indyPosY					; Get Indy's vertical position.
 	adc		#$09						; Add Offset for crosshair.
 	sta		weaponPosY					; Set Object Y to Indy Y + 9.
@@ -3984,7 +3990,7 @@ setSelectedInvSlot
 	sta		weaponPosX					; Set Object X to Indy X + 9.
 
 finishInvCycle
-	lda		eventState					; Check Event State.
+	lda		grappleWhipState			; Check grapple/whip state.
 	bpl		handleInvSelectAdj			; If Bit 7 Clear, go to standard collision.
 
 	; --------------------------------------------------------------------------
@@ -3995,7 +4001,7 @@ finishInvCycle
 	cmp		#$bf						; Check if state has reached terminal value.
 	bcs		handleInvSelEdgeCase		; If >= $BF, handle end case.
 	adc		#$10						; Increment High Nibble (Timer/Stage).
-	sta		eventState					; Update State.
+	sta		grappleWhipState			; Update grapple stage.
 	ldx		#$03						; Load Index 3.
 	jsr		invSelectAdjHandler			; Call Handler.
 	jmp		jmpObjHitHandeler			; Return.
@@ -4004,7 +4010,7 @@ handleInvSelEdgeCase
 	lda		#$70						; Load $70.
 	sta		weaponPosY					; Reset Object Y.
 	lsr									; Divide by 2 -> $38.
-	sta		eventState					; Set Event State to $38 (Bit 7 Clear).
+	sta		grappleWhipState			; Set grapple state to $38 (Bit 7 Clear).
 	bne		jmpObjHitHandeler			; Return.
 
 handleInvSelectAdj
@@ -4013,7 +4019,7 @@ handleInvSelectAdj
 	; Checks if Indy's position aligns with the crosshair cursor.
 	; Used to determine if Indy has "hit" the target when using the grapple.
 	; --------------------------------------------------------------------------
-	bit		eventState					; Check State.
+	bit		grappleWhipState			; Check grapple state.
 	bvc		jmpObjHitHandeler			; If Bit 6 Clear, Exit.
 	ldx		#$03						; Load Index 3.
 	jsr		invSelectAdjHandler			; Update Cursor/Object Position logic?
@@ -4048,8 +4054,8 @@ handleYBoundary
 	lda		#$0c						; Load Mask $0C (Bits 2, 3).
 
 handleBitwiseUpdate
-	eor		eventState					; Toggle State Bits based on alignment.
-	sta		eventState					; Store State.
+	eor		grappleWhipState			; Toggle state bits based on alignment.
+	sta		grappleWhipState			; Store state.
 	bne		jmpObjHitHandeler			; Return.
 
 checkBoundary
@@ -4261,7 +4267,7 @@ animateSpider:
 		lda		spiderRoomState				; Check main state
 		bmi		finishRoomHandle			; If Bit 7 set (Aggressive/Caught),
 											; skip passive animation updates
-		bit		globalStateFlag				; Check if a major event
+		bit		gameEventFlag				; Check if a major event
 		bmi		finishRoomHandle			; If so, skip
 		and		#$07						; Mask lower 3 bits (Animation Timer)
 		bne		updateSpiderSpriteState	; If timer != 0, go update sprite state shadow
@@ -4282,7 +4288,7 @@ valleyOfPoisonRoomHandler:
 		lda		#$80						; Set Bit 7 ($80) in Screen Event State.
 		sta		screenEventState			; screenEventState = $80 (Active).
 		ldx		#$00						; X = 0.
-		bit		globalStateFlag				; Check Major Event Flag
+		bit		gameEventFlag				; Check major event flag
 		bmi		thiefEscape					;  If Major Event Set (Negative),
 											; Enter thief escape mode.
 		bit		pickupStatusFlags			; Check Pickup Status (Bit 6 = Overflow).
@@ -4351,10 +4357,10 @@ faceThiefLeft:
 		lda		p0PosY						; Load Thief Y
 		cmp		#$4a						; Check Bound.
 		bcs		swarmOffscreen				; If >= $4A, Skip.
-		ldy		EventStateOffset			; Load Swarm Timer/State.
+		ldy		swarmEventCounter			; Load swarm spawn counter.
 		beq		swarmOffscreen				; If 0, Skip.
 		dey									; Decrement.
-		sty		EventStateOffset			; Update State.
+		sty		swarmEventCounter			; Update counter.
 		ldy		#$8e						; Default Y.
 		adc		#$03						; Add 3 to thief Y location
 		sta		m0PosY						; Set swarm Y near Thief.
@@ -4473,7 +4479,7 @@ updateMesaSideRoom:
 		lda		#$02						; Load 2.
 		and		mesaSideState				; Check Bit 1 of state.
 		bne		indyVsGravity				; Branch if set.
-		sta		eventState					; Clear eventState if bit 1 was clear
+		sta		grappleWhipState			; Clear grapple state if bit 1 was clear
 		lda		#$0b						; Load $0B.
 		sta		p0PosY						; Set Object Vertical Position?
 
@@ -4539,7 +4545,7 @@ bribeCheck:
 		sty		snakePosY					; Set snakeVertPos.
 		inc		indyPosX					; Increment Indy X (49).
 		lda		#$80						; Set Bit 7.
-		sta		globalStateFlag				; Trigger Major Event (bribe success)
+		sta		gameEventFlag				; Trigger major event (bribe success)
 
 finishRoomHandler:
 		jmp		jmpSetupNewRoom				; Return.
@@ -4553,7 +4559,7 @@ treasureRoomHandler:
 		dey									; Decrement.
 		bne		finishRoomHandler			; If not 1, return (Delay loop).
 
-		lda		treasureIndex				; Get Treasure Index/State.
+		lda		treasureRoomState			; Get treasure room state.
 		and		#$07						; Mask bits 0-2.
 		bne		advanceTreasureState		; Branch if not 0
 											; (Item processing active).
@@ -4581,8 +4587,8 @@ resetTreasureCountdown:
 spawnTreasureItem:
 		ldy		temp0						; Restore Y index
 		tya									; Move to A.
-		ora		treasureIndex				; Combine with current Index.
-		sta		treasureIndex				; Update Treasure Index.
+		ora		treasureRoomState			; Combine with current state.
+		sta		treasureRoomState			; Update treasure room state.
 		lda		treasureRoomItemPosY,y		; Get Vertical Position for Item.
 		sta		p0PosY						; Set P0 Vertical Position (Item).
 		lda		treasureRoomItemOffset,y	; Get Graphic Offset for Item.
@@ -4592,9 +4598,9 @@ spawnTreasureItem:
 advanceTreasureState:
 		cmp		#$04						; Check State Phase.
 		bcs		resetTreasureCountdown			; Branch if >= 4 (Reset).
-		rol		treasureIndex				; Rotate State
+		rol		treasureRoomState			; Rotate state left
 		sec									; Set Carry.
-		ror		treasureIndex				; Rotate State.
+		ror		treasureRoomState			; Rotate state right (set bit 7).
 		bmi		resetTreasureCountdown			; Branch if Negative.
 
 mapRoomHandler:
@@ -4901,7 +4907,7 @@ enableBall
 
 		cpx		#ID_ARK_ROOM				; Check Ark Room.
 		beq		initKernalJumps				; Branch if Ark Room.
-		bit		globalStateFlag				; Check Major Event.
+		bit		gameEventFlag				; Check major event.
 		bmi		initKernalJumps				; Branch if Negative (Bit 7 Set).
 		ldy		SWCHA						; Read Joystick.
 		sty		REFP1						; Set Reflection P1
