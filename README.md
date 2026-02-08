@@ -55,6 +55,248 @@ The game uses a **2-bank ROM** (8KB total) with bank-switching via strobes at `B
 - **Bank 0** (`BANK0TOP` = `$1000`, reorg'd to `$D000`): Contains game logic — collision handling, inventory management, room event handlers, scoring, movement, input processing, and sound.
 - **Bank 1** (`BANK1TOP` = `$2000`, reorg'd to `$F000`): Contains the display kernels, sprite data, playfield graphics, room handler dispatch, and music frequency tables.
 
+### Game Loop
+
+Like all Atari 2600 games, the program is structured around the NTSC television signal — one complete pass through the loop produces one frame of video (~60 fps). The frame is divided into four phases: **VSYNC**, **VBLANK**, **Kernel** (visible picture), and **Overscan**. Game logic is split across VBLANK and Overscan to stay within the CPU time budgets of each phase, and the two ROM banks are switched in and out at specific points every frame.
+
+#### Frame Overview
+
+```
+newFrame ──spin on INTIM──►
+startNewFrame
+  ├── VSYNC (3 scanlines)
+  │     Timers, weapon clamp, RESET check
+  │
+  ├── VBLANK (~37 scanlines of CPU time)
+  │   ├── [Bank 0] Main game logic
+  │   │     Ark Room / title ── Snake AI ──
+  │   │     Event checks ── Input & movement ──
+  │   │     Inventory ── Item use ──
+  │   │     Sprite animation ── Mesa scroll
+  │   │
+  │   ├── [Bank 1] Room-specific handler
+  │   │     Per-room AI, physics, spawning
+  │   │
+  │   └── [Bank 0] Pre-kernel setup
+  │         Colors, NUSIZ, CTRLPF from tables
+  │         setObjPosX: position all 5 TIA objects
+  │         Spin on INTIM until VBLANK expires
+  │
+  ├── VISIBLE KERNEL (~192 scanlines)
+  │   ├── [Bank 1] drawScreen preamble (5 lines)
+  │   │     Clear collisions, set initial PF, enable TIA
+  │   │
+  │   ├── [Bank 1] Room kernel dispatch (160 lines)
+  │   │     staticSpriteKernel ──── rooms 0–5
+  │   │     scrollingPlayfieldKernel ── rooms 6–10
+  │   │     multiplexedSpriteKernel ── rooms 11–12
+  │   │     arkPedestalKernel ──── room 13
+  │   │
+  │   └── [Bank 1] drawInventoryKernel (~27 lines)
+  │         6-item inventory strip, selection cursor
+  │
+  └── OVERSCAN (~30 scanlines of CPU time)
+      ├── [Bank 1] Post-kernel logic
+      │     Sound/music ── Timepiece sprite ──
+      │     Event animation ── Death sequence ──
+      │     Inventory cycling ── Grapple state
+      │
+      └── [Bank 0] Collision handling
+            Weapon hits ── Indy vs objects ──
+            Room-specific pickups ── Idle handlers
+            ──► newFrame (loop closes)
+```
+
+#### Phase 1: VSYNC (3 Scanlines)
+
+**Entry point**: `startNewFrame`
+
+The CPU asserts the VSYNC signal for exactly 3 scanlines, during which it performs lightweight housekeeping:
+
+| Scanline | Work |
+|----------|------|
+| 1 | Assert VSYNC. Clamp weapon position — if `weaponPosY` ≤ `$50`, center `weaponPosX`. Increment `frameCount`; every 64th frame (`and #$3f`) increments `timeOfDay`. If `eventTimer` is negative, decrement it (paralysis/cutscene countdown). |
+| 2 | Check for game restart — if `arkRoomStateFlag` bit 7 is set (endgame state) AND the RESET switch is pressed, jump to `startGame`. |
+| 3 | De-assert VSYNC. Arm the VBLANK timer: `TIM64T = VBLANK_TIME` (44). This gives 44 × 64 = 2,816 cycles ≈ 37 scanlines of CPU time for game logic. |
+
+#### Phase 2: VBLANK (~37 Scanlines of CPU Time)
+
+All game logic runs while the TIA outputs a blank screen. Work is spread across both ROM banks with two bank switches during this phase.
+
+##### Bank 0 — Main Game Logic
+
+This is the largest block of game code, executing in order every frame:
+
+| Step | Label | Description |
+|------|-------|-------------|
+| 1 | `frameFirstLine` | **Game-over check**: if `gameEventFlag` overflows to 0, call `getFinalScore` and transition to the Ark Room. |
+| 2 | `checkShowDevInitials` | **Ark Room / title screen**: if in the Ark Room, play Raiders March, check Yar bonus for HSW initials easter egg. Otherwise skip. |
+| 3 | *(Ark Room only)* | **Pedestal elevator**: slowly lower Indy to his score height. Check fire button for restart. Set `arkRoomStateFlag` to enable RESET. |
+| 4 | `HandleEasterEgg` | **Cutscene check**: if `screenEventState` bit 6 is set, advance the Ark/snake reveal sequence. |
+| 5 | `advanceArkSeq` | **Snake AI**: every 4th frame, grow snake sprite, steer toward Indy using `snakePosXOffsetTable`, update `ballPosX`/`ballPosY` and `kernelRenderState`. |
+| 6 | `configSnake` | **Snake kernel setup**: load `kernelDataPtrLo/Hi` and `kernelDataIndex` from `snakeMotionTable` for the wiggling ball sprite. |
+| 7 | `checkMajorEventDone` | If `gameEventFlag` bit 7 is set (death in progress), skip to `finishedScrollUpdate` — bypass normal input. |
+| 8 | `checkGameScriptTimer` | If `eventTimer` is negative (Indy paralyzed/frozen), force standing sprite and skip input. |
+| 9 | `branchOnFrameParity` | **Frame parity split**: even frames run full input processing. Odd frames skip to `clearItemUseOnButtonRelease`. |
+| 10 | `gatePlayerTriggeredEvent` | **Weapon aiming**: joystick moves the weapon crosshair (missile 1) with boundary clamping. |
+| 11 | `handleIndyMove` | **Movement**: read `SWCHA` → `getMoveDir` → move Indy → check room boundary override tables (`CheckRoomOverrideCondition`) → trigger room transitions if a boundary is crossed. |
+| 12 | `HandleIInventorySelect` | **Left controller**: fire button cycles through inventory slots. Handles item drop, bullet reload (+3), and shovel placement. |
+| 13 | `clearItemUseOnButtonRelease` | Clears `USING_GRENADE_OR_PARACHUTE` flag on right fire button release. |
+| 14 | `handleItemUse` | **Right controller**: fire button dispatches the selected item — grenade throw/cook timer, parachute deploy, grapple hook launch, shovel dig, Ankh warp, revolver fire, whip strike. This is the largest single block in VBLANK. |
+| 15 | `updateIndyParachuteSprite` | **Sprite selection**: choose Indy's current sprite pointer — parachute sprite, standing sprite, or walk-cycle animation (advances frame on a timer). |
+| 16 | `handleMesaScroll` | **Vertical scrolling**: in Mesa Field or Valley of Poison, shift the camera offset (`roomObjectVar`) and adjust all object Y positions to scroll the world. |
+
+##### Bank Switch → Bank 1: Room Handlers
+
+At `finishedScrollUpdate`, the code writes `selectRoomHandler` as the target address and jumps through the `jumpToBank1` trampoline.
+
+`selectRoomHandler` dispatches via `roomHandlerJmpTable` — each room has its own handler that runs room-specific AI and physics:
+
+| Room | Handler | Key Logic |
+|------|---------|-----------|
+| Treasure Room | `treasureRoomHandler` | Item cycle timer, basket availability, treasure spawning |
+| Marketplace | *(none — immediate return)* | — |
+| Entrance Room | `entranceRoomHandler` | Sets `screenEventState = $40` |
+| Black Market | `blackMarketRoomHandler` | Lunatic/blocker positioning, bribe check |
+| Map Room | `mapRoomHandler` | Sun height from `timeOfDay`, Head of Ra beam, movement constraints |
+| Mesa Side | `mesaSideRoomHandler` | Parachute/freefall physics, gravity, horizontal input |
+| Temple Entrance | `templeEntranceRoomHandler` | Timepiece placement, room graphics from `entranceRoomEventState` |
+| Spider Room | `spiderRoomHandler` | Spider AI (passive→aggressive), web positioning, animation |
+| Shining Light | `roomOfShiningLightHandler` | Chase AI, dungeon secret exit check |
+| Mesa Field | `mesaFieldRoomHandler` | Pins P0/M0/Ball to center Y (`$7F`) for scrolling |
+| Valley of Poison | `valleyOfPoisonRoomHandler` | Thief chase/escape AI, tsetse swarm spawning |
+| Thieves' Den | `thievesDenRoomHandler` | Moves 5 thieves with left/right boundary bounce |
+| Well of Souls | `WellOfSoulsRoomHandler` | Sets mesa landing bonus, then shares thief-movement code |
+
+All handlers exit via `jmpSetupNewRoom`, which bank-switches back to Bank 0.
+
+##### Bank Switch → Bank 0: Pre-Kernel Setup
+
+`setupNewRoom` prepares the TIA for display:
+
+1. If `screenInitFlag` ≠ 0, call `updateRoomEventState` (one-shot room initialization), then clear the flag.
+2. Set `NUSIZ0` from the per-room `HMOVETable` entry.
+3. Set `CTRLPF` from `roomPFControlFlags` (playfield reflection/priority/ball size).
+4. Set `COLUBK`, `COLUPF`, `COLUP0`, `COLUP1` from per-room color tables.
+5. If in the Thieves' Den or Well of Souls, initialize 5 thief HMOVE positions from table data.
+
+Then `setObjPosX` positions all 5 TIA objects (P0, P1, M0, M1, Ball) using the coarse/fine HMOVE technique. This consumes **6 scanlines** (one WSYNC per object + one for HMOVE).
+
+Finally, `waitTime` spins on `INTIM` until the VBLANK timer expires, then bank-switches to Bank 1 for `drawScreen`.
+
+#### Phase 3: Visible Kernel (~192 Scanlines)
+
+**Entry point**: `drawScreen` (Bank 1)
+
+##### Kernel Preamble (5 Scanlines)
+
+The first few visible lines set up the display state:
+- Clear horizontal motion registers (`HMCLR`) and collision latches (`CXCLR`).
+- Write initial PF0/PF1/PF2 from per-room playfield tables.
+- Enable TIA output (`VBLANK = 0`), zero the `scanline` counter.
+- Disable the Ball sprite in the Map Room (used for the sun position mechanic).
+- Read `SWCHA` → set `REFP1` for Indy sprite reflection (skipped during death/Ark Room).
+- Three WSYNC+HMOVE pairs to settle object positions.
+- Dispatch to the appropriate kernel via RTS-trick: push return address from `kernelJumpTable` indexed by `KernelJumpTableIndex` for the current room, then `rts`.
+
+##### Room Kernels (160 Scanlines)
+
+The kernel index table maps each room to one of four kernels:
+
+| Index | Kernel | Rooms | Scanline Method |
+|-------|--------|-------|-----------------|
+| 0 | `staticSpriteKernel` | 0–5 | 2 scanlines/iteration, 80 iterations |
+| 2 | `scrollingPlayfieldKernel` | 6–10 | 2 scanlines/iteration, 80 iterations |
+| 4 | `multiplexedSpriteKernel` | 11–12 | State machine, variable per thief zone |
+| 6 | `arkPedestalKernel` | 13 | 1 scanline/iteration, ~160 lines |
+
+**`staticSpriteKernel`** (Treasure Room, Marketplace, Entrance, Black Market, Map Room, Mesa Side):
+Two scanlines per loop. Scanline 1: HMOVE, check snake/ball draw range, enable missiles M0 (web/swarm) and M1 (weapon) by comparing against their Y positions. Scanline 2: draw P0 sprite — bit 7 of the graphics data encodes inline TIA register writes (color/HMOVE) instead of shape data, allowing P0 to change color or position mid-frame. Enable the ball by scanline comparison.
+
+**`scrollingPlayfieldKernel`** (Temple Entrance, Spider Room, Shining Light, Mesa Field, Valley of Poison):
+Two scanlines per loop with playfield scrolling. On each iteration, the scanline is compared to `p0DrawStartLine` — above that boundary, the kernel indexes `(pf1GfxPtrLo),y` / `(pf2GfxPtrLo),y` with a scroll offset (`roomObjectVar`) to render the scrolling wall. Below that boundary, `dynamicGfxData` renders destructible dungeon wall segments or cleared passages. Both paths draw P0 and P1 (Indy) by scanline–vs–Y comparison. The ball object is driven through `(kernelDataPtrLo),y` for the snake wiggle animation.
+
+**`multiplexedSpriteKernel`** (Thieves' Den, Well of Souls):
+Displays 5 enemy thieves using a single P0 hardware sprite, repositioned between each thief's zone (~32 scanlines each). Operates as a state machine via `kernelRenderState`: **positioning phase** (bit 7) uses a coarse/fine delay loop to place RESP0, **drawing phase** (bit 6) streams `(p0GfxPtrLo),y` and `(kernelDataPtrLo),y` for sprite and color data across 16 lines. Between thief zones, P1 (Indy) is drawn using the PHP/stack trick — `txs` redirects the stack pointer so that `php` writes directly to TIA enable registers (`ENABL`/`ENAM1`/`ENAM0` at `$1F`/`$1E`/`$1D`).
+
+**`arkPedestalKernel`** (Ark Room — title and ending screen):
+Single-height scanlines (1 WSYNC per line). Lines 0–14: draw the Ark top/wings sprite with rainbow color cycling (only in win state). Lines 15–28: draw the Ark body with alternating gold patterns. Lines 29–143: draw Indy's standing sprite at the pedestal height determined by `adventurePoints` — above Indy is empty, below is the diamond-pattern `PedestalLiftSprite`. Lines 144–159: draw the pedestal base.
+
+##### Inventory Kernel (~27 Scanlines)
+
+All four room kernels converge at `drawInventoryKernel`, which draws the bottom-of-screen inventory strip:
+
+1. **2 lines**: Clear all sprites, fill PF1/PF2 solid (separator bar).
+2. **2 lines**: Set `NUSIZ0`/`NUSIZ1` to 3-copies-close mode, enable VDEL for both players, position P0/P1 for 48-pixel-wide multiplexed rendering.
+3. **1 line**: HMOVE to fine-position, set inventory item colors (gold), position ball (selection cursor).
+4. **1 line**: Clear playfield, set `COLUBK` to black.
+5. **5 lines**: Burgundy background border.
+6. **8 lines**: `drawInventoryItems` — render 6 inventory item sprites using the 48-pixel GRP0/GRP1 VDEL technique (write P0, P1, P0, P1, P0, P1 in rapid succession each line).
+7. **4 lines**: Clear sprites, reset VDEL/NUSIZ, draw selection cursor ball.
+8. **4 lines**: Final separator lines and overscan preparation.
+
+#### Phase 4: Overscan (~30 Scanlines of CPU Time)
+
+Immediately after the inventory kernel, the TIA is blanked (`VBLANK = $0F`) and the overscan timer is armed: `TIM64T = OVERSCAN_TIME` (36). This gives 36 × 64 = 2,304 cycles ≈ 30 scanlines. The stack pointer is also reset to `$FF` here.
+
+##### Bank 1 — Post-Kernel Logic
+
+| Step | Label | Description |
+|------|-------|-------------|
+| 1 | `updateSoundRegisters` | Process both TIA audio channels (X=1, then X=0). Set AUDC, AUDV, AUDF. Dispatch to `playRaidersMarch` (effect `$9C`) or `playFluteMelody` (effect `$84`) for sustained music playback. |
+| 2 | `finishUpdateSound` | If holding the Timepiece: toggle open/closed sprite on right fire press. If holding the Flute: activate Snake Charmer song. |
+| 3 | `updateEventState` | If `screenEventState` bit 7 is set: animate the on-screen event (move object toward target via `updateMoveToTarget`), update timepiece graphics pointer for the snake reveal animation. |
+| 4 | `UpdateInvItemPos` | Position 3 inventory display objects (X=2,3,4) via `UpdateInvObjPos` — converts item slot sprite pointers into on-screen X positions. |
+| 5 | *(death check)* | **Death dissolve sequence**: if `gameEventFlag` bit 7 is set, shrink `indySpriteHeight` by 1 line every 16 frames with a descending sound effect. At height < 3 (hat only), rotate the flag and pause for 60 frames. At frame 120: respawn with full height, decrement `livesLeft`. If `livesLeft` goes negative, set `gameEventFlag = $FF` (triggers game-over on the next frame's overflow check). |
+| 6 | `invItemSelectCycle` | If not in the Ark Room: read `SWCHA` left/right to cycle inventory selection. Handle hourglass → grapple initialization in Mesa Field. Drive the grapple state machine (incrementing stages, position alignment checks). |
+
+##### Bank Switch → Bank 0: Collision Handling
+
+At `jmpObjHitHandeler`, the code bank-switches to Bank 0 and enters the collision dispatch chain. This reads the TIA collision registers that were latched during the kernel:
+
+| Step | Label | Collision Register | Description |
+|------|-------|--------------------|-------------|
+| 1 | `checkObjectHit` | `CXM1P` | Weapon (M1) hit player/thief → flip thief direction, clear weapon, apply `thiefShotPenalty`. |
+| 2 | `checkWeaponHit` | `CXM1FB` | Weapon hit playfield → destroy dungeon wall segment (modify `dynamicGfxData` bitmask). |
+| 3 | `weaponObjHit` | `CXM1FB` bit 6 | Weapon hit ball/snake → kill the snake. |
+| 4 | `handleIndyVsObjHit` | `CXP1FB` | Indy hit playfield/ball → timepiece pickup, flute immunity check, tsetse fly paralysis, snake death. |
+| 5 | `handleMesaSideSecretExit` | `CXM0P` | Mesa Side: M0 collision enters Well of Souls; falling off (Indy Y ≥ `$4F`) enters Valley of Poison. |
+| 6 | `dispatchHits` | `CXPPMM` | Player-player collision → dispatches to room-specific handlers via `playerHitJumpTable` for pickups and interactions (whip, key, baskets, shovel, parachute landing, etc.). |
+| 7 | `playerHitDefaut` | `CXP1FB` | Secondary dispatch → `playfieldHitJumpTable` for wall/boundary collisions and idle room logic. |
+| 8 | `defaultIdleHandler` | `CXM0P` | M0-player collisions (spider web capture, tsetse swarm death), grenade detonation timer check. |
+
+After the collision chain completes, execution falls through to `newFrame`, which spins on `INTIM` waiting for the overscan timer to expire — and the cycle begins again.
+
+#### Bank Switching Mechanism
+
+Both banks contain a symmetric trampoline routine (`jumpToBank1` in Bank 0, `JumpToBank0` in Bank 1). The trampoline writes self-modifying code into zero-page RAM (`temp0`–`temp5`):
+
+```
+temp0: LDA $FFF8/$FFF9    ; reading the strobe address switches banks
+temp3: JMP <target>        ; then jumps to the target address
+```
+
+The caller sets `temp4`/`temp5` to the target address before jumping to the trampoline. Executing `jmp temp0` reads the bank strobe (switching ROM) and immediately jumps to the target label in the new bank.
+
+**Bank switches per frame** (in execution order):
+
+| # | Direction | Trigger | Target |
+|---|-----------|---------|--------|
+| 1 | Bank 0 → 1 | `finishedScrollUpdate` | `selectRoomHandler` (room-specific handler) |
+| 2 | Bank 1 → 0 | `jmpSetupNewRoom` | `setupNewRoom` (pre-kernel color/position setup) |
+| 3 | Bank 0 → 1 | `jmpDisplayKernel` | `drawScreen` (visible kernel + overscan) |
+| 4 | Bank 1 → 0 | `jmpObjHitHandeler` | `checkObjectHit` (collision dispatch) |
+
+Bank 1 also has a safety stub (`BANK1Start`) at its reset vector entry — it immediately reads `BANK0STROBE` to switch back to Bank 0 if Bank 1 is entered on power-on.
+
+#### Special States
+
+**Title / Ark Room**: The Ark Room (`ID_ARK_ROOM`, `$0D`) serves double duty as the title screen and the endgame screen. On cold boot, `startGame` sets `currentRoomId = ID_ARK_ROOM` and fills inventory with copyright text sprites. The VBLANK Ark Room logic plays the Raiders March, runs the pedestal elevator animation (lowering Indy to his score height), and checks the fire button for restart.
+
+**Death Sequence**: Setting `gameEventFlag` bit 7 triggers the death dissolve during overscan. Indy's sprite height shrinks by one line every 16 frames. Once only the hat remains (height < 3), the flag is rotated and the sprite disappears for 60 frames. At frame 120, Indy respawns at full height and `livesLeft` is decremented. If lives drop below zero, `gameEventFlag` is set to `$FF` — on the next frame, the VBLANK overflow check catches this and transitions to the Ark Room.
+
+**Room Transitions**: Triggered by the boundary override system in `handleIndyMove`. When Indy crosses a room edge (checked via `CheckRoomOverrideCondition` against per-room boundary tables), `currentRoomId` is changed and `initRoomState` reinitializes all per-room state — sprites, playfield pointers, object positions, and event flags. Special transitions include: Mesa Side fall into Valley of Poison (Y position check), M0 collision into Well of Souls, blown-open wall alignment into the Temple, and Ankh warp directly to Mesa Field.
+
 ### Display Kernels
 
 The game uses **4 different scanline kernels** selected via `KernelJumpTableIndex` and `kernelJumpTable`:
@@ -183,10 +425,10 @@ In `mapRoomHandler`, when Indy holds the Head of Ra and the sun (driven by `time
 `timeOfDay` increments every ~63 frames (roughly once per second), driven in the VBLANK section. It controls the timepiece display, basket item rotation, sun position, and Head of Ra timing.
 
 #### Scrolling (Mesa Field)
-Handled in `handleMesaScroll` — the camera offset `p0OffsetPosY` shifts all object positions when Indy nears screen edges, bounded by `MESA_MAP_MAX_HEIGHT` (`$50`).
+Handled in `handleMesaScroll` — the camera offset `roomObjectVar` shifts all object positions when Indy nears screen edges, bounded by `MESA_MAP_MAX_HEIGHT` (`$50`).
 
 #### Sound System
-Two channels with effect timers (`soundChan0EffectTimer`, `soundChan1EffectTimer`). The Raiders March plays from `raidersMarchFreqTable` when triggered with `RAIDERS_MARCH` (`$9C`). The flute melody uses `snakeCharmFreqTable` with `SNAKE_CHARM_SONG` (`$84`).
+Two channels with effect timers (`soundChan0Effect`, `soundChan1Effect`). The Raiders March plays from `raidersMarchFreqTable` when triggered with `RAIDERS_MARCH` (`$9C`). The flute melody uses `snakeCharmFreqTable` with `SNAKE_CHARM_SONG` (`$84`).
 
 #### Easter Egg (Yar)
 Triggered via `HandleEasterEgg` — finding Yar on the Flying Saucer Mesa sets `yarFoundBonus`. When combined with a high enough score, Howard Scott Warshaw's initials (`devInitialsGfx0` / `devInitialsGfx1`) appear in the inventory strip at `checkShowDevInitials`.
