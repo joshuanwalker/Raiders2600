@@ -256,14 +256,14 @@ At `jmpObjHitHandeler`, the code bank-switches to Bank 0 and enters the collisio
 
 | Step | Label | Collision Register | Description |
 |------|-------|--------------------|-------------|
-| 1 | `checkObjectHit` | `CXM1P` | Weapon (M1) hit player/thief → flip thief direction, clear weapon, apply `thiefShotPenalty`. |
+| 1 | `checkWeaponPlayerHit` | `CXM1P` | Weapon (M1) hit player/thief → flip thief direction, clear weapon, apply `thiefShotPenalty`. |
 | 2 | `checkWeaponHit` | `CXM1FB` | Weapon hit playfield → destroy dungeon wall segment (modify `dynamicGfxData` bitmask). |
 | 3 | `weaponObjHit` | `CXM1FB` bit 6 | Weapon hit ball/snake → kill the snake. |
 | 4 | `handleIndyVsObjHit` | `CXP1FB` | Indy hit playfield/ball → timepiece pickup, flute immunity check, tsetse fly paralysis, snake death. |
 | 5 | `handleMesaSideSecretExit` | `CXM0P` | Mesa Side: M0 collision enters Well of Souls; falling off (Indy Y ≥ `$4F`) enters Valley of Poison. |
 | 6 | `dispatchHits` | `CXPPMM` | Player-player collision → dispatches to room-specific handlers via `playerHitJumpTable` for pickups and interactions (whip, key, baskets, shovel, parachute landing, etc.). |
-| 7 | `playerHitDefaut` | `CXP1FB` | Secondary dispatch → `playfieldHitJumpTable` for wall/boundary collisions and idle room logic. |
-| 8 | `defaultIdleHandler` | `CXM0P` | M0-player collisions (spider web capture, tsetse swarm death), grenade detonation timer check. |
+| 7 | `playerHitDefault` | `CXP1FB` | Secondary dispatch → `playfieldHitJumpTable` for wall/boundary collisions and idle room logic. |
+| 8 | `checkMissile0Hit` | `CXM0P` | M0-player collisions (spider web capture, tsetse swarm death), grenade detonation timer check. |
 
 After the collision chain completes, execution falls through to `newFrame`, which spins on `INTIM` waiting for the overscan timer to expire — and the cycle begins again.
 
@@ -285,7 +285,7 @@ The caller sets `temp4`/`temp5` to the target address before jumping to the tram
 | 1 | Bank 0 → 1 | `finishedScrollUpdate` | `selectRoomHandler` (room-specific handler) |
 | 2 | Bank 1 → 0 | `jmpSetupNewRoom` | `setupNewRoom` (pre-kernel color/position setup) |
 | 3 | Bank 0 → 1 | `jmpDisplayKernel` | `drawScreen` (visible kernel + overscan) |
-| 4 | Bank 1 → 0 | `jmpObjHitHandeler` | `checkObjectHit` (collision dispatch) |
+| 4 | Bank 1 → 0 | `jmpObjHitHandeler` | `checkWeaponPlayerHit` (collision dispatch) |
 
 Bank 1 also has a safety stub (`BANK1Start`) at its reset vector entry — it immediately reads `BANK0STROBE` to switch back to Bank 0 if Bank 1 is entered on power-on.
 

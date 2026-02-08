@@ -469,7 +469,7 @@ coarseMoveObj
 	sta		HMOVE
 	jmp		jmpDisplayKernel
 
-checkObjectHit:
+checkWeaponPlayerHit:
 	bit		CXM1P						; check player collision with Indy bullet
 	bpl		checkWeaponHit				; branch if no player collision
 	ldx		currentRoomId				; get the current screen id
@@ -554,7 +554,7 @@ checkDungeonWallHit:
 handleLeftWall:
 	lda		weaponPosX					; get bullet or whip horizontal position
 	cmp		#$30						; Compare it to 48 (left side boundary threshold)
-	bcs		handleRighrWall				; If bullet is at or beyond 48, branch to right-side logic
+	bcs		handleRightWall				; If bullet is at or beyond 48, branch to right-side logic
 	sbc		#$10						; Subtract 16 from position
 										; (adjusting to fit into the masking table index range)
 	eor		#$1f						; XOR with 31 to mirror or normalize the range
@@ -575,7 +575,7 @@ maskDungeonWall:
 										; of the wall)
 	jmp		clearWeaponState			; unconditional branch
 
-handleRighrWall:
+handleRightWall:
 	sbc		#$71						; Subtract 113 from bullet/whip horizontal position
 	cmp		#$20						; Compare result to 32
 	bcc		maskDungeonWall				; apply wall mask
@@ -610,7 +610,7 @@ handleIndyVsObjHit:
 
 	; --- Damage / Effect Logic --
 	bit		screenEventState			; Check Event State (Snakes vs Flies?)
-	bpl		setWellOfSoulsEntryEvent	; If Bit 7 is CLEAR, it's a Snake/Lethal
+	bpl		triggerSnakeDeathEvent	; If Bit 7 is CLEAR, it's a Snake/Lethal
 										; Jump to Death Logic.
 	; --- Tsetse Fly Paralysis ---
 	; If Bit 7 is SET, it implies Tsetse Flies (Spider Room / Valley).
@@ -620,7 +620,7 @@ handleIndyVsObjHit:
 	sta		eventTimer					; Set "Paralysis" Timer (Indy freezes).
 	bne		handleMesaSideSecretExit	; Return.
 
-setWellOfSoulsEntryEvent:
+triggerSnakeDeathEvent:
 	bvc		handleMesaSideSecretExit	; Fail-safe?
 	lda		#$80						; Set Bit 7.
 	sta		gameEventFlag				; Trigger major event
@@ -682,7 +682,7 @@ dispatchHits:
 	clc
 	ror		pickupStatusFlags
 continueToHitDispatch:
-	jmp		playerHitDefaut
+	jmp		playerHitDefault
 
 handlePlayerObjCollision:
 	lda		currentRoomId				; get the current screen id
@@ -783,7 +783,7 @@ playerHitInSpiderRoom:
 	lda		#%10000000					; Set Bit 7
 	sta		gameEventFlag				; Trigger major event flag
 resumeHitDispatch:
-	jmp		playerHitDefaut
+	jmp		playerHitDefault
 
 playerHitInMesaSide:
 	bit		mesaSideState				;Check event state flags
@@ -807,7 +807,7 @@ removeParachute:
 	sec
 	jsr		removeItem					; carry set...take away selected item
 continueAfterParachute:
-	jmp		playerHitDefaut
+	jmp		playerHitDefault
 
 playerHitInMarket:
 	; This handles collision with the 3 Baskets in the Marketplace.
@@ -827,7 +827,7 @@ playerHitInMarket:
 	and		inputActionState			; Preserve current movement
 	ora		#$43						; Force bits 6, 1, and 0 ($43).
 	sta		inputActionState			; Set "Bumping/Shoving"
-	jmp		playerHitDefaut		; Resume
+	jmp		playerHitDefault		; Resume
 
 checkIndyYForMarketFlags:
 	cpy		#$20						; Check Zone (Row $20)
@@ -837,7 +837,7 @@ clearMarketFlags:
 	; Zone 2: Between $20 and $3A (Middle path)
 	lda		#$00
 	sta		inputActionState			; Clear movement modification flags.
-	jmp		playerHitDefaut		; Resume
+	jmp		playerHitDefault		; Resume
 
 setMarketFlags:
 	cpy		#$09						; Check Topmost Boundary ($09)
@@ -846,7 +846,7 @@ setMarketFlags:
 	and		inputActionState
 	ora		#$42						; Force bits 6 and 1 ($42).
 	sta		inputActionState			; Apply "Shove" physics.
-	jmp		playerHitDefaut		; Resume
+	jmp		playerHitDefault		; Resume
 
 indyTouchMarketBaskets:
 	; --- Basket Content Logic ---
@@ -891,7 +891,7 @@ checkAddItemToInv:
 	txa									; Move Item ID to A
 	jsr		placeItemInInventory		; Add to inventory
 exitGiveItem:
-	jmp		playerHitDefaut		; Resume
+	jmp		playerHitDefault		; Resume
 
 
 playerHitInBlackMarket:
@@ -909,7 +909,7 @@ resetInteractionFlags:
 	sta		inputActionState
 
 resumeScreenLogic:
-	jmp		playerHitDefaut
+	jmp		playerHitDefault
 
 pickMarketItemByTime:
 	ldx		#ID_BLACK_MARKET_GRENADE	; Load X with the grenade item ID (for black market)
@@ -942,7 +942,7 @@ checkMiddleMarketZone:
 
 playerHitInTempleEntrance:
 	inc		indyPosX					; Push Indy right
-	bne		playerHitDefaut				; Resume
+	bne		playerHitDefault				; Resume
 
 playerHitInEntranceRoom:
 	; -----------------------------------------------------------------------
@@ -958,7 +958,7 @@ playerHitInEntranceRoom:
 	; --- Whip Pickup Logic ---
 	lda		#ID_INVENTORY_WHIP			; Load Whip Item ID
 	jsr		placeItemInInventory		; Attempt to add to inventory
-	bcc		playerHitDefaut				; If inventory full (Carry Clear), exit
+	bcc		playerHitDefault				; If inventory full (Carry Clear), exit
 
 	; Update Room State to remove Whip graphic
 	ror		entranceRoomState
@@ -967,7 +967,7 @@ playerHitInEntranceRoom:
 	lda		#$42						; Set High Bit of rotated value
 										; Reset P0 object vertical pos
 	sta		$df							; (Move it out of reach)
-	bne		playerHitDefaut				; Resume
+	bne		playerHitDefault				; Resume
 
 checkRockRange:
 	; --- Rock Collision Logic ---
@@ -975,13 +975,13 @@ checkRockRange:
 	cmp		#$16						; Top Boundary Check (22)
 	bcc		pushIndyOutOfRock			; If Y < 22, Hit "Top Edge" of Rock
 	cmp		#$1f						; Bottom Bound
-	bcc		playerHitDefaut				; If 22 <= Y < 31, WALK THROUGH
+	bcc		playerHitDefault				; If 22 <= Y < 31, WALK THROUGH
 
 	; If Y >= 31 (and < 63 from earlier check), fall through to push left.
 pushIndyOutOfRock:
 	dec		indyPosX					; Push Indy Left
 
-playerHitDefaut:
+playerHitDefault:
 	lda		currentRoomId				; get the current screen id
 	asl									; multiply screen id by 2 (word table)
 	tax									; Move the result to X
@@ -996,9 +996,9 @@ playerHitDefaut:
 	rts									; jump to Player / Playfield collision strategy
 
 screenIdleLogicDispatcher:
-	lda		roomleHandlerJmpTable+1,x	; Load high byte of default screen behavior routine
+	lda		roomIdleHandlerJmpTable+1,x	; Load high byte of default screen behavior routine
 	pha									; push to stack
-	lda		roomleHandlerJmpTable,x		; Load low byte of default screen behavior routine
+	lda		roomIdleHandlerJmpTable,x		; Load low byte of default screen behavior routine
 	pha									; push to stack
 	rts									; Indirect jump to it (no collision case)
 
@@ -1024,7 +1024,7 @@ putIndyInMesaSide:
 	rts									; Otherwise, return
 
 FailSafeToCollisionCheck:
-	jmp		defaultIdleHandler
+	jmp		checkMissile0Hit
 
 
 initFallbackEntryPosition:
@@ -1072,7 +1072,7 @@ nudgeIndyLeft:
 	sty		indyPosX					; Apply horizontal adjustment
 	bne		setIndyToNormalMove			; Continue
 
-exitToTempleEnterance:
+exitToTempleEntrance:
 	; -----------------------------------------------------------------------
 	; RIGHT WALL COLLISION (EXIT TO TEMPLE ENTRANCE)
 	; -----------------------------------------------------------------------
@@ -1122,7 +1122,7 @@ indyMoveOnInput:
 setIndyToNormalMove:
 	lda		#$05
 	sta		soundChan0Effect			; Set Indy walk state
-	bne		defaultIdleHandler			; unconditional branch
+	bne		checkMissile0Hit			; unconditional branch
 
 indyEnterHole:
 	rol		playerInputState
@@ -1136,7 +1136,7 @@ setIndyToTriggeredState:
 undoInputBitShift:
 	ror		playerInputState
 
-defaultIdleHandler:
+checkMissile0Hit:
 	bit		CXM0P						; check player collisions with missile0
 	bpl		checkGrenadeDetonation		; branch if didn't collide with Indy
 	ldx		currentRoomId				; get the current screen id
@@ -2771,49 +2771,49 @@ dropItemTable:						; ID 0: Empty/Default (No Action)
 	.word dropGrappleItem-1			; ID 18: Hourglass
 
 playerHitJumpTable
-	.word playerHitDefaut-1					; Treasure Room
+	.word playerHitDefault-1					; Treasure Room
 	.word playerHitInMarket-1				; Marketplace
 	.word playerHitInEntranceRoom-1			; Entrance Room
 	.word playerHitInBlackMarket-1			; Black Market
-	.word playerHitDefaut-1					; Map Room
+	.word playerHitDefault-1					; Map Room
 	.word playerHitInMesaSide-1				; Mesa Side
 	.word playerHitInTempleEntrance-1		; Temple Entrance
 	.word playerHitInSpiderRoom-1			; Spider Room
 	.word playerHitInRoomOfShiningLight-1	; Room of the Shining Light
-	.word playerHitDefaut-1					; Mesa Field
+	.word playerHitDefault-1					; Mesa Field
 	.word playerHitInValleyOfPoison-1		; Valley of Poison
 	.word playerHitInThievesDen-1			; Thieves Den
 	.word playerHitInWellOfSouls-1			; Well of Souls
 
 playfieldHitJumpTable:
-	.word defaultIdleHandler-1				; Treasure Room
-	.word defaultIdleHandler-1				; Marketplace
-	.word exitToTempleEnterance-1			; Entrance Room
-	.word defaultIdleHandler-1				; Black Market
-	.word defaultIdleHandler-1				; Map Room
+	.word checkMissile0Hit-1				; Treasure Room
+	.word checkMissile0Hit-1				; Marketplace
+	.word exitToTempleEntrance-1			; Entrance Room
+	.word checkMissile0Hit-1				; Black Market
+	.word checkMissile0Hit-1				; Map Room
 	.word indyMoveOnInput-1					; Mesa Side
 	.word stopIndyMovInTemple-1				; Temple Entrance
 	.word indyMoveOnInput-1					; Spider Room
 	.word playerHitInRoomOfShiningLight-1	; Room of the Shining Light
-	.word defaultIdleHandler-1				; Mesa Field
+	.word checkMissile0Hit-1				; Mesa Field
 	.word indyEnterHole-1					; Valley of Poison
-	.word defaultIdleHandler-1				; Thieves Den
-	.word defaultIdleHandler-1				; Well of Souls
+	.word checkMissile0Hit-1				; Thieves Den
+	.word checkMissile0Hit-1				; Well of Souls
 
-roomleHandlerJmpTable:
-	.word defaultIdleHandler-1				; Treasure Room
-	.word defaultIdleHandler-1				; Marketplace
+roomIdleHandlerJmpTable:
+	.word checkMissile0Hit-1				; Treasure Room
+	.word checkMissile0Hit-1				; Marketplace
 	.word setIndyToTriggeredState-1			; Entrance Room
-	.word defaultIdleHandler-1				; Black Market
+	.word checkMissile0Hit-1				; Black Market
 	.word initFallbackEntryPosition-1		; Map Room
-	.word defaultIdleHandler-1				; Mesa Side
-	.word defaultIdleHandler-1				; Temple Entrance
-	.word defaultIdleHandler-1				; Spider Room
-	.word defaultIdleHandler-1				; Room of the Shining Light
+	.word checkMissile0Hit-1				; Mesa Side
+	.word checkMissile0Hit-1				; Temple Entrance
+	.word checkMissile0Hit-1				; Spider Room
+	.word checkMissile0Hit-1				; Room of the Shining Light
 	.word warpToMesaSide-1					; Mesa Field
 	.word setIndyToTriggeredState-1			; Valley of Poison
-	.word defaultIdleHandler-1				; Thieves Den
-	.word defaultIdleHandler-1				; Well of Souls
+	.word checkMissile0Hit-1				; Thieves Den
+	.word checkMissile0Hit-1				; Well of Souls
 
 placeItemInInventory
 	ldx		inventoryItemCount				; get number of inventory items
@@ -4086,9 +4086,9 @@ jmpObjHitHandeler
 	; BANK SWITCH RETURN
 	; Return to CheckObjectCollisions in Bank 0.
 	; --------------------------------------------------------------------------
-	lda		#<checkObjectHit
+	lda		#<checkWeaponPlayerHit
 	sta		temp4
-	lda		#>checkObjectHit
+	lda		#>checkWeaponPlayerHit
 	sta		temp5
 JumpToBank0
 	lda		#LDA_ABS
