@@ -242,24 +242,29 @@ pickupItemStatus		= $c7	; Bitmask: Global "has item been found" flags (1=found)
 
 ;----------------------------------------------------------------------------
 ; Object Positioning (Kernel Variables)
+; Two parallel arrays for TIA object positions:
+;   X array: p0PosX[0..4] = $c8-$cc  (P0, P1, M0, M1, BL)
+;   Y array: p0PosY[0..4] = $ce-$d2  (P0, P1, M0, M1, BL)
+; Index 5 ($cd/$d3) is a virtual slot — the static AI chase target
+; used by updateMoveToTarget when Y=5.
 ;----------------------------------------------------------------------------
-p0PosX					= $c8	; Player 0 (Usually Enemy/Object) X Position
-indyPosX				= $c9	; Player 1 (Indy) X Position
-m0PosX					= $ca	; Missile 0 (Web/Swarm/Bullet) X Position
-weaponPosX				= $cb	; Missile 1 (Whip/Bullet/Grapple) X Position
-indyPosXSet				= $cc	; Target X position for forced movement events
-unused_CD				= $cd	; Unused / Temp
-p0PosY					= $ce	; Player 0 Y Position
-indyPosY				= $cf	; Player 1 (Indy) Y Position
-m0PosY					= $d0	; Missile 0 Y Position
-weaponPosY				= $d1	; Missile 1 Y Position (Whip tip/Bullet)
-ballPosY				= $d2	; Ball Y Position (Snake/Timepiece graphics)
-targetPosY				= $d3	; Target Y position for AI movement logic
-objectState				= $d4	; General object animation phase / state
-snakePosY				= $d5	; Vertical position specifically for Snake/Dungeon Guardian
-auxDataPtrLo			= $d6	; Generic Pointer Low
-auxDataPtrHi			= $d7	; Generic Pointer High
-auxDataIndex			= $d8	; Generic Index/Offset
+p0PosX					= $c8	; [0] Player 0 (Enemy/Object) X Position
+indyPosX				= $c9	; [1] Player 1 (Indy) X Position
+m0PosX					= $ca	; [2] Missile 0 (Web/Swarm) X Position
+weaponPosX				= $cb	; [3] Missile 1 (Whip/Bullet/Grapple) X Position
+ballPosX				= $cc	; [4] Ball X Position (Snake body / Timepiece / Blocker)
+targetPosX				= $cd	; [5] AI chase target X (static waypoint for updateMoveToTarget)
+p0PosY					= $ce	; [0] Player 0 Y Position
+indyPosY				= $cf	; [1] Player 1 (Indy) Y Position
+m0PosY					= $d0	; [2] Missile 0 Y Position
+weaponPosY				= $d1	; [3] Missile 1 (Weapon) Y Position
+ballPosY				= $d2	; [4] Ball Y Position (Snake body / Timepiece / Blocker)
+targetPosY				= $d3	; [5] AI chase target Y (static waypoint for updateMoveToTarget)
+kernelRenderState		= $d4	; Room-specific render state (snake wiggle / dungeon wall offset / thief FSM)
+snakePosY				= $d5	; Snake/Ball coarse-Y draw threshold for kernel scanline check
+kernelDataPtrLo			= $d6	; Kernel secondary data pointer Lo (snake motion / thief color / timepiece gfx)
+kernelDataPtrHi			= $d7	; Kernel secondary data pointer Hi
+kernelDataIndex			= $d8	; Kernel data index (snake motion offset / PF register selector)
 
 ;----------------------------------------------------------------------------
 ; Graphics Pointers & Buffers
@@ -524,7 +529,7 @@ checkWeaponHit:
 	bne		weaponObjHit				; did we hit the snake?
 checkDungeonWallHit:
 	lda		weaponPosY					; get bullet or whip vertical position
-	sbc		objectState					; subtract dungeon wall height
+	sbc		kernelRenderState					; subtract dungeon wall height
 	lsr									; divide by 4 total
 	lsr
 	beq		handleLeftWall				; if zero, left wall hit
@@ -614,7 +619,7 @@ setWellOfSoulsEntryEvent:
 	bne		handleMesaSideSecretExit	; Return.
 
 timePieceTouch:
-	lda		auxDataPtrLo
+	lda		kernelDataPtrLo
 	cmp		#<timeSprite
 	bne		handleMesaSideSecretExit
 	lda		#ID_INVENTORY_TIME_PIECE
@@ -1305,7 +1310,7 @@ advanceArkSeq
 	bcs		setIndyArkLevel				; If Indy is right of x=$20, skip
 	lda		#$20
 setIndyArkLevel
-	sta		indyPosXSet					; Store Indys forced horizontal position?
+	sta		ballPosX					; Set snake/ball center X position
 incrementArkSeq
 	inx
 	stx		p0SpriteHeight				; Increment and store progression
@@ -1326,12 +1331,12 @@ snakeMove
 	sta		snakePosY					; Update internal Y
 
 	; --- Steering Calculation ---
-	; The snake "Steers" by adding offsets to the 'indyPosXSet' variable.
+	; The snake "Steers" by adding offsets to the 'ballPosX' variable.
 	; It tries to align its center column with Indy.
-	lda		objectState					; Load current Wiggle Frame
+	lda		kernelRenderState					; Load current Wiggle Frame
 	and		#$03
 	tax
-	lda		objectState					; Load state again
+	lda		kernelRenderState					; Load state again
 	lsr									; Get top nibble (Direction/Intensity)
 	lsr
 	tay									; Y = Steering Mode
@@ -1339,7 +1344,7 @@ snakeMove
 	clc
 	adc		snakePosXOffsetTable,y		; Add Steering offset
 	clc
-	adc		indyPosXSet					; Add to Snake's Center X Position
+	adc		ballPosX					; Add to Snake's Center X Position
 										; (follows Indy)
 
 	; --- Boundary & Proximity Checks ---
@@ -1368,21 +1373,21 @@ updateSnakeMove
 	asl
 	asl
 	sta		temp0						; Store steering factor upper nibble
-	lda		objectState
+	lda		kernelRenderState
 	and		#$03
 	tax
 	lda		snakePosXOffsetTable,x
 	clc
-	adc		indyPosXSet					; Set base position towards Indy
-	sta		indyPosXSet
+	adc		ballPosX					; Set base position towards Indy
+	sta		ballPosX
 
 	; --- Resolve Final State ---
-	lda		objectState
+	lda		kernelRenderState
 	lsr
 	lsr
 	ora		temp0						; Combine new Steering Factor
 										; (High Nibble) with old state
-	sta		objectState					; Save
+	sta		kernelRenderState					; Save
 
 configSnake
 	; -----------------------------------------------------------------------
@@ -1395,26 +1400,26 @@ configSnake
 	; This routine sets up the pointer to the "Wiggle Table" (snakeMotionTable)
 	; so the Kernel knows how much to shift the ball left/right.
 	; -----------------------------------------------------------------------
-	lda		objectState
+	lda		kernelRenderState
 	and		#$03						; Mask Frame (0-3)
 	tax
 	lda		snakeMoveTableLSB,x			; Get Low Byte of Motion Table
-	sta		auxDataPtrLo				; Store in Generic Pointer Lo ($D6)
+	sta		kernelDataPtrLo				; Store snake motion table Lo
 	lda		#>snakeMotionTable0			; High Byte is fixed (Page $FA/FB)
-	sta		auxDataPtrHi				; Store High Byte
+	sta		kernelDataPtrHi				; Store High Byte
 
 	; -----------------------------------------------------------------------
 	; CALCULATE VERTICAL OFFSET
 	; -----------------------------------------------------------------------
 	; Determine where in the table to start reading based on animation state.
-	lda		objectState
+	lda		kernelRenderState
 	lsr
 	lsr
 	tax
 	lda		snakeMoveTableLSB,x			; Look up animation offset
 	sec
 	sbc		#$08						; Subtract 8 (Snake Height correction)
-	sta		auxDataIndex				; Store in Generic Index ($D8)
+	sta		kernelDataIndex				; Store snake motion start offset
 
 checkMajorEventDone
 	bit		gameEventFlag
@@ -1988,7 +1993,7 @@ setRoomAttr
 	cpx		#ID_THIEVES_DEN				; Is this the Thieves' Den?
 	bcc		placeObjectPosX
 	lda		#$20
-	sta		objectState					; set object state value
+	sta		kernelRenderState					; set object state value
 	ldx		#$04
 
 SetupThievesDenObjects
@@ -2031,7 +2036,7 @@ clearStateLoop
 	bne		clearStateLoop				; Unconditional loop to write new value
 exitStateClear
 	lda		#$fc						; Load setup value
-	sta		auxDataPtrHi				; Store it to a specific control variable
+	sta		kernelDataPtrHi				; Store it to a specific control variable
 	rts									; Return from subroutine
 
 initRoomState
@@ -2156,7 +2161,7 @@ initTempleAndShiningLight
 	bne		initMesaFieldScrollState	; If neither, skip this routine
 
 	ldy		#$00
-	sty		auxDataIndex				; Clear Timepiece Sprite Index
+	sty		kernelDataIndex				; Clear Timepiece Sprite Index
 
 	ldy		#$40
 	sty		dynamicGfxData				; Set visual reference
@@ -2166,7 +2171,7 @@ initRoomOfShiningLight
 	ldy		#$ff
 	sty		dynamicGfxData				; Set mask to FF (Draw full bars)
 	iny									; y = 0
-	sty		auxDataIndex				; Clear pointers
+	sty		kernelDataIndex				; Clear pointers
 	iny									; y = 1
 enableDungeonWalls
 	sty		dungeonBlock1				; Enable Dungeon Wall Segments
@@ -2175,7 +2180,7 @@ enableDungeonWalls
 	sty		dungeonBlock4
 	sty		dungeonBlock5
 	ldy		#$39
-	sty		objectState					; Set Animation State for the Light
+	sty		kernelRenderState					; Set Animation State for the Light
 	sty		snakePosY					; Set snake enemy Y-position baseline
 initMesaFieldScrollState
 	cpx		#ID_MESA_FIELD				; Is this the Mesa Field?
@@ -3187,7 +3192,7 @@ scrollingPlayfieldKernel
 	sta		PF2							; Store in PF2.
 	bcc		drawIndySprite				; Branch to draw player sprites.
 DungeonWallScanlineHandler
-	sbc		objectState					; Adjust for snake/dungeon state.
+	sbc		kernelRenderState					; Adjust for snake/dungeon state.
 	lsr									; Divide by 4.
 	lsr
 	sta		WSYNC						; Wait for Horizontal Sync.
@@ -3196,12 +3201,12 @@ DungeonWallScanlineHandler
 	tax									; Transfer A to X.
 	cpx		snakePosY					; Compare with Snake vertical position.
 	bcc		drawDungeonWall				; Branch if X < Snake Pos.
-	ldx		auxDataIndex				; Load Timepiece sprite data pointer.
+	ldx		kernelDataIndex				; Load Timepiece sprite data pointer.
 	lda		#$00
 	beq		setDungeonWall				; Unconditional branch to store 0.
 drawDungeonWall
 	lda		dynamicGfxData,x			; Load dungeon graphics data.
-	ldx		auxDataIndex				; Restore X.
+	ldx		kernelDataIndex				; Restore X.
 setDungeonWall
 	sta		PF1,x						; Store graphics (or 0) to PF1 using X
 										; as offset
@@ -3243,7 +3248,7 @@ nextPFScanline
 	cmp		#$08						; Check height range
 	bcs		goNextPFScanline			; Skip if outside range.
 	tay									; Transfer to Y.
-	lda		(auxDataPtrLo),y			; Load timepiece graphics.
+	lda		(kernelDataPtrLo),y			; Load timepiece graphics.
 	sta		ENABL						; Enable/Disable Ball.
 	sta		HMBL						; Set Horizontal Motion for Ball.
 goNextPFScanline
@@ -3320,10 +3325,10 @@ staticSpriteKernel
 	tay									; Transfer to Y.
 	cmp		#$08						; Compare with 8.
 	bcc		burn5Cycles					; Branch if < 8.
-	lda		auxDataIndex				; Load pointer to timepiece sprite data.
-	sta		auxDataPtrLo				; Store in graphics pointer.
+	lda		kernelDataIndex				; Load pointer to timepiece sprite data.
+	sta		kernelDataPtrLo				; Store in graphics pointer.
 drawTimepieceSprite
-	lda		(auxDataPtrLo),y			; Load timepiece graphics.
+	lda		(kernelDataPtrLo),y			; Load timepiece graphics.
 	sta		HMBL						; Store in Ball Horizontal Motion check.
 
 setMissile1Enable
@@ -3425,7 +3430,7 @@ multiplexedSpriteKernel
 	sta		WSYNC
 ;---------------------------------------
 	sta		HMOVE						; Execute HMOVE.
-	bit		objectState					; Check state flag to determine
+	bit		kernelRenderState					; Check state flag to determine
 										; if we are positioning or
 										; drawing/updating.
 	bpl		animateThieves				; If bit 7 is clear, jump to Animation Logic.
@@ -3435,7 +3440,7 @@ multiplexedSpriteKernel
 	; --------------------------------------------------------------------------
 	ldy		temp5						; Load Fine position timing value
 	lda		temp4						; Load Coarse position value (HMOVE).
-	lsr		objectState					; Shift state right (clears Bit 7,
+	lsr		kernelRenderState					; Shift state right (clears Bit 7,
 										; moves to next state).
 ThiefPosTimingLoop
 	dey									; Delay loop for horizontal positioning.
@@ -3451,24 +3456,24 @@ animateThieves
 										; Update logic.
 	; --------------------------------------------------------------------------
 	; THIEF DRAWING LOGIC
-	; If Bit 6 of objectState is SET, we are drawing the sprite.
+	; If Bit 6 of kernelRenderState is SET, we are drawing the sprite.
 	; --------------------------------------------------------------------------
 	txa									; Move current scanline count to A.
 	and		#$0f						; Mask to lower 4 bits
 	tay									; Transfer directly to Y index for graphics.
 	lda		(p0GfxPtrLo),y				; Load P0 Graphics data (Indirect Y).
 	sta		GRP0						; Store to GRP0 (Draw).
-	lda		(auxDataPtrLo),y			; Load P0 Color data.
+	lda		(kernelDataPtrLo),y			; Load P0 Color data.
 	sta		COLUP0						; Store to COLUP0.
 	iny									; Next line of sprite data.
 	lda		(p0GfxPtrLo),y				; Look ahead: Load next graphics line.
 	sta		temp0						; Store next thief gfx line
-	lda		(auxDataPtrLo),y			; Look ahead: Load next color line.
+	lda		(kernelDataPtrLo),y			; Look ahead: Load next color line.
 	sta		temp1						; Store next thief color line
 	cpy		p0SpriteHeight				; Check if we have drawn the full
 										; height of the sprite.
 	bcc		returnToThiefKernel			; If Y < Height, continue drawing next line.
-	lsr		objectState					; If done, Shift state right (Clear Bit 6).
+	lsr		kernelRenderState					; If done, Shift state right (Clear Bit 6).
 returnToThiefKernel
 	jmp		thiefKernel					; Jump back to main kernel loop.
 
@@ -3478,7 +3483,7 @@ updateThiefAnimation
 	; Determines which thief is active based on scanline height.
 	; --------------------------------------------------------------------------
 	lda		#$20						; Load Bit 5 mask.
-	bit		objectState					; Check Bit 5 of state.
+	bit		kernelRenderState					; Check Bit 5 of state.
 	beq		thiefFrameSetup				; If Bit 5 clear, proceed to Frame Setup.
 	txa									; Move scanline to A.
 	lsr									; Shift right 5 times (Divide by 32)
@@ -3503,13 +3508,13 @@ updateThiefAnimation
 										; High Byte is inherited from current context
 										; (Thief Page or specific override)
 	lda		#$65						; Load brownish/gold color.
-	sta		auxDataPtrLo				; Set Color Pointer.
+	sta		kernelDataPtrLo				; Set Color Pointer.
 	lda		#$00						; Clear A.
-	sta		objectState					; Ensure state stays in "Dig Mode".
+	sta		kernelRenderState					; Ensure state stays in "Dig Mode".
 	jmp		thiefKernel					; Return.
 
 finishThiefAnimate
-	lsr		objectState					; Shift state (Bit 5 cleared).
+	lsr		kernelRenderState					; Shift state (Bit 5 cleared).
 	jmp		thiefKernel					; Return.
 
 thiefFrameSetup
@@ -3518,7 +3523,7 @@ thiefFrameSetup
 	; Calculates the correct animation frame based on movement.
 	; --------------------------------------------------------------------------
 	lsr									; Shift A
-	bit		objectState					; Check state (Bit 4?).
+	bit		kernelRenderState					; Check state (Bit 4?).
 	beq		thiefSpecialAnimate			; If zero, jump to Special Case.
 	ldy		temp3						; Restore Thief Index.
 	lda		#$08						; Load Bit 3 mask.
@@ -3534,10 +3539,10 @@ pickThiefSpriteFrame
 	lda		thiefSpriteValueLo,y		; Load LSB for Sprite Graphic.
 	sta		p0GfxPtrLo					; Set Graphic Pointer LSB.
 	lda		#<thiefColors				; Load Colors Base Address.
-	sta		auxDataPtrLo				; Set Color Pointer LSB.
+	sta		kernelDataPtrLo				; Set Color Pointer LSB.
 	lda		#HEIGHT_THIEF - 1			; Load Height for Thief (-1).
 	sta		p0SpriteHeight				; Set Height.
-	lsr		objectState					; Shift state.
+	lsr		kernelRenderState					; Shift state.
 	jmp		thiefKernel					; Return.
 
 thiefSpecialAnimate
@@ -3554,7 +3559,7 @@ thiefSpriteHandeler
 	and		#$0f						; Mask low nibble.
 	sta		temp5						; Store fine position.
 	lda		#$80						; Load $80.
-	sta		objectState					; Store state.
+	sta		kernelRenderState					; Store state.
 	jmp		thiefKernel					; Jump back.
 
 drawInventoryKernel
@@ -3835,9 +3840,9 @@ UpdateInvEventState
 	and		#$06						; Mask bits 1 and 2.
 	asl									; Shift left
 	asl
-	sta		auxDataPtrLo				; Update Timepiece Graphics Pointer
+	sta		kernelDataPtrLo				; Update Timepiece Graphics Pointer
 	lda		#$fd						; Load $FD.
-	sta		auxDataPtrHi				; Set auxDataPtrHi (?)
+	sta		kernelDataPtrHi				; Set timepiece gfx page ($FD)
 
 UpdateInvItemPos
 	; --------------------------------------------------------------------------
@@ -4233,8 +4238,8 @@ spiderRoomHandler:
 		and		#$07						; check every 8th frame
 		bne		animateSpider				; If not the 8th frame, skip movement update
 		ldy		#$05						; Set Target Index to 5 (a unused/static slot?)
-		lda		#$4c						; Load Passive Target X?
-		sta		unused_CD					; (Unused write)
+		lda		#$4c						; Passive target X = center
+		sta		targetPosX					; Set AI chase target X
 		lda		#$23						; Set Passive home Target Y = $23
 		sta		targetPosY					; Store in target variable for
 updateMoveSpider:
@@ -4304,7 +4309,7 @@ thiefEscape:
 	; Mode: Thief Escape (Man in Black leaves with item or during death)
 		ldy		#$05						; Target Index = 5.
 		lda		#$55						; Target Y = $55 (Escape Point).
-		sta		unused_CD					; Store unused temp.
+		sta		targetPosX					; Set AI chase target X (thief escape point)
 		sta		targetPosY					; Set Target Vertical Position to $55.
 		lda		#$01						; Speed Mask = 1
 											; (Update every ODD frame - Fast).
@@ -4543,7 +4548,7 @@ bribeCheck:
 											; (Did we drop Gold?)
 		bmi		finishRoomHandler			; Branch if Bit 7 set (No Bribe).
 		lda		#$30						; Load 48.
-		sta		indyPosXSet					; Teleport Indy to X=48
+		sta		ballPosX					; Set Ball/Blocker X to 48
 		ldy		#$00
 		sty		ballPosY					; Clear Lunatic Y  (Remove Lunatic).
 		ldy		#$7f						; Load $7F.
@@ -4632,7 +4637,7 @@ mapRoomHandler:
 	; Indy cannot walk freely horizontally here. His X position is snapped
 	; to center ($71) unless specific conditions are met.
 		lda		#$71
-		sta		indyPosXSet					; Force Center X alignment
+		sta		ballPosX					; Force Ball X to center
 		ldy		#$4f						; Default Graphic Offset (Inactive State)
 
 		; Check if Indy is standing on the correct "Plinth" (Y=$3A)
@@ -4770,13 +4775,13 @@ templeEntranceRoomHandler:
 	; --------------------------------------------------------------------------
 	; Use default Ball Position (set in initRoomState or loadRoomGfx)
 		lda		#$4c
-		sta		indyPosXSet					; Set position to Center Screen
+		sta		ballPosX					; Set Ball/Timepiece X to center
 		lda		#$2a
 		sta		ballPosY					; Set Timepiece Graphics (Ball Sprite)
 		lda		#<timeSprite
-		sta		auxDataPtrLo
+		sta		kernelDataPtrLo
 		lda		#>timeSprite
-		sta		auxDataPtrLo + 1
+		sta		kernelDataPtrLo + 1
 		bne		finishTempleEntrance
 
 timepieceTaken:
@@ -4796,7 +4801,7 @@ finishTempleEntrance:
 		ldy		#$3b						; P0 Graphics Data
 		sty		p0GfxState					; store in graphics state
 		iny									; becomes $3C
-		sty		objectState					; Store state
+		sty		kernelRenderState					; Store state
 
 		; Calculate P0 Graphics Pointer based on State
 		; $C1 - State -> P0 Ptr Low
@@ -4834,8 +4839,8 @@ roomOfShiningLightHandler:
 roslStateHandeler:
 		ldy		#$05						; Set Y to 5 so updateMoveToTarget
 											; keeps light static
-		lda		#$4c						; X Target = Center
-		sta		unused_CD					; Set Temp (unused)
+		lda		#$4c						; X target = center
+		sta		targetPosX					; Set AI chase target X (shining light)
 		lda		#$0b						; Y Target
 		sta		targetPosY					; Set Temp Y
 
