@@ -751,8 +751,8 @@ playerHitInWellOfSouls:
 	bcc		takeAwayShovel				; If Indy is above this threshold,
 
 	lda		dirtPileGfxState			; Load dirt pile graphics state
-	cmp		#$54						; Is the pile fully cleared?
-	bne		resumeCollisionChain			; If not empty ($54), you can't find Ark yet.
+	cmp		#<dirtPileSprite			; Is the pile fully cleared?
+	bne		resumeCollisionChain			; If not cleared, you can't find Ark yet.
 	lda		secretArkMesaID				; Load Secret Ark Location (Game RNG)
 	cmp		activeMesaID				; Compare to Current Mesa Region
 	bne		arkNotFound					; If wrong mesa, nothing is here.
@@ -1810,9 +1810,9 @@ attemptArkDig
 	; Decrementing it moves the pointer to the "Smaller Pile" sprite data.
 	ldy		dirtPileGfxState			; Load current graphics offset ($5C start)
 	dey									; Shrink pile
-	cpy		#$54						; Have we reached the "Cleared" state?
-	bcs		clampDigDepth				; If State >= $54, save it.
-	iny									; If < $54, limit it (Don't over-dig).
+	cpy		#<dirtPileSprite			; Have we reached the "Cleared" state?
+	bcs		clampDigDepth				; If State >= cleared, save it.
+	iny									; If past cleared, limit it (Don't over-dig).
 
 
 clampDigDepth
@@ -2098,7 +2098,7 @@ initRoomState
 	ora		#$40						; Set bit 6 to indicate re-entry or warp status.
 	sta		grenadeState				; Update the state.
 resetRoomFlags
-	lda		#$5c						; Load default value for dirt pile graphics
+	lda		#<dirtPileSprite + 8		; Full pile (topmost read window position)
 	sta		dirtPileGfxState
 	ldx		#$00						; Initialize X to 0 for clearing.
 	stx		screenEventState			; Clear screen event state.
@@ -6014,8 +6014,13 @@ thiefColors
 	.byte BLACK + 4, BLACK + 6, BLACK + 8, BLACK + 10, BLACK + 8, BLACK + 6
 	.byte LT_BLUE + 8, LT_BLUE + 8, LT_BLUE + 14, LT_BLUE + 14
 
-
-
+; Dirt pile sprite for the Well of Souls.
+; Used as P0 graphics via dirtPileGfxState (low byte of pointer).
+; As Indy digs with the shovel, dirtPileGfxState decrements from
+; <dirtPileSprite + 8 (full pile) down to <dirtPileSprite (cleared),
+; sliding the 16-byte read window through this data so the pile
+; visually shrinks from the top.
+dirtPileSprite
 	.byte $00 ; |........|
 	.byte $00 ; |........|
 	.byte $00 ; |........|
