@@ -166,7 +166,7 @@ screenInitFlag			= $99	; Non-zero if the screen needs initialization logic
 grenadeState			= $9a	; Status: Bit 7=Active, Bit 6=Wall Effect Trigger
 grenadeCookTime			= $9b	; Timer until grenade explosion
 arkRoomStateFlag		= $9c	; bit7 = RESET enabled & Ark hidden; bit7 clear = Ark visible & RESET ignored.
-majorEventFlag			= $9d	; Flags for Cutscenes (Death, Capture, End Game)
+globalStateFlag			= $9d	; Flags for Cutscenes (Death, Capture, End Game)
 adventurePoints			= $9e	; (Manual: "Adventure Points") Score/Pedestal Height
 livesLeft				= $9f	; (Manual: Starts with 3 lives)
 bulletCount				= $a0	; (Manual: Max 6 bullets)
@@ -361,6 +361,9 @@ ID_VALLEY_OF_POISON		 = $0A ;--
 ID_THIEVES_DEN			 = $0B ;-- ThievesDenWellOfSoulsScanlineHandler
 ID_WELL_OF_SOULS		 = $0C ;-- ThievesDenWellOfSoulsScanlineHandler
 ID_ARK_ROOM				 = $0D
+
+
+
 
 ;===============================================================================
 ; U S E R - C O N S T A N T S
@@ -585,7 +588,7 @@ handleIndyVsObjHit:
 setWellOfSoulsEntryEvent:
 	bvc		handleMesaSideSecretExit	; Fail-safe?
 	lda		#$80						; Set Bit 7.
-	sta		majorEventFlag				; Trigger Major Event
+	sta		globalStateFlag				; Trigger Major Event
 	bne		handleMesaSideSecretExit	; Return.
 
 timePieceTouch:
@@ -630,7 +633,7 @@ handleMesaFall:
 	bmi		clearHits					; If the result has bit 7 set,
 										; skip setting major event
 	lda		#$80						; Otherwise, set major event flag
-	sta		majorEventFlag
+	sta		globalStateFlag
 clearHits:
 	sta		CXCLR						; clear all collisions
 dispatchHits:
@@ -743,7 +746,7 @@ playerHitInSpiderRoom:
 	ldx		#$00						; Set X to 0
 	stx		spiderRoomState				; Clear spider room state
 	lda		#%10000000					; Set Bit 7
-	sta		majorEventFlag				; Trigger major event flag
+	sta		globalStateFlag				; Trigger major event flag
 resumeHitDispatch:
 	jmp		playerHitDefaut
 
@@ -959,7 +962,7 @@ playerHitDefaut:
 
 screenIdleLogicDispatcher:
 	lda		roomleHandlerJmpTable+1,x	; Load high byte of default screen behavior routine
-	pha									;push to stack
+	pha									; push to stack
 	lda		roomleHandlerJmpTable,x		; Load low byte of default screen behavior routine
 	pha									; push to stack
 	rts									; Indirect jump to it (no collision case)
@@ -1106,7 +1109,7 @@ defaultIdleHandler:
 	beq		clearInputBit0ForSpiderRoom	; Yes, go to clearInputBit0ForSpiderRoom
 	bcc		checkGrenadeDetonation		; If screen ID is lower than Spider Room, skip
 	lda		#$80						; Trigger a major event (Death/Capture)
-	sta		majorEventFlag				; Set flag.
+	sta		globalStateFlag				; Set flag.
 	bne		despawnMissile0				; unconditional branch
 
 clearInputBit0ForSpiderRoom:
@@ -1130,7 +1133,7 @@ checkGrenadeDetonation:
 	bne		newFrame				; branch if not time to detinate grenade
 	lda		#$a0
 	sta		weaponPosY				; Move grenade offscreen
-	sta		majorEventFlag				; Trigger major event (explosion happened)
+	sta		globalStateFlag				; Trigger major event (explosion happened)
 applyGrenadeWallEffect:
 	lsr		grenadeState				; Logical shift right: bit 0 -> carry
 	bcc		skipUpdate					; If bit 0 was clear, skip this
@@ -1194,10 +1197,10 @@ frameFirstLine
 	sta		WSYNC						; last line of vertical sync
 	sta		VSYNC						; end vertical sync (D1 = 0)
 	stx		TIM64T						; set timer for vertical blanking period
-	ldx		majorEventFlag
+	ldx		globalStateFlag
 	inx									; Increment counter
 	bne		checkShowDevInitials		; If not overflowed, check initials display
-	stx		majorEventFlag				; Overflowed: zero -> set majorEventFlag to 0
+	stx		globalStateFlag				; Overflowed: zero -> set globalStateFlag to 0
 	jsr		getFinalScore				; set adventurePoints to minimum
 	lda		#ID_ARK_ROOM				; set ark title screen
 	sta		currentRoomId				; to the current room
@@ -1272,7 +1275,7 @@ advanceArkSeq
 	ldx		p0SpriteHeight
 	cpx		#$60
 	bcc		incrementArkSeq				; If sprite height < $60, branch
-	bit		majorEventFlag
+	bit		globalStateFlag
 	bmi		continueArkSeq				; If bit 7 is set, jump to continue logic
 	ldx		#$00						; Reset X
 	lda		indyPosX
@@ -1392,7 +1395,7 @@ configSnake
 	sta		auxDataIndex				; Store in Generic Index ($D8)
 
 checkMajorEventDone
-	bit		majorEventFlag
+	bit		globalStateFlag
 	bpl		checkGameScriptTimer		; If major event not complete
 										; continue sequence
 	jmp		finishedScrollUpdate		; Else, jump to end
@@ -3794,7 +3797,7 @@ updateEventState
 	bcc		UpdateInvEventState			; If < 5, Update Animation State.
 	ldx		#$04						; X = 4.
 	ldy		#$01						; Y = 1.
-	bit		majorEventFlag				; Check Major Event Flag
+	bit		globalStateFlag				; Check Major Event Flag
 	bmi		setInvEventStateTo3			; If Set (Minus), Set Y=3.
 	bit		eventTimer					; Check event Timer
 	bpl		updateInvEventStateAfterYSet	; If positive, skip.
@@ -3826,7 +3829,7 @@ invObjPosLoop
 	inx									; Next Item.
 	cpx		#$05						; Loop until 5.
 	bcc		invObjPosLoop				; Loop.
-	bit		majorEventFlag				; Check Major Event (Death).
+	bit		globalStateFlag				; Check Major Event (Death).
 	bpl		invItemSelectCycle			; If Clear, Normal Gameplay
 										; (Selection Allowed).
 
@@ -3850,7 +3853,7 @@ invObjPosLoop
 removeIndySpriteLine
 	sta		frameCount					; Reset Frame Count
 	sec									; Set Carry
-	ror		majorEventFlag				; Rotate Major Event Flag
+	ror		globalStateFlag				; Rotate Major Event Flag
 indyHatPause
 	cmp		#$3c						; Compare A with 60
 	bcc		resetIndyAfterDeath			; If < 60, Continue.
@@ -3870,11 +3873,11 @@ resetIndyAfterDeath
 	lda		#HEIGHT_INDY_SPRITE			; Reset Height default.
 	sta		indySpriteHeight			; Store.
 	sta		soundChan1EffectTimer		; Store.
-	sta		majorEventFlag				; Reset Flag.
+	sta		globalStateFlag				; Reset Flag.
 	dec		livesLeft					; Decrement Lives.
 	bpl		jmpToNewFrame				; If Lives >= 0, Continue Game.
 	lda		#$ff						; Game Over State?
-	sta		majorEventFlag				; Set Flag.
+	sta		globalStateFlag				; Set Flag.
 	bne		jmpToNewFrame				; Exit.
 
 invItemSelectCycle
@@ -4248,7 +4251,7 @@ animateSpider:
 		lda		spiderRoomState				; Check main state
 		bmi		finishRoomHandle			; If Bit 7 set (Aggressive/Caught),
 											; skip passive animation updates
-		bit		majorEventFlag				; Check if a major event
+		bit		globalStateFlag				; Check if a major event
 		bmi		finishRoomHandle			; If so, skip
 		and		#$07						; Mask lower 3 bits (Animation Timer)
 		bne		updateSpiderSpriteState	; If timer != 0, go update sprite state shadow
@@ -4269,7 +4272,7 @@ valleyOfPoisonRoomHandler:
 		lda		#$80						; Set Bit 7 ($80) in Screen Event State.
 		sta		screenEventState			; screenEventState = $80 (Active).
 		ldx		#$00						; X = 0.
-		bit		majorEventFlag				; Check Major Event Flag
+		bit		globalStateFlag				; Check Major Event Flag
 		bmi		thiefEscape					;  If Major Event Set (Negative),
 											; Enter thief escape mode.
 		bit		pickupStatusFlags			; Check Pickup Status (Bit 6 = Overflow).
@@ -4526,7 +4529,7 @@ bribeCheck:
 		sty		snakePosY					; Set snakeVertPos.
 		inc		indyPosX					; Increment Indy X (49).
 		lda		#$80						; Set Bit 7.
-		sta		majorEventFlag				; Trigger Major Event (bribe success)
+		sta		globalStateFlag				; Trigger Major Event (bribe success)
 
 finishRoomHandler:
 		jmp		jmpSetupNewRoom				; Return.
@@ -4888,7 +4891,7 @@ enableBall
 
 		cpx		#ID_ARK_ROOM				; Check Ark Room.
 		beq		initKernalJumps				; Branch if Ark Room.
-		bit		majorEventFlag				; Check Major Event.
+		bit		globalStateFlag				; Check Major Event.
 		bmi		initKernalJumps				; Branch if Negative (Bit 7 Set).
 		ldy		SWCHA						; Read Joystick.
 		sty		REFP1						; Set Reflection P1
