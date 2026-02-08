@@ -215,24 +215,30 @@ spiderRoomState			= $b6	; State: Animation timer (bits 0-2) / Aggressive mode (b
 
 ;----------------------------------------------------------------------------
 ; Inventory System
+; Indy carries up to 6 items. Each slot is a 16-bit pointer to an
+; 8-byte sprite in ROM. The Lo byte encodes item identity:
+;   itemId = (slotLo - <inventorySprites) / HEIGHT_ITEM_SPRITES
+; Slots are accessed two ways:
+;   Rendering:  (invSlotLo),y / (invSlotLo2),y  — indirect indexed per-slot
+;   Management: invSlotLo,x  (x = 0,2,4,6,8,10) — array base with byte offset
 ;----------------------------------------------------------------------------
-invSlotLo				= $b7	; Inventory Slot 1 (Sprite Ptr Low)
+invSlotLo				= $b7	; Inventory Slot 1 (Sprite Ptr Low)  — also array base
 invSlotHi				= $b8	; Inventory Slot 1 (Sprite Ptr High)
-invSlotLo2				= $b9	; Inventory Slot 2
-invSlotHi2				= $ba	; ...
-invSlotLo3				= $bb	; Inventory Slot 3
-invSlotHi3				= $bc	; ...
-invSlotLo4				= $bd	; Inventory Slot 4
-invSlotHi4				= $be	; ...
-invSlotLo5				= $bf	; Inventory Slot 5
-invSlotHi5				= $c0	; ...
-invSlotLo6				= $c1	; Inventory Slot 6
-invSlotHi6				= $c2	; ...
-selectedItemSlot		= $c3	; Index (0-10) of currently highlighted slot
-inventoryItemCount		= $c4	; Number of items currently held
+invSlotLo2				= $b9	; Inventory Slot 2 (Sprite Ptr Low)
+invSlotHi2				= $ba	; Inventory Slot 2 (Sprite Ptr High)
+invSlotLo3				= $bb	; Inventory Slot 3 (Sprite Ptr Low)
+invSlotHi3				= $bc	; Inventory Slot 3 (Sprite Ptr High)
+invSlotLo4				= $bd	; Inventory Slot 4 (Sprite Ptr Low)
+invSlotHi4				= $be	; Inventory Slot 4 (Sprite Ptr High)
+invSlotLo5				= $bf	; Inventory Slot 5 (Sprite Ptr Low)
+invSlotHi5				= $c0	; Inventory Slot 5 (Sprite Ptr High)
+invSlotLo6				= $c1	; Inventory Slot 6 (Sprite Ptr Low)
+invSlotHi6				= $c2	; Inventory Slot 6 (Sprite Ptr High)
+selectedItemSlot		= $c3	; Byte offset (0,2,4,6,8,10) into invSlot array for selected item
+inventoryItemCount		= $c4	; Number of items currently held (0-6)
 selectedInventoryId		= $c5	; ID of the item currently selected (e.g. ID_INVENTORY_WHIP)
-basketItemStatus		= $c6	; Bitmask: Items remaining in baskets
-pickupItemsStatus		= $c7	; Bitmask: Global "Has item been found" flags
+basketItemStatus		= $c6	; Bitmask: Basket item collection flags (1=taken, 0=available)
+pickupItemStatus		= $c7	; Bitmask: Global "has item been found" flags (1=found)
 
 ;----------------------------------------------------------------------------
 ; Object Positioning (Kernel Variables)
@@ -337,7 +343,7 @@ INDY_CARRYING_SHOVEL				= %00000001
 
 BASKET_STATUS_MARKET_GRENADE		= %00000001
 BASKET_STATUS_BLACK_MARKET_GRENADE	= %00000010
-BACKET_STATUS_REVOLVER				= %00001000
+BASKET_STATUS_REVOLVER				= %00001000
 BASKET_STATUS_COINS					= %00010000
 BASKET_STATUS_KEY					= %00100000
 
@@ -2691,7 +2697,7 @@ itemStatusBitValues
 	.byte BASKET_STATUS_MARKET_GRENADE | PICKUP_ITEM_STATUS_WHIP
 	.byte BASKET_STATUS_BLACK_MARKET_GRENADE | PICKUP_ITEM_STATUS_SHOVEL
 	.byte PICKUP_ITEM_STATUS_HEAD_OF_RA
-	.byte BACKET_STATUS_REVOLVER | PICKUP_ITEM_STATUS_TIME_PIECE
+	.byte BASKET_STATUS_REVOLVER | PICKUP_ITEM_STATUS_TIME_PIECE
 	.byte BASKET_STATUS_COINS
 	.byte BASKET_STATUS_KEY | PICKUP_ITEM_STATUS_HOUR_GLASS
 	.byte PICKUP_ITEM_STATUS_ANKH
@@ -2702,7 +2708,7 @@ itemStatusMaskTable
 	.byte ~(BASKET_STATUS_MARKET_GRENADE | PICKUP_ITEM_STATUS_WHIP);$FE
 	.byte ~(BASKET_STATUS_BLACK_MARKET_GRENADE | PICKUP_ITEM_STATUS_SHOVEL);$FD
 	.byte ~PICKUP_ITEM_STATUS_HEAD_OF_RA;$FB
-	.byte ~(BACKET_STATUS_REVOLVER | PICKUP_ITEM_STATUS_TIME_PIECE);$F7
+	.byte ~(BASKET_STATUS_REVOLVER | PICKUP_ITEM_STATUS_TIME_PIECE);$F7
 	.byte ~BASKET_STATUS_COINS;$EF
 	.byte ~(BASKET_STATUS_KEY | PICKUP_ITEM_STATUS_HOUR_GLASS);$DF
 	.byte ~PICKUP_ITEM_STATUS_ANKH;$BF
@@ -2848,8 +2854,8 @@ setItemAsNotTaken
 	rts
 
 showItemAsNotTaken
-	and		pickupItemsStatus
-	sta		pickupItemsStatus				; clear status bit showing item not taken
+	and		pickupItemStatus
+	sta		pickupItemStatus				; clear status bit showing item not taken
 	rts
 
 showItemAsTaken
@@ -2863,8 +2869,8 @@ showItemAsTaken
 	rts
 
 pickUpItemTaken
-	ora		pickupItemsStatus
-	sta		pickupItemsStatus				; show item taken
+	ora		pickupItemStatus
+	sta		pickupItemStatus				; show item taken
 	rts
 
 isItemAlreadyTaken:
@@ -2880,7 +2886,7 @@ finishIsItemTaken:
 	rts
 
 isItemTaken:
-	and		pickupItemsStatus
+	and		pickupItemStatus
 	bne		finishIsItemTaken
 	clc										; clear carry for item not taken already
 	rts
@@ -4756,7 +4762,7 @@ templeEntranceRoomHandler:
 	; If the item has been taken, we must hide the graphic.
 	; --------------------------------------------------------------------------
 		lda		#PICKUP_ITEM_STATUS_TIME_PIECE	; Load Time Piece mask.
-		and		pickupItemsStatus			; Check if player already has it.
+		and		pickupItemStatus			; Check if player already has it.
 
 		bne		timepieceTaken				; If Result != 0 (Item Taken), hide it.
 	; --------------------------------------------------------------------------
@@ -4958,7 +4964,7 @@ notInBasket
 
 checkPickupStatus
 		; Check if Player already has the item.
-		and		pickupItemsStatus			; Mask with Pickup Status.
+		and		pickupItemStatus			; Mask with Pickup Status.
 		bne		notInBasket					; ; If result != 0 (Already have it),
 											; Return Failure.
 		clc									; Clear Carry

@@ -128,7 +128,7 @@ Key items and their IDs include:
 | Hourglass | `ID_INVENTORY_HOUR_GLASS` |
 | Shovel | `ID_INVENTORY_SHOVEL` |
 
-Selection uses the left joystick. `selectedItemSlot` tracks the cursor position, and `selectedInventoryId` holds the current item's ID. Items are added via `placeItemInInventory` and removed via `removeItem`. Global pickup tracking uses `pickupItemsStatus` and `basketItemStatus` bitmasks.
+Selection uses the left joystick. `selectedItemSlot` tracks the cursor position (byte offset 0,2,4,6,8,10 into the slot array), and `selectedInventoryId` holds the current item's ID. Items are added via `placeItemInInventory` and removed via `removeItem`. Global pickup tracking uses `pickupItemStatus` and `basketItemStatus` bitmasks.
 
 ### Scoring System
 
