@@ -139,7 +139,7 @@ This is the largest block of game code, executing in order every frame:
 | 8 | `checkGameScriptTimer` | If `eventTimer` is negative (Indy paralyzed/frozen), force standing sprite and skip input. |
 | 9 | `branchOnFrameParity` | **Frame parity split**: even frames run full input processing. Odd frames skip to `clearItemUseOnButtonRelease`. |
 | 10 | `handleWeaponAim` | **Weapon aiming**: joystick moves the weapon crosshair (missile 1) with boundary clamping. |
-| 11 | `handleIndyMove` | **Movement**: read `SWCHA` → `getMoveDir` → move Indy → check room boundary override tables (`CheckRoomOverrideCondition`) → trigger room transitions if a boundary is crossed. |
+| 11 | `handleIndyMove` | **Movement**: read `SWCHA` → `getMoveDir` → move Indy → check room boundary override tables (`checkRoomOverrideCondition`) → trigger room transitions if a boundary is crossed. |
 | 12 | `handleInventorySelect` | **Left controller**: fire button cycles through inventory slots. Handles item drop, bullet reload (+3), and shovel placement. |
 | 13 | `clearItemUseOnButtonRelease` | Clears `USING_GRENADE_OR_PARACHUTE` flag on right fire button release. |
 | 14 | `handleItemUse` | **Right controller**: fire button dispatches the selected item — grenade throw/cook timer, parachute deploy, grapple hook launch, shovel dig, Ankh warp, revolver fire, whip strike. This is the largest single block in VBLANK. |
@@ -166,7 +166,7 @@ At `dispatchRoomHandler`, the code writes `selectRoomHandler` as the target addr
 | Mesa Field | `mesaFieldRoomHandler` | Pins P0/M0/Ball to center Y (`$7F`) for scrolling |
 | Valley of Poison | `valleyOfPoisonRoomHandler` | Thief chase/escape AI, tsetse swarm spawning |
 | Thieves' Den | `thievesDenRoomHandler` | Moves 5 thieves with left/right boundary bounce |
-| Well of Souls | `WellOfSoulsRoomHandler` | Sets mesa landing bonus, then shares thief-movement code |
+| Well of Souls | `wellOfSoulsRoomHandler` | Sets mesa landing bonus, then shares thief-movement code |
 
 All handlers exit via `jmpSetupNewRoom`, which bank-switches back to Bank 0.
 
@@ -175,7 +175,7 @@ All handlers exit via `jmpSetupNewRoom`, which bank-switches back to Bank 0.
 `setupNewRoom` prepares the TIA for display:
 
 1. If `screenInitFlag` ≠ 0, call `updateRoomEventState` (one-shot room initialization), then clear the flag.
-2. Set `NUSIZ0` from the per-room `HMOVETable` entry.
+2. Set `NUSIZ0` from the per-room `hmoveTable` entry.
 3. Set `CTRLPF` from `roomPFControlFlags` (playfield reflection/priority/ball size).
 4. Set `COLUBK`, `COLUPF`, `COLUP0`, `COLUP1` from per-room color tables.
 5. If in the Thieves' Den or Well of Souls, initialize 5 thief HMOVE positions from table data.
@@ -198,7 +198,7 @@ The first few visible lines set up the display state:
 * Disable the Ball sprite in the Map Room (used for the sun position mechanic).
 * Read `SWCHA` → set `REFP1` for Indy sprite reflection (skipped during death/Ark Room).
 * Three WSYNC+HMOVE pairs to settle object positions.
-* Dispatch to the appropriate kernel via RTS-trick: push return address from `kernelJumpTable` indexed by `KernelJumpTableIndex` for the current room, then `rts`.
+* Dispatch to the appropriate kernel via RTS-trick: push return address from `kernelJumpTable` indexed by `kernelJumpTableIndex` for the current room, then `rts`.
 
 ##### Room Kernels (160 Scanlines)
 
@@ -221,7 +221,7 @@ Two scanlines per loop with playfield scrolling. On each iteration, the scanline
 Displays 5 enemy thieves using a single P0 hardware sprite, repositioned between each thief's zone (~32 scanlines each). Operates as a state machine via `kernelRenderState`: **positioning phase** (bit 7) uses a coarse/fine delay loop to place RESP0, **drawing phase** (bit 6) streams `(p0GfxPtrLo),y` and `(kernelDataPtrLo),y` for sprite and color data across 16 lines. Between thief zones, P1 (Indy) is drawn using the PHP/stack trick — `txs` redirects the stack pointer so that `php` writes directly to TIA enable registers (`ENABL`/`ENAM1`/`ENAM0` at `$1F`/`$1E`/`$1D`).
 
 **`arkPedestalKernel`** (Ark Room — title and ending screen):
-Single-height scanlines (1 WSYNC per line). Lines 0–14: draw the Ark top/wings sprite with rainbow color cycling (only in win state). Lines 15–28: draw the Ark body with alternating gold patterns. Lines 29–143: draw Indy's standing sprite at the pedestal height determined by `adventurePoints` — above Indy is empty, below is the diamond-pattern `PedestalLiftSprite`. Lines 144–159: draw the pedestal base.
+Single-height scanlines (1 WSYNC per line). Lines 0–14: draw the Ark top/wings sprite with rainbow color cycling (only in win state). Lines 15–28: draw the Ark body with alternating gold patterns. Lines 29–143: draw Indy's standing sprite at the pedestal height determined by `adventurePoints` — above Indy is empty, below is the diamond-pattern `pedestalLiftSprite`. Lines 144–159: draw the pedestal base.
 
 ##### Inventory Kernel (~27 Scanlines)
 
@@ -247,7 +247,7 @@ Immediately after the inventory kernel, the TIA is blanked (`VBLANK = $0F`) and 
 | 1 | `updateSoundRegisters` | Process both TIA audio channels (X=1, then X=0). Set AUDC, AUDV, AUDF. Dispatch to `playRaidersMarch` (effect `$9C`) or `playFluteMelody` (effect `$84`) for sustained music playback. |
 | 2 | `finishUpdateSound` | If holding the Timepiece: toggle open/closed sprite on right fire press. If holding the Flute: activate Snake Charmer song. |
 | 3 | `updateEventState` | If `screenEventState` bit 7 is set: animate the on-screen event (move object toward target via `updateMoveToTarget`), update timepiece graphics pointer for the snake reveal animation. |
-| 4 | `UpdateInvItemPos` | Position 3 inventory display objects (X=2,3,4) via `UpdateInvObjPos` — converts item slot sprite pointers into on-screen X positions. |
+| 4 | `updateInvItemPos` | Position 3 inventory display objects (X=2,3,4) via `updateInvObjPos` — converts item slot sprite pointers into on-screen X positions. |
 | 5 | *(death check)* | **Death dissolve sequence**: if `gameEventFlag` bit 7 is set, shrink `indySpriteHeight` by 1 line every 16 frames with a descending sound effect. At height < 3 (hat only), rotate the flag and pause for 60 frames. At frame 120: respawn with full height, decrement `livesLeft`. If `livesLeft` goes negative, set `gameEventFlag = $FF` (triggers game-over on the next frame's overflow check). |
 | 6 | `invItemSelectCycle` | If not in the Ark Room: read `SWCHA` left/right to cycle inventory selection. Handle hourglass → grapple initialization in Mesa Field. Drive the grapple state machine (incrementing stages, position alignment checks). |
 
@@ -270,7 +270,7 @@ After the collision chain completes, execution falls through to `newFrame`, whic
 
 #### Bank Switching Mechanism
 
-Both banks contain a symmetric trampoline routine (`jumpToBank1` in Bank 0, `JumpToBank0` in Bank 1). The trampoline writes self-modifying code into zero-page RAM (`temp0`–`temp5`):
+Both banks contain a symmetric trampoline routine (`jumpToBank1` in Bank 0, `jumpToBank0` in Bank 1). The trampoline writes self-modifying code into zero-page RAM (`temp0`–`temp5`):
 
 ```text
 temp0: LDA $FFF8/$FFF9    ; reading the strobe address switches banks
@@ -288,7 +288,7 @@ The caller sets `temp4`/`temp5` to the target address before jumping to the tram
 | 3 | Bank 0 → 1 | `jmpDisplayKernel` | `drawScreen` (visible kernel + overscan) |
 | 4 | Bank 1 → 0 | `jmpObjHitHandeler` | `checkWeaponPlayerHit` (collision dispatch) |
 
-Bank 1 also has a safety stub (`BANK1Start`) at its reset vector entry — it immediately reads `BANK0STROBE` to switch back to Bank 0 if Bank 1 is entered on power-on.
+Bank 1 also has a safety stub (`bank1Start`) at its reset vector entry — it immediately reads `BANK0STROBE` to switch back to Bank 0 if Bank 1 is entered on power-on.
 
 #### Special States
 
@@ -296,11 +296,11 @@ Bank 1 also has a safety stub (`BANK1Start`) at its reset vector entry — it im
 
 **Death Sequence**: Setting `gameEventFlag` bit 7 triggers the death dissolve during overscan. Indy's sprite height shrinks by one line every 16 frames. Once only the hat remains (height < 3), the flag is rotated and the sprite disappears for 60 frames. At frame 120, Indy respawns at full height and `livesLeft` is decremented. If lives drop below zero, `gameEventFlag` is set to `$FF` — on the next frame, the VBLANK overflow check catches this and transitions to the Ark Room.
 
-**Room Transitions**: Triggered by the boundary override system in `handleIndyMove`. When Indy crosses a room edge (checked via `CheckRoomOverrideCondition` against per-room boundary tables), `currentRoomId` is changed and `initRoomState` reinitializes all per-room state — sprites, playfield pointers, object positions, and event flags. Special transitions include: Mesa Side fall into Valley of Poison (Y position check), M0 collision into Well of Souls, blown-open wall alignment into the Temple, and Ankh warp directly to Mesa Field.
+**Room Transitions**: Triggered by the boundary override system in `handleIndyMove`. When Indy crosses a room edge (checked via `checkRoomOverrideCondition` against per-room boundary tables), `currentRoomId` is changed and `initRoomState` reinitializes all per-room state — sprites, playfield pointers, object positions, and event flags. Special transitions include: Mesa Side fall into Valley of Poison (Y position check), M0 collision into Well of Souls, blown-open wall alignment into the Temple, and Ankh warp directly to Mesa Field.
 
 ### Display Kernels
 
-The game uses **4 different scanline kernels** selected via `KernelJumpTableIndex` and `kernelJumpTable`:
+The game uses **4 different scanline kernels** selected via `kernelJumpTableIndex` and `kernelJumpTable`:
 
 | Index | Kernel | Rooms |
 | ----- | ------ | ----- |
@@ -322,7 +322,7 @@ The `staticSpriteKernel` rooms (0–5) use a clever data encoding for Player 0 t
 
 #### How It Works
 
-Each byte in a `*PlayerGraphics` data table (e.g., `MarketplacePlayerGraphics`, `EntranceRoomPlayerGraphics`) is read once per scanline. The routine checks **bit 7** to determine the byte's meaning:
+Each byte in a `*playerGraphics` data table (e.g., `marketplacePlayerGraphics`, `entranceRoomPlayerGraphics`) is read once per scanline. The routine checks **bit 7** to determine the byte's meaning:
 
 | Bit 7 | Meaning      | Action                                                       |
 | ----- | ------------ | ------------------------------------------------------------ |
@@ -386,16 +386,16 @@ HMOVE commands serve two purposes in the data streams:
 
 #### Per-Room Data Tables
 
-Each `staticSpriteKernel` room has its own `*PlayerGraphics` data table:
+Each `staticSpriteKernel` room has its own `*playerGraphics` data table:
 
 | Room | Data Table | Key Elements |
 | ---- | ---------- | ------------ |
-| Treasure Room | `TreasureRoomPlayerGraphics` | Ankh, coins, hourglass, chai (cycling treasures) |
-| Marketplace | `MarketplacePlayerGraphics` | Two sellers, flute, three baskets, parachute pack |
-| Entrance Room | `EntranceRoomPlayerGraphics` | Loose rock, cave entrance (jagged edge), boulder, whip |
-| Black Market | `BlackMarketPlayerGraphics` | Two sellers, bullets, basket, shovel |
-| Map Room | `MapRoomPlayerGraphics` | Sun disc, hieroglyphic wall, model chamber, pedestal |
-| Mesa Side | `MesaSidePlayerGraphics` | Parachute figure, tree (canopy/trunk), mesa ground |
+| Treasure Room | `treasureRoomPlayerGraphics` | Ankh, coins, hourglass, chai (cycling treasures) |
+| Marketplace | `marketplacePlayerGraphics` | Two sellers, flute, three baskets, parachute pack |
+| Entrance Room | `entranceRoomPlayerGraphics` | Loose rock, cave entrance (jagged edge), boulder, whip |
+| Black Market | `blackMarketPlayerGraphics` | Two sellers, bullets, basket, shovel |
+| Map Room | `mapRoomPlayerGraphics` | Sun disc, hieroglyphic wall, model chamber, pedestal |
+| Mesa Side | `mesaSidePlayerGraphics` | Parachute figure, tree (canopy/trunk), mesa ground |
 
 The initial P0 color for each room is set from `roomP0ColorTable` during pre-kernel setup, but is typically overridden immediately by the first `SET_PLAYER_0_COLOR` command in the data stream.
 
@@ -420,7 +420,7 @@ There are **14 rooms** defined as constants (IDs `$00`–`$0D`):
 | `$0C` | `ID_WELL_OF_SOULS` | Well of Souls |
 | `$0D` | `ID_ARK_ROOM` | Ark Room (Title/End) |
 
-Room transitions call `initRoomState` which loads per-room data from tables: `roomBGColorTable`, `roomPFColorTable`, `PFControlTable`, `objectPosXTable`, `roomObjPosYTable`, playfield graphics pointers, and sprite data.
+Room transitions call `initRoomState` which loads per-room data from tables: `roomBGColorTable`, `roomPFColorTable`, `pfControlTable`, `objectPosXTable`, `roomObjPosYTable`, playfield graphics pointers, and sprite data.
 
 Each room has a **handler** dispatched from `roomHandlerJmpTable` (Bank 1), which runs room-specific logic every frame.
 
@@ -530,7 +530,7 @@ Two channels with effect timers (`soundChan0Effect`, `soundChan1Effect`). The Ra
 
 #### Easter Egg (Yar)
 
-Triggered via `HandleEasterEgg` — finding Yar on the Flying Saucer Mesa sets `yarFoundBonus`. When combined with a high enough score, Howard Scott Warshaw's initials (`devInitialsGfx0` / `devInitialsGfx1`) appear in the inventory strip at `checkShowDevInitials`.
+Triggered via `handleEasterEgg` — finding Yar on the Flying Saucer Mesa sets `yarFoundBonus`. When combined with a high enough score, Howard Scott Warshaw's initials (`devInitialsGfx0` / `devInitialsGfx1`) appear in the inventory strip at `checkShowDevInitials`.
 
 ### Controls
 

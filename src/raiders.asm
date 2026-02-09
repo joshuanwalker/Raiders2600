@@ -453,6 +453,14 @@ MAX_INVENTORY_ITEMS			= 6
 INVENTORY_SLOT_LIMIT		= (MAX_INVENTORY_ITEMS * 2) - 1 ; $0B — one past last valid 2-byte slot index
 SCREEN_CENTER_X				= (XMAX / 2) - 4               ; $4C — standard centered X position
 
+;--------------------
+; PLACEHOLDERS 
+; The following is a dummy addresss that is replaced
+; by the spider room's handler. (ZP address at one time?)
+;---------------------
+spiderRoomPlayerGraphics	= $00E5
+
+
 ;***********************************************************
 ;	bank 0 / (First bank)
 ;***********************************************************
@@ -478,7 +486,7 @@ moveObjectLoop
 	sta		WSYNC						; wait for next scan line
 	lda		p0PosX,x					; get Thief's horizontal position
 	tay
-	lda		HMOVETable,y				; get fine motion/coarse position value
+	lda		hmoveTable,y				; get fine motion/coarse position value
 	sta		HMP0,x						; set Thief's fine motion value
 	and		#$0f						; mask off fine motion value
 	tay									; move coarse move value to y
@@ -493,7 +501,7 @@ coarseMoveObj
 	jmp		jmpDisplayKernel
 
 
-CheckForObjHit:
+checkForObjHit:
 ; -----------------------------------------------------------------------
 ; MAIN GAME COLLISION HANDLER
 ; -----------------------------------------------------------------------
@@ -1623,7 +1631,7 @@ reversePosOrder
 applyEventOffsetToIndy
 	ror		temp1						; Rotate player input to extract direction
 	bcs		checkScanBoundaryOrContinue	; If carry set, skip
-	jsr		CheckRoomOverrideCondition	; Run event/collision subroutine
+	jsr		checkRoomOverrideCondition	; Run event/collision subroutine
 	bcs		triggerScreenTransition		; If failed/blocked, exit
 	bvc		checkScanBoundaryOrContinue	; If no vertical/horizontal event flag, skip
 	ldy		temp0						; Event index
@@ -1654,7 +1662,7 @@ handleInventorySelect
 	bit		INPT4|$30					; read action button from left controller
 	bmi		normalizeplayerInput		; branch if action button not pressed
 	bit		grenadeState
-	bmi		ExitItemHandler				; If game state prevents interaction, skip
+	bmi		exitItemHandler				; If game state prevents interaction, skip
 	lda		playerInputState
 	ror									; Check bit 0 of input
 	bcs		handleIInventoryUpdate		; If set, already mid-action, skip
@@ -1668,7 +1676,7 @@ normalizeplayerInput
 	rol		playerInputState
 handleIInventoryUpdate
 	lda		inputActionState
-	bpl		ExitItemHandler				; If no item queued, exit
+	bpl		exitItemHandler				; If no item queued, exit
 	and		#$1f
 	cmp		#$01
 	bne		checkShovelPickup
@@ -1691,12 +1699,12 @@ placeGenericItem
 clearItemUseFlag
 	lda		#$00
 	sta		inputActionState			; Clear item pickup/use state
-ExitItemHandler
+exitItemHandler
 	jmp		selectIndySprite
 
 clearItemUseOnButtonRelease
 	bit		grenadeState				; Test game state flags
-	bmi		ExitItemHandler				; If bit 7 is set (N = 1),
+	bmi		exitItemHandler				; If bit 7 is set (N = 1),
 										; then a grenade or parachute event
 										; is in progress.
 	bit		INPT5|$30					; read action button from right controller
@@ -1949,7 +1957,7 @@ selectIndySprite
 	bit		mesaSideState				; Check game status flags
 	bpl		setIndySpriteIfStill		; If parachute bit (bit 7) is clear,
 										; skip parachute rendering
-	lda		#<ParachutingIndySprite		; Load low byte of parachute sprite address
+	lda		#<parachutingIndySprite		; Load low byte of parachute sprite address
 	sta		indyGfxPtrLo					; Set Indy's sprite pointer
 	lda		#HEIGHT_PARACHUTING_SPRITE	; Load height for parachuting sprite
 	bne		setIndySpriteHeight
@@ -1960,7 +1968,7 @@ setIndySpriteIfStill
 	bne		updateIndyWalkCycle			; If any direction is pressed, skip
 										; (Indy is moving)
 setIndyStandSprite
-	lda		#<IndyStandSprite			; Load low byte of pointer to stationary sprite
+	lda		#<indyStandSprite			; Load low byte of pointer to stationary sprite
 setIndySpriteLSBValue
 	sta		indyGfxPtrLo					; Store sprite pointer (low byte)
 	lda		#<HEIGHT_INDY_SPRITE		; Load low byte of pointer to stationary sprite
@@ -1981,11 +1989,11 @@ checkAnimationTiming
 	lda		#HEIGHT_INDY_SPRITE			; Load height for walking sprite
 	clc
 	adc		indyGfxPtrLo				; Advance to next sprite frame
-	cmp		#<IndyStandSprite			; Check if we've reached the end of walkcycle
+	cmp		#<indyStandSprite			; Check if we've reached the end of walkcycle
 	bcc		setIndySpriteLSBValue		; If not, update walking frame
 	lda		#$02						; Set a short animation timer
 	sta		soundChan1Effect
-	lda		#<Indy_0					; Reset animation back to first walking frame
+	lda		#<indy_0					; Reset animation back to first walking frame
 	bcs		setIndySpriteLSBValue		; Unconditional jump to store new sprite pointer
 
 
@@ -2075,7 +2083,7 @@ setupNewRoom
 setRoomAttr
 	sta		screenInitFlag				; Store the updated flag
 	ldx		currentRoomId				; get the current room id
-	lda		HMOVETable,x
+	lda		hmoveTable,x
 	sta		NUSIZ0						; Set object sizing/horizontal motion control
 	lda		roomPFControlFlags
 	sta		CTRLPF						; Set playfield control flags
@@ -2093,16 +2101,16 @@ setRoomAttr
 	sta		kernelRenderState			; set object state value
 	ldx		#$04
 
-SetupThievesDenObjects
+setupThievesDenObjects
 	; --------------------------------------------------------------------------
 	; INITIALIZE THIEVES POSITIONS
 	; Uses a lookup table to set initial HMOVE values for 5 thieves.
 	; --------------------------------------------------------------------------
 	ldy		dynamicGfxData,x			; Get index.
-	lda		HMOVETable,y				; Load X position from table.
+	lda		hmoveTable,y				; Load X position from table.
 	sta		thiefPosX,x					; Store
 	dex									; Next thief.
-	bpl		SetupThievesDenObjects		; Loop through all Thieves' Den
+	bpl		setupThievesDenObjects		; Loop through all Thieves' Den
 										; enemy positions
 placeObjectPosX
 	jmp		setThievesPosX
@@ -2132,7 +2140,7 @@ clearStateLoop
 	lda		#$14						; Now set A = 20
 	bne		clearStateLoop				; Unconditional loop to write new value
 exitStateClear
-	lda		#$fc						; Hi byte for thief/dirt pile color pointer
+	lda		#>thiefSprites				; Hi byte for thief/dirt pile color pointer
 	sta		kernelDataPtrHi				; Set color data page ($FC)
 	rts									; Return from subroutine
 
@@ -2160,7 +2168,7 @@ resetRoomFlags
 	ror		playerInputState			; Reverse the bit rotation
 										; keeps input state consistent
 	ldx		currentRoomId				; Load the current room ID into X.
-	lda		PFControlTable,x			; Set playfield control flags
+	lda		pfControlTable,x			; Set playfield control flags
 										; (reflection, priority) based on table.
 	sta		roomPFControlFlags
 	cpx		#ID_ARK_ROOM				; Is this the Ark Room?
@@ -2190,13 +2198,13 @@ loadRoomGfx
 	bcs		clearGameStateMem			; jump to clear game state memory.
 	adc		roomSpecialTable,x			; set special behavior flags for room
 	sta		p0DrawStartLine					; Set kernel scanline boundary
-	lda		PF1GfxDataLo,x
+	lda		pf1GfxDataLo,x
 	sta		pf1GfxPtrLo					; Store PF1 graphics pointer LSB.
-	lda		PF1GfxDataHi,x
+	lda		pf1GfxDataHi,x
 	sta		pf1GfxPtrHi					; Store PF1 graphics pointer MSB.
-	lda		PF2GfxDataLo,x
+	lda		pf2GfxDataLo,x
 	sta		pf2GfxPtrLo					; Store PF2 graphics pointer LSB.
-	lda		PF2GfxDataHi,x
+	lda		pf2GfxDataHi,x
 	sta		pf2GfxPtrHi					; Store PF2 graphics pointer MSB.
 	lda		#$55
 	sta		ballPosY					; Init object vertical parameter
@@ -2294,7 +2302,7 @@ finishRoomSpecificInit
 	sta		roomObjectVar				; Clear Scroll Offset
 	rts									; complete screen init
 
-CheckRoomOverrideCondition
+checkRoomOverrideCondition
 	ldy		roomOverrideTable,x			; Load room override index based on
 										; current screen ID
 	cpy		temp2						; Compare with current override
@@ -2377,9 +2385,9 @@ inputFinalOverride
 	bmi		checkPosYlOverride			; If fire button pressed, allow override
 rtsNoOverrideSideEffect
 	clc									; Clear carry to signal no override
-	bit		NoOpRTS						; Dummy BIT used for timing/padding
+	bit		noOpRTS						; Dummy BIT used for timing/padding
 
-NoOpRTS
+noOpRTS
 	rts
 
 checkHeadOfRaAlign
@@ -2417,7 +2425,7 @@ dropItemLoop
 	sta		invSlotLo,x
 	cpy		#$05						; If item index is less than 5,
 										; skip clearing pickup flag
-	bcc		FinishItemRemoval
+	bcc		finishItemRemoval
 ; Remove pickup status bit if this is a non-basket item
 	tya									; Move item ID to A
 	tax									; move item id to x
@@ -2425,7 +2433,7 @@ dropItemLoop
 										; show it's no longer taken
 	txa									; X -> A
 	tay									; And back to Y for further use
-FinishItemRemoval
+finishItemRemoval
 	jmp		finishInventorySelect
 
 checkNextItem
@@ -2585,7 +2593,7 @@ finishInventorySelect
 	.byte	$00,$00,$00					; $dafd (*)
 
 
-HMOVETable
+hmoveTable
 	.byte MSBL_SIZE1 | ONE_COPY			; Treasure Room
 	.byte MSBL_SIZE1 | ONE_COPY			; Marketplace
 	.byte MSBL_SIZE8 | DOUBLE_SIZE		; Entrance Room
@@ -2624,7 +2632,7 @@ COARSE_MOTION SET 9
 
 
 
-PFControlTable
+pfControlTable
 	.byte MSBL_SIZE2 | PF_REFLECT					; Treasure Room
 	.byte MSBL_SIZE2 | PF_REFLECT					; Marketplace
 	.byte MSBL_SIZE2 | PF_REFLECT					; Entrance Room
@@ -2709,14 +2717,14 @@ objectPosXTable
 	.byte	$4c,$4c,$4c,$12,$12
 
 p0GfxDataHi
-	.byte >TreasureRoomPlayerGraphics
-	.byte >MarketplacePlayerGraphics
-	.byte >EntranceRoomPlayerGraphics
-	.byte >BlackMarketPlayerGraphics
-	.byte >MapRoomPlayerGraphics
-	.byte >MesaSidePlayerGraphics
-	.byte $FA
-	.byte $00
+	.byte >treasureRoomPlayerGraphics
+	.byte >marketplacePlayerGraphics
+	.byte >entranceRoomPlayerGraphics
+	.byte >blackMarketPlayerGraphics
+	.byte >mapRoomPlayerGraphics
+	.byte >mesaSidePlayerGraphics
+	.byte >templeEntrancePlayerGraphics	
+	.byte >spiderRoomPlayerGraphics				; Spider Room has placeholder value; handler overrides
 	.byte >shiningLightSprites
 	.byte >emptySprite
 	.byte >thiefSprites
@@ -2724,14 +2732,14 @@ p0GfxDataHi
 	.byte >thiefSprites
 
 p0GfxDataLo
-	.byte <TreasureRoomPlayerGraphics
-	.byte <MarketplacePlayerGraphics
-	.byte <EntranceRoomPlayerGraphics
-	.byte <BlackMarketPlayerGraphics
-	.byte <MapRoomPlayerGraphics
-	.byte <MesaSidePlayerGraphics
-	.byte $C1
-	.byte $E5
+	.byte <treasureRoomPlayerGraphics
+	.byte <marketplacePlayerGraphics
+	.byte <entranceRoomPlayerGraphics
+	.byte <blackMarketPlayerGraphics
+	.byte <mapRoomPlayerGraphics
+	.byte <mesaSidePlayerGraphics
+	.byte <templeEntrancePlayerGraphics
+	.byte <spiderRoomPlayerGraphics				; Spider Room has placeholder value; handler overrides
 	.byte <shiningLightSprites
 	.byte <emptySprite
 	.byte <thiefSprites
@@ -2783,17 +2791,17 @@ m0PosYTable
 	.byte	$f0
 
 
-PF1GfxDataLo
-	.byte <COLUP0,<COLUP0,<COLUP0,<COLUP0,<COLUP0,<COLUP0,<RoomPF1GraphicData_7,<RoomPF1GraphicData_8,<RoomPF1GraphicData_9,<RoomPF1GraphicData_10,<RoomPF1GraphicData_10
+pf1GfxDataLo
+	.byte <COLUP0,<COLUP0,<COLUP0,<COLUP0,<COLUP0,<COLUP0,<roomPF1GraphicData_7,<roomPF1GraphicData_8,<roomPF1GraphicData_9,<roomPF1GraphicData_10,<roomPF1GraphicData_10
 
-PF1GfxDataHi
-	.byte >COLUP0,>COLUP0,>COLUP0,>COLUP0,>COLUP0,>COLUP0,>RoomPF1GraphicData_7,>RoomPF1GraphicData_8,>RoomPF1GraphicData_9,>RoomPF1GraphicData_10,>RoomPF1GraphicData_10
+pf1GfxDataHi
+	.byte >COLUP0,>COLUP0,>COLUP0,>COLUP0,>COLUP0,>COLUP0,>roomPF1GraphicData_7,>roomPF1GraphicData_8,>roomPF1GraphicData_9,>roomPF1GraphicData_10,>roomPF1GraphicData_10
 
-PF2GfxDataLo
-	.byte <HMP0,<HMP0,<HMP0,<HMP0,<HMP0,<HMP0,<RoomPF1GraphicData_6,<RoomPF2GraphicData_7,<RoomPF2GraphicData_6,<RoomPF2GraphicData_9,<RoomPF2GraphicData_9
+pf2GfxDataLo
+	.byte <HMP0,<HMP0,<HMP0,<HMP0,<HMP0,<HMP0,<roomPF1GraphicData_6,<roomPF2GraphicData_7,<roomPF2GraphicData_6,<roomPF2GraphicData_9,<roomPF2GraphicData_9
 
-PF2GfxDataHi
-	.byte >HMP0,>HMP0,>HMP0,>HMP0,>HMP0,>HMP0,>RoomPF1GraphicData_6,>RoomPF2GraphicData_7,>RoomPF2GraphicData_6,>RoomPF2GraphicData_9,>RoomPF2GraphicData_9
+pf2GfxDataHi
+	.byte >HMP0,>HMP0,>HMP0,>HMP0,>HMP0,>HMP0,>roomPF1GraphicData_6,>roomPF2GraphicData_7,>roomPF2GraphicData_6,>roomPF2GraphicData_9,>roomPF2GraphicData_9
 
 itemStatusBitValues
 	.byte BASKET_STATUS_MARKET_GRENADE | PICKUP_ITEM_STATUS_WHIP
@@ -3073,9 +3081,9 @@ initGameVars:
 	sta		invSlotLo5
 	lda		#INIT_SCORE						; set initial adventurePoints
 	sta		adventurePoints
-	lda		#<IndyStandSprite				; set Indy's initial sprite (standing)
+	lda		#<indyStandSprite				; set Indy's initial sprite (standing)
 	sta		indyGfxPtrLo
-	lda		#>IndySprites
+	lda		#>indySprites
 	sta		indyGfxPtrHi
 	lda		#SCREEN_CENTER_X
 	sta		indyPosX						; set Indy's initial X position
@@ -3274,14 +3282,14 @@ swarmEventCounterTable
 	org		BANK1TOP					; Physical address of 2nd bank in ROM   ($1000-$1FFF)
 	rorg	BANK1_REORG					; Shift to logical address for 2nd bank ($F000-$FFFF)
 
-BANK1Start
+bank1Start
 	lda		BANK0STROBE
 
 scrollingPlayfieldKernel
 ; This loop draws the main playfield area.
 ; It handles walls, background graphics, and player sprites.
 	cmp		p0DrawStartLine				; Check against graphics data/state.
-	bcs		DungeonWallScanlineHandler	; Branch if carry set.
+	bcs		dungeonWallScanlineHandler	; Branch if carry set.
 	lsr									; Divide by 2.
 	clc									; Clear carry
 	adc		roomObjectVar				; Add vertical offset.
@@ -3294,7 +3302,7 @@ scrollingPlayfieldKernel
 	lda		(pf2GfxPtrLo),y				; Load PF2 graphics data.
 	sta		PF2							; Store in PF2.
 	bcc		drawIndySprite				; Branch to draw player sprites.
-DungeonWallScanlineHandler
+dungeonWallScanlineHandler
 	sbc		kernelRenderState			; Adjust for snake/dungeon state.
 	lsr									; Divide by 4.
 	lsr
@@ -3462,9 +3470,9 @@ setMissile1Enable
 	ldy		#DISABLE_BM					; Default to disable missile.
 	txa									; Move scanlineCounter to A.
 	cmp		weaponPosY					; Compare with weapon position.
-	bne		UpdateMissile1Enable		; If not weapon pos, skip enable.
+	bne		updateMissile1Enable		; If not weapon pos, skip enable.
 	dey									; Enable missile (Y becomes $FF/Enable).
-UpdateMissile1Enable
+updateMissile1Enable
 	sty		ENAM1						; Update Missile 1 Enable.
 	sec									; Set carry.
 	sbc		indyPosY					; Subtract Indy vertical position.
@@ -3511,7 +3519,7 @@ skipStaticPlayer1Sprite
 	lda		#$00						; Load 0 (clear graphics).
 	beq		staticPlayer1Sprite			; Jump back to store 0 in GRP1.
 
-AdvanceStillKernelScanline
+advanceStillKernelScanline
 	inx									; Increment scanline counter.
 	sta		HMCLR						; Clear horizontal motion.
 	cpx		#HEIGHT_KERNEL				; Check limit.
@@ -3546,7 +3554,7 @@ thiefKernel
 	sec									; Set Carry.
 	sbc		indyPosY					; Subtract Indy Y.
 	cmp		indySpriteHeight			; Compare with Height.
-	bcs		AdvanceStillKernelScanline	; If outside (Carry Set), branch back.
+	bcs		advanceStillKernelScanline	; If outside (Carry Set), branch back.
 	tay									; Use result as Y index.
 	lda		(indyGfxPtrLo),y			; Load Indy graphics.
 	sta		HMCLR						; Clear horizontal motion.
@@ -3569,9 +3577,9 @@ multiplexedSpriteKernel
 	lda		temp4						; Load Coarse position value (HMOVE).
 	lsr		kernelRenderState			; Shift state right (clears Bit 7,
 										; moves to next state).
-ThiefPosTimingLoop
+thiefPosTimingLoop
 	dey									; Delay loop for horizontal positioning.
-	bpl		ThiefPosTimingLoop			; Loop until Y < 0.
+	bpl		thiefPosTimingLoop			; Loop until Y < 0.
 	sta		RESP0						; Strobe Reset Player 0 to set
 										; coarse horizontal position.
 	sta		HMP0						; Set Fine Motion Player 0
@@ -3634,7 +3642,7 @@ updateThiefAnimation
 	sta		p0GfxPtrLo					; Set as Low Byte of Sprite Pointer.
 										; High Byte is inherited from current context
 										; (Thief Page or specific override)
-	lda		#$65						; Dirt pile color data (reads $FC65-$FC74:
+	lda		#<dirtPileColorBase			; Dirt pile color data (reads 16 bytes:
 										; 7 × $FF from fullDirtPile as BROWN+15,
 										; then dirtPileColorGradient RED→YELLOW)
 	sta		kernelDataPtrLo				; Set Color Pointer Low Byte.
@@ -3918,7 +3926,7 @@ openTimepiece
 	bit		INPT5|$30					; read action button from right controller
 	bpl		updateTimepieceSprite		; branch if action button pressed
 	lda		#<closedTimepieceSprite
-	bne		StoreTimepieceSprite		; unconditional branch
+	bne		storeTimepieceSprite		; unconditional branch
 
 updateTimepieceSprite
 	; --------------------------------------------------------------------------
@@ -3932,7 +3940,7 @@ updateTimepieceSprite
 	lsr
 	adc		#<timepiece12_00			; Add Base Address of Timepiece Graphics.
 
-StoreTimepieceSprite
+storeTimepieceSprite
 	ldx		selectedItemSlot			; Get the current slot for the timepiece.
 	sta		invSlotLo,x					; Update the graphics pointer (Low Byte).
 
@@ -3942,7 +3950,7 @@ resetInventoryState
 
 updateEventState
 	bit		screenEventState			; Check for special inventory event.
-	bpl		UpdateInvItemPos			; If Bit 7 clear, skip to standard update.
+	bpl		updateInvItemPos			; If Bit 7 clear, skip to standard update.
 
 	; --------------------------------------------------------------------------
 	; INVENTORY EVENT ANIMATION
@@ -3950,7 +3958,7 @@ updateEventState
 	lda		frameCount					; Get current frame coun
 	and		#$07						; Mask lower 3 bits.
 	cmp		#$05						; Compare with 5.
-	bcc		UpdateInvEventState			; If < 5, Update Animation State.
+	bcc		updateInvEventState			; If < 5, Update Animation State.
 	ldx		#$04						; X = 4.
 	ldy		#$01						; Y = 1.
 	bit		indyStatus				; Check major event flag
@@ -3964,16 +3972,16 @@ setInvEventStateTo3
 updateInvEventStateAfterYSet
 	jsr		updateMoveToTarget			; Call Object Position Handler.
 
-UpdateInvEventState
+updateInvEventState
 	lda		frameCount					; Get current frame count.
 	and		#$06						; Mask bits 1 and 2.
 	asl									; Shift left
 	asl
 	sta		kernelDataPtrLo				; Update Timepiece Graphics Pointer
-	lda		#$fd						; Load $FD.
-	sta		kernelDataPtrHi				; Set timepiece gfx page ($FD)
+	lda		#>timepieceBallFrame0	; Timepiece ball animation data page
+	sta		kernelDataPtrHi				; Set timepiece gfx page
 
-UpdateInvItemPos
+updateInvItemPos
 	; --------------------------------------------------------------------------
 	; POSITION INVENTORY OBJECTS
 	; Positions the strip of 3 items visible in the inventory.
@@ -3981,7 +3989,7 @@ UpdateInvItemPos
 	ldx		#$02						; Start at Index 2.
 
 invObjPosLoop
-	jsr		UpdateInvObjPos				; Update Position for Item X.
+	jsr		updateInvObjPos				; Update Position for Item X.
 	inx									; Next Item.
 	cpx		#$05						; Loop until 5.
 	bcc		invObjPosLoop				; Loop.
@@ -4050,7 +4058,7 @@ jmpToNewFrame
 	sta		temp4						; Store bank-switch jump target lo
 	lda		#>newFrame					; Load MSB address to start new frame
 	sta		temp5						; Store bank-switch jump target hi
-	jmp		JumpToBank0					; Jump to routine in Bank 0
+	jmp		jumpToBank0					; Jump to routine in Bank 0
 
 checkInvCycle
 	bit		grappleWhipState			; Check grapple/whip state.
@@ -4205,13 +4213,13 @@ checkBoundary
 jmpObjHitHandeler
 	; --------------------------------------------------------------------------
 	; BANK SWITCH RETURN
-	; Return to CheckForObjHit in Bank 0.
+	; Return to checkForObjHit in Bank 0.
 	; --------------------------------------------------------------------------
-	lda		#<CheckForObjHit
+	lda		#<checkForObjHit
 	sta		temp4
-	lda		#>CheckForObjHit
+	lda		#>checkForObjHit
 	sta		temp5
-JumpToBank0
+jumpToBank0
 	lda		#LDA_ABS
 	sta		temp0
 	lda		#<BANK0STROBE
@@ -4246,13 +4254,13 @@ arkPedestalKernel
 	bcs		drawLiftingPedestal			; If > Height*2, draw pedestal bits instead
 	lsr									; Divide by 2 (Sprite shift)
 	tay									; Transfer to Y index
-	lda		IndyStandSprite,y			; Load Indy standing sprite data
+	lda		indyStandSprite,y			; Load Indy standing sprite data
 	jmp		drawPlayer1Sprite			; Jump to common draw routine
 
 drawLiftingPedestal
 	and		#$03						; Mask low 2 bits for Pedestal pattern
 	tay									; Transfer to Y
-	lda		PedestalLiftSprite,y		; Load Pedestal lift diamond Sprite data
+	lda		pedestalLiftSprite,y		; Load Pedestal lift diamond Sprite data
 
 drawPlayer1Sprite
 	sta		GRP1						; Store in GRP1 (Player 1 Graphics)
@@ -4416,7 +4424,7 @@ animateSpider:
 
 updateSpiderSpriteState:
 		tax									; Use A (masked spiderRoomState) as index
-		lda		TreasureRoomItemStateTable,x	; Load a value from table
+		lda		treasureRoomItemStateTable,x	; Load a value from table
 		sta		m0PosYShadow				; Update the shadow variable
 		dec		spiderRoomState				; Decrement the timer/state counter
 
@@ -4529,7 +4537,7 @@ weaponUse:
 finishValleyOfPoison:
 		jmp		jmpSetupNewRoom		; Return.
 
-WellOfSoulsRoomHandler:
+wellOfSoulsRoomHandler:
 	; --------------------------------------------------------------------------
 	; WELL OF SOULS (Screen ID 12)
 	; Uses Thief logic to drive Thieves here too.
@@ -4933,8 +4941,8 @@ finishTempleEntrance:
 		sty		kernelRenderState			; Store state
 
 		; Calculate P0 Graphics Pointer based on State
-		; $C1 - State -> P0 Ptr Low
-		lda		#$c1
+		; Offset backward from end of timeSprite data
+		lda		#<templeEntrancePlayerGraphics
 		sec
 		sbc		p0SpriteHeight
 		sta		p0GfxPtrLo					; Set P0 Graphics Pointer Low
@@ -5012,7 +5020,7 @@ jmpSetupNewRoom
 		sta		temp4						; Store bank-switch jump target lo.
 		lda		#>setupNewRoom				; Load Return Address High.
 		sta		temp5						; Store bank-switch jump target hi.
-		jmp		JumpToBank0					; Jump to Bank 0.
+		jmp		jumpToBank0					; Jump to Bank 0.
 
 entranceRoomHandler
 	; --------------------------------------------------------------------------
@@ -5066,7 +5074,7 @@ initKernalJumps
 		sta		PF1							; Set PF1
 		lda		roomPF2Gfx,y				; Get PF2 Data.
 		sta		PF2							; Set PF2
-		ldx		KernelJumpTableIndex,y		; Get Kernel Index.
+		ldx		kernelJumpTableIndex,y		; Get Kernel Index.
 		lda		kernelJumpTable+1,x			; Get High Byte.
 		pha									; Push High.
 		lda		kernelJumpTable,x			; Get Low Byte.
@@ -5139,29 +5147,29 @@ moveP0PosXLeft
 	dec		p0PosX,x						; Decrement Follower X (Move Left).
 	rts										; Return.
 
-UpdateObjBoundPos
+updateObjBoundPos
 	lda		p0PosY,x						; Get Object Y.
 	cmp		#$53							; Compare $53 (Bottom/Top Boundary).
-	bcc		UpdateObjClampPos				; Branch if < $53.
-UpdateObjBoundClamp
+	bcc		updateObjClampPos				; Branch if < $53.
+updateObjBoundClamp
 	rol		secretArkMesaID,x				; Rotate State/Flags.
 	clc										; Clear Carry.
 	ror		secretArkMesaID,x				; Rotate Back (Clear Bit 7).
 	lda		#$78							; Load $78.
 	sta		p0PosY,x						; into p0 Y Position
 	rts										; Return.
-UpdateObjClampPos
+updateObjClampPos
 	lda		p0PosX,x						; Get Object X.
 	cmp		#$10							; Compare $10 (Left Boundary).
-	bcc		UpdateObjBoundClamp				; Branch if < $10.
+	bcc		updateObjBoundClamp				; Branch if < $10.
 	cmp		#$8e							; Compare $8E (Right Boundary).
-	bcs		UpdateObjBoundClamp				; Branch if >= $8E.
+	bcs		updateObjBoundClamp				; Branch if >= $8E.
 	rts		; Branch if >= $8E.
 
 	;padding to $F900
 	.byte	$00,$00,$00,$00
 
-BlackMarketPlayerGraphics
+blackMarketPlayerGraphics
 	; ---------------------------------------------------------------
 	; First seller — green turban with colored face bands
 	; (initial P0 color = ORANGE + 10 from roomP0ColorTable)
@@ -5283,7 +5291,7 @@ BlackMarketPlayerGraphics
 	.byte $00 ; |........| $F94F
 	.byte $00 ; |........| $F950
 
-MapRoomPlayerGraphics
+mapRoomPlayerGraphics
 	; ---------------------------------------------------------------
 	; The Map Room (Room 4) P0 data stream.
 	; P0 stays at initial X=$4F throughout (no HMOVE commands).
@@ -5396,7 +5404,7 @@ MapRoomPlayerGraphics
 	.byte $7F ; |.XXXXXXX| $F9A0  Solid floor
 	.byte $7F ; |.XXXXXXX| $F9A1  Solid floor
 
-MesaSidePlayerGraphics
+mesaSidePlayerGraphics
 	; ---------------------------------------------------------------
 	; Parachute figure (initial color = GREEN_BLUE + 8 from roomP0ColorTable)
 	; Drawn at the top of the screen; visible when Indy is parachuting in.
@@ -5499,17 +5507,17 @@ MesaSidePlayerGraphics
 	.byte $00 ; |........| $F9EC
 	.byte $00 ; |........| $F9ED
 
-KernelJumpTableIndex
+kernelJumpTableIndex
 	.byte 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 4, 4, 6
 
-PedestalLiftSprite
+pedestalLiftSprite
 	.byte $1C ; |...XXX..| $F9FC
 	.byte $36 ; |..XX.XX.| $F9FD
 	.byte $63 ; |.XX...XX| $F9FE
 	.byte $36 ; |..XX.XX.| $F9FF
 
-IndySprites
-Indy_0
+indySprites
+indy_0
 	.byte $18 ; |...XX...| $FA00
 	.byte $3C ; |..XXXX..| $FA01
 	.byte $00 ; |........| $FA02
@@ -5522,7 +5530,7 @@ Indy_0
 	.byte $43 ; |.X....XX| $FA09
 	.byte $00 ; |........| $FA0A
 
-Indy_1
+indy_1
 	.byte $18 ; |...XX...| $FA0B
 	.byte $3C ; |..XXXX..| $FA0C
 	.byte $00 ; |........| $FA0D
@@ -5535,7 +5543,7 @@ Indy_1
 	.byte $46 ; |.X...XX.| $FA14
 	.byte $00 ; |........| $FA15
 
-Indy_2
+indy_2
 	.byte $18 ; |...XX...| $FA16
 	.byte $3C ; |..XXXX..| $FA17
 	.byte $00 ; |........| $FA18
@@ -5548,7 +5556,7 @@ Indy_2
 	.byte $8C ; |X...XX..| $FA1F
 	.byte $00 ; |........| $FA20
 
-Indy_3
+indy_3
 	.byte $18 ; |...XX...| $FA21
 	.byte $3C ; |..XXXX..| $FA22
 	.byte $00 ; |........| $FA23
@@ -5561,7 +5569,7 @@ Indy_3
 	.byte $0C ; |....XX..| $FA2A
 	.byte $00 ; |........| $FA2B
 
-Indy_4
+indy_4
 	.byte $18 ; |...XX...| $FA2C
 	.byte $3C ; |..XXXX..| $FA2D
 	.byte $00 ; |........| $FA2E
@@ -5574,7 +5582,7 @@ Indy_4
 	.byte $18 ; |...XX...| $FA35
 	.byte $00 ; |........| $FA36
 
-Indy_5
+indy_5
 	.byte $18 ; |...XX...| $FA37
 	.byte $3C ; |..XXXX..| $FA38
 	.byte $00 ; |........| $FA39
@@ -5587,7 +5595,7 @@ Indy_5
 	.byte $30 ; |..XX....| $FA40
 	.byte $00 ; |........| $FA41
 
-Indy_6
+indy_6
 	.byte $18 ; |...XX...| $FA42
 	.byte $3C ; |..XXXX..| $FA43
 	.byte $00 ; |........| $FA44
@@ -5600,7 +5608,7 @@ Indy_6
 	.byte $30 ; |..XX....| $FA4B
 	.byte $00 ; |........| $FA4C
 
-Indy_7
+indy_7
 	.byte $18 ; |...XX...| $FA4D
 	.byte $3C ; |..XXXX..| $FA4E
 	.byte $00 ; |........| $FA4F
@@ -5613,7 +5621,7 @@ Indy_7
 	.byte $20 ; |..X.....| $FA56
 	.byte $00 ; |........| $FA57
 
-IndyStandSprite
+indyStandSprite
 	.byte $18 ; |...XX...| $FA58
 	.byte $3C ; |..XXXX..| $FA59
 	.byte $00 ; |........| $FA5A
@@ -5626,7 +5634,7 @@ IndyStandSprite
 	.byte $3C ; |..XXXX..| $FA61
 	.byte $00 ; |........| $FA62
 
-ParachutingIndySprite
+parachutingIndySprite
 	.byte $3C ; |..XXXX..| $FA63
 	.byte $7E ; |.XXXXXX.| $FA64
 	.byte $FF ; |XXXXXXXX| $FA65
@@ -5735,6 +5743,7 @@ timeSprite
 	.byte HMOVE_R1 | 7
 	.byte HMOVE_L3 | 7
 	.byte HMOVE_L3 | 7
+templeEntrancePlayerGraphics
 	.byte HMOVE_0  | 0
 
 
@@ -6103,7 +6112,7 @@ raidersMarchFreqTable
 	.byte $18 ; |...XX...|
 
 thiefSprites
-ThiefSprite_0
+thiefSprite_0
 	.byte $14 ; |...X.X..|
 	.byte $3C ; |..XXXX..|
 	.byte $7E ; |.XXXXXX.|
@@ -6120,7 +6129,7 @@ ThiefSprite_0
 	.byte $11 ; |...X...X|
 	.byte $33 ; |..XX..XX|
 	.byte $00 ; |........|
-ThiefSprite_1
+thiefSprite_1
 	.byte $14 ; |...X.X..|
 	.byte $3C ; |..XXXX..|
 	.byte $7E ; |.XXXXXX.|
@@ -6137,7 +6146,7 @@ ThiefSprite_1
 	.byte $22 ; |..X...X.|
 	.byte $66 ; |.XX..XX.|
 	.byte $00 ; |........|
-ThiefSprite_2
+thiefSprite_2
 	.byte $14 ; |...X.X..|
 	.byte $3C ; |..XXXX..|
 	.byte $7E ; |.XXXXXX.|
@@ -6154,7 +6163,7 @@ ThiefSprite_2
 	.byte $44 ; |.X...X..|
 	.byte $CC ; |XX..XX..|
 	.byte $00 ; |........|
-ThiefSprite_3
+thiefSprite_3
 	.byte $14 ; |...X.X..|
 	.byte $3C ; |..XXXX..|
 	.byte $7E ; |.XXXXXX.|
@@ -6173,8 +6182,8 @@ ThiefSprite_3
 	.byte $00 ; |........|
 
 thiefSpriteValueLo
-	.byte <ThiefSprite_0, <ThiefSprite_1
-	.byte <ThiefSprite_2, <ThiefSprite_3
+	.byte <thiefSprite_0, <thiefSprite_1
+	.byte <thiefSprite_2, <thiefSprite_3
 
 
 thiefColors
@@ -6208,7 +6217,8 @@ fullDirtPile
 	.byte $3E ; |..XXXXX.|
 	.byte $7F ; |.XXXXXXX|
 	.byte $FF ; |XXXXXXXX|
-	.byte $FF ; |XXXXXXXX|
+dirtPileColorBase
+	.byte $FF ; |XXXXXXXX|	; ← kernelDataPtrLo points here for color data
 	.byte $FF ; |XXXXXXXX|
 	.byte $FF ; |XXXXXXXX|
 	.byte $FF ; |XXXXXXXX|
@@ -6217,9 +6227,8 @@ fullDirtPile
 	.byte $FF ; |XXXXXXXX|
 
 ; Dirt pile COLUP0 color gradient (bottom 9 scanlines).
-; The dirt pile color pointer is set to $65 (kernelDataPtrLo at line 3636)
-; with kernelDataPtrHi = $FC, reading 16 bytes from $FC65-$FC74.
-; The first 7 color values reuse fullDirtPile's $FF bytes (BROWN+15).
+; kernelDataPtrLo is set to <dirtPileColorBase, with kernelDataPtrHi = $FC.
+; Reading 16 bytes: the first 7 reuse fullDirtPile's $FF bytes (BROWN+15).
 ; These 9 bytes provide the remaining gradient: RED fading to dark YELLOW.
 dirtPileColorGradient
 	.byte $3E ; |..XXXXX.| $FC6C  RED + 14
@@ -6266,7 +6275,7 @@ roomHandlerJmpTable:
 		.word mesaFieldRoomHandler-1 ; $fc9a/b
 		.word valleyOfPoisonRoomHandler-1 ; $fc9c/d
 		.word thievesDenRoomHandler-1 ; $fc9e/f
-		.word WellOfSoulsRoomHandler-1 ; $fca0/1
+		.word wellOfSoulsRoomHandler-1 ; $fca0/1
 
 treasureRoomItemPosY
 	.byte $1A,$38,$09,$26
@@ -6323,7 +6332,7 @@ spiderGfxFrame4
 	.byte	$54 ; |.#.#.#..|
 	.byte	$00 ; |........|
 
-TreasureRoomItemStateTable
+treasureRoomItemStateTable
 	.byte $8B,$8A,$86,$87,$85,$89
 
 thiefMoveDelayTable
@@ -6356,12 +6365,12 @@ finishInvSelectAdj
 	rts
 
 ; Timepiece ball sprite animation data — 4 frames of 8 HMBL/ENABL values.
-; Referenced via computed pointer at UpdateInvEventState:
+; Referenced via computed pointer at updateInvEventState:
 ;   kernelDataPtrLo = (frameCount AND #$06) << 2  → $00/$08/$10/$18
 ;   kernelDataPtrHi = $FD
 ; The scrolling playfield kernel writes each value to both ENABL (bit 1 =
 ; ball visible) and HMBL (bits 4-7 = horizontal motion), rendering the
-; timepiece as a shaped ball object across 8 scanlines per frame.
+; timepiece as across 8 scanlines per frame.
 	.byte $00 ; |........| $FCFF  (padding/boundary)
 timepieceBallFrame0
 	.byte $F2 ; |XXXX..X.| $FD00  HMOVE R1, ball ON
@@ -6400,7 +6409,7 @@ timepieceBallFrame3
 	.byte $12 ; |...X..X.| $FD1E
 	.byte $00 ; |........| $FD1F
 
-RoomPF1GraphicData_6:
+roomPF1GraphicData_6:
 	.byte $FF ; |XXXXXXXX|
 	.byte $FF ; |XXXXXXXX|
 	.byte $FC ; |XXXXXX..|
@@ -6442,7 +6451,7 @@ RoomPF1GraphicData_6:
 	.byte $F0 ; |XXXX....|
 	.byte $FE ; |XXXXXXX.|
 
-RoomPF1GraphicData_7:
+roomPF1GraphicData_7:
 	.byte $FF ; |XXXXXXXX|
 	.byte $FF ; |XXXXXXXX|
 	.byte $FF ; |XXXXXXXX|
@@ -6476,7 +6485,7 @@ RoomPF1GraphicData_7:
 	.byte $80 ; |X.......|
 	.byte $00 ; |........|
 
-RoomPF1GraphicData_8:
+roomPF1GraphicData_8:
 	.byte $00 ; |........|
 	.byte $00 ; |........|
 	.byte $00 ; |........|
@@ -6511,7 +6520,7 @@ RoomPF1GraphicData_8:
 	.byte $00 ; |........|
 	.byte $00 ; |........|
 
-RoomPF1GraphicData_9:
+roomPF1GraphicData_9:
 	.byte $00 ; |........|
 	.byte $00 ; |........|
 	.byte $00 ; |........|
@@ -6531,7 +6540,7 @@ RoomPF1GraphicData_9:
 	.byte $02 ; |......X.|
 	.byte $00 ; |........|
 
-RoomPF2GraphicData_6:
+roomPF2GraphicData_6:
 	.byte $00 ; |........|
 	.byte $00 ; |........|
 	.byte $00 ; |........|
@@ -6561,7 +6570,7 @@ RoomPF2GraphicData_6:
 	.byte $80 ; |X.......|
 	.byte $80 ; |X.......|
 
-RoomPF2GraphicData_7:
+roomPF2GraphicData_7:
 	.byte $00 ; |........|
 	.byte $00 ; |........|
 	.byte $00 ; |........|
@@ -6643,7 +6652,7 @@ shiningLightFrame3
 	.byte $00 ; |........|
 
 
-RoomPF1GraphicData_10:
+roomPF1GraphicData_10:
 	.byte $07 ; |.....XXX|
 	.byte $07 ; |.....XXX|
 	.byte $07 ; |.....XXX|
@@ -6765,7 +6774,7 @@ RoomPF1GraphicData_10:
 	.byte $00 ; |........|
 	.byte $00 ; |........|
 
-RoomPF2GraphicData_9:
+roomPF2GraphicData_9:
 	.byte $07 ; |.....XXX|
 	.byte $07 ; |.....XXX|
 	.byte $07 ; |.....XXX|
@@ -6893,19 +6902,19 @@ pedestalSprite
 	.byte $7E ; |.XXXXXX.|
 	.byte $FF ; |XXXXXXXX|
 
-UpdateInvObjPos
+updateInvObjPos
 	lda		secretArkMesaID,x
-	bmi		UpdateInvObjPosBound
+	bmi		updateInvObjPosBound
 	rts
 
-UpdateInvObjPosBound
+updateInvObjPosBound
 	jsr		invSelectAdjHandler
-	jsr		UpdateObjBoundPos
+	jsr		updateObjBoundPos
 	rts
 
 
 
-TreasureRoomPlayerGraphics
+treasureRoomPlayerGraphics
 	; ---------------------------------------------------------------
 	; Treasure Room (Room 0) P0 data stream.
 	; P0 starts at X=$78. The treasureRoomHandler cycles through
@@ -7045,7 +7054,7 @@ devInitialsGfx0
 
 
 
-MarketplacePlayerGraphics
+marketplacePlayerGraphics
 	; ---------------------------------------------------------------
 	; Marketplace (Room 1) P0 data stream.
 	; Initial P0 color: LT_RED + 8 (from roomP0ColorTable),
@@ -7194,7 +7203,7 @@ MarketplacePlayerGraphics
 
 
 
-EntranceRoomPlayerGraphics
+entranceRoomPlayerGraphics
 	; ---------------------------------------------------------------
 	; Entrance Room (Room 2) P0 data stream.
 	; Initial P0 color: BROWN + 8 (from roomP0ColorTable),
@@ -7348,6 +7357,6 @@ inventoryIndexPosX
 	.org BANK1TOP + 4096 - 6, 0
 
 	;Interrupt Vectors
-	.word BANK1Start	; NMI
-	.word BANK1Start	; RESET
-	.word BANK1Start	; IRQ/BRK
+	.word bank1Start	; NMI
+	.word bank1Start	; RESET
+	.word bank1Start	; IRQ/BRK
