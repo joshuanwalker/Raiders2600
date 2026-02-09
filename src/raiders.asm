@@ -677,7 +677,7 @@ checkIndyBallHit:
 triggerSnakeDeathEvent:
 	bvc		checkMesaSideExit			; bit 6 must be set (snake visible) or skip
 	lda		#INDY_DEAD					; set death flag
-	sta		indyStatus				; trigger Indy death sequence
+	sta		indyStatus					; trigger Indy death sequence
 	bne		checkMesaSideExit			; continue collision chain
 
 timePieceTouch:
@@ -1307,12 +1307,12 @@ updateTimers
 firstLineOfVerticalSync
 	sta		WSYNC						; Wait for start of next scanlineCounter
 	bit		arkRoomStateFlag
-	bpl		frameFirstLine
+	bpl		checkGameOver
 	ror		SWCHB						; rotate RESET to carry
-	bcs		frameFirstLine				; branch if RESET not pressed
+	bcs		checkGameOver				; branch if RESET not pressed
 	jmp		startGame					; If RESET was pressed, restart the game
 
-frameFirstLine
+checkGameOver
 	sta		WSYNC						; wait for first sync
 	lda		#STOP_VERT_SYNC				;load a for VSYNC pause
 	ldx		#VBLANK_TIME
@@ -1321,7 +1321,7 @@ frameFirstLine
 	stx		TIM64T						; set timer for vertical blanking period
 	ldx		indyStatus
 	inx									; Increment counter
-	bne		checkShowDevInitials		; If not overflowed, check initials display
+	bne		checkForArkRoom			; If not overflowed, continue normal frame
 	stx		indyStatus					; Overflowed: zero -> set indyStatus to 0
 	jsr		getFinalScore				; set adventurePoints to minimum
 	lda		#ID_ARK_ROOM				; set ark title screen
@@ -1330,10 +1330,10 @@ frameFirstLine
 gotoArkRoomLogic:
 	jmp		setupNewRoom
 
-checkShowDevInitials:
-	lda		currentRoomId				; get teh room number
+checkForArkRoom:
+	lda		currentRoomId				; get the room number
 	cmp		#ID_ARK_ROOM				; are we in the ark room?
-	bne		HandleEasterEgg				; branch if not in ID_ARK_ROOM
+	bne		checkScreenEvent			; branch if not in ID_ARK_ROOM
 	lda		#RAIDERS_MARCH				; Ch1 control = distortion + volume, signals "Raiders March"
 	sta		soundChan1Effect
 	ldy		yarFoundBonus				; check if yar was found
@@ -1384,13 +1384,13 @@ setArkActionCode
 	sta		secretArkMesaID				; Store action/state code
 	jmp		initGameVars				; Clear game variables
 
-HandleEasterEgg
+checkScreenEvent
 	bit		screenEventState
-	bvs		advanceArkSeq				; If bit 6 set, jump to alternate path
+	bvs		updateSnakeAI				; If bit 6 set, advance snake/cutscene
 continueArkSeq
 	jmp		checkIndyStatus
 
-advanceArkSeq
+updateSnakeAI
 	lda		frameCount					; get current frame count
 	and		#$03						; Only act every 4 frames
 	bne		configSnake					; If not, skip
@@ -1530,10 +1530,10 @@ checkGameScriptTimer
 branchOnFrameParity
 	lda		frameCount					; get current frame count
 	ror									; Test even/odd frame
-	bcc		gatePlayerTriggeredEvent	; If even, continue next step
+	bcc		handleWeaponAim				; If even, continue next step
 	jmp		clearItemUseOnButtonRelease	; If odd, do something else
 
-gatePlayerTriggeredEvent
+handleWeaponAim
 	ldx		currentRoomId				; get the current screen id
 	cpx		#ID_MESA_SIDE
 	beq		stopWeaponEvent				; If on Mesa Side, use a different handler
@@ -1584,7 +1584,7 @@ checkInputAndStateForEvent
 	ror
 	bcc		handleIndyMove				; If no button, skip
 stopWeaponEvent
-	jmp		HandleIInventorySelect
+	jmp		handleInventorySelect
 
 handleIndyMove
 	ldx		#<indyPosY - p0PosY			; Get index of Indy in object list
@@ -1642,13 +1642,13 @@ checkScanBoundaryOrContinue
 	adc		#$0d						; Offset for object range or screen width
 	cmp		#$34
 	bcc		incEventScanIndex			; If still within bounds, continue scanning
-	bcs		HandleIInventorySelect		; Else, exit
+	bcs		handleInventorySelect		; Else, exit
 
 triggerScreenTransition
 	sty		currentRoomId				; Set new screen based on event result
 	jsr		initRoomState				; Load new room or area
 
-HandleIInventorySelect
+handleInventorySelect
 	bit		INPT4|$30					; read action button from left controller
 	bmi		normalizeplayerInput		; branch if action button not pressed
 	bit		grenadeState
@@ -1690,7 +1690,7 @@ clearItemUseFlag
 	lda		#$00
 	sta		inputActionState			; Clear item pickup/use state
 ExitItemHandler
-	jmp		updateIndyParachuteSprite
+	jmp		selectIndySprite
 
 clearItemUseOnButtonRelease
 	bit		grenadeState				; Test game state flags
@@ -1704,7 +1704,7 @@ clearItemUseOnButtonRelease
 	and		playerInputState			; Clear the USING_GRENADE_OR_PARACHUTE bit
 										; from the player input state
 	sta		playerInputState			; Store the updated input state
-	jmp		updateIndyParachuteSprite
+	jmp		selectIndySprite
 
 handleItemUse
 	lda		#USING_GRENADE_OR_PARACHUTE ; Load the flag indicating item use
@@ -1740,7 +1740,7 @@ setGrenadeState
 										; Bit 7 set: grenade is active
 										; Bit 0 optionally set: triggers
 										; wall explosion if conditions were met
-	jmp		updateIndyParachuteSprite
+	jmp		selectIndySprite
 
 checkToActivateParachute
 	cpx		#ID_INVENTORY_PARACHUTE		; Is the selected item the parachute?
@@ -1766,7 +1766,7 @@ handleSpecialItemUseCases
 										; go to handle collision impact
 	jsr		warpToMesaSide				; No collision	warp Indy to Mesa Side
 exitItemUseHandler
-	jmp		updateIndyParachuteSprite
+	jmp		selectIndySprite
 
 calculateMesaGrapple
 	; -----------------------------------------------------------------------
@@ -1885,19 +1885,19 @@ ankhWarpToMesa
 	sta		grappleWhipState			; Set grapple state for mesa warp
 	lda		#$1d						; Set initial Y for object
 	sta		roomObjectVar				; set object vertical position
-	bne		updateIndyParachuteSprite	; Unconditional jump to common handler
+	bne		selectIndySprite	; Unconditional jump to common handler
 
 handleWeaponUseOnMove
 	lda		SWCHA						; read joystick values
 	and		#P1_NO_MOVE					; Mask to isolate movement bits
 	cmp		#P1_NO_MOVE
-	beq		updateIndyParachuteSprite	; branch if right joystick not moved
+	beq		selectIndySprite	; branch if right joystick not moved
 	cpx		#ID_INVENTORY_REVOLVER
 	bne		checkUsingWhip				; check for Indy using whip
 	bit		weaponStatus				; check bullet or whip status
-	bmi		updateIndyParachuteSprite	; branch if bullet active
+	bmi		selectIndySprite	; branch if bullet active
 	ldy		bulletCount					; get number of bullets remaining
-	bmi		updateIndyParachuteSprite	; branch if no more bullets
+	bmi		selectIndySprite	; branch if no more bullets
 	dec		bulletCount					; reduce number of bullets
 	ora		#BULLET_OR_WHIP_ACTIVE
 	sta		weaponStatus				; set BULLET_OR_WHIP_ACTIVE bit
@@ -1911,7 +1911,7 @@ handleWeaponUseOnMove
 
 checkUsingWhip
 	cpx		#ID_INVENTORY_WHIP			; Is Indy using the whip?
-	bne		updateIndyParachuteSprite	; branch if Indy not using whip
+	bne		selectIndySprite	; branch if Indy not using whip
 	ora		#$80						; Set a status bit (bit 7) to indicate whip is active
 	sta		grappleWhipState			; Set whip active in grapple/whip state
 	ldy		#$04						; Default vertical offset (X)
@@ -1943,7 +1943,7 @@ applyWhipStrikePosition
 triggerWhipEffect
 	lda		#$0f						; Set effect timer for whip (15 frames)
 	sta		soundChan1Effect			; Animate or time whip
-updateIndyParachuteSprite
+selectIndySprite
 	bit		mesaSideState				; Check game status flags
 	bpl		setIndySpriteIfStill		; If parachute bit (bit 7) is clear,
 										; skip parachute rendering
@@ -6914,7 +6914,7 @@ TreasureRoomPlayerGraphics
 
 devInitialsGfx1 ; Programmer's initials (HSW) part 2
 	; (Also serves as top of Treasure Room P0 stream —
-	;  dual-use data, referenced by checkShowDevInitials)
+	;  dual-use data, referenced by checkForArkRoom)
 	.byte $00 ; |........| $FF01
 	.byte $07 ; |.....XXX| $FF02
 	.byte $04 ; |.....X..| $FF03

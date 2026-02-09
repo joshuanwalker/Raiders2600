@@ -128,21 +128,21 @@ This is the largest block of game code, executing in order every frame:
 
 | Step | Label | Description |
 |------|-------|-------------|
-| 1 | `frameFirstLine` | **Game-over check**: if `gameEventFlag` overflows to 0, call `getFinalScore` and transition to the Ark Room. |
-| 2 | `checkShowDevInitials` | **Ark Room / title screen**: if in the Ark Room, play Raiders March, check Yar bonus for HSW initials easter egg. Otherwise skip. |
+| 1 | `checkGameOver` | **Start logic on first scan line**: if `indyStatus` overflows to 0, call `getFinalScore` and transition to the Ark Room. |
+| 2 | `checkForArkRoom` | **Ark Room / title screen**: if in the Ark Room, play Raiders March, check Yar bonus for HSW initials easter egg. Otherwise skip. |
 | 3 | *(Ark Room only)* | **Pedestal elevator**: slowly lower Indy to his score height. Check fire button for restart. Set `arkRoomStateFlag` to enable RESET. |
-| 4 | `HandleEasterEgg` | **Cutscene check**: if `screenEventState` bit 6 is set, advance the Arkbreveal sequence. |
-| 5 | `advanceArkSeq` | **Snake AI**: every 4th frame, grow snake sprite, steer toward Indy using `snakePosXOffsetTable`, update `ballPosX`/`ballPosY` and `kernelRenderState`. |
+| 4 | `checkScreenEvent` | **Cutscene check**: if `screenEventState` bit 6 is set, advance the Ark reveal sequence. |
+| 5 | `updateSnakeAI` | **Snake AI**: every 4th frame, grow snake sprite, steer toward Indy using `snakePosXOffsetTable`, update `ballPosX`/`ballPosY` and `kernelRenderState`. |
 | 6 | `configSnake` | **Snake kernel setup**: load `kernelDataPtrLo/Hi` and `kernelDataIndex` from `snakeMotionTable` for the wiggling ball sprite. |
-| 7 | `checkIndyStatus` | If `indyStaus` bit 7 is set (death in progress), skip to `finishedScrollUpdate` — bypass normal input. |
+| 7 | `checkIndyStatus` | If `indyStatus` bit 7 is set (death in progress), skip to `finishedScrollUpdate` — bypass normal input. |
 | 8 | `checkGameScriptTimer` | If `eventTimer` is negative (Indy paralyzed/frozen), force standing sprite and skip input. |
 | 9 | `branchOnFrameParity` | **Frame parity split**: even frames run full input processing. Odd frames skip to `clearItemUseOnButtonRelease`. |
-| 10 | `gatePlayerTriggeredEvent` | **Weapon aiming**: joystick moves the weapon crosshair (missile 1) with boundary clamping. |
+| 10 | `handleWeaponAim` | **Weapon aiming**: joystick moves the weapon crosshair (missile 1) with boundary clamping. |
 | 11 | `handleIndyMove` | **Movement**: read `SWCHA` → `getMoveDir` → move Indy → check room boundary override tables (`CheckRoomOverrideCondition`) → trigger room transitions if a boundary is crossed. |
-| 12 | `HandleIInventorySelect` | **Left controller**: fire button cycles through inventory slots. Handles item drop, bullet reload (+3), and shovel placement. |
+| 12 | `handleInventorySelect` | **Left controller**: fire button cycles through inventory slots. Handles item drop, bullet reload (+3), and shovel placement. |
 | 13 | `clearItemUseOnButtonRelease` | Clears `USING_GRENADE_OR_PARACHUTE` flag on right fire button release. |
 | 14 | `handleItemUse` | **Right controller**: fire button dispatches the selected item — grenade throw/cook timer, parachute deploy, grapple hook launch, shovel dig, Ankh warp, revolver fire, whip strike. This is the largest single block in VBLANK. |
-| 15 | `updateIndyParachuteSprite` | **Sprite selection**: choose Indy's current sprite pointer — parachute sprite, standing sprite, or walk-cycle animation (advances frame on a timer). |
+| 15 | `selectIndySprite` | **Sprite selection**: choose Indy's current sprite pointer — parachute sprite, standing sprite, or walk-cycle animation (advances frame on a timer). |
 | 16 | `handleMesaScroll` | **Vertical scrolling**: in Mesa Field or Valley of Poison, shift the camera offset (`roomObjectVar`) and adjust all object Y positions to scroll the world. |
 
 ##### Bank Switch → Bank 1: Room Handlers
