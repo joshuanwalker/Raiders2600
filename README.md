@@ -2,7 +2,7 @@
 
 **Original Game (1982) by Atari, Inc.**  
 **Original Designer:** Howard Scott Warshaw  
-**Disassembly & Analysis:** Dennis Debro & Halkun (That's me!)
+**Disassembly & Analysis:** Halkun (That's me!)
 
 ---
 
@@ -537,3 +537,7 @@ Triggered via `HandleEasterEgg` — finding Yar on the Flying Saucer Mesa sets `
 * **Right joystick**: Movement + action button (use items/weapons)
 * **Left joystick**: Inventory selection + drop button
 * Input is read from `SWCHA` (`$0280`) and `INPT5` (fire buttons)
+
+### Special Tanks
+
+Thanks to Dennis Debro for sharing his reverse engeering attmept so that I could merge it with mine.
