@@ -4969,7 +4969,7 @@ dungeonWallHit:
 		cmp		#(MOVE_DOWN >> 4)			; Is Player pressing DOWN?
 		bne		jmpSetupNewRoom				; If not pressing Down, no interaction.
 
-		; --- Trigger Dungeon Entry ---
+		; --- Trigger Secret Exit ---
 		sta		escapePrisonPenalty			; Apply Penalty (13 points).
 		lda		#$4c						; Load $4C.
 		sta		indyPosX					; Teleport Indy to Center X.
