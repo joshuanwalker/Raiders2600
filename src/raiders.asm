@@ -38,6 +38,7 @@ LT_RED					= $20
 RED						= $30
 ORANGE					= $40
 DK_PINK					= $50
+PURPLE					= $60
 DK_BLUE					= $70
 BLUE					= $80
 LT_BLUE					= $90
@@ -3376,27 +3377,51 @@ staticSpriteKernelCheck
 	jmp		drawInventoryKernel			; Jump to draw inventory zone.
 
 skipP0Draw
-	lda		#$00						; Load 0
+	lda		#$00						; Clear GRP0 (blank scanline).
 	beq		nextStillPlayerScanline		; Unconditional branch.
 
-staticP0Sprite
-	lda		(p0GfxPtrLo),y				; Load P0 graphics.
-	bmi		setP0Values					; If negative (special flag
-	;									; bit 7), jump to setting values.
-	cpy		roomObjectVar				; Compare Y with offset.
-	bcs		staticSpriteKernelCheck		; Branch if greater or equal
-	cpy		p0PosY						; Compare Y with P0 vertical position.
-	bcc		skipP0Draw					; Skip if below.
-	sta		GRP0						; Store to GRP0.
-	bcs		nextStillPlayerScanline		; Unconditional branch.
+; ---------------------------------------------------------------------------
+; drawP0GraphicsStream
+;
+; Reads bytes from the P0 graphics data stream one per scanline.
+; Each byte is either sprite pixel data or an inline command:
+;
+;   Bit 7 clear: The byte is written directly to GRP0 as sprite pixels.
+;   Bit 7 set:   The byte is a command that modifies P0's color or position:
+;                  ASL shifts out bit 7, leaving a 7-bit payload.
+;                  Bit 0 (original bit 1) selects the target TIA register:
+;                    0 → COLUP0  (change P0 color)
+;                    1 → HMP0    (apply horizontal motion on next HMOVE)
+;                  The remaining bits are the value written.
+;
+; This works because pf1GfxPtrLo/Hi for rooms 0-5 point to COLUP0 ($06),
+; and pf2GfxPtrLo/Hi point to HMP0 ($20). The indexed indirect addressing
+; (pf1GfxPtrLo,x) with X=0 writes to COLUP0, X=2 writes to HMP0.
+;
+; GRP0 retains its last value across command-only scanlines, so filled
+; regions persist while color/position changes reshape the sprite.
+; HMOVE is strobed every scanline, so accumulated HMP0 writes produce
+; diagonal or curved edges (e.g., the Mesa Side tree trunk/branches).
+; ---------------------------------------------------------------------------
+drawP0GraphicsStream
+	lda		(p0GfxPtrLo),y				; Load next byte from P0 data stream.
+	bmi		setP0Values					; Bit 7 set → decode as command byte.
+	cpy		roomObjectVar				; Past end of drawable region?
+	bcs		staticSpriteKernelCheck		; Yes → exit P0 drawing loop.
+	cpy		p0PosY						; Above P0 start position?
+	bcc		skipP0Draw					; Yes → skip (not in sprite range yet).
+	sta		GRP0						; Write pixel data to GRP0.
+	bcs		nextStillPlayerScanline		; Unconditional → advance scanline.
 
 setP0Values
-	asl									; Shift left.
-	tay									; Transfer to Y.
-	and		#$02						; Mask bit 1.
-	tax									; Transfer to X.
-	tya									; Transfer to A.
-	sta		(pf1GfxPtrLo,x)				; Store to TIA pointer address.
+; Decode command byte: bit 7 was set, so ASL shifts it out.
+; After ASL, bit 0 (originally bit 1) selects the target register.
+	asl									; Shift out bit 7; payload in bits 7-1.
+	tay									; Save shifted value in Y.
+	and		#$02						; Isolate bit 1 (register select).
+	tax									; X=0 → COLUP0, X=2 → HMP0.
+	tya									; Restore shifted value (payload + select bit).
+	sta		(pf1GfxPtrLo,x)			; Write to selected TIA register.
 
 nextStillPlayerScanline
 	inc		scanline					; Increment scanline counter.
@@ -3463,7 +3488,7 @@ skipBallDraw
 
 setBallEnable
 	sta		ENABL						; Update Ball Enable.
-	bcc		staticP0Sprite				; Unconditional branch back to loop start.
+	bcc		drawP0GraphicsStream		; Loop back to process next data byte.
 
 skipDrawingTheBall
 	bcc		skipBallDraw				; Unconditional branch.
@@ -5133,182 +5158,258 @@ UpdateObjClampPos
 	.byte	$00,$00,$00,$00
 
 BlackMarketPlayerGraphics
-	.byte $00 ; |........| $F900
-	.byte $E4 ; |XXX..X..| $F901
-	.byte $7E ; |.XXXXXX.| $F902
-	.byte $9A ; |X..XX.X.| $F903
-	.byte $E4 ; |XXX..X..| $F904
-	.byte $A6 ; |X.X..XX.| $F905
-	.byte $5A ; |.X.XX.X.| $F906
-	.byte $7E ; |.XXXXXX.| $F907
-	.byte $E4 ; |XXX..X..| $F908
-	.byte $7F ; |.XXXXXXX| $F909
+	; ---------------------------------------------------------------
+	; First seller — green turban with colored face bands
+	; (initial P0 color = ORANGE + 10 from roomP0ColorTable)
+	; GRP0 retains last value across command scanlines, so the $7E
+	; turban shape persists while color commands create stripes.
+	; ---------------------------------------------------------------
+	.byte $00 ; |........| $F900  Blank top
+	.byte SET_PLAYER_0_COLOR | (GREEN + 8) >> 1	; $F901  Turban color (green)
+	.byte $7E ; |.XXXXXX.| $F902  Turban (drawn in green)
+	.byte SET_PLAYER_0_COLOR | (RED + 4) >> 1		; $F903  Red headband
+	.byte SET_PLAYER_0_COLOR | (GREEN + 8) >> 1	; $F904  Green band
+	.byte SET_PLAYER_0_COLOR | (ORANGE + 12) >> 1	; $F905  Flesh tone (face)
+	.byte $5A ; |.X.XX.X.| $F906  Face (eyes)
+	.byte $7E ; |.XXXXXX.| $F907  Chin / jaw
+	.byte SET_PLAYER_0_COLOR | (GREEN + 8) >> 1	; $F908  Robe color (green)
+	.byte $7F ; |.XXXXXXX| $F909  Body / robe
+	; ---------------------------------------------------------------
+	; Gap between first seller and bullets
+	; ---------------------------------------------------------------
 	.byte $00 ; |........| $F90A
 	.byte $00 ; |........| $F90B
-	.byte $84 ; |X....X..| $F90C
-	.byte $08 ; |....X...| $F90D
-	.byte $2A ; |..X.X.X.| $F90E
-	.byte $22 ; |..X...X.| $F90F
-	.byte $00 ; |........| $F910
-	.byte $22 ; |..X...X.| $F911
-	.byte $2A ; |..X.X.X.| $F912
-	.byte $08 ; |....X...| $F913
-	.byte $00 ; |........| $F914
-	.byte $B9 ; |X.XXX..X| $F915
-	.byte $D4 ; |XX.X.X..| $F916
-	.byte $89 ; |X...X..X| $F917
-	.byte $6C ; |.XX.XX..| $F918
-	.byte $7B ; |.XXXX.XX| $F919
-	.byte $7F ; |.XXXXXXX| $F91A
-	.byte $81 ; |X......X| $F91B
-	.byte $A6 ; |X.X..XX.| $F91C
-	.byte $3F ; |..XXXXXX| $F91D
-	.byte $77 ; |.XXX.XXX| $F91E
-	.byte $07 ; |.....XXX| $F91F
-	.byte $7F ; |.XXXXXXX| $F920
-	.byte $86 ; |X....XX.| $F921
-	.byte $89 ; |X...X..X| $F922
-	.byte $3F ; |..XXXXXX| $F923
-	.byte $1F ; |...XXXXX| $F924
-	.byte $0E ; |....XXX.| $F925
-	.byte $0C ; |....XX..| $F926
-	.byte $00 ; |........| $F927
-	.byte $C1 ; |XX.....X| $F928
-	.byte $B6 ; |X.XX.XX.| $F929
-	.byte $00 ; |........| $F92A
-	.byte $00 ; |........| $F92B
-	.byte $00 ; |........| $F92C
-	.byte $81 ; |X......X| $F92D
-	.byte $1C ; |...XXX..| $F92E
-	.byte $2A ; |..X.X.X.| $F92F
-	.byte $55 ; |.X.X.X.X| $F930
-	.byte $2A ; |..X.X.X.| $F931
-	.byte $14 ; |...X.X..| $F932
-	.byte $3E ; |..XXXXX.| $F933
-	.byte $00 ; |........| $F934
-	.byte $A9 ; |X.X.X..X| $F935
-	.byte $00 ; |........| $F936
-	.byte $E4 ; |XXX..X..| $F937
-	.byte $89 ; |X...X..X| $F938
-	.byte $81 ; |X......X| $F939
-	.byte $7E ; |.XXXXXX.| $F93A
-	.byte $9A ; |X..XX.X.| $F93B
-	.byte $E4 ; |XXX..X..| $F93C
-	.byte $A6 ; |X.X..XX.| $F93D
-	.byte $5A ; |.X.XX.X.| $F93E
-	.byte $7E ; |.XXXXXX.| $F93F
-	.byte $E4 ; |XXX..X..| $F940
-	.byte $7F ; |.XXXXXXX| $F941
-	.byte $00 ; |........| $F942
-	.byte $C9 ; |XX..X..X| $F943
-	.byte $89 ; |X...X..X| $F944
-	.byte $82 ; |X.....X.| $F945
-	.byte $00 ; |........| $F946
-	.byte $7C ; |.XXXXX..| $F947
-	.byte $18 ; |...XX...| $F948
-	.byte $18 ; |...XX...| $F949
-	.byte $92 ; |X..X..X.| $F94A
-	.byte $7F ; |.XXXXXXX| $F94B
-	.byte $1F ; |...XXXXX| $F94C
-	.byte $07 ; |.....XXX| $F94D
+	; ---------------------------------------------------------------
+	; Six bullets for sale (grey)
+	; Symmetric diamond arrangement of 6 dots.
+	; ---------------------------------------------------------------
+	.byte SET_PLAYER_0_COLOR | (BLACK + 8) >> 1	; $F90C  Set grey for bullets
+	.byte $08 ; |....X...| $F90D  Top bullet
+	.byte $2A ; |..X.X.X.| $F90E  Three bullets
+	.byte $22 ; |..X...X.| $F90F  Two outer bullets
+	.byte $00 ; |........| $F910  Center gap
+	.byte $22 ; |..X...X.| $F911  Two outer bullets
+	.byte $2A ; |..X.X.X.| $F912  Three bullets
+	.byte $08 ; |....X...| $F913  Bottom bullet
+	.byte $00 ; |........| $F914  Blank
+	; ---------------------------------------------------------------
+	; Reposition P0 far left — draw Lunatic 
+	; (HMOVE_L7 persists through the next COLUP0 command, so P0
+	; shifts left 7 on TWO consecutive scanlines before L1 kicks in)
+	; ---------------------------------------------------------------
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L7 >> 1		; $F915  Shift left 7
+	.byte SET_PLAYER_0_COLOR | (GREEN_BLUE + 8) >> 1	; $F916  Set teal color
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L1 >> 1		; $F917  Nudge left 1
+	.byte $6C ; |.XX.XX..| $F918  Item top (teal, drifting L1)
+	.byte $7B ; |.XXXX.XX| $F919  Item body (drifting L1)
+	.byte $7F ; |.XXXXXXX| $F91A  Item base (drifting L1)
+	.byte SET_PLAYER_0_HMOVE | HMOVE_0 >> 1		; $F91B  Stop horizontal motion
+	.byte SET_PLAYER_0_COLOR | (ORANGE + 12) >> 1	; $F91C  Switch to orange
+	.byte $3F ; |..XXXXXX| $F91D  Item midsection (orange)
+	.byte $77 ; |.XXX.XXX| $F91E  Item detail
+	.byte $07 ; |.....XXX| $F91F  Narrow section
+	.byte $7F ; |.XXXXXXX| $F920  Wide base
+	.byte SET_PLAYER_0_COLOR | (BLACK + 12) >> 1	; $F921  Switch to grey
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L1 >> 1		; $F922  Drift left (diagonal)
+	.byte $3F ; |..XXXXXX| $F923  Tapered shape (grey, drifting L1)
+	.byte $1F ; |...XXXXX| $F924  Narrowing
+	.byte $0E ; |....XXX.| $F925  Narrowing
+	.byte $0C ; |....XX..| $F926  Tip
+	.byte $00 ; |........| $F927  Blank
+	; ---------------------------------------------------------------
+	; Reposition P0 far right — draw basket
+	; (HMOVE_R8 persists across 5 scanlines for large repositioning)
+	; ---------------------------------------------------------------
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R8 >> 1		; $F928  Shift right 8
+	.byte SET_PLAYER_0_COLOR | (PURPLE + 12) >> 1				; $F929  Set purple ($6C)
+	.byte $00 ; |........| $F92A  Blank (repositioning R8)
+	.byte $00 ; |........| $F92B  Blank (repositioning R8)
+	.byte $00 ; |........| $F92C  Blank (repositioning R8)
+	.byte SET_PLAYER_0_HMOVE | HMOVE_0 >> 1		; $F92D  Stop horizontal motion
+	.byte $1C ; |...XXX..| $F92E  Basket top (purple)
+	.byte $2A ; |..X.X.X.| $F92F  Basket weave
+	.byte $55 ; |.X.X.X.X| $F930  Basket weave (widest)
+	.byte $2A ; |..X.X.X.| $F931  Basket weave
+	.byte $14 ; |...X.X..| $F932  Basket weave (narrow)
+	.byte $3E ; |..XXXXX.| $F933  Basket rim
+	.byte $00 ; |........| $F934  Blank
+	; ---------------------------------------------------------------
+	; Reposition P0 left for second seller
+	; (HMOVE_L5 persists across 3 scanlines: L5+L5+L5 = 15 left)
+	; ---------------------------------------------------------------
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L5 >> 1		; $F935  Shift left 5
+	.byte $00 ; |........| $F936  Blank (repositioning L5)
+	; ---------------------------------------------------------------
+	; Second seller — same design as first seller
+	; (green turban, red/green/orange face stripes)
+	; ---------------------------------------------------------------
+	.byte SET_PLAYER_0_COLOR | (GREEN + 8) >> 1	; $F937  Turban color (green)
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L1 >> 1		; $F938  Nudge left 1
+	.byte SET_PLAYER_0_HMOVE | HMOVE_0 >> 1		; $F939  Stop motion
+	.byte $7E ; |.XXXXXX.| $F93A  Turban (drawn in green)
+	.byte SET_PLAYER_0_COLOR | (RED + 4) >> 1		; $F93B  Red headband
+	.byte SET_PLAYER_0_COLOR | (GREEN + 8) >> 1	; $F93C  Green band
+	.byte SET_PLAYER_0_COLOR | (ORANGE + 12) >> 1	; $F93D  Flesh tone (face)
+	.byte $5A ; |.X.XX.X.| $F93E  Face (eyes)
+	.byte $7E ; |.XXXXXX.| $F93F  Chin / jaw
+	.byte SET_PLAYER_0_COLOR | (GREEN + 8) >> 1	; $F940  Robe color (green)
+	.byte $7F ; |.XXXXXXX| $F941  Body / robe
+	; ---------------------------------------------------------------
+	; Gap between second seller and shovel
+	; ---------------------------------------------------------------
+	.byte $00 ; |........| $F942  Blank
+	; ---------------------------------------------------------------
+	; Reposition P0 right — draw shovel for sale
+	; ---------------------------------------------------------------
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R7 >> 1		; $F943  Shift right 7
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L1 >> 1		; $F944  Adjust left 1
+	.byte SET_PLAYER_0_COLOR | (BLACK + 4) >> 1	; $F945  Dark grey (shovel metal)
+	.byte $00 ; |........| $F946  Blank
+	.byte $7C ; |.XXXXX..| $F947  Shovel blade
+	.byte $18 ; |...XX...| $F948  Shovel handle
+	.byte $18 ; |...XX...| $F949  Shovel handle
+	.byte SET_PLAYER_0_COLOR | (LT_RED + 4) >> 1	; $F94A  Warm brown (handle)
+	.byte $7F ; |.XXXXXXX| $F94B  Handle base
+	.byte $1F ; |...XXXXX| $F94C  Ground taper
+	.byte $07 ; |.....XXX| $F94D  Ground taper (narrow)
+	; ---------------------------------------------------------------
+	; Bottom padding
+	; ---------------------------------------------------------------
 	.byte $00 ; |........| $F94E
 	.byte $00 ; |........| $F94F
 	.byte $00 ; |........| $F950
 
 MapRoomPlayerGraphics
-	.byte $94 ; |X..X.X..| $F951
-	.byte $00 ; |........| $F952
-	.byte $08 ; |....X...| $F953
-	.byte $1C ; |...XXX..| $F954
-	.byte $3E ; |..XXXXX.| $F955
-	.byte $3E ; |..XXXXX.| $F956
-	.byte $3E ; |..XXXXX.| $F957
-	.byte $3E ; |..XXXXX.| $F958
-	.byte $1C ; |...XXX..| $F959
-	.byte $08 ; |....X...| $F95A
-	.byte $00 ; |........| $F95B
-	.byte $8E ; |X...XXX.| $F95C
-	.byte $7F ; |.XXXXXXX| $F95D
-	.byte $7F ; |.XXXXXXX| $F95E
-	.byte $7F ; |.XXXXXXX| $F95F
-	.byte $14 ; |...X.X..| $F960
-	.byte $14 ; |...X.X..| $F961
+	; ---------------------------------------------------------------
+	; The Map Room (Room 4) P0 data stream.
+	; P0 stays at initial X=$4F throughout (no HMOVE commands).
+	; The sun's vertical position is controlled by mapRoomHandler via
+	; p0PosY based on timeOfDay — it rises and sets in a ping-pong
+	; cycle. When the room is "closed" (Indy has no key), roomObjectVar
+	; limits how much of this data is drawn, showing only solid walls.
+	;
+	; Visual layout (top to bottom):
+	;   1. Sun disc (LT_RED+8)
+	;   2. Mesa Map(YELLOW+12)
+	;   3. Model chamber doorway (GREEN+8)
+	;   4. Eye of Ra (LT_RED+4)
+	; ---------------------------------------------------------------
+	; Sun disc — diamond shape, appears as rising/setting sun
+	; (initial P0 color = LT_RED + 6 from roomP0ColorTable;
+	;  overridden immediately by this color command)
+	; ---------------------------------------------------------------
+	.byte SET_PLAYER_0_COLOR | (LT_RED + 8) >> 1	; $F951  Sun color (orange-red)
+	.byte $00 ; |........| $F952  Blank above sun
+	.byte $08 ; |....X...| $F953  Sun top point
+	.byte $1C ; |...XXX..| $F954  Sun expanding
+	.byte $3E ; |..XXXXX.| $F955  Sun widest
+	.byte $3E ; |..XXXXX.| $F956  Sun widest
+	.byte $3E ; |..XXXXX.| $F957  Sun widest
+	.byte $3E ; |..XXXXX.| $F958  Sun widest
+	.byte $1C ; |...XXX..| $F959  Sun contracting
+	.byte $08 ; |....X...| $F95A  Sun bottom point
+	.byte $00 ; |........| $F95B  Gap below sun
+	; ---------------------------------------------------------------
+	; Mesa Map
+	; (YELLOW+12 on dark blue background)
+	; ---------------------------------------------------------------
+	.byte SET_PLAYER_0_COLOR | (YELLOW + 12) >> 1	; $F95C  Golden glyph color
+	.byte $7F ; |.XXXXXXX| $F95D  Top wall edge
+	.byte $7F ; |.XXXXXXX| $F95E  Top wall edge
+	.byte $7F ; |.XXXXXXX| $F95F  Top wall edge
+	.byte $14 ; |...X.X..| $F960  
+	.byte $14 ; |...X.X..| $F961 
 	.byte $00 ; |........| $F962
 	.byte $00 ; |........| $F963
-	.byte $2A ; |..X.X.X.| $F964
-	.byte $2A ; |..X.X.X.| $F965
+	.byte $2A ; |..X.X.X.| $F964 
+	.byte $2A ; |..X.X.X.| $F965  
 	.byte $00 ; |........| $F966
 	.byte $00 ; |........| $F967
-	.byte $14 ; |...X.X..| $F968
-	.byte $36 ; |..XX.XX.| $F969
-	.byte $22 ; |..X...X.| $F96A
-	.byte $08 ; |....X...| $F96B
-	.byte $08 ; |....X...| $F96C
-	.byte $3E ; |..XXXXX.| $F96D
-	.byte $1C ; |...XXX..| $F96E
-	.byte $08 ; |....X...| $F96F
+	.byte $14 ; |...X.X..| $F968  
+	.byte $36 ; |..XX.XX.| $F969 
+	.byte $22 ; |..X...X.| $F96A  
+	.byte $08 ; |....X...| $F96B  
+	.byte $08 ; |....X...| $F96C  
+	.byte $3E ; |..XXXXX.| $F96D  
+	.byte $1C ; |...XXX..| $F96E  
+	.byte $08 ; |....X...| $F96F  
 	.byte $00 ; |........| $F970
-	.byte $41 ; |.X.....X| $F971
-	.byte $63 ; |.XX...XX| $F972
-	.byte $49 ; |.X..X..X| $F973
-	.byte $08 ; |....X...| $F974
+	.byte $41 ; |.X.....X| $F971  
+	.byte $63 ; |.XX...XX| $F972 
+	.byte $49 ; |.X..X..X| $F973 
+	.byte $08 ; |....X...| $F974 
 	.byte $00 ; |........| $F975
 	.byte $00 ; |........| $F976
-	.byte $14 ; |...X.X..| $F977
-	.byte $14 ; |...X.X..| $F978
+	.byte $14 ; |...X.X..| $F977  
+	.byte $14 ; |...X.X..| $F978  
 	.byte $00 ; |........| $F979
 	.byte $00 ; |........| $F97A
-	.byte $08 ; |....X...| $F97B
-	.byte $6B ; |.XX.X.XX| $F97C
-	.byte $6B ; |.XX.X.XX| $F97D
-	.byte $08 ; |....X...| $F97E
+	.byte $08 ; |....X...| $F97B 
+	.byte $6B ; |.XX.X.XX| $F97C  
+	.byte $6B ; |.XX.X.XX| $F97D  
+	.byte $08 ; |....X...| $F97E  
 	.byte $00 ; |........| $F97F
-	.byte $22 ; |..X...X.| $F980
-	.byte $22 ; |..X...X.| $F981
+	.byte $22 ; |..X...X.| $F980  
+	.byte $22 ; |..X...X.| $F981  
 	.byte $00 ; |........| $F982
 	.byte $00 ; |........| $F983
-	.byte $08 ; |....X...| $F984
-	.byte $1C ; |...XXX..| $F985
-	.byte $1C ; |...XXX..| $F986
-	.byte $7F ; |.XXXXXXX| $F987
-	.byte $7F ; |.XXXXXXX| $F988
-	.byte $7F ; |.XXXXXXX| $F989
-	.byte $E4 ; |XXX..X..| $F98A
-	.byte $41 ; |.X.....X| $F98B
-	.byte $41 ; |.X.....X| $F98C
-	.byte $41 ; |.X.....X| $F98D
-	.byte $41 ; |.X.....X| $F98E
-	.byte $41 ; |.X.....X| $F98F
-	.byte $41 ; |.X.....X| $F990
-	.byte $41 ; |.X.....X| $F991
-	.byte $41 ; |.X.....X| $F992
-	.byte $41 ; |.X.....X| $F993
-	.byte $41 ; |.X.....X| $F994
-	.byte $7F ; |.XXXXXXX| $F995
-	.byte $92 ; |X..X..X.| $F996
-	.byte $77 ; |.XXX.XXX| $F997
-	.byte $77 ; |.XXX.XXX| $F998
-	.byte $63 ; |.XX...XX| $F999
-	.byte $77 ; |.XXX.XXX| $F99A
-	.byte $14 ; |...X.X..| $F99B
-	.byte $36 ; |..XX.XX.| $F99C
-	.byte $55 ; |.X.X.X.X| $F99D
-	.byte $63 ; |.XX...XX| $F99E
-	.byte $77 ; |.XXX.XXX| $F99F
-	.byte $7F ; |.XXXXXXX| $F9A0
-	.byte $7F ; |.XXXXXXX| $F9A1
+	.byte $08 ; |....X...| $F984 
+	.byte $1C ; |...XXX..| $F985  
+	.byte $1C ; |...XXX..| $F986  
+	; --- Floor bar (also ceiling of chamber below) ---
+	.byte $7F ; |.XXXXXXX| $F987  Bottom wall edge
+	.byte $7F ; |.XXXXXXX| $F988  Bottom wall edge
+	.byte $7F ; |.XXXXXXX| $F989  Bottom wall edge
+	; ---------------------------------------------------------------
+	; Model chamber doorway — the room where the beam reveals
+	; the Ark location. Green rectangle with open interior.
+	; ---------------------------------------------------------------
+	.byte SET_PLAYER_0_COLOR | (GREEN + 8) >> 1	; $F98A  Chamber color (green)
+	.byte $41 ; |.X.....X| $F98B  Chamber left/right walls
+	.byte $41 ; |.X.....X| $F98C  Chamber walls
+	.byte $41 ; |.X.....X| $F98D  Chamber walls
+	.byte $41 ; |.X.....X| $F98E  Chamber walls
+	.byte $41 ; |.X.....X| $F98F  Chamber walls
+	.byte $41 ; |.X.....X| $F990  Chamber walls
+	.byte $41 ; |.X.....X| $F991  Chamber walls
+	.byte $41 ; |.X.....X| $F992  Chamber walls
+	.byte $41 ; |.X.....X| $F993  Chamber walls
+	.byte $41 ; |.X.....X| $F994  Chamber walls
+	.byte $7F ; |.XXXXXXX| $F995  Chamber floor
+	; ---------------------------------------------------------------
+	; Eye of Ra
+	; ---------------------------------------------------------------
+	.byte SET_PLAYER_0_COLOR | (LT_RED + 4) >> 1	; $F996  Floor color (tan/earth)
+	.byte $77 ; |.XXX.XXX| $F997  Floor pattern
+	.byte $77 ; |.XXX.XXX| $F998  Floor pattern
+	.byte $63 ; |.XX...XX| $F999  Floor pattern (narrower)
+	.byte $77 ; |.XXX.XXX| $F99A  Floor pattern
+	.byte $14 ; |...X.X..| $F99B  Base detail (cross top)
+	.byte $36 ; |..XX.XX.| $F99C  Base detail (cross arms)
+	.byte $55 ; |.X.X.X.X| $F99D  Base detail (widest)
+	.byte $63 ; |.XX...XX| $F99E  Base detail
+	.byte $77 ; |.XXX.XXX| $F99F  Base detail
+	.byte $7F ; |.XXXXXXX| $F9A0  Solid floor
+	.byte $7F ; |.XXXXXXX| $F9A1  Solid floor
 
 MesaSidePlayerGraphics
+	; ---------------------------------------------------------------
+	; Parachute figure (initial color = GREEN_BLUE + 8 from roomP0ColorTable)
+	; Drawn at the top of the screen; visible when Indy is parachuting in.
+	; ---------------------------------------------------------------
 	.byte $00 ; |........| $F9A2
-	.byte $86 ; |X....XX.| $F9A3
-	.byte $24 ; |..X..X..| $F9A4
-	.byte $18 ; |...XX...| $F9A5
-	.byte $24 ; |..X..X..| $F9A6
-	.byte $24 ; |..X..X..| $F9A7
-	.byte $7E ; |.XXXXXX.| $F9A8
-	.byte $5A ; |.X.XX.X.| $F9A9
-	.byte $5B ; |.X.XX.XX| $F9AA
-	.byte $3C ; |..XXXX..| $F9AB
+	.byte SET_PLAYER_0_COLOR | (BLACK + 12) >> 1	; $F9A3  Set color to grey
+	.byte $24 ; |..X..X..| $F9A4  Parachute cords
+	.byte $18 ; |...XX...| $F9A5  Body
+	.byte $24 ; |..X..X..| $F9A6  Arms
+	.byte $24 ; |..X..X..| $F9A7  Legs
+	.byte $7E ; |.XXXXXX.| $F9A8  Canopy bottom
+	.byte $5A ; |.X.XX.X.| $F9A9  Canopy middle
+	.byte $5B ; |.X.XX.XX| $F9AA  Canopy middle
+	.byte $3C ; |..XXXX..| $F9AB  Canopy top
+	; ---------------------------------------------------------------
+	; Empty sky (25 blank scanlines between parachute and tree)
+	; ---------------------------------------------------------------
 	.byte $00 ; |........| $F9AC
 	.byte $00 ; |........| $F9AD
 	.byte $00 ; |........| $F9AE
@@ -5334,45 +5435,63 @@ MesaSidePlayerGraphics
 	.byte $00 ; |........| $F9C2
 	.byte $00 ; |........| $F9C3
 	.byte $00 ; |........| $F9C4
-	.byte $B9 ; |X.XXX..X| $F9C5
-	.byte $E4 ; |XXX..X..| $F9C6
-	.byte $81 ; |X......X| $F9C7
-	.byte $89 ; |X...X..X| $F9C8
-	.byte $55 ; |.X.X.X.X| $F9C9
-	.byte $F9 ; |XXXXX..X| $F9CA
-	.byte $89 ; |X...X..X| $F9CB
-	.byte $F9 ; |XXXXX..X| $F9CC
-	.byte $81 ; |X......X| $F9CD
-	.byte $FA ; |XXXXX.X.| $F9CE
-	.byte $32 ; |..XX..X.| $F9CF
-	.byte $1C ; |...XXX..| $F9D0
-	.byte $89 ; |X...X..X| $F9D1
-	.byte $3E ; |..XXXXX.| $F9D2
-	.byte $91 ; |X..X...X| $F9D3
-	.byte $7F ; |.XXXXXXX| $F9D4
-	.byte $7F ; |.XXXXXXX| $F9D5
-	.byte $7F ; |.XXXXXXX| $F9D6
-	.byte $7F ; |.XXXXXXX| $F9D7
-	.byte $89 ; |X...X..X| $F9D8
-	.byte $1F ; |...XXXXX| $F9D9
-	.byte $07 ; |.....XXX| $F9DA
-	.byte $01 ; |.......X| $F9DB
-	.byte $00 ; |........| $F9DC
-	.byte $E9 ; |XXX.X..X| $F9DD
-	.byte $FE ; |XXXXXXX.| $F9DE
-	.byte $89 ; |X...X..X| $F9DF
-	.byte $3F ; |..XXXXXX| $F9E0
-	.byte $7F ; |.XXXXXXX| $F9E1
-	.byte $F9 ; |XXXXX..X| $F9E2
-	.byte $91 ; |X..X...X| $F9E3
-	.byte $F9 ; |XXXXX..X| $F9E4
-	.byte $89 ; |X...X..X| $F9E5
-	.byte $3F ; |..XXXXXX| $F9E6
-	.byte $F9 ; |XXXXX..X| $F9E7
-	.byte $7F ; |.XXXXXXX| $F9E8
-	.byte $3F ; |..XXXXXX| $F9E9
-	.byte $7F ; |.XXXXXXX| $F9EA
-	.byte $7F ; |.XXXXXXX| $F9EB
+	; ---------------------------------------------------------------
+	; Tree canopy top — reposition P0 left and set leaf color
+	; ---------------------------------------------------------------
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L7 >> 1		; $F9C5  Shift P0 left 7
+	.byte SET_PLAYER_0_COLOR | (GREEN + 8) >> 1	; $F9C6  Set color to green
+	.byte SET_PLAYER_0_HMOVE | HMOVE_0 >> 1		; $F9C7  Stop horizontal motion
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L1 >> 1		; $F9C8  Nudge left 1
+	.byte $55 ; |.X.X.X.X| $F9C9  Sparse leaf top
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1		; $F9CA  Nudge right 1
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L1 >> 1		; $F9CB  Nudge left 1
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1		; $F9CC  Nudge right 1
+	.byte SET_PLAYER_0_HMOVE | HMOVE_0 >> 1		; $F9CD  Stop motion
+	; ---------------------------------------------------------------
+	; Tree branches — switch to brown, draw branch shapes
+	; ---------------------------------------------------------------
+	.byte SET_PLAYER_0_COLOR | (BROWN + 4) >> 1	; $F9CE  Set color to brown
+	.byte $32 ; |..XX..X.| $F9CF  Branch
+	.byte $1C ; |...XXX..| $F9D0  Branch
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L1 >> 1		; $F9D1  Shift left 1
+	.byte $3E ; |..XXXXX.| $F9D2  Wider branch
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L2 >> 1		; $F9D3  Shift left 2
+	; ---------------------------------------------------------------
+	; Tree canopy/foliage — dense leaf region
+	; ---------------------------------------------------------------
+	.byte $7F ; |.XXXXXXX| $F9D4  Full foliage
+	.byte $7F ; |.XXXXXXX| $F9D5  Full foliage
+	.byte $7F ; |.XXXXXXX| $F9D6  Full foliage
+	.byte $7F ; |.XXXXXXX| $F9D7  Full foliage
+	; ---------------------------------------------------------------
+	; Tree trunk — narrowing downward
+	; ---------------------------------------------------------------
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L1 >> 1		; $F9D8  Shift left 1
+	.byte $1F ; |...XXXXX| $F9D9  Upper trunk
+	.byte $07 ; |.....XXX| $F9DA  Mid trunk
+	.byte $01 ; |.......X| $F9DB  Lower trunk
+	.byte $00 ; |........| $F9DC  Gap
+	; ---------------------------------------------------------------
+	; Mesa ground — reposition right, change to ground color
+	; ---------------------------------------------------------------
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R3 >> 1		; $F9DD  Shift right 3
+	.byte SET_PLAYER_0_COLOR | (BROWN + 12) >> 1	; $F9DE  Set color to tan
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L1 >> 1		; $F9DF  Shift left 1
+	.byte $3F ; |..XXXXXX| $F9E0  Mesa surface
+	.byte $7F ; |.XXXXXXX| $F9E1  Mesa surface
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1		; $F9E2  Nudge right 1
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L2 >> 1		; $F9E3  Shift left 2
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1		; $F9E4  Nudge right 1
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L1 >> 1		; $F9E5  Shift left 1
+	.byte $3F ; |..XXXXXX| $F9E6  Mesa ledge
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1		; $F9E7  Nudge right 1
+	.byte $7F ; |.XXXXXXX| $F9E8  Mesa base
+	.byte $3F ; |..XXXXXX| $F9E9  Mesa base
+	.byte $7F ; |.XXXXXXX| $F9EA  Mesa base
+	.byte $7F ; |.XXXXXXX| $F9EB  Mesa base
+	; ---------------------------------------------------------------
+	; Bottom padding
+	; ---------------------------------------------------------------
 	.byte $00 ; |........| $F9EC
 	.byte $00 ; |........| $F9ED
 
@@ -6227,7 +6346,7 @@ invIncP0PosX
 finishInvSelectAdj
 	rts
 
-
+;unknown data
 	.byte $00 ; |........|
 	.byte $F2 ; |XXXX..X.|
 	.byte $40 ; |.X......|
