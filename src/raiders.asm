@@ -972,7 +972,7 @@ playerHitInBlackMarket:
 	bit		CXP1FB						; check Indy collision with playfield
 	bmi		checkIndyPosForMarketFlags	; branch if Indy collided with playfield
 	lda		indyPosX					; get Indy's horizontal position
-	cmp		#$50
+	cmp		#XMAX / 2
 	bcs		pickMarketItemByTime
 	dec		indyPosX					; move Indy left one pixel
 	rol		blackMarketState			; rotate Black Market state left
@@ -1096,7 +1096,7 @@ enterMesaSide:
 	jsr		initRoomState
 	lda		#$05
 	sta		indyPosY					; place Indy near top of screen
-	lda		#$50
+	lda		#XMAX / 2
 	sta		indyPosX					; center Indy horizontally
 	tsx
 	cpx		#$fe						; check if stack is nearly empty (called via jmp)
@@ -2565,7 +2565,7 @@ selectNextAvailableItem:
 nextItemIndex:
 	inx									; increment by 2 to compensate for word pointer
 	inx
-	cpx		#$0b
+	cpx		#INVENTORY_SLOT_LIMIT
 	bcc		selectNextItem
 	ldx		#$00						; wrap around to the beginning
 selectNextItem:
@@ -4079,7 +4079,7 @@ checkInvItemChoice
 checkInvCycleRight
 	inx
 	inx									; Move to next slot (2-byte stride)
-	cpx		#$0b
+	cpx		#INVENTORY_SLOT_LIMIT
 	bcc		continueInvCycleRight
 	ldx		#$00						; Wrap around to first slot if > 10
 
@@ -4398,7 +4398,7 @@ animateSpider:
 	; The "Web" is represented by Missile 0 held in a fixed position.
 		lda		m0PosYShadow				; Check Shadow Variable for M0
 		bmi		finishRoomHandle			; If negative (disabled/offscreen), exit
-		ldx		#$50						; Set Web Horizontal Position to $50
+		ldx		#XMAX / 2					; Set Web Horizontal Position to center
 		stx		m0PosX
 		ldx		#$26						; Set Web Vertical Position to $26
 		stx		m0PosY
