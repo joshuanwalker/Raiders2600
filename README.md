@@ -50,7 +50,7 @@ run.bat
 
 ### ROM Architecture
 
-The game uses a **2-bank ROM** (8KB total) with bank-switching via strobes at `BANK0STROBE` (`$FFF8`) and `BANK1STROBE` (`$FFF9`). Bank switching is done through a self-modifying code technique whare opcodes are written into zero-page RAM variables and executed in-place.
+The game uses a **2-bank ROM** (8KB total) with bank-switching via strobes at `BANK0STROBE` (`$FFF8`) and `BANK1STROBE` (`$FFF9`). Bank switching is done through a self-modifying code technique where opcodes are written into zero-page RAM variables and executed in-place.
 
 * **Bank 0** (`BANK0TOP` = `$D000`): Contains game logic — collision handling, inventory management, room event handlers, scoring, movement, input processing, and sound.
 * **Bank 1** (`BANK1TOP` = `$F000`): Contains the display kernels, sprite data, playfield graphics, room handler dispatch, and music frequency tables.
@@ -134,7 +134,7 @@ This is the largest block of game code, executing in order every frame:
 | 3 | *(Ark Room only)* | **Pedestal elevator**: slowly lower Indy to his score height. Check fire button for restart. Set `arkRoomStateFlag` to enable RESET. |
 | 4 | `checkScreenEvent` | **Cutscene check**: if `screenEventState` bit 6 is set, advance the Ark reveal sequence. |
 | 5 | `updateSnakeAI` | **Snake AI**: every 4th frame, grow snake sprite, steer toward Indy using `snakePosXOffsetTable`, update `ballPosX`/`ballPosY` and `kernelRenderState`. |
-| 6 | `configSnake` | **Snake kernel setup**: load `kernelDataPtrLo/Hi` and `kernelDataIndex` from `snakeMotionTable` for the wiggling ball sprite. |
+| 6 | `configSnake` | **Snake kernel setup**: load `kernelDataPtrLo/Hi` and `kernelDataIndex` from `snakeMotionTable0`–`snakeMotionTable3` for the wiggling ball sprite. |
 | 7 | `checkIndyStatus` | If `indyStatus` bit 7 is set (death in progress), skip to `dispatchRoomHandler` — bypass normal input. |
 | 8 | `checkGameScriptTimer` | If `eventTimer` is negative (Indy paralyzed/frozen), force standing sprite and skip input. |
 | 9 | `branchOnFrameParity` | **Frame parity split**: even frames run full input processing. Odd frames skip to `clearItemUseOnButtonRelease`. |
@@ -180,7 +180,7 @@ All handlers exit via `jmpSetupNewRoom`, which bank-switches back to Bank 0.
 4. Set `COLUBK`, `COLUPF`, `COLUP0`, `COLUP1` from per-room color tables.
 5. If in the Thieves' Den or Well of Souls, initialize 5 thief HMOVE positions from table data.
 
-Then `setObjPosX` positions all 5 TIA objects (P0, P1, M0, M1, Ball) using the coarse/fine HMOVE technique. This consumes **6 scanlines** (one WSYNC per object + one for HMOVE).
+Then `setThievesPosX` positions all 5 TIA objects (P0, P1, M0, M1, Ball) using the coarse/fine HMOVE technique. This consumes **6 scanlines** (one WSYNC per object + one for HMOVE).
 
 Finally, `waitTime` spins on `INTIM` until the VBLANK timer expires, then bank-switches to Bank 1 for `drawScreen`.
 
@@ -248,7 +248,7 @@ Immediately after the inventory kernel, the TIA is blanked (`VBLANK = $0F`) and 
 | 2 | `finishUpdateSound` | If holding the Timepiece: toggle open/closed sprite on right fire press. If holding the Flute: activate Snake Charmer song. |
 | 3 | `updateEventState` | If `screenEventState` bit 7 is set: animate the on-screen event (move object toward target via `updateMoveToTarget`), update timepiece graphics pointer for the snake reveal animation. |
 | 4 | `updateInvItemPos` | Position 3 inventory display objects (X=2,3,4) via `updateInvObjPos` — converts item slot sprite pointers into on-screen X positions. |
-| 5 | *(death check)* | **Death dissolve sequence**: if `gameEventFlag` bit 7 is set, shrink `indySpriteHeight` by 1 line every 16 frames with a descending sound effect. At height < 3 (hat only), rotate the flag and pause for 60 frames. At frame 120: respawn with full height, decrement `livesLeft`. If `livesLeft` goes negative, set `gameEventFlag = $FF` (triggers game-over on the next frame's overflow check). |
+| 5 | *(death check)* | **Death dissolve sequence**: if `indyStatus` bit 7 is set, shrink `indySpriteHeight` by 1 line every 16 frames with a descending sound effect. At height < 3 (hat only), rotate the flag and pause for 60 frames. At frame 120: respawn with full height, decrement `livesLeft`. If `livesLeft` goes negative, set `indyStatus = INDY_GAMEOVER` (triggers game-over on the next frame's overflow check). |
 | 6 | `invItemSelectCycle` | If not in the Ark Room: read `SWCHA` left/right to cycle inventory selection. Handle hourglass → grapple initialization in Mesa Field. Drive the grapple state machine (incrementing stages, position alignment checks). |
 
 ##### Bank Switch → Bank 0: Collision Handling
@@ -257,8 +257,8 @@ At `jmpObjHitHandeler`, the code bank-switches to Bank 0 and enters the collisio
 
 | Step | Label | Collision Register | Description |
 | ---- | ----- | ------------------ | ----------- |
-| 1 | `checkWeaponPlayerHit` | `CXM1P` | Weapon (M1) hit player/thief → flip thief direction, clear weapon, apply `thiefShotPenalty`. |
-| 2 | `checkWeaponPlayfieldHit` | `CXM1FB` | Weapon hit playfield → destroy dungeon wall segment (modify `dynamicGfxData` bitmask). |
+| 1 | `checkForObjHit` | `CXM1P` | Weapon (M1) hit player/thief → flip thief direction, clear weapon, apply `thiefShotPenalty`. |
+| 2 | `checkWeaponPFHit` | `CXM1FB` | Weapon hit playfield → destroy dungeon wall segment (modify `dynamicGfxData` bitmask). |
 | 3 | `checkWeaponBallHit` | `CXM1FB` bit 6 | Weapon hit ball/snake → kill the snake. |
 | 4 | `checkIndyBallHit` | `CXP1FB` | Indy hit playfield/ball → timepiece pickup, flute immunity check, tsetse fly paralysis, snake death. |
 | 5 | `checkMesaSideExit` | `CXM0P` | Mesa Side: M0 collision enters Well of Souls; falling off (Indy Y ≥ `$4F`) enters Valley of Poison. |
@@ -286,7 +286,7 @@ The caller sets `temp4`/`temp5` to the target address before jumping to the tram
 | 1 | Bank 0 → 1 | `dispatchRoomHandler` | `selectRoomHandler` (room-specific handler) |
 | 2 | Bank 1 → 0 | `jmpSetupNewRoom` | `setupNewRoom` (pre-kernel color/position setup) |
 | 3 | Bank 0 → 1 | `jmpDisplayKernel` | `drawScreen` (visible kernel + overscan) |
-| 4 | Bank 1 → 0 | `jmpObjHitHandeler` | `checkWeaponPlayerHit` (collision dispatch) |
+| 4 | Bank 1 → 0 | `jmpObjHitHandeler` | `checkForObjHit` (collision dispatch) |
 
 Bank 1 also has a safety stub (`bank1Start`) at its reset vector entry — it immediately reads `BANK0STROBE` to switch back to Bank 0 if Bank 1 is entered on power-on.
 
@@ -294,7 +294,7 @@ Bank 1 also has a safety stub (`bank1Start`) at its reset vector entry — it im
 
 **Title / Ark Room**: The Ark Room (`ID_ARK_ROOM`, `$0D`) serves double duty as the title screen and the endgame screen. On cold boot, `startGame` sets `currentRoomId = ID_ARK_ROOM` and fills inventory with copyright text sprites. The VBLANK Ark Room logic plays the Raiders March, runs the pedestal elevator animation (lowering Indy to his score height), and checks the fire button for restart.
 
-**Death Sequence**: Setting `gameEventFlag` bit 7 triggers the death dissolve during overscan. Indy's sprite height shrinks by one line every 16 frames. Once only the hat remains (height < 3), the flag is rotated and the sprite disappears for 60 frames. At frame 120, Indy respawns at full height and `livesLeft` is decremented. If lives drop below zero, `gameEventFlag` is set to `$FF` — on the next frame, the VBLANK overflow check catches this and transitions to the Ark Room.
+**Death Sequence**: Setting `indyStatus` bit 7 triggers the death dissolve during overscan. Indy's sprite height shrinks by one line every 16 frames. Once only the hat remains (height < 3), the flag is rotated and the sprite disappears for 60 frames. At frame 120, Indy respawns at full height and `livesLeft` is decremented. If lives drop below zero, `indyStatus` is set to `INDY_GAMEOVER` — on the next frame, the VBLANK overflow check catches this and transitions to the Ark Room.
 
 **Room Transitions**: Triggered by the boundary override system in `handleIndyMove`. When Indy crosses a room edge (checked via `checkRoomOverrideCondition` against per-room boundary tables), `currentRoomId` is changed and `initRoomState` reinitializes all per-room state — sprites, playfield pointers, object positions, and event flags. Special transitions include: Mesa Side fall into Valley of Poison (Y position check), M0 collision into Well of Souls, blown-open wall alignment into the Temple, and Ankh warp directly to Mesa Field.
 
@@ -496,7 +496,7 @@ The final value determines Indy's pedestal height in the Ark Room.
 Implemented in `playerHitInWellOfSouls`. All three conditions must be true:
 
 1. `indyPosY >= $3F` — Indy is deep enough in the Well
-2. `diggingState == $54` — dirt fully cleared via shovel
+2. `dirtPileGfxState == clearedDirtPile` — dirt fully cleared via shovel
 3. `secretArkMesaID == activeMesaID` — correct mesa (discovered via Map Room)
 
 When all three are met, `arkRoomStateFlag` is set positive, triggering the endgame sequence in `arkPedestalKernel` which shows the Ark above Indy's pedestal.
@@ -530,7 +530,7 @@ Two channels with effect timers (`soundChan0Effect`, `soundChan1Effect`). The Ra
 
 #### Easter Egg (Yar)
 
-Triggered via `handleEasterEgg` — finding Yar on the Flying Saucer Mesa sets `yarFoundBonus`. When combined with a high enough score, Howard Scott Warshaw's initials (`devInitialsGfx0` / `devInitialsGfx1`) appear in the inventory strip at `checkShowDevInitials`.
+Triggered in `checkForArkRoom` — finding Yar on the Flying Saucer Mesa (via `checkMarketYar`) sets `yarFoundBonus`. When `yarFoundBonus` is set and `arkRoomStateFlag` bit 7 is clear, Howard Scott Warshaw's initials (`devInitialsGfx0` / `devInitialsGfx1`) are loaded into the inventory display slots.
 
 ### Controls
 
@@ -540,4 +540,4 @@ Triggered via `handleEasterEgg` — finding Yar on the Flying Saucer Mesa sets `
 
 ### Special Thanks
 
-Thanks to Dennis Debro for sharing his reverse engeering attmept so that I could merge it with mine.
+Thanks to Dennis Debro for sharing his reverse engineering attempt so that I could merge it with mine.
