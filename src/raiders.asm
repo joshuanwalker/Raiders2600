@@ -176,7 +176,15 @@ screenInitFlag			= $99	; Non-zero if the screen needs initialization logic
 grenadeState			= $9a	; Status: Bit 7=Active, Bit 6=Wall Effect Trigger
 grenadeDetonateTime		= $9b	; timeOfDay value at which active grenade detonates
 arkRoomStateFlag		= $9c	; bit7 = RESET enabled & Ark hidden; bit7 clear = Ark visible & RESET ignored.
-gameEventFlag			= $9d	; Flags for cutscene events (death, capture, end game)
+indyStatus				= $9d	; Flag bits for Indy's current status and major events:
+									; Bit 7: Indy Dead/Alive
+									; Bit 6: Parachuting (for scoring)
+									; Bit 5: Using Head of Ra in Map Room (for scoring)
+									; Bit 4: In Shining Light Prison (for scoring)
+									; Bit 3: Found Ark (for scoring)
+									; Bit 2: Used secret Mesa exit (for scoring)
+									; Bit 1: Unused
+									; Bit 0: Unused
 adventurePoints			= $9e	; (Manual: "Adventure Points") Score/Pedestal Height
 livesLeft				= $9f	; (Manual: Starts with 3 lives)
 bulletCount				= $a0	; (Manual: Max 6 bullets)
@@ -308,7 +316,10 @@ savedScrollOffset		= $eb	; Context save: roomObjectVar (scroll offset) during Me
 savedIndyPosY			= $ec	; Context save: Indy Y position
 savedIndyPosX			= $ed	; Context save: Indy X position
 thiefPosX				= $ee	; Thief coarse X position array base (5 bytes: $ee-$f2)
-
+; 						  $ef
+; 						  $f0
+; 						  $f1
+; 						  $f2
 
 ;--------------------
 ;sprite heights
@@ -408,20 +419,26 @@ ID_THIEVES_DEN			 = $0B ;-- multiplexedSpriteKernel
 ID_WELL_OF_SOULS		 = $0C ;-- multiplexedSpriteKernel
 ID_ARK_ROOM				 = $0D
 
+;--------------------
+;Indy State
+;---------------------
 
+INDY_DEAD				= $80 ; Indy is dead
+INDY_GAMEOVER			= $FF ; Game over state
 
 
 ;===============================================================================
 ; U S E R - C O N S T A N T S
 ;===============================================================================
 
-BANK0STROBE					= $FFF8
-BANK1STROBE					= $FFF9
-BANK0_REORG					= $D000
-BANK1_REORG					= $F000
+BANK0STROBE					= $FFF8		; Bank 0 strobe address (triggers 1st bank when read)
+BANK1STROBE					= $FFF9		; Bank 1 strobe address (triggers 2nd bank when read)
 
-BANK0TOP					= $1000
-BANK1TOP					= $2000
+BANK0TOP					= $0000		; Physical start of 1st bank in ROM
+BANK1TOP					= $1000		; Physical start of 2nd bank in ROM
+
+BANK0_REORG					= $D000		; Logical start of 1st bank in Atari address space
+BANK1_REORG					= $F000		; Logical start of 2nd bank in Atari address space
 
 LDA_ABS						= $AD		; instruction to LDA $XXXX
 JMP_ABS						= $4C		; instruction for JMP $XXXX
@@ -442,12 +459,12 @@ ENTRANCE_ROOM_ROCK_VERT_POS = 53
 MAX_INVENTORY_ITEMS			= 6
 
 ;***********************************************************
-;	bank 0 / 0..1
+;	bank 0 / (First bank)
 ;***********************************************************
 
-	seg		bank0
-	org		BANK0TOP
-	rorg	BANK0_REORG
+	seg		bank0						; Bank 0 Segement
+	org		BANK0TOP					; Physical address of 1st bank in ROM   ($0000-$1FFF)
+	rorg	BANK0_REORG					; Shift to logical address for 1st bank ($D000-$EFFF)
 
 ;note: 1st bank's vector points right at the cold start routine
 	lda		BANK0STROBE					;trigger 1st bank
@@ -457,22 +474,22 @@ coldStart
 
 
 ;-------------------------------------
-; setObjPosX
-; set object horizontal position
+; setThievesPosX
+; set Thieves' horizontal position in Thieves' Den
 ;-------------------------------------
-setObjPosX
+setThievesPosX:
 	ldx		#<RESBL - RESP0
 moveObjectLoop
 	sta		WSYNC						; wait for next scan line
-	lda		p0PosX,x					; get object's horizontal position
+	lda		p0PosX,x					; get Thief's horizontal position
 	tay
 	lda		HMOVETable,y				; get fine motion/coarse position value
-	sta		HMP0,x						; set object's fine motion value
+	sta		HMP0,x						; set Thief's fine motion value
 	and		#$0f						; mask off fine motion value
 	tay									; move coarse move value to y
 coarseMoveObj
 	dey
-	bpl		coarseMoveObj				; set object's coarse position
+	bpl		coarseMoveObj				; set Thief's coarse position
 	sta		RESP0,x
 	dex
 	bpl		moveObjectLoop
@@ -480,14 +497,28 @@ coarseMoveObj
 	sta		HMOVE
 	jmp		jmpDisplayKernel
 
-checkWeaponPlayerHit:
+
+CheckForObjHit:
+; -----------------------------------------------------------------------
+; MAIN GAME COLLISION HANDLER
+; -----------------------------------------------------------------------
+; This is the object collision routine, it checks all of the possible collisions
+; between things on the screen.
+; -----------------------------------------------------------------------
+
+
+; --------------------------------------------------------------------------
+; DID WEAPON HIT A THIEF?
+; First we check if the weapon (M1) hit a player sprite (thief). This is only relevant
+; in rooms with thieves (Valley of Poison, Thieves' Den, Well of Souls
 ; Check if weapon (M1) hit a player sprite (thief).
 ; Only relevant in rooms with thieves (Valley of Poison, Thieves' Den, Well of Souls).
+; --------------------------------------------------------------------------
 	bit		CXM1P						; check weapon (M1) vs player collision
-	bpl		checkWeaponPlayfieldHit				; branch if no collision
+	bpl		checkWeaponPFHit			; branch to next check if no collision
 	ldx		currentRoomId				; get the current room id
 	cpx		#ID_VALLEY_OF_POISON		; rooms with thieves are >= Valley of Poison
-	bcc		checkWeaponPlayfieldHit				; branch if room has no thieves
+	bcc		checkWeaponPFHit			; branch to next check if room has no thieves
 	beq		weaponHitThief				; Valley of Poison has only one thief
 
 	; --------------------------------------------------------------------------
@@ -495,8 +526,6 @@ checkWeaponPlayerHit:
 	; The screen is divided vertically. We use Weapon Y to determine which thief (0-4) was hit.
 	; Formula: Index = ((WeaponY + 1) / 16)
 	; --------------------------------------------------------------------------
-
-
 	lda		weaponPosY					; Load Weapon Vertical Position.
 	adc		#$01						; Adjust for offset (Carry set assumed).
 	lsr									; Divide by 2.
@@ -509,11 +538,9 @@ checkWeaponPlayerHit:
 	; FLIP THIEF DIRECTION
 	; Hitting a thief makes them reverse direction.
 	; --------------------------------------------------------------------------
-
 	lda		#REFLECT					; Load Reflect Bit.
 	eor		roomObjectVar,x				; XOR with current state (Toggle Direction).
 	sta		roomObjectVar,x				; Save new state.
-
 weaponHitThief:
 	lda		weaponStatus				; get bullet or whip status
 	bpl		setThiefShotPenalty			; branch if bullet or whip not active
@@ -523,45 +550,49 @@ weaponHitThief:
 	and		#%00011111					; Mask check.
 	beq		markPickupProcessed
 	jsr		placeItemInInventory
-
 markPickupProcessed:
 	lda		#%01000000					; Set Bit 6.
 	sta		pickupStatusFlags
 
-setThiefShotPenalty
+
 	; --------------------------------------------------------------------------
 	; PENALTY FOR SHOOTING THIEF
-	; Killing a thief is dishonorable (or noise?). Deducts adventurePoints.
+	; Killing a thief is dishonorable. Deducts adventurePoints.
 	; --------------------------------------------------------------------------
+setThiefShotPenalty
 	lda		#~BULLET_OR_WHIP_ACTIVE		; Clear Active Bit mask.
 	sta		weaponPosY					; Invalidates weapon Y (effectively removing it).
 	lda		#PENALTY_SHOOTING_THIEF		; Load Penalty Value.
 	sta		thiefShotPenalty			; Apply penalty.
 
-checkWeaponPlayfieldHit:
+
+; --------------------------------------------------------------------------
+; DID WEAPON HIT THE PLAYFIELD? (WALLS)
 ; Check if weapon (M1) hit the playfield. In dungeon rooms (Temple Entrance,
 ; Room of Shining Light), this destroys wall segments. In Mesa Field, skip
 ; to Indy's ball collision check instead.
+; --------------------------------------------------------------------------
+checkWeaponPFHit:
 	bit		CXM1FB						; check weapon (M1) vs playfield/ball collision
-	bpl		checkWeaponBallHit				; branch if no playfield hit — check ball next
+	bpl		checkWeaponBallHit			; branch if no playfield hit — check ball next
 	ldx		currentRoomId				; get the current room id
 	cpx		#ID_MESA_FIELD				; Mesa Field has no destructible walls
 	beq		checkIndyBallHit			; skip wall logic, check Indy vs ball
 	cpx		#ID_TEMPLE_ENTRANCE			; Temple Entrance has dungeon walls
 	beq		checkDungeonWallHit			; handle wall destruction
 	cpx		#ID_ROOM_OF_SHINING_LIGHT	; Room of Shining Light also has dungeon walls
-	bne		checkWeaponBallHit				; no destructible walls in other rooms
+	bne		checkWeaponBallHit			; no destructible walls in other rooms
 checkDungeonWallHit:
 	lda		weaponPosY					; get bullet or whip vertical position
-	sbc		kernelRenderState					; subtract dungeon wall height
+	sbc		kernelRenderState			; subtract dungeon wall height
 	lsr									; divide by 4 total
 	lsr
 	beq		handleLeftWall				; if zero, left wall hit
 	tax
 	ldy		weaponPosX					; get weapon horizontal position
-	cpy		#$12
+	cpy		#$12						; if 18 
 	bcc		clearWeaponState			; branch if too far left
-	cpy		#$8d
+	cpy		#$8d						; if 141
 	bcs		clearWeaponState			; branch if too far right
 	lda		#$00
 	sta		dynamicGfxData,x			; zero out dungeon gfx data for wall hit
@@ -599,23 +630,32 @@ clearWeaponState:
 	ldy		#~BULLET_OR_WHIP_ACTIVE		; deactivate weapon
 	sty		weaponStatus				; clear BULLET_OR_WHIP_ACTIVE status
 	sty		weaponPosY					; move weapon off-screen
-checkWeaponBallHit:
+
+
+; --------------------------------------------------------------------------
+; DID WEAPON HIT THE BALL SPRITE? (SNAKE)
 ; Check if weapon (M1) hit the ball sprite (snake).
 ; Bit 6 of CXM1FB indicates M1-ball collision.
+; --------------------------------------------------------------------------
+checkWeaponBallHit:
 	bit		CXM1FB						; check weapon (M1) vs ball (snake) collision
 	bvc		checkIndyBallHit			; branch if no ball hit (bit 6 clear)
 	bit		screenEventState			; is snake active on screen?
 	bvc		checkIndyBallHit			; branch if no snake present
-	lda		#$5a						; kill the snake — move everything off-screen
+	lda		#$5a						; kill the snake — move everything off-screen (Y=90)
 	sta		ballPosY					; move ball (snake body) off-screen
 	sta		p0SpriteHeight				; collapse snake sprite height
 	sta		weaponStatus				; deactivate weapon
 	sta		weaponPosY					; move weapon off-screen
 
-checkIndyBallHit:
+
+; --------------------------------------------------------------------------
+; DID INDY HIT THE BALL SPRITE? (SNAKE, TSETSE FLIES, TIMEPIECE)
 ; Check if Indy (P1) collided with the ball sprite.
 ; The ball represents different things per room: snake, tsetse flies, or timepiece.
 ; Bit 6 of CXP1FB indicates P1-ball collision.
+; --------------------------------------------------------------------------
+checkIndyBallHit:
 	bit		CXP1FB						; check Indy (P1) vs ball collision
 	bvc		checkMesaSideExit			; branch if no ball collision (bit 6 clear)
 	ldx		currentRoomId				; get current room id
@@ -625,8 +665,9 @@ checkIndyBallHit:
 	; --- Flute Immunity Check ---
 	lda		selectedInventoryId			; Get currently selected item.
 	cmp		#ID_INVENTORY_FLUTE			; Is it the Flute?
-	beq		checkMesaSideExit	; If Flute is selected, IGNORE collision
-										; (Immunity to Snakes/Flies)
+	beq		checkMesaSideExit			; If Flute is selected, IGNORE
+										; and check next collision
+										;(Immunity to Snakes/Flies)
 
 	; --- Determine collision type: snake or tsetse fly ---
 	bit		screenEventState			; bit 7: 0 = snake (lethal), 1 = tsetse fly
@@ -638,12 +679,12 @@ checkIndyBallHit:
 	and		#$07						; Mask for random duration
 	ora		#$80						; Set Bit 7.
 	sta		eventTimer					; Set "Paralysis" Timer (Indy freezes).
-	bne		checkMesaSideExit	; Return.
+	bne		checkMesaSideExit			; Return.
 
 triggerSnakeDeathEvent:
 	bvc		checkMesaSideExit			; bit 6 must be set (snake visible) or skip
-	lda		#$80						; set death flag
-	sta		gameEventFlag				; trigger Indy death sequence
+	lda		#INDY_DEAD					; set death flag
+	sta		indyStatus				; trigger Indy death sequence
 	bne		checkMesaSideExit			; continue collision chain
 
 timePieceTouch:
@@ -653,30 +694,34 @@ timePieceTouch:
 	lda		#ID_INVENTORY_TIME_PIECE
 	jsr		placeItemInInventory
 
+
+; --------------------------------------------------------------------------
+; WHICH EXIT DID INDY HIT ON MESA SIDE?
+; Mesa Side has two exits: M0 collision (cave under tree) enters Well of Souls,
+; falling off the bottom (Indy Y >= 79 [$4F]) enters Valley of Poison.
+; --------------------------------------------------------------------------
 checkMesaSideExit:
-; Mesa Side has two exits: M0 collision (grapple point) enters Well of Souls,
-; falling off the bottom (Indy Y >= $4F) enters Valley of Poison.
 	ldx		#ID_MESA_SIDE
 	cpx		currentRoomId				; are we on the Mesa Side?
 	bne		checkPlayerCollision		; branch if not — skip to player-player check
-	bit		CXM0P						; check M0 (grapple point) vs Indy collision
-	bpl		handleMesaFall				; no M0 hit — check if Indy fell off
+	bit		CXM0P						; check M0 (cave under tree) vs Indy collision
+	bpl		handleMesaFall				; no M0 hit — check if Indy fell to bottom of screen
 	stx		indyPosY					; set Indy vertical position (i.e. x = 5)
 	lda		#ID_WELL_OF_SOULS
 	sta		currentRoomId				; move Indy to the Well of Souls
 	jsr		initRoomState
 	lda		#(XMAX / 2) - 4
 	sta		indyPosX					; place Indy in horizontal middle
-	bne		clearCollisionLatches					; unconditional branch
+	bne		clearCollisionLatches		; unconditional branch
 
 handleMesaFall:
 	ldx		indyPosY					; get Indy vertical position
-	cpx		#$4f							; has Indy reached the bottom? (Y >= 79)
+	cpx		#$4f						; has Indy reached the bottom? (Y >= 79)
 	bcc		checkPlayerCollision		; not at bottom yet — continue collision chain
 	lda		#ID_VALLEY_OF_POISON		; Otherwise, load Valley of Poison
 	sta		currentRoomId				; Set the current screen to Valley of Poison
 	jsr		initRoomState				; initialize rooom state
-	lda		savedScrollOffset				; Restore saved scroll offset
+	lda		savedScrollOffset			; Restore saved scroll offset
 	sta		roomObjectVar				; Restore roomObjectVar from save
 	lda		savedIndyPosY				; get saved Indy vertical position
 	sta		indyPosY					; set Indy vertical position
@@ -685,15 +730,19 @@ handleMesaFall:
 	lda		#$fd						; Load bitmask value
 	and		mesaSideState				; Apply bitmask to a status/control flag
 	sta		mesaSideState				; Store the result back
-	bmi		clearCollisionLatches					; If the result has bit 7 set,
+	bmi		clearCollisionLatches		; If the result has bit 7 set,
 										; skip setting major event
-	lda		#$80						; Otherwise, set major event flag
-	sta		gameEventFlag
+	lda		#INDY_DEAD					; Otherwise, Indy has fallen to his death
+	sta		indyStatus
 clearCollisionLatches:
 	sta		CXCLR						; clear all collision latches
-checkPlayerCollision:
-; Check if Indy (P1) collided with P0 (room object / treasure / thief).
+
+
+; --------------------------------------------------------------------------
+; DID INDY HIT THE PLAYER 0 SPRITE? (ROOM OBJECT, TREASURE, THIEF)
 ; Bit 7 of CXPPMM indicates player-player collision.
+; --------------------------------------------------------------------------
+checkPlayerCollision:
 	bit		CXPPMM						; check player-player (P0 vs P1) collision
 	bmi		dispatchPlayerHit			; branch if collision detected
 	ldx		#$00
@@ -706,9 +755,12 @@ checkPlayerCollision:
 continueToPlayerHitDefault:
 	jmp		playerHitDefault
 
+	; --------------------------------------------------------------------------
+	; Dispatch to room-specific player-player collision handler via playerHitJumpTable.
+	; Treasure Room (ID 0) is handled inline; all others jump through the table.
+	; --------------------------------------------------------------------------
 dispatchPlayerHit:
-; Dispatch to room-specific player-player collision handler via playerHitJumpTable.
-; Treasure Room (ID 0) is handled inline; all others jump through the table.
+
 	lda		currentRoomId				; get the current room id
 	bne		jumpPlayerHit				; branch if not Treasure Room (use jump table)
 	; --- Treasure Room: inline item pickup ---
@@ -751,7 +803,7 @@ playerHitInWellOfSouls:
 	bcc		takeAwayShovel				; If Indy is above this threshold,
 
 	lda		dirtPileGfxState			; Load dirt pile graphics state
-	cmp		#<dirtPileSprite			; Is the pile fully cleared?
+	cmp		#<clearedDirtPile			; Is the pile fully cleared?
 	bne		resumeCollisionChain			; If not cleared, you can't find Ark yet.
 	lda		secretArkMesaID				; Load Secret Ark Location (Game RNG)
 	cmp		activeMesaID				; Compare to Current Mesa Region
@@ -802,13 +854,13 @@ setPickupProcessedFlag:
 	tya
 	ora		#$c0
 	sta		pickupStatusFlags
-	bne		resumeCollisionChain			; unconditional branch
+	bne		resumeCollisionChain		; unconditional branch
 
 playerHitInSpiderRoom:
 	ldx		#$00						; Set X to 0
 	stx		spiderRoomState				; Clear spider room state
-	lda		#%10000000					; Set Bit 7
-	sta		gameEventFlag				; Trigger major event flag
+	lda		#INDY_DEAD					; Touching spiders is deadly, set death flag
+	sta		indyStatus					; Trigger major event flag
 resumeCollisionChain:
 	jmp		playerHitDefault
 
@@ -1183,8 +1235,8 @@ checkMissile0Hit:
 	cpx		#ID_SPIDER_ROOM				; Spider Room?
 	beq		clearInputBit0ForSpiderRoom	; handle spider web capture
 	bcc		checkGrenadeDetonation		; rooms below Spider Room have no M0 hazard
-	lda		#$80						; rooms above Spider Room: M0 is lethal
-	sta		gameEventFlag				; trigger Indy death
+	lda		#INDY_DEAD					; rooms above Spider Room: M0 is lethal
+	sta		indyStatus				; trigger Indy death
 	bne		despawnMissile0				; unconditional — remove M0 from screen
 
 clearInputBit0ForSpiderRoom:
@@ -1208,9 +1260,9 @@ checkGrenadeDetonation:
 	lda		timeOfDay					; get current time
 	cmp		grenadeDetonateTime			; has detonation time been reached?
 	bne		newFrame					; not yet — wait
-	lda		#$a0
+	lda		#INDY_DEAD | $20
 	sta		weaponPosY					; move grenade sprite off-screen
-	sta		gameEventFlag				; trigger explosion event (Indy death)
+	sta		indyStatus				; trigger explosion event (Indy death)
 applyGrenadeWallEffect:
 	lsr		grenadeState				; Logical shift right: bit 0 -> carry
 	bcc		skipUpdate					; If bit 0 was clear, skip this
@@ -1274,10 +1326,10 @@ frameFirstLine
 	sta		WSYNC						; last line of vertical sync
 	sta		VSYNC						; end vertical sync (D1 = 0)
 	stx		TIM64T						; set timer for vertical blanking period
-	ldx		gameEventFlag
+	ldx		indyStatus
 	inx									; Increment counter
 	bne		checkShowDevInitials		; If not overflowed, check initials display
-	stx		gameEventFlag				; Overflowed: zero -> set gameEventFlag to 0
+	stx		indyStatus					; Overflowed: zero -> set indyStatus to 0
 	jsr		getFinalScore				; set adventurePoints to minimum
 	lda		#ID_ARK_ROOM				; set ark title screen
 	sta		currentRoomId				; to the current room
@@ -1343,7 +1395,7 @@ HandleEasterEgg
 	bit		screenEventState
 	bvs		advanceArkSeq				; If bit 6 set, jump to alternate path
 continueArkSeq
-	jmp		checkMajorEventDone
+	jmp		checkIndyStatus
 
 advanceArkSeq
 	lda		frameCount					; get current frame count
@@ -1352,7 +1404,7 @@ advanceArkSeq
 	ldx		p0SpriteHeight
 	cpx		#$60
 	bcc		incrementArkSeq				; If sprite height < $60, branch
-	bit		gameEventFlag
+	bit		indyStatus
 	bmi		continueArkSeq				; If bit 7 is set, jump to continue logic
 	ldx		#$00						; Reset X
 	lda		indyPosX
@@ -1471,8 +1523,8 @@ configSnake
 	sbc		#$08						; Subtract 8 (Snake Height correction)
 	sta		kernelDataIndex				; Store snake motion start offset
 
-checkMajorEventDone
-	bit		gameEventFlag
+checkIndyStatus
+	bit		indyStatus
 	bpl		checkGameScriptTimer		; If major event not complete
 										; continue sequence
 	jmp		finishedScrollUpdate		; Else, jump to end
@@ -1810,7 +1862,7 @@ attemptArkDig
 	; Decrementing it moves the pointer to the "Smaller Pile" sprite data.
 	ldy		dirtPileGfxState			; Load current graphics offset ($5C start)
 	dey									; Shrink pile
-	cpy		#<dirtPileSprite			; Have we reached the "Cleared" state?
+	cpy		#<clearedDirtPile			; Have we reached the "Cleared" state?
 	bcs		clampDigDepth				; If State >= cleared, save it.
 	iny									; If past cleared, limit it (Don't over-dig).
 
@@ -2058,7 +2110,7 @@ SetupThievesDenObjects
 	bpl		SetupThievesDenObjects		; Loop through all Thieves' Den
 										; enemy positions
 placeObjectPosX
-	jmp		setObjPosX
+	jmp		setThievesPosX
 
 initArkRoomObjPos
 	lda		#$4d						; Set Indy's X position in the Ark Room
@@ -2098,7 +2150,7 @@ initRoomState
 	ora		#$40						; Set bit 6 to indicate re-entry or warp status.
 	sta		grenadeState				; Update the state.
 resetRoomFlags
-	lda		#<dirtPileSprite + 8		; Full pile (topmost read window position)
+	lda		#<fullDirtPile			; Full pile (topmost read window position)
 	sta		dirtPileGfxState
 	ldx		#$00						; Initialize X to 0 for clearing.
 	stx		screenEventState			; Clear screen event state.
@@ -2813,16 +2865,16 @@ dropItemTable:						; ID 0: Empty/Default (No Action)
 	.word dropGrappleItem-1			; ID 18: Hourglass
 
 playerHitJumpTable
-	.word playerHitDefault-1					; Treasure Room
+	.word playerHitDefault-1				; Treasure Room
 	.word playerHitInMarket-1				; Marketplace
 	.word playerHitInEntranceRoom-1			; Entrance Room
 	.word playerHitInBlackMarket-1			; Black Market
-	.word playerHitDefault-1					; Map Room
+	.word playerHitDefault-1				; Map Room
 	.word playerHitInMesaSide-1				; Mesa Side
 	.word playerHitInTempleEntrance-1		; Temple Entrance
 	.word playerHitInSpiderRoom-1			; Spider Room
 	.word playerHitInRoomOfShiningLight-1	; Room of the Shining Light
-	.word playerHitDefault-1					; Mesa Field
+	.word playerHitDefault-1				; Mesa Field
 	.word playerHitInValleyOfPoison-1		; Valley of Poison
 	.word playerHitInThievesDen-1			; Thieves Den
 	.word playerHitInWellOfSouls-1			; Well of Souls
@@ -3219,12 +3271,13 @@ swarmEventCounterTable
 
 
 ;***********************************************************
-;	bank 1 / 0..1
+;	bank 1 / (Second bank)
 ;***********************************************************
 
-	seg		bank1
-	org		BANK1TOP
-	rorg	BANK1_REORG
+
+	seg		bank1						; Bank 1 Segment
+	org		BANK1TOP					; Physical address of 2nd bank in ROM   ($1000-$1FFF)
+	rorg	BANK1_REORG					; Shift to logical address for 2nd bank ($F000-$FFFF)
 
 BANK1Start
 	lda		BANK0STROBE
@@ -3879,7 +3932,7 @@ updateEventState
 	bcc		UpdateInvEventState			; If < 5, Update Animation State.
 	ldx		#$04						; X = 4.
 	ldy		#$01						; Y = 1.
-	bit		gameEventFlag				; Check major event flag
+	bit		indyStatus				; Check major event flag
 	bmi		setInvEventStateTo3			; If Set (Minus), Set Y=3.
 	bit		eventTimer					; Check event Timer
 	bpl		updateInvEventStateAfterYSet	; If positive, skip.
@@ -3911,7 +3964,7 @@ invObjPosLoop
 	inx									; Next Item.
 	cpx		#$05						; Loop until 5.
 	bcc		invObjPosLoop				; Loop.
-	bit		gameEventFlag				; Check major event (death).
+	bit		indyStatus				; Check major event (death).
 	bpl		invItemSelectCycle			; If Clear, Normal Gameplay
 										; (Selection Allowed).
 
@@ -3935,7 +3988,7 @@ invObjPosLoop
 removeIndySpriteLine
 	sta		frameCount					; Reset Frame Count
 	sec									; Set Carry
-	ror		gameEventFlag				; Rotate major event flag
+	ror		indyStatus					; remove one line from sprite height
 indyHatPause
 	cmp		#$3c						; Compare A with 60
 	bcc		resetIndyAfterDeath			; If < 60, Continue.
@@ -3955,11 +4008,11 @@ resetIndyAfterDeath
 	lda		#HEIGHT_INDY_SPRITE			; Reset Height default.
 	sta		indySpriteHeight			; Store.
 	sta		soundChan1Effect			; Store sound effect.
-	sta		gameEventFlag				; Reset flag.
+	sta		indyStatus					; Reset flag.
 	dec		livesLeft					; Decrement Lives.
 	bpl		jmpToNewFrame				; If Lives >= 0, Continue Game.
-	lda		#$ff						; Game Over State?
-	sta		gameEventFlag				; Set flag (game over).
+	lda		#INDY_GAMEOVER				; Game Over State
+	sta		indyStatus					; Set flag (game over).
 	bne		jmpToNewFrame				; Exit.
 
 invItemSelectCycle
@@ -4131,11 +4184,11 @@ checkBoundary
 jmpObjHitHandeler
 	; --------------------------------------------------------------------------
 	; BANK SWITCH RETURN
-	; Return to CheckObjectCollisions in Bank 0.
+	; Return to CheckForObjHit in Bank 0.
 	; --------------------------------------------------------------------------
-	lda		#<checkWeaponPlayerHit
+	lda		#<CheckForObjHit
 	sta		temp4
-	lda		#>checkWeaponPlayerHit
+	lda		#>CheckForObjHit
 	sta		temp5
 JumpToBank0
 	lda		#LDA_ABS
@@ -4333,7 +4386,7 @@ animateSpider:
 		lda		spiderRoomState				; Check main state
 		bmi		finishRoomHandle			; If Bit 7 set (Aggressive/Caught),
 											; skip passive animation updates
-		bit		gameEventFlag				; Check if a major event
+		bit		indyStatus				; Check if a major event
 		bmi		finishRoomHandle			; If so, skip
 		and		#$07						; Mask lower 3 bits (Animation Timer)
 		bne		updateSpiderSpriteState	; If timer != 0, go update sprite state shadow
@@ -4354,7 +4407,7 @@ valleyOfPoisonRoomHandler:
 		lda		#$80						; Set Bit 7 ($80) in Screen Event State.
 		sta		screenEventState			; screenEventState = $80 (Active).
 		ldx		#$00						; X = 0.
-		bit		gameEventFlag				; Check major event flag
+		bit		indyStatus				; Check major event flag
 		bmi		thiefEscape					;  If Major Event Set (Negative),
 											; Enter thief escape mode.
 		bit		pickupStatusFlags			; Check Pickup Status (Bit 6 = Overflow).
@@ -4610,8 +4663,8 @@ bribeCheck:
 		sty		p0SpriteHeight				; set p0SpriteHeight
 		sty		snakePosY					; Set snakeVertPos.
 		inc		indyPosX					; Increment Indy X (49).
-		lda		#$80						; Set Bit 7.
-		sta		gameEventFlag				; Trigger major event (bribe success)
+		lda		#INDY_DEAD					; Lunatic kills Indy
+		sta		indyStatus					; (but removes Lunatic permanently)
 
 finishRoomHandler:
 		jmp		jmpSetupNewRoom				; Return.
@@ -4973,7 +5026,7 @@ enableBall
 
 		cpx		#ID_ARK_ROOM				; Check Ark Room.
 		beq		initKernalJumps				; Branch if Ark Room.
-		bit		gameEventFlag				; Check major event.
+		bit		indyStatus				; Check major event.
 		bmi		initKernalJumps				; Branch if Negative (Bit 7 Set).
 		ldy		SWCHA						; Read Joystick.
 		sty		REFP1						; Set Reflection P1
@@ -6017,10 +6070,10 @@ thiefColors
 ; Dirt pile sprite for the Well of Souls.
 ; Used as P0 graphics via dirtPileGfxState (low byte of pointer).
 ; As Indy digs with the shovel, dirtPileGfxState decrements from
-; <dirtPileSprite + 8 (full pile) down to <dirtPileSprite (cleared),
+; <fullDirtPile  down to <clearedDirtPile 
 ; sliding the 16-byte read window through this data so the pile
 ; visually shrinks from the top.
-dirtPileSprite
+clearedDirtPile
 	.byte $00 ; |........|
 	.byte $00 ; |........|
 	.byte $00 ; |........|
@@ -6029,6 +6082,8 @@ dirtPileSprite
 	.byte $00 ; |........|
 	.byte $00 ; |........|
 	.byte $00 ; |........|
+	
+fullDirtPile
 	.byte $00 ; |........|
 	.byte $00 ; |........|
 	.byte $00 ; |........|
@@ -6045,6 +6100,8 @@ dirtPileSprite
 	.byte $FF ; |XXXXXXXX|
 	.byte $FF ; |XXXXXXXX|
 	.byte $FF ; |XXXXXXXX|
+
+;Unknown Data	
 	.byte $3E ; |..XXXXX.|
 	.byte $3C ; |..XXXX..|
 	.byte $3A ; |..XXX.X.|

@@ -134,7 +134,7 @@ This is the largest block of game code, executing in order every frame:
 | 4 | `HandleEasterEgg` | **Cutscene check**: if `screenEventState` bit 6 is set, advance the Arkbreveal sequence. |
 | 5 | `advanceArkSeq` | **Snake AI**: every 4th frame, grow snake sprite, steer toward Indy using `snakePosXOffsetTable`, update `ballPosX`/`ballPosY` and `kernelRenderState`. |
 | 6 | `configSnake` | **Snake kernel setup**: load `kernelDataPtrLo/Hi` and `kernelDataIndex` from `snakeMotionTable` for the wiggling ball sprite. |
-| 7 | `checkMajorEventDone` | If `gameEventFlag` bit 7 is set (death in progress), skip to `finishedScrollUpdate` — bypass normal input. |
+| 7 | `checkIndyStatus` | If `indyStaus` bit 7 is set (death in progress), skip to `finishedScrollUpdate` — bypass normal input. |
 | 8 | `checkGameScriptTimer` | If `eventTimer` is negative (Indy paralyzed/frozen), force standing sprite and skip input. |
 | 9 | `branchOnFrameParity` | **Frame parity split**: even frames run full input processing. Odd frames skip to `clearItemUseOnButtonRelease`. |
 | 10 | `gatePlayerTriggeredEvent` | **Weapon aiming**: joystick moves the weapon crosshair (missile 1) with boundary clamping. |
