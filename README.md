@@ -134,7 +134,7 @@ This is the largest block of game code, executing in order every frame:
 | 4 | `checkScreenEvent` | **Cutscene check**: if `screenEventState` bit 6 is set, advance the Ark reveal sequence. |
 | 5 | `updateSnakeAI` | **Snake AI**: every 4th frame, grow snake sprite, steer toward Indy using `snakePosXOffsetTable`, update `ballPosX`/`ballPosY` and `kernelRenderState`. |
 | 6 | `configSnake` | **Snake kernel setup**: load `kernelDataPtrLo/Hi` and `kernelDataIndex` from `snakeMotionTable` for the wiggling ball sprite. |
-| 7 | `checkIndyStatus` | If `indyStatus` bit 7 is set (death in progress), skip to `finishedScrollUpdate` — bypass normal input. |
+| 7 | `checkIndyStatus` | If `indyStatus` bit 7 is set (death in progress), skip to `dispatchRoomHandler` — bypass normal input. |
 | 8 | `checkGameScriptTimer` | If `eventTimer` is negative (Indy paralyzed/frozen), force standing sprite and skip input. |
 | 9 | `branchOnFrameParity` | **Frame parity split**: even frames run full input processing. Odd frames skip to `clearItemUseOnButtonRelease`. |
 | 10 | `handleWeaponAim` | **Weapon aiming**: joystick moves the weapon crosshair (missile 1) with boundary clamping. |
@@ -147,7 +147,7 @@ This is the largest block of game code, executing in order every frame:
 
 ##### Bank Switch → Bank 1: Room Handlers
 
-At `finishedScrollUpdate`, the code writes `selectRoomHandler` as the target address and jumps through the `jumpToBank1` trampoline.
+At `dispatchRoomHandler`, the code writes `selectRoomHandler` as the target address and jumps through the `jumpToBank1` trampoline.
 
 `selectRoomHandler` dispatches via `roomHandlerJmpTable` — each room has its own handler that runs room-specific AI and physics:
 

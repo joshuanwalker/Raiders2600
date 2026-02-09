@@ -1520,7 +1520,7 @@ checkIndyStatus
 	bit		indyStatus
 	bpl		checkGameScriptTimer		; If major event not complete
 										; continue sequence
-	jmp		finishedScrollUpdate		; Else, jump to end
+	jmp		dispatchRoomHandler			; Else, jump to end
 
 checkGameScriptTimer
 	bit		eventTimer
@@ -1992,7 +1992,7 @@ handleMesaScroll
 	cpx		#ID_MESA_FIELD				; are we on the Mesa Field?
 	beq		checkMesaCameraUpdate		; Yes, check if we need to scroll
 	cpx		#ID_VALLEY_OF_POISON		; Do check if we are in Valley of Poison too
-	bne		finishedScrollUpdate			; If neither, continue to Bank 1 routines
+	bne		dispatchRoomHandler				; If neither, continue to Bank 1 routines
 
 checkMesaCameraUpdate
 	; -----------------------------------------------------------------------
@@ -2012,14 +2012,14 @@ tryScrollSouth
 	ldy		indyPosY					; get Indy's vertical position
 	cpy		#MESA_SCROLL_TRIGGER_BOTTOM	; Check Lower Scroll Boundary
 										; (Bottom of screen)
-	beq		finishedScrollUpdate				; If at bottom, stop scrolling
+	beq		dispatchRoomHandler					; If at bottom, stop scrolling
 
 	ldx		roomObjectVar				; Load the current World Background Offset.
 	bcs		tryScrollNorth				; If Indy Y >= $27, he is near the bottom.
 										; (Carry Set = Check Downward Scroll/Reverse)
 
 	; --- SCROLLING DOWN (Walking towards bottom) ---
-	beq		finishedScrollUpdate		; If Offset is 0, we are at
+	beq		dispatchRoomHandler			; If Offset is 0, we are at
 										; the very bottom of the map.
 										; Stop scrolling.
 
@@ -2028,7 +2028,7 @@ tryScrollSouth
 	inc		weaponPosY					; Move Weapon DOWN with him
 	and		#$02						; Check Frame Timing every 2 frames
 										; (scroll speed)
-	bne		finishedScrollUpdate				; if not time to scroll, skip
+	bne		dispatchRoomHandler					; if not time to scroll, skip
 
 	; Shift all other objects DOWN to match the camera movement:
 	dec		roomObjectVar
@@ -2038,16 +2038,16 @@ tryScrollSouth
 	inc		p0PosY
 	inc		m0PosY
 	inc		ballPosY
-	jmp		finishedScrollUpdate
+	jmp		dispatchRoomHandler
 
 tryScrollNorth
 	; --- SCROLLING UP (Walking towards top) ---
 	cpx		#MESA_MAP_MAX_HEIGHT		; Check Upper World Limit (Offset $50)
-	bcs		finishedScrollUpdate		; If at top of map, Stop scrolling.
+	bcs		dispatchRoomHandler			; If at top of map, Stop scrolling.
 	dec		indyPosY					; Nudge Indy UP (Keep him pinned to edge)
 	dec		weaponPosY					; Move Weapon UP
 	and		#$02						; Frame Timer check
-	bne		finishedScrollUpdate
+	bne		dispatchRoomHandler
 
 	; Shift the World DOWN relative to Indy:
 	inc		roomObjectVar
@@ -2058,7 +2058,7 @@ tryScrollNorth
 	dec		m0PosY
 	dec		ballPosY
 
-finishedScrollUpdate
+dispatchRoomHandler
 	lda		#<selectRoomHandler			; Load low byte of Bank 1 Kernel address
 	sta		temp4						; Store bank-switch jump target lo
 	lda		#>selectRoomHandler			; Load high byte of Bank 1 Kernel address
