@@ -131,7 +131,7 @@ This is the largest block of game code, executing in order every frame:
 | 1 | `frameFirstLine` | **Game-over check**: if `gameEventFlag` overflows to 0, call `getFinalScore` and transition to the Ark Room. |
 | 2 | `checkShowDevInitials` | **Ark Room / title screen**: if in the Ark Room, play Raiders March, check Yar bonus for HSW initials easter egg. Otherwise skip. |
 | 3 | *(Ark Room only)* | **Pedestal elevator**: slowly lower Indy to his score height. Check fire button for restart. Set `arkRoomStateFlag` to enable RESET. |
-| 4 | `HandleEasterEgg` | **Cutscene check**: if `screenEventState` bit 6 is set, advance the Arkbreveal sequence. |
+| 4 | `HandleEasterEgg` | **Easter egg check**: if `screenEventState` bit 6 is set, advance the easter egg sequence. |
 | 5 | `advanceArkSeq` | **Snake AI**: every 4th frame, grow snake sprite, steer toward Indy using `snakePosXOffsetTable`, update `ballPosX`/`ballPosY` and `kernelRenderState`. |
 | 6 | `configSnake` | **Snake kernel setup**: load `kernelDataPtrLo/Hi` and `kernelDataIndex` from `snakeMotionTable` for the wiggling ball sprite. |
 | 7 | `checkIndyStatus` | If `indyStaus` bit 7 is set (death in progress), skip to `finishedScrollUpdate` — bypass normal input. |
