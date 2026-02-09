@@ -450,6 +450,8 @@ ENTRANCE_ROOM_CAVE_VERT_POS = 9
 ENTRANCE_ROOM_ROCK_VERT_POS = 53
 
 MAX_INVENTORY_ITEMS			= 6
+INVENTORY_SLOT_LIMIT		= (MAX_INVENTORY_ITEMS * 2) - 1 ; $0B — one past last valid 2-byte slot index
+SCREEN_CENTER_X				= (XMAX / 2) - 4               ; $4C — standard centered X position
 
 ;***********************************************************
 ;	bank 0 / (First bank)
@@ -703,7 +705,7 @@ checkMesaSideExit:
 	lda		#ID_WELL_OF_SOULS
 	sta		currentRoomId				; move Indy to the Well of Souls
 	jsr		initRoomState
-	lda		#(XMAX / 2) - 4
+	lda		#SCREEN_CENTER_X
 	sta		indyPosX					; place Indy in horizontal middle
 	bne		clearCollisionLatches		; unconditional branch
 
@@ -836,7 +838,7 @@ takeItemFromInv:
 	jsr		removeItem
 	bcc		resumeCollisionChain
 updateAfterItemRemove:
-	cpy		#$0b
+	cpy		#ID_INVENTORY_SHOVEL
 	bne		setPickupProcessedFlag
 	ror		blackMarketState			; rotate Black Market state right
 	clc
@@ -935,8 +937,8 @@ indyTouchMarketBaskets:
 notTouchingBottomBasket:
 	; Top Row Baskets (check X position)
 	lda		indyPosX					; Get Indy's horizontal position
-	cmp		#$4c						; Check Middle/Right boundary
-	bcs		touchingRightBasket			; If X >= $4C, it's the Right Basket.
+	cmp		#SCREEN_CENTER_X			; Check Middle/Right boundary
+	bcs		touchingRightBasket			; If X >= center, it's the Right Basket.
 
 	; Left Basket: Contains GRENADES
 	ldx		#ID_MARKETPLACE_GRENADE		; Pre-load Grenade ID
@@ -1113,11 +1115,11 @@ initFallbackEntryPosition:
 ; position and transition to Mesa Side.
 	bit		mapRoomState
 	bmi		fallThroughToMissile0Check	; bit 7 set — skip (already transitioning)
-	lda		#$50
+	lda		#MESA_MAP_MAX_HEIGHT
 	sta		savedScrollOffset			; default scroll offset
 	lda		#$41
 	sta		savedIndyPosY				; default vertical position
-	lda		#$4c
+	lda		#SCREEN_CENTER_X
 	bne		saveIndyPosAndEnterMesa		; save horizontal position and enter Mesa Side
 
 stopIndyMovInTemple:
@@ -1176,7 +1178,7 @@ indyPixelLeft:
 playerHitInRoomOfShiningLight:
 	ldx		#$1a
 	lda		indyPosX					; get Indy horizontal position
-	cmp		#$4c
+	cmp		#SCREEN_CENTER_X
 	bcc		setIndyInDungeon			; branch if Indy on left of screen
 	ldx		#$7d
 setIndyInDungeon:
@@ -1513,7 +1515,7 @@ configSnake
 	tax
 	lda		snakeMoveTableLSB,x			; Look up animation offset
 	sec
-	sbc		#$08						; Subtract 8 (Snake Height correction)
+	sbc		#HEIGHT_ITEM_SPRITES		; Subtract 8 (Snake Height correction)
 	sta		kernelDataIndex				; Store snake motion start offset
 
 checkIndyStatus
@@ -1675,7 +1677,7 @@ handleIInventoryUpdate
 	inc		bulletCount
 	bne		clearItemUseFlag
 checkShovelPickup
-	cmp		#$0b
+	cmp		#ID_INVENTORY_SHOVEL
 	bne		placeGenericItem
 	ror		blackMarketState			; rotate Black Market state right
 	sec									; set carry
@@ -1875,7 +1877,7 @@ ankhWarpToMesa
 	sta		ankhUsedBonus				; set to reduce adventurePoints by 9 points
 	sta		currentRoomId				; Change current screen to Mesa Field
 	jsr		initRoomState				; Load the data for the new screen
-	lda		#$4c						; Prepare a flag or state value for later use
+	lda		#SCREEN_CENTER_X			; Prepare a flag or state value for later use
 	;Warp Indy to center of Mesa Field
 	sta		indyPosX					; Set Indy's horizontal position
 	sta		weaponPosX					; Set projectile's horizontal position
@@ -2130,8 +2132,8 @@ clearStateLoop
 	lda		#$14						; Now set A = 20
 	bne		clearStateLoop				; Unconditional loop to write new value
 exitStateClear
-	lda		#$fc						; Load setup value
-	sta		kernelDataPtrHi				; Store it to a specific control variable
+	lda		#$fc						; Hi byte for thief/dirt pile color pointer
+	sta		kernelDataPtrHi				; Set color data page ($FC)
 	rts									; Return from subroutine
 
 initRoomState
@@ -2283,7 +2285,7 @@ initMesaFieldScrollState
 	ldy		indyPosY					; get Indy's vertical position
 	cpy		#$49						; If Indy is "Above" the scroll line
 	bcc		finishRoomSpecificInit
-	lda		#$50
+	lda		#MESA_MAP_MAX_HEIGHT
 	sta		roomObjectVar				; start scrolling from bottom
 	rts									; return
 
@@ -3075,7 +3077,7 @@ initGameVars:
 	sta		indyGfxPtrLo
 	lda		#>IndySprites
 	sta		indyGfxPtrHi
-	lda		#$4c
+	lda		#SCREEN_CENTER_X
 	sta		indyPosX						; set Indy's initial X position
 	lda		#$0f
 	sta		indyPosY						; set Indy's initial Y position
@@ -3346,7 +3348,7 @@ nextPFScanline
 	sty		GRP0						; Update GRP0 (P0 graphics).
 	sec									; Set carry.
 	sbc		ballPosY					; Adjust for object Y.
-	cmp		#$08						; Check height range
+	cmp		#HEIGHT_ITEM_SPRITES		; Check height range
 	bcs		goNextPFScanline			; Skip if outside range.
 	tay									; Transfer to Y.
 	lda		(kernelDataPtrLo),y			; Load timepiece graphics.
@@ -3448,7 +3450,7 @@ staticSpriteKernel
 	cmp		#$10						; Compare with 16.
 	bcs		burn19Cycles				; Branch if snake not active here.
 	tay									; Transfer to Y.
-	cmp		#$08						; Compare with 8.
+	cmp		#HEIGHT_ITEM_SPRITES		; Compare with 8 (upper/lower half split).
 	bcc		burn5Cycles					; Branch if < 8.
 	lda		kernelDataIndex				; Load pointer to timepiece sprite data.
 	sta		kernelDataPtrLo				; Store in graphics pointer.
@@ -3632,8 +3634,10 @@ updateThiefAnimation
 	sta		p0GfxPtrLo					; Set as Low Byte of Sprite Pointer.
 										; High Byte is inherited from current context
 										; (Thief Page or specific override)
-	lda		#$65						; Load brownish/gold color.
-	sta		kernelDataPtrLo				; Set Color Pointer.
+	lda		#$65						; Dirt pile color data (reads $FC65-$FC74:
+										; 7 × $FF from fullDirtPile as BROWN+15,
+										; then dirtPileColorGradient RED→YELLOW)
+	sta		kernelDataPtrLo				; Set Color Pointer Low Byte.
 	lda		#$00						; Clear A.
 	sta		kernelRenderState			; Ensure state stays in "Dig Mode".
 	jmp		thiefKernel					; Return.
@@ -3651,7 +3655,7 @@ thiefFrameSetup
 	bit		kernelRenderState			; Check state (Bit 4?).
 	beq		thiefSpecialAnimate			; If zero, jump to Special Case.
 	ldy		temp3						; Restore Thief Index.
-	lda		#$08						; Load Bit 3 mask.
+	lda		#REFLECT					; Load Reflect bit mask.
 	and		temp2						; Check thief state
 	beq		pickThiefSpriteFrame		; If Bit 3 clear, jump.
 	lda		#$03						; Load Offset 3
@@ -4363,7 +4367,7 @@ spiderRoomHandler:
 		and		#$07						; check every 8th frame
 		bne		animateSpider				; If not the 8th frame, skip movement update
 		ldy		#$05						; Set Target Index to 5 (a unused/static slot?)
-		lda		#$4c						; Passive target X = center
+		lda		#SCREEN_CENTER_X			; Passive target X = center
 		sta		targetPosX					; Set AI chase target X
 		lda		#$23						; Set Passive home Target Y = $23
 		sta		targetPosY					; Store in target variable for
@@ -4559,7 +4563,7 @@ checkToMoveThieves:
 		bcs		setNewThiefPosX				; If >= 20, still in bounds, update Position.
 											; Else, fall through to Change Direction.
 changeThiefDirection:
-		lda		#$08						; Load Reflect mask.
+		lda		#REFLECT					; Load Reflect mask.
 		eor		roomObjectVar,x				; XOR with current state
 		sta		roomObjectVar,x				; Update state.
 
@@ -4899,7 +4903,7 @@ templeEntranceRoomHandler:
 	; TIMEPIECE PRESENT STATE
 	; --------------------------------------------------------------------------
 	; Use default Ball Position (set in initRoomState or loadRoomGfx)
-		lda		#$4c
+		lda		#SCREEN_CENTER_X
 		sta		ballPosX					; Set Ball/Timepiece X to center
 		lda		#$2a
 		sta		ballPosY					; Set Timepiece Graphics (Ball Sprite)
@@ -4964,7 +4968,7 @@ roomOfShiningLightHandler:
 roslStateHandeler:
 		ldy		#$05						; Set Y to 5 so updateMoveToTarget
 											; keeps light static
-		lda		#$4c						; X target = center
+		lda		#SCREEN_CENTER_X			; X target = center
 		sta		targetPosX					; Set AI chase target X (shining light)
 		lda		#$0b						; Y Target
 		sta		targetPosY					; Set Temp Y
@@ -4996,7 +5000,7 @@ dungeonWallHit:
 
 		; --- Trigger Secret Exit ---
 		sta		escapePrisonPenalty			; Apply Penalty (13 points).
-		lda		#$4c						; Load $4C.
+		lda		#SCREEN_CENTER_X			; Teleport Indy to center.
 		sta		indyPosX					; Teleport Indy to Center X.
 
 		ror		entranceRoomEventState		; Rotate Event State (Modify flags).
@@ -6212,16 +6216,21 @@ fullDirtPile
 	.byte $FF ; |XXXXXXXX|
 	.byte $FF ; |XXXXXXXX|
 
-;Unknown Data	
-	.byte $3E ; |..XXXXX.|
-	.byte $3C ; |..XXXX..|
-	.byte $3A ; |..XXX.X.|
-	.byte $38 ; |..XXX...|
-	.byte $36 ; |..XX.XX.|
-	.byte $34 ; |..XX.X..|
-	.byte $32 ; |..XX..X.|
-	.byte $20 ; |..X.....|
-	.byte $10 ; |...X....|
+; Dirt pile COLUP0 color gradient (bottom 9 scanlines).
+; The dirt pile color pointer is set to $65 (kernelDataPtrLo at line 3636)
+; with kernelDataPtrHi = $FC, reading 16 bytes from $FC65-$FC74.
+; The first 7 color values reuse fullDirtPile's $FF bytes (BROWN+15).
+; These 9 bytes provide the remaining gradient: RED fading to dark YELLOW.
+dirtPileColorGradient
+	.byte $3E ; |..XXXXX.| $FC6C  RED + 14
+	.byte $3C ; |..XXXX..| $FC6D  RED + 12
+	.byte $3A ; |..XXX.X.| $FC6E  RED + 10
+	.byte $38 ; |..XXX...| $FC6F  RED + 8
+	.byte $36 ; |..XX.XX.| $FC70  RED + 6
+	.byte $34 ; |..XX.X..| $FC71  RED + 4
+	.byte $32 ; |..XX..X.| $FC72  RED + 2
+	.byte $20 ; |..X.....| $FC73  LT_RED + 0
+	.byte $10 ; |...X....| $FC74  YELLOW + 0
 
 possibleTreasureItemID
 	.byte $00 ; |........|
@@ -6346,40 +6355,50 @@ invIncP0PosX
 finishInvSelectAdj
 	rts
 
-;unknown data
-	.byte $00 ; |........|
-	.byte $F2 ; |XXXX..X.|
-	.byte $40 ; |.X......|
-	.byte $F2 ; |XXXX..X.|
-	.byte $C0 ; |XX......|
-	.byte $12 ; |...X..X.|
-	.byte $10 ; |...X....|
-	.byte $F2 ; |XXXX..X.|
-	.byte $00 ; |........|
-	.byte $12 ; |...X..X.|
-	.byte $20 ; |..X.....|
-	.byte $02 ; |......X.|
-	.byte $B0 ; |X.XX....|
-	.byte $F2 ; |XXXX..X.|
-	.byte $30 ; |..XX....|
-	.byte $12 ; |...X..X.|
-	.byte $00 ; |........|
-	.byte $F2 ; |XXXX..X.|
-	.byte $40 ; |.X......|
-	.byte $F2 ; |XXXX..X.|
-	.byte $D0 ; |XX.X....|
-	.byte $12 ; |...X..X.|
-	.byte $10 ; |...X....|
-	.byte $02 ; |......X.|
-	.byte $00 ; |........|
-	.byte $02 ; |......X.|
-	.byte $30 ; |..XX....|
-	.byte $12 ; |...X..X.|
-	.byte $B0 ; |X.XX....|
-	.byte $02 ; |......X.|
-	.byte $20 ; |..X.....|
-	.byte $12 ; |...X..X.|
-	.byte $00 ; |........|
+; Timepiece ball sprite animation data — 4 frames of 8 HMBL/ENABL values.
+; Referenced via computed pointer at UpdateInvEventState:
+;   kernelDataPtrLo = (frameCount AND #$06) << 2  → $00/$08/$10/$18
+;   kernelDataPtrHi = $FD
+; The scrolling playfield kernel writes each value to both ENABL (bit 1 =
+; ball visible) and HMBL (bits 4-7 = horizontal motion), rendering the
+; timepiece as a shaped ball object across 8 scanlines per frame.
+	.byte $00 ; |........| $FCFF  (padding/boundary)
+timepieceBallFrame0
+	.byte $F2 ; |XXXX..X.| $FD00  HMOVE R1, ball ON
+	.byte $40 ; |.X......| $FD01
+	.byte $F2 ; |XXXX..X.| $FD02
+	.byte $C0 ; |XX......| $FD03
+	.byte $12 ; |...X..X.| $FD04
+	.byte $10 ; |...X....| $FD05
+	.byte $F2 ; |XXXX..X.| $FD06
+	.byte $00 ; |........| $FD07
+timepieceBallFrame1
+	.byte $12 ; |...X..X.| $FD08
+	.byte $20 ; |..X.....| $FD09
+	.byte $02 ; |......X.| $FD0A
+	.byte $B0 ; |X.XX....| $FD0B
+	.byte $F2 ; |XXXX..X.| $FD0C
+	.byte $30 ; |..XX....| $FD0D
+	.byte $12 ; |...X..X.| $FD0E
+	.byte $00 ; |........| $FD0F
+timepieceBallFrame2
+	.byte $F2 ; |XXXX..X.| $FD10
+	.byte $40 ; |.X......| $FD11
+	.byte $F2 ; |XXXX..X.| $FD12
+	.byte $D0 ; |XX.X....| $FD13
+	.byte $12 ; |...X..X.| $FD14
+	.byte $10 ; |...X....| $FD15
+	.byte $02 ; |......X.| $FD16
+	.byte $00 ; |........| $FD17
+timepieceBallFrame3
+	.byte $02 ; |......X.| $FD18
+	.byte $30 ; |..XX....| $FD19
+	.byte $12 ; |...X..X.| $FD1A
+	.byte $B0 ; |X.XX....| $FD1B
+	.byte $02 ; |......X.| $FD1C
+	.byte $20 ; |..X.....| $FD1D
+	.byte $12 ; |...X..X.| $FD1E
+	.byte $00 ; |........| $FD1F
 
 RoomPF1GraphicData_6:
 	.byte $FF ; |XXXXXXXX|
@@ -7182,7 +7201,7 @@ EntranceRoomPlayerGraphics
 	; immediately overridden by grey (BLACK + 12).
 	;
 	; This stream draws four elements in the Entrance Room:
-	;   1. A small loose rock/stone near the top
+	;   1. A key near the top (unused, but data still present)
 	;   2. The temple cave entrance (right wall opening) — a tall
 	;      jagged silhouette using extensive HMOVE jitter (L1/R1)
 	;      to produce a natural, rough stone edge
