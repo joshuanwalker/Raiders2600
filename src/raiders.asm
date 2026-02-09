@@ -164,7 +164,7 @@ secretArkMesaID			= $8c	; The specific Mesa ID where the Ark is hidden.
 grappleWhipState		= $8d	; State machine for grapple swing / whip attack sequence
 m0PosYShadow			= $8e	; Shadow copy of Missile 0 Y position (Webs/Swarm)
 weaponStatus			= $8f	; Status of Indy's weapon (Bit 7: Active/Cooldown)
-unused_90				= $90	; Screen flags cleared on room change (result unused)
+unused90				= $90	; Screen flags cleared on room change (result unused)
 inputActionState		= $91	; Combined joystick direction + collision response flags
 indyDir					= $92	; Direction Indy is facing (for Sprite selection)
 screenEventState		= $93	; Flags for screen events (e.g., Snake/Fly active)
@@ -1993,7 +1993,7 @@ checkAnimationTiming
 	bcc		setIndySpriteLSBValue		; If not, update walking frame
 	lda		#$02						; Set a short animation timer
 	sta		soundChan1Effect
-	lda		#<indy_0					; Reset animation back to first walking frame
+	lda		#<indyWalk0					; Reset animation back to first walking frame
 	bcs		setIndySpriteLSBValue		; Unconditional jump to store new sprite pointer
 
 
@@ -2159,7 +2159,7 @@ resetRoomFlags
 	stx		screenEventState			; Clear screen event state.
 	stx		spiderRoomState				; Clear spider room state.
 	stx		m0PosYShadow				; Clear shadow variable for missile Y Position
-	stx		unused_90					; Clear unknown flag at $90
+	stx		unused90					; Clear unknown flag at $90
 	lda		pickupStatusFlags			; Load pickup flags.
 	stx		pickupStatusFlags			; Clear pickup flags.
 	jsr		updateRoomEventState		; Update room event counters/offsets.
@@ -2792,16 +2792,16 @@ m0PosYTable
 
 
 pf1GfxDataLo
-	.byte <COLUP0,<COLUP0,<COLUP0,<COLUP0,<COLUP0,<COLUP0,<roomPF1GraphicData_7,<roomPF1GraphicData_8,<roomPF1GraphicData_9,<roomPF1GraphicData_10,<roomPF1GraphicData_10
+	.byte <COLUP0,<COLUP0,<COLUP0,<COLUP0,<COLUP0,<COLUP0,<roomPF1GraphicData7,<roomPF1GraphicData8,<roomPF1GraphicData9,<roomPF1GraphicData10,<roomPF1GraphicData10
 
 pf1GfxDataHi
-	.byte >COLUP0,>COLUP0,>COLUP0,>COLUP0,>COLUP0,>COLUP0,>roomPF1GraphicData_7,>roomPF1GraphicData_8,>roomPF1GraphicData_9,>roomPF1GraphicData_10,>roomPF1GraphicData_10
+	.byte >COLUP0,>COLUP0,>COLUP0,>COLUP0,>COLUP0,>COLUP0,>roomPF1GraphicData7,>roomPF1GraphicData8,>roomPF1GraphicData9,>roomPF1GraphicData10,>roomPF1GraphicData10
 
 pf2GfxDataLo
-	.byte <HMP0,<HMP0,<HMP0,<HMP0,<HMP0,<HMP0,<roomPF1GraphicData_6,<roomPF2GraphicData_7,<roomPF2GraphicData_6,<roomPF2GraphicData_9,<roomPF2GraphicData_9
+	.byte <HMP0,<HMP0,<HMP0,<HMP0,<HMP0,<HMP0,<roomPF1GraphicData6,<roomPF2GraphicData7,<roomPF2GraphicData6,<roomPF2GraphicData9,<roomPF2GraphicData9
 
 pf2GfxDataHi
-	.byte >HMP0,>HMP0,>HMP0,>HMP0,>HMP0,>HMP0,>roomPF1GraphicData_6,>roomPF2GraphicData_7,>roomPF2GraphicData_6,>roomPF2GraphicData_9,>roomPF2GraphicData_9
+	.byte >HMP0,>HMP0,>HMP0,>HMP0,>HMP0,>HMP0,>roomPF1GraphicData6,>roomPF2GraphicData7,>roomPF2GraphicData6,>roomPF2GraphicData9,>roomPF2GraphicData9
 
 itemStatusBitValues
 	.byte BASKET_STATUS_MARKET_GRENADE | PICKUP_ITEM_STATUS_WHIP
@@ -3225,21 +3225,21 @@ jumpToBank1
 
 getMoveDir
 	ror								;move first bit into carry
-	bcs		mov_emy_right			;if 1 check if enemy shoulld go right
+	bcs		movEmyRight			;if 1 check if enemy shoulld go right
 	dec		p0PosY,x				;move enemy left 1 unit
-mov_emy_right
+movEmyRight
 	ror								;rotate next bit into carry
-	bcs		mov_emy_down				;if 1 check if enemy should go up
+	bcs		movEmyDown				;if 1 check if enemy should go up
 	inc		p0PosY,x				;move enemy right 1 unit
-mov_emy_down
+movEmyDown
 	ror								;rotate next bit into carry
-	bcs		mov_emy_up				;if 1 check if enemy should go up
+	bcs		movEmyUp				;if 1 check if enemy should go up
 	dec		p0PosX,x				;move enemy down 1 unit
-mov_emy_up
+movEmyUp
 	ror								;rotate next bit into carry
-	bcs		mov_emy_finish			;if 1, moves are finished
+	bcs		movEmyFinish			;if 1, moves are finished
 	inc		p0PosX,x				;move enemy up 1 unit
-mov_emy_finish
+movEmyFinish
 	rts								;return
 
 indyMoveDeltaTable
@@ -3938,7 +3938,7 @@ updateTimepieceSprite
 	and		#$e0						; Keep top 3 bits for the 8 sprites
 	lsr
 	lsr
-	adc		#<timepiece12_00			; Add Base Address of Timepiece Graphics.
+	adc		#<timepiece1200			; Add Base Address of Timepiece Graphics.
 
 storeTimepieceSprite
 	ldx		selectedItemSlot			; Get the current slot for the timepiece.
@@ -4075,7 +4075,7 @@ checkInvCycle
 	beq		finishInvCycle				; branch if Indy not carrying items
 	ldx		selectedItemSlot
 	lda		invSlotLo,x					; get inventory graphic LSB value
-	cmp		#<timepiece12_00
+	cmp		#<timepiece1200
 	bcc		checkInvItemChoice			; branch if the item is not open clock sprite
 	lda		#<closedTimepieceSprite		; close the timepiece
 
@@ -5517,7 +5517,7 @@ pedestalLiftSprite
 	.byte $36 ; |..XX.XX.| $F9FF
 
 indySprites
-indy_0
+indyWalk0
 	.byte $18 ; |...XX...| $FA00
 	.byte $3C ; |..XXXX..| $FA01
 	.byte $00 ; |........| $FA02
@@ -5530,7 +5530,7 @@ indy_0
 	.byte $43 ; |.X....XX| $FA09
 	.byte $00 ; |........| $FA0A
 
-indy_1
+indyWalk1
 	.byte $18 ; |...XX...| $FA0B
 	.byte $3C ; |..XXXX..| $FA0C
 	.byte $00 ; |........| $FA0D
@@ -5543,7 +5543,7 @@ indy_1
 	.byte $46 ; |.X...XX.| $FA14
 	.byte $00 ; |........| $FA15
 
-indy_2
+indyWalk2
 	.byte $18 ; |...XX...| $FA16
 	.byte $3C ; |..XXXX..| $FA17
 	.byte $00 ; |........| $FA18
@@ -5556,7 +5556,7 @@ indy_2
 	.byte $8C ; |X...XX..| $FA1F
 	.byte $00 ; |........| $FA20
 
-indy_3
+indyWalk3
 	.byte $18 ; |...XX...| $FA21
 	.byte $3C ; |..XXXX..| $FA22
 	.byte $00 ; |........| $FA23
@@ -5569,7 +5569,7 @@ indy_3
 	.byte $0C ; |....XX..| $FA2A
 	.byte $00 ; |........| $FA2B
 
-indy_4
+indyWalk4
 	.byte $18 ; |...XX...| $FA2C
 	.byte $3C ; |..XXXX..| $FA2D
 	.byte $00 ; |........| $FA2E
@@ -5582,7 +5582,7 @@ indy_4
 	.byte $18 ; |...XX...| $FA35
 	.byte $00 ; |........| $FA36
 
-indy_5
+indyWalk5
 	.byte $18 ; |...XX...| $FA37
 	.byte $3C ; |..XXXX..| $FA38
 	.byte $00 ; |........| $FA39
@@ -5595,7 +5595,7 @@ indy_5
 	.byte $30 ; |..XX....| $FA40
 	.byte $00 ; |........| $FA41
 
-indy_6
+indyWalk6
 	.byte $18 ; |...XX...| $FA42
 	.byte $3C ; |..XXXX..| $FA43
 	.byte $00 ; |........| $FA44
@@ -5608,7 +5608,7 @@ indy_6
 	.byte $30 ; |..XX....| $FA4B
 	.byte $00 ; |........| $FA4C
 
-indy_7
+indyWalk7
 	.byte $18 ; |...XX...| $FA4D
 	.byte $3C ; |..XXXX..| $FA4E
 	.byte $00 ; |........| $FA4F
@@ -5975,7 +5975,7 @@ invHourGlassSprite
 	.byte $36 ; |..XX.XX.| $FB96
 	.byte $77 ; |.XXX.XXX| $FB97
 
-timepiece12_00: ;timepiece bitmaps...
+timepiece1200: ;timepiece bitmaps...
 	.byte $3E ; |..XXXXX.| $FB98
 	.byte $41 ; |.X.....X| $FB99
 	.byte $41 ; |.X.....X| $FB9A
@@ -5985,7 +5985,7 @@ timepiece12_00: ;timepiece bitmaps...
 	.byte $3E ; |..XXXXX.| $FB9E
 	.byte $1C ; |...XXX..| $FB9F
 
-timepiece01_00
+timepiece0100
 	.byte $3E ; |..XXXXX.| $FBA0
 	.byte $41 ; |.X.....X| $FBA1
 	.byte $41 ; |.X.....X| $FBA2
@@ -5995,7 +5995,7 @@ timepiece01_00
 	.byte $3E ; |..XXXXX.| $FBA6
 	.byte $1C ; |...XXX..| $FBA7
 
-timepiece03_00
+timepiece0300
 	.byte $3E ; |..XXXXX.| $FBA8
 	.byte $41 ; |.X.....X| $FBA9
 	.byte $41 ; |.X.....X| $FBAA
@@ -6005,7 +6005,7 @@ timepiece03_00
 	.byte $3E ; |..XXXXX.| $FBAE
 	.byte $1C ; |...XXX..| $FBAF
 
-timepiece05_00
+timepiece0500
 	.byte $3E ; |..XXXXX.| $FBB0
 	.byte $43 ; |.X....XX| $FBB1
 	.byte $45 ; |.X...X.X| $FBB2
@@ -6015,7 +6015,7 @@ timepiece05_00
 	.byte $3E ; |..XXXXX.| $FBB6
 	.byte $1C ; |...XXX..| $FBB7
 
-timepiece06_00
+timepiece0600
 	.byte $3E ; |..XXXXX.| $FBB8
 	.byte $49 ; |.X..X..X| $FBB9
 	.byte $49 ; |.X..X..X| $FBBA
@@ -6025,7 +6025,7 @@ timepiece06_00
 	.byte $3E ; |..XXXXX.| $FBBE
 	.byte $1C ; |...XXX..| $FBBF
 
-timepiece07_00
+timepiece0700
 	.byte $3E ; |..XXXXX.| $FBC0
 	.byte $61 ; |.XX....X| $FBC1
 	.byte $51 ; |.X.X...X| $FBC2
@@ -6035,7 +6035,7 @@ timepiece07_00
 	.byte $3E ; |..XXXXX.| $FBC6
 	.byte $1C ; |...XXX..| $FBC7
 
-timepiece09_00
+timepiece0900
 	.byte $3E ; |..XXXXX.| $FBC8
 	.byte $41 ; |.X.....X| $FBC9
 	.byte $41 ; |.X.....X| $FBCA
@@ -6045,7 +6045,7 @@ timepiece09_00
 	.byte $3E ; |..XXXXX.| $FBCE
 	.byte $1C ; |...XXX..| $FBCF
 
-timepiece11_00
+timepiece1100
 	.byte $3E ; |..XXXXX.| $FBD0
 	.byte $41 ; |.X.....X| $FBD1
 	.byte $41 ; |.X.....X| $FBD2
@@ -6112,7 +6112,7 @@ raidersMarchFreqTable
 	.byte $18 ; |...XX...|
 
 thiefSprites
-thiefSprite_0
+thiefSprite0
 	.byte $14 ; |...X.X..|
 	.byte $3C ; |..XXXX..|
 	.byte $7E ; |.XXXXXX.|
@@ -6129,7 +6129,7 @@ thiefSprite_0
 	.byte $11 ; |...X...X|
 	.byte $33 ; |..XX..XX|
 	.byte $00 ; |........|
-thiefSprite_1
+thiefSprite1
 	.byte $14 ; |...X.X..|
 	.byte $3C ; |..XXXX..|
 	.byte $7E ; |.XXXXXX.|
@@ -6146,7 +6146,7 @@ thiefSprite_1
 	.byte $22 ; |..X...X.|
 	.byte $66 ; |.XX..XX.|
 	.byte $00 ; |........|
-thiefSprite_2
+thiefSprite2
 	.byte $14 ; |...X.X..|
 	.byte $3C ; |..XXXX..|
 	.byte $7E ; |.XXXXXX.|
@@ -6163,7 +6163,7 @@ thiefSprite_2
 	.byte $44 ; |.X...X..|
 	.byte $CC ; |XX..XX..|
 	.byte $00 ; |........|
-thiefSprite_3
+thiefSprite3
 	.byte $14 ; |...X.X..|
 	.byte $3C ; |..XXXX..|
 	.byte $7E ; |.XXXXXX.|
@@ -6182,8 +6182,8 @@ thiefSprite_3
 	.byte $00 ; |........|
 
 thiefSpriteValueLo
-	.byte <thiefSprite_0, <thiefSprite_1
-	.byte <thiefSprite_2, <thiefSprite_3
+	.byte <thiefSprite0, <thiefSprite1
+	.byte <thiefSprite2, <thiefSprite3
 
 
 thiefColors
@@ -6409,7 +6409,7 @@ timepieceBallFrame3
 	.byte $12 ; |...X..X.| $FD1E
 	.byte $00 ; |........| $FD1F
 
-roomPF1GraphicData_6:
+roomPF1GraphicData6:
 	.byte $FF ; |XXXXXXXX|
 	.byte $FF ; |XXXXXXXX|
 	.byte $FC ; |XXXXXX..|
@@ -6451,7 +6451,7 @@ roomPF1GraphicData_6:
 	.byte $F0 ; |XXXX....|
 	.byte $FE ; |XXXXXXX.|
 
-roomPF1GraphicData_7:
+roomPF1GraphicData7:
 	.byte $FF ; |XXXXXXXX|
 	.byte $FF ; |XXXXXXXX|
 	.byte $FF ; |XXXXXXXX|
@@ -6485,7 +6485,7 @@ roomPF1GraphicData_7:
 	.byte $80 ; |X.......|
 	.byte $00 ; |........|
 
-roomPF1GraphicData_8:
+roomPF1GraphicData8:
 	.byte $00 ; |........|
 	.byte $00 ; |........|
 	.byte $00 ; |........|
@@ -6520,7 +6520,7 @@ roomPF1GraphicData_8:
 	.byte $00 ; |........|
 	.byte $00 ; |........|
 
-roomPF1GraphicData_9:
+roomPF1GraphicData9:
 	.byte $00 ; |........|
 	.byte $00 ; |........|
 	.byte $00 ; |........|
@@ -6540,7 +6540,7 @@ roomPF1GraphicData_9:
 	.byte $02 ; |......X.|
 	.byte $00 ; |........|
 
-roomPF2GraphicData_6:
+roomPF2GraphicData6:
 	.byte $00 ; |........|
 	.byte $00 ; |........|
 	.byte $00 ; |........|
@@ -6570,7 +6570,7 @@ roomPF2GraphicData_6:
 	.byte $80 ; |X.......|
 	.byte $80 ; |X.......|
 
-roomPF2GraphicData_7:
+roomPF2GraphicData7:
 	.byte $00 ; |........|
 	.byte $00 ; |........|
 	.byte $00 ; |........|
@@ -6652,7 +6652,7 @@ shiningLightFrame3
 	.byte $00 ; |........|
 
 
-roomPF1GraphicData_10:
+roomPF1GraphicData10:
 	.byte $07 ; |.....XXX|
 	.byte $07 ; |.....XXX|
 	.byte $07 ; |.....XXX|
@@ -6774,7 +6774,7 @@ roomPF1GraphicData_10:
 	.byte $00 ; |........|
 	.byte $00 ; |........|
 
-roomPF2GraphicData_9:
+roomPF2GraphicData9:
 	.byte $07 ; |.....XXX|
 	.byte $07 ; |.....XXX|
 	.byte $07 ; |.....XXX|
