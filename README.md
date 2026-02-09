@@ -538,6 +538,6 @@ Triggered via `HandleEasterEgg` — finding Yar on the Flying Saucer Mesa sets `
 * **Left joystick**: Inventory selection + drop button
 * Input is read from `SWCHA` (`$0280`) and `INPT5` (fire buttons)
 
-### Special Tanks
+### Special Thanks
 
 Thanks to Dennis Debro for sharing his reverse engeering attmept so that I could merge it with mine.
