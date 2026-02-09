@@ -489,7 +489,7 @@ The score (`adventurePoints`) starts at `INIT_SCORE` (100) and is modified in `g
 | `escapePrisonPenalty` | Escaped dungeon via secret exit | 13 |
 | `thiefShotPenalty` | Shot the thief | 4 |
 
-The final value determines Indy's pedestal height in the Ark Room.
+The final value determines Indy's pedestal height in the Ark Room. Unlike what the legends say, you can not get enough points to "Touch" the Ark. 
 
 ### Win Condition
 
