@@ -10,26 +10,26 @@
 
 This repository contains the fully reverse-engineered and commented source code for the Atari 2600 classic, *Raiders of the Lost Ark*.
 
-
 ## Project Structure
 
 The project has been reorganized for a clean development workflow:
 
-*   **`src/`**: Contains the main assembly source (`raiders.asm`) and header files (`tia_constants.h`).
-*   **`bin/`**: Contains build tools (DASM) and emulator executable (Stella).
-*   **`out/`**: Destination for compiled binaries (`.bin`), symbol files (`.sym`), and listing files (`.lst`). (auto generated at compile time)
-*   **`make.bat`**: Windows batch script to compile the project.
-*   **`run.bat`**: Windows batch script to launch the compiled game.
-
+* **`src/`**: Contains the main assembly source (`raiders.asm`) and header files (`tia_constants.h`).
+* **`bin/`**: Contains build tools (DASM) and emulator executable (Stella).
+* **`out/`**: Destination for compiled binaries (`.bin`), symbol files (`.sym`), and listing files (`.lst`). (auto generated at compile time)
+* **`make.bat`**: Windows batch script to compile the project.
+* **`run.bat`**: Windows batch script to launch the compiled game.
 
 ## How to Build & Run
 
 ### Prerequisites
-*   Windows OS
-*   **DASM**: `dasm.exe` must be in the `bin/` folder.
-*   **Stella**: `Stella.exe` and `SDL2.dll` must be in the `bin/` folder (optional, for running).
+
+* Windows OS
+* **DASM**: `dasm.exe` must be in the `bin/` folder.
+* **Stella**: `Stella.exe` and `SDL2.dll` must be in the `bin/` folder (optional, for running).
 
 ### Compiling
+
 Run the build script from the root directory:
 
 ```cmd
@@ -37,6 +37,7 @@ make.bat
 ```
 
 ### Running
+
 Launch the compiled ROM in Stella:
 
 ```cmd
@@ -51,8 +52,8 @@ run.bat
 
 The game uses a **2-bank ROM** (8KB total) with bank-switching via strobes at `BANK0STROBE` (`$FFF8`) and `BANK1STROBE` (`$FFF9`). Bank switching is done through a self-modifying code technique whare opcodes are written into zero-page RAM variables and executed in-place.
 
-- **Bank 0** (`BANK0TOP` = `$D000`): Contains game logic — collision handling, inventory management, room event handlers, scoring, movement, input processing, and sound.
-- **Bank 1** (`BANK1TOP` = `$F000`): Contains the display kernels, sprite data, playfield graphics, room handler dispatch, and music frequency tables.
+* **Bank 0** (`BANK0TOP` = `$D000`): Contains game logic — collision handling, inventory management, room event handlers, scoring, movement, input processing, and sound.
+* **Bank 1** (`BANK1TOP` = `$F000`): Contains the display kernels, sprite data, playfield graphics, room handler dispatch, and music frequency tables.
 
 ### Game Loop
 
@@ -60,7 +61,7 @@ Like all Atari 2600 games, the program is structured around the NTSC television 
 
 #### Frame Overview
 
-```
+```text
 newFrame ──spin on INTIM──►
 startNewFrame
   ├── VSYNC (3 scanlines)
@@ -113,7 +114,7 @@ startNewFrame
 The CPU asserts the VSYNC signal for exactly 3 scanlines, during which it performs lightweight housekeeping:
 
 | Scanline | Work |
-|----------|------|
+| -------- | ---- |
 | 1 | Assert VSYNC. Clamp weapon position — if `weaponPosY` ≤ `$50`, center `weaponPosX`. Increment `frameCount`; every 64th frame (`and #$3f`) increments `timeOfDay`. If `eventTimer` is negative, decrement it (paralysis/cutscene countdown). |
 | 2 | Check for game restart — if `arkRoomStateFlag` bit 7 is set (endgame state) AND the RESET switch is pressed, jump to `startGame`. |
 | 3 | De-assert VSYNC. Arm the VBLANK timer: `TIM64T = VBLANK_TIME` (44). This gives 44 × 64 = 2,816 cycles ≈ 37 scanlines of CPU time for game logic. |
@@ -127,7 +128,7 @@ All game logic runs while the TIA outputs a blank screen. Work is spread across 
 This is the largest block of game code, executing in order every frame:
 
 | Step | Label | Description |
-|------|-------|-------------|
+| ---- | ----- | ----------- |
 | 1 | `checkGameOver` | **Start logic on first scan line**: if `indyStatus` overflows to 0, call `getFinalScore` and transition to the Ark Room. |
 | 2 | `checkForArkRoom` | **Ark Room / title screen**: if in the Ark Room, play Raiders March, check Yar bonus for HSW initials easter egg. Otherwise skip. |
 | 3 | *(Ark Room only)* | **Pedestal elevator**: slowly lower Indy to his score height. Check fire button for restart. Set `arkRoomStateFlag` to enable RESET. |
@@ -152,7 +153,7 @@ At `dispatchRoomHandler`, the code writes `selectRoomHandler` as the target addr
 `selectRoomHandler` dispatches via `roomHandlerJmpTable` — each room has its own handler that runs room-specific AI and physics:
 
 | Room | Handler | Key Logic |
-|------|---------|-----------|
+| ---- | ------- | --------- |
 | Treasure Room | `treasureRoomHandler` | Item cycle timer, treasure availability, treasure spawning |
 | Marketplace | *(none — immediate return)* | — |
 | Entrance Room | `entranceRoomHandler` | Sets `screenEventState = $40` |
@@ -190,20 +191,21 @@ Finally, `waitTime` spins on `INTIM` until the VBLANK timer expires, then bank-s
 ##### Kernel Preamble (5 Scanlines)
 
 The first few visible lines set up the display state:
-- Clear horizontal motion registers (`HMCLR`) and collision latches (`CXCLR`).
-- Write initial PF0/PF1/PF2 from per-room playfield tables.
-- Enable TIA output (`VBLANK = 0`), zero the `scanline` counter.
-- Disable the Ball sprite in the Map Room (used for the sun position mechanic).
-- Read `SWCHA` → set `REFP1` for Indy sprite reflection (skipped during death/Ark Room).
-- Three WSYNC+HMOVE pairs to settle object positions.
-- Dispatch to the appropriate kernel via RTS-trick: push return address from `kernelJumpTable` indexed by `KernelJumpTableIndex` for the current room, then `rts`.
+
+* Clear horizontal motion registers (`HMCLR`) and collision latches (`CXCLR`).
+* Write initial PF0/PF1/PF2 from per-room playfield tables.
+* Enable TIA output (`VBLANK = 0`), zero the `scanline` counter.
+* Disable the Ball sprite in the Map Room (used for the sun position mechanic).
+* Read `SWCHA` → set `REFP1` for Indy sprite reflection (skipped during death/Ark Room).
+* Three WSYNC+HMOVE pairs to settle object positions.
+* Dispatch to the appropriate kernel via RTS-trick: push return address from `kernelJumpTable` indexed by `KernelJumpTableIndex` for the current room, then `rts`.
 
 ##### Room Kernels (160 Scanlines)
 
 The kernel index table maps each room to one of four kernels:
 
 | Index | Kernel | Rooms | Scanline Method |
-|-------|--------|-------|-----------------|
+| ----- | ------ | ----- | --------------- |
 | 0 | `staticSpriteKernel` | 0–5 | 2 scanlines/iteration, 80 iterations |
 | 2 | `scrollingPlayfieldKernel` | 6–10 | 2 scanlines/iteration, 80 iterations |
 | 4 | `multiplexedSpriteKernel` | 11–12 | State machine, variable per thief zone |
@@ -241,7 +243,7 @@ Immediately after the inventory kernel, the TIA is blanked (`VBLANK = $0F`) and 
 ##### Bank 1 — Post-Kernel Logic
 
 | Step | Label | Description |
-|------|-------|-------------|
+| ---- | ----- | ----------- |
 | 1 | `updateSoundRegisters` | Process both TIA audio channels (X=1, then X=0). Set AUDC, AUDV, AUDF. Dispatch to `playRaidersMarch` (effect `$9C`) or `playFluteMelody` (effect `$84`) for sustained music playback. |
 | 2 | `finishUpdateSound` | If holding the Timepiece: toggle open/closed sprite on right fire press. If holding the Flute: activate Snake Charmer song. |
 | 3 | `updateEventState` | If `screenEventState` bit 7 is set: animate the on-screen event (move object toward target via `updateMoveToTarget`), update timepiece graphics pointer for the snake reveal animation. |
@@ -254,7 +256,7 @@ Immediately after the inventory kernel, the TIA is blanked (`VBLANK = $0F`) and 
 At `jmpObjHitHandeler`, the code bank-switches to Bank 0 and enters the collision dispatch chain. This reads the TIA collision registers that were latched during the kernel:
 
 | Step | Label | Collision Register | Description |
-|------|-------|--------------------|-------------|
+| ---- | ----- | ------------------ | ----------- |
 | 1 | `checkWeaponPlayerHit` | `CXM1P` | Weapon (M1) hit player/thief → flip thief direction, clear weapon, apply `thiefShotPenalty`. |
 | 2 | `checkWeaponPlayfieldHit` | `CXM1FB` | Weapon hit playfield → destroy dungeon wall segment (modify `dynamicGfxData` bitmask). |
 | 3 | `checkWeaponBallHit` | `CXM1FB` bit 6 | Weapon hit ball/snake → kill the snake. |
@@ -270,7 +272,7 @@ After the collision chain completes, execution falls through to `newFrame`, whic
 
 Both banks contain a symmetric trampoline routine (`jumpToBank1` in Bank 0, `JumpToBank0` in Bank 1). The trampoline writes self-modifying code into zero-page RAM (`temp0`–`temp5`):
 
-```
+```text
 temp0: LDA $FFF8/$FFF9    ; reading the strobe address switches banks
 temp3: JMP <target>        ; then jumps to the target address
 ```
@@ -280,8 +282,8 @@ The caller sets `temp4`/`temp5` to the target address before jumping to the tram
 **Bank switches per frame** (in execution order):
 
 | # | Direction | Trigger | Target |
-|---|-----------|---------|--------|
-| 1 | Bank 0 → 1 | `finishedScrollUpdate` | `selectRoomHandler` (room-specific handler) |
+| - | --------- | ------- | ------ |
+| 1 | Bank 0 → 1 | `dispatchRoomHandler` | `selectRoomHandler` (room-specific handler) |
 | 2 | Bank 1 → 0 | `jmpSetupNewRoom` | `setupNewRoom` (pre-kernel color/position setup) |
 | 3 | Bank 0 → 1 | `jmpDisplayKernel` | `drawScreen` (visible kernel + overscan) |
 | 4 | Bank 1 → 0 | `jmpObjHitHandeler` | `checkWeaponPlayerHit` (collision dispatch) |
@@ -301,7 +303,7 @@ Bank 1 also has a safety stub (`BANK1Start`) at its reset vector entry — it im
 The game uses **4 different scanline kernels** selected via `KernelJumpTableIndex` and `kernelJumpTable`:
 
 | Index | Kernel | Rooms |
-|-------|--------|-------|
+| ----- | ------ | ----- |
 | 0 | `staticSpriteKernel` | Treasure Room, Marketplace, Entrance Room, Black Market, Map Room, Mesa Side |
 | 1 | `scrollingPlayfieldKernel` | Temple Entrance, Spider Room, Shining Light, Mesa Field, Valley of Poison |
 | 2 | `multiplexedSpriteKernel` (thiefKernel) | Thieves' Den, Well of Souls |
@@ -309,10 +311,10 @@ The game uses **4 different scanline kernels** selected via `KernelJumpTableInde
 
 Each kernel handles TIA register writes differently to accommodate the visual needs of those rooms — the thief kernel manages multiple P0 objects across scanlines, while the playfield kernel handles scrolling dungeon walls.
 
-- **`staticSpriteKernel`**: P0's data stream is dual-purpose — bit 7 encodes direct TIA register writes (color/HMOVE) instead of graphics. Simplest kernel.
-- **`scrollingPlayfieldKernel`**: Full PF1/PF2 rendering from pointer tables, dynamic dungeon wall segments, conventional P0/P1 drawing, ball object for timepiece. Supports scrollable rooms.
-- **`multiplexedSpriteKernel`**: P0 is repositioned and redrawn multiple times per frame via coarse timing loops — classic scanline multiplexing to display several enemies from one hardware sprite.
-- **`arkPedestalKernel`**: Single-purpose kernel for the title/ending screen — draws the Ark sprite and Indy on a height-adjustable pedestal.
+* **`staticSpriteKernel`**: P0's data stream is dual-purpose — bit 7 encodes direct TIA register writes (color/HMOVE) instead of graphics. Simplest kernel.
+* **`scrollingPlayfieldKernel`**: Full PF1/PF2 rendering from pointer tables, dynamic dungeon wall segments, conventional P0/P1 drawing, ball object for timepiece. Supports scrollable rooms.
+* **`multiplexedSpriteKernel`**: P0 is repositioned and redrawn multiple times per frame via coarse timing loops — classic scanline multiplexing to display several enemies from one hardware sprite.
+* **`arkPedestalKernel`**: Single-purpose kernel for the title/ending screen — draws the Ark sprite and Indy on a height-adjustable pedestal.
 
 ### P0 Graphics Stream Encoding
 
@@ -322,16 +324,16 @@ The `staticSpriteKernel` rooms (0–5) use a clever data encoding for Player 0 t
 
 Each byte in a `*PlayerGraphics` data table (e.g., `MarketplacePlayerGraphics`, `EntranceRoomPlayerGraphics`) is read once per scanline. The routine checks **bit 7** to determine the byte's meaning:
 
-| Bit 7 | Meaning | Action |
-|-------|---------|--------|
-| **0** | Pixel data | Written directly to `GRP0` (the Player 0 graphics register) |
+| Bit 7 | Meaning      | Action                                                       |
+| ----- | ------------ | ------------------------------------------------------------ |
+| **0** | Pixel data   | Written directly to `GRP0` (the Player 0 graphics register)  |
 | **1** | Command byte | Decoded as a TIA register write (color or horizontal motion) |
 
 #### Command Byte Decoding
 
 When bit 7 is set, the byte encodes both a **target register** and a **payload value**:
 
-```
+```text
 Byte layout:  1 R PPPPPP 0
               │ │ └─────┘
               │ │    └── Payload (6 bits → shifted into bits 7-2 of TIA register)
@@ -340,6 +342,7 @@ Byte layout:  1 R PPPPPP 0
 ```
 
 The decoding steps:
+
 1. **ASL** — Shift left, pushing bit 7 out (into carry) and the register-select bit into bit 1.
 2. **AND #$02** — Isolate bit 1 → becomes the X index: `0` = `COLUP0`, `2` = `HMP0`.
 3. **STA (pf1GfxPtrLo,X)** — Write the shifted payload to the selected TIA register via indirect indexed addressing. The `pf1GfxPtrLo` pointer is set up so that `X=0` targets `COLUP0` and `X=2` targets `HMP0`.
@@ -352,11 +355,13 @@ SET_PLAYER_0_HMOVE = %10000001   ; bit 7 set, bit 0 set   → writes HMP0
 ```
 
 A color command is written as:
+
 ```asm
 .byte SET_PLAYER_0_COLOR | (GREEN + 8) >> 1   ; Set P0 color to green (luminance 8)
 ```
 
 An HMOVE command is written as:
+
 ```asm
 .byte SET_PLAYER_0_HMOVE | HMOVE_L7 >> 1      ; Shift P0 left 7 pixels
 ```
@@ -384,7 +389,7 @@ HMOVE commands serve two purposes in the data streams:
 Each `staticSpriteKernel` room has its own `*PlayerGraphics` data table:
 
 | Room | Data Table | Key Elements |
-|------|-----------|--------------|
+| ---- | ---------- | ------------ |
 | Treasure Room | `TreasureRoomPlayerGraphics` | Ankh, coins, hourglass, chai (cycling treasures) |
 | Marketplace | `MarketplacePlayerGraphics` | Two sellers, flute, three baskets, parachute pack |
 | Entrance Room | `EntranceRoomPlayerGraphics` | Loose rock, cave entrance (jagged edge), boulder, whip |
@@ -399,7 +404,7 @@ The initial P0 color for each room is set from `roomP0ColorTable` during pre-ker
 There are **14 rooms** defined as constants (IDs `$00`–`$0D`):
 
 | ID | Constant | Room |
-|----|----------|------|
+| -- | -------- | ---- |
 | `$00` | `ID_TREASURE_ROOM` | Treasure Room |
 | `$01` | `ID_MARKETPLACE` | Marketplace |
 | `$02` | `ID_ENTRANCE_ROOM` | Entrance Room |
@@ -425,14 +430,14 @@ The player can carry up to **6 items** (`MAX_INVENTORY_ITEMS`). Each slot is a p
 
 Item IDs are computed at assembly time as offsets from the sprite table:
 
-```
+```text
 ID = (spriteLabel - inventorySprites) / HEIGHT_ITEM_SPRITES
 ```
 
 Key items and their IDs include:
 
 | Item | Constant |
-|------|----------|
+| ---- | -------- |
 | Empty | `ID_INVENTORY_EMPTY` |
 | Whip | `ID_INVENTORY_WHIP` |
 | Flute | `ID_INVENTORY_FLUTE` |
@@ -455,8 +460,8 @@ Selection uses the left joystick. `selectedItemSlot` tracks the cursor position 
 
 The game tracks which items have been collected using two separate bitmasks:
 
-- **`basketItemStatus`** — Tracks **spawnable items** found at fixed world locations. In the Marketplace, these are the three literal baskets that contain the Key, Grenades, and Revolver. In the Treasure Room, the term "basket" is a code abstraction — it simply means the item is in its original, non-picked-up state (P0 displays the cycling item, and touching it picks it up). These items can respawn when dropped.
-- **`pickupItemStatus`** — Tracks **unique items** that exist as one-of-a-kind objects in the world: Whip, Shovel, Head of Ra, Timepiece, Hourglass, Ankh, and Chai. Once collected, their world placement changes.
+* **`basketItemStatus`** — Tracks **spawnable items** found at fixed world locations. In the Marketplace, these are the three literal baskets that contain the Key, Grenades, and Revolver. In the Treasure Room, the term "basket" is a code abstraction — it simply means the item is in its original, non-picked-up state (P0 displays the cycling item, and touching it picks it up). These items can respawn when dropped.
+* **`pickupItemStatus`** — Tracks **unique items** that exist as one-of-a-kind objects in the world: Whip, Shovel, Head of Ra, Timepiece, Hourglass, Ankh, and Chai. Once collected, their world placement changes.
 
 The `itemIndexTable` determines which bitmask applies to each item: even indices use `basketItemStatus`, odd indices use `pickupItemStatus`. The helper routines `showItemAsTaken`, `setItemAsNotTaken`, and `isItemAlreadyTaken` handle the bit manipulation transparently.
 
@@ -467,7 +472,7 @@ The score (`adventurePoints`) starts at `INIT_SCORE` (100) and is modified in `g
 **Bonuses (subtracted):**
 
 | Variable | Description | Points |
-|----------|-------------|--------|
+| -------- | ----------- | ------ |
 | `findingArkBonus` | Found the Ark | 10 |
 | `usingParachuteBonus` | Used parachute | 3 |
 | `ankhUsedBonus` | Used Ankh for Mesa skip | 9 |
@@ -479,7 +484,7 @@ The score (`adventurePoints`) starts at `INIT_SCORE` (100) and is modified in `g
 **Penalties (added):**
 
 | Variable | Description | Points |
-|----------|-------------|--------|
+| -------- | ----------- | ------ |
 | `grenadeOpeningPenalty` | Blasted wall | 2 |
 | `escapePrisonPenalty` | Escaped dungeon via secret exit | 13 |
 | `thiefShotPenalty` | Shot the thief | 4 |
@@ -499,30 +504,36 @@ When all three are met, `arkRoomStateFlag` is set positive, triggering the endga
 ### Key Game Mechanics
 
 #### Grappling Hook (Mesa Field)
+
 Calculated in `calculateMesaGrapple` — converts the hook's pixel position to a grid ID:
 
-```
+```text
 RegionY = ((HookY - 6) + ScrollOffset) / 16
 RegionX = (HookX - 16) / 32
 ```
 
 #### Map Room Reveal
+
 In `mapRoomHandler`, when Indy holds the Head of Ra and the sun (driven by `timeOfDay`) is at the correct position, a beam reveals the Ark's mesa using data from `mapRoomArkLocX` / `mapRoomArkLocY`.
 
 #### Time System
+
 `timeOfDay` increments every ~63 frames (roughly once per second), driven in the VBLANK section. It controls the timepiece display, treasure room rotation, sun position, and Head of Ra timing.
 
 #### Scrolling (Mesa Field)
+
 Handled in `handleMesaScroll` — the camera offset `roomObjectVar` shifts all object positions when Indy nears screen edges, bounded by `MESA_MAP_MAX_HEIGHT` (`$50`).
 
 #### Sound System
+
 Two channels with effect timers (`soundChan0Effect`, `soundChan1Effect`). The Raiders March plays from `raidersMarchFreqTable` when triggered with `RAIDERS_MARCH` (`$9C`). The flute melody uses `snakeCharmFreqTable` with `SNAKE_CHARM_SONG` (`$84`).
 
 #### Easter Egg (Yar)
+
 Triggered via `HandleEasterEgg` — finding Yar on the Flying Saucer Mesa sets `yarFoundBonus`. When combined with a high enough score, Howard Scott Warshaw's initials (`devInitialsGfx0` / `devInitialsGfx1`) appear in the inventory strip at `checkShowDevInitials`.
 
 ### Controls
 
-- **Right joystick**: Movement + action button (use items/weapons)
-- **Left joystick**: Inventory selection + drop button
-- Input is read from `SWCHA` (`$0280`) and `INPT5` (fire buttons)
+* **Right joystick**: Movement + action button (use items/weapons)
+* **Left joystick**: Inventory selection + drop button
+* Input is read from `SWCHA` (`$0280`) and `INPT5` (fire buttons)
