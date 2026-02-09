@@ -177,14 +177,6 @@ grenadeState			= $9a	; Status: Bit 7=Active, Bit 6=Wall Effect Trigger
 grenadeDetonateTime		= $9b	; timeOfDay value at which active grenade detonates
 arkRoomStateFlag		= $9c	; bit7 = RESET enabled & Ark hidden; bit7 clear = Ark visible & RESET ignored.
 indyStatus				= $9d	; Flag bits for Indy's current status and major events:
-									; Bit 7: Indy Dead/Alive
-									; Bit 6: Parachuting (for scoring)
-									; Bit 5: Using Head of Ra in Map Room (for scoring)
-									; Bit 4: In Shining Light Prison (for scoring)
-									; Bit 3: Found Ark (for scoring)
-									; Bit 2: Used secret Mesa exit (for scoring)
-									; Bit 1: Unused
-									; Bit 0: Unused
 adventurePoints			= $9e	; (Manual: "Adventure Points") Score/Pedestal Height
 livesLeft				= $9f	; (Manual: Starts with 3 lives)
 bulletCount				= $a0	; (Manual: Max 6 bullets)
