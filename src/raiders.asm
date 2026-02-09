@@ -6887,9 +6887,34 @@ UpdateInvObjPosBound
 
 
 TreasureRoomPlayerGraphics
-	.byte SET_PLAYER_0_COLOR | BLACK >> 1
+	; ---------------------------------------------------------------
+	; Treasure Room (Room 0) P0 data stream.
+	; P0 starts at X=$78. The treasureRoomHandler cycles through
+	; basket states based on timeOfDay, setting roomObjectVar to
+	; control which portion of this data is visible.
+	;
+	; This data contains 4 treasure items that appear in the baskets,
+	; separated by HMOVE repositioning commands. The items cycle
+	; through based on the time of day. P0 is repositioned horizontally
+	; between items to place them at the correct basket locations.
+	;
+	; The devInitialsGfx1 label overlaps — the initials data doubles
+	; as the first few bytes of this stream (easter egg: HSW's
+	; initials displayed via the inventory strip).
+	;
+	; Visual layout (top to bottom):
+	;   1. Developer initials (HSW) — Not used
+	;   2. Ankh (GREEN_BLUE + 12)
+	;   3. Coins (YELLOW + 4) — repositioned far left
+	;   4. Hourglass (ORANGE + 12 top / DK_PINK + 12 bottom)
+	;   5. Chai (DK_PINK + 12, persists from hourglass)
+	;   6. Developer initials (HSW) part 1 — Not used
+	; ---------------------------------------------------------------
+	.byte SET_PLAYER_0_COLOR | BLACK >> 1			; Set color to black
 
-devInitialsGfx1 ;programmer's initials #2
+devInitialsGfx1 ; Programmer's initials (HSW) part 2
+	; (Also serves as top of Treasure Room P0 stream —
+	;  dual-use data, referenced by checkShowDevInitials)
 	.byte $00 ; |........| $FF01
 	.byte $07 ; |.....XXX| $FF02
 	.byte $04 ; |.....X..| $FF03
@@ -6900,66 +6925,87 @@ devInitialsGfx1 ;programmer's initials #2
 	.byte $50 ; |.X.X....| $FF08
 	.byte $00 ; |........| $FF09
 
+	; ---------------------------------------------------------------
+	; Ankh — Egyptian cross with looped top
+	; (teal/cyan color, appears in one of the baskets)
+	; ---------------------------------------------------------------
+	.byte SET_PLAYER_0_COLOR | (GREEN_BLUE + 12) >> 1	; Set color to teal
+	.byte $1C ; |...XXX..|  Loop top
+	.byte $36 ; |..XX.XX.|  Loop sides
+	.byte $1C ; |...XXX..|  Loop bottom
+	.byte $49 ; |.X..X..X|  Cross arms
+	.byte $7F ; |.XXXXXXX|  Cross bar (widest)
+	.byte $49 ; |.X..X..X|  Cross arms
+	.byte $1C ; |...XXX..|  Shaft
+	.byte $3E ; |..XXXXX.|  Base
+	.byte $00 ; |........|
 
+	; ---------------------------------------------------------------
+	; Coins — stack of gold coins
+	; Repositions P0 left (L7 persists through color cmd, then L4, then stop)
+	; ---------------------------------------------------------------
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L7 >> 1		; Shift P0 left 7
+	.byte SET_PLAYER_0_COLOR | (YELLOW + 4) >> 1	; Set color to gold
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L4 >> 1		; Shift P0 left 4
+	.byte SET_PLAYER_0_HMOVE | HMOVE_0 >> 1		; Stop horizontal motion
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|
+	.byte $00 ; |........|  Gap (repositioning scanlines)
+	.byte $00 ; |........|
+	.byte $1C ; |...XXX..|  Top coin
+	.byte $70 ; |.XXX....|  Second coin (offset left)
+	.byte $07 ; |.....XXX|  Third coin (offset right)
+	.byte $70 ; |.XXX....|  Fourth coin (offset left)
+	.byte $0E ; |....XXX.|  Bottom coin
+	.byte $00 ; |........|
 
-	.byte SET_PLAYER_0_COLOR | (GREEN_BLUE + 12) >> 1 ; D6
-	.byte $1C ; |...XXX..|
-	.byte $36 ; |..XX.XX.|
-	.byte $1C ; |...XXX..|
-	.byte $49 ; |.X..X..X|
-	.byte $7F ; |.XXXXXXX|
-	.byte $49 ; |.X..X..X|
-	.byte $1C ; |...XXX..|
-	.byte $3E ; |..XXXXX.|
+	; ---------------------------------------------------------------
+	; Hourglass — two triangles meeting at center
+	; Repositions P0 far right (R7+14 clocks combined), then stops.
+	; Top half is orange, bottom half is dark pink (sand color).
+	; ---------------------------------------------------------------
+	.byte SET_PLAYER_0_HMOVE | (HMOVE_R7 | 14) >> 1	; Shift P0 right (combined)
+	.byte SET_PLAYER_0_COLOR | (ORANGE + 12) >> 1	; Set color to orange (top half)
 	.byte $00 ; |........|
-	.byte SET_PLAYER_0_HMOVE | HMOVE_L7 >> 1 ;$B9
-	.byte SET_PLAYER_0_COLOR | (YELLOW + 4) >> 1;$8A
-	.byte SET_PLAYER_0_HMOVE | HMOVE_L4 >> 1;$A1
-	.byte SET_PLAYER_0_HMOVE | HMOVE_0 >> 1;$81
+	.byte SET_PLAYER_0_HMOVE | HMOVE_0 >> 1		; Stop horizontal motion
+	.byte $77 ; |.XXX.XXX|  Top frame (wide)
+	.byte $36 ; |..XX.XX.|  Narrowing
+	.byte $14 ; |...X.X..|  Waist
+	.byte $22 ; |..X...X.|  Center pinch
+	.byte SET_PLAYER_0_COLOR | (DK_PINK + 12) >> 1	; Set color to pink (bottom half)
+	.byte $14 ; |...X.X..|  Waist (expanding)
+	.byte $36 ; |..XX.XX.|  Widening
+	.byte $77 ; |.XXX.XXX|  Bottom frame (wide)
 	.byte $00 ; |........|
+
+	; ---------------------------------------------------------------
+	; Chai — Hebrew letter ח (symbol of life)
+	; Color persists from hourglass (DK_PINK + 12).
+	; These bytes have bit 7 set so they act as command+graphics
+	; interleaved — $BF, $CE, $EF encode both HMOVE/color and
+	; are also written to GRP0 on their respective scanlines.
+	; ---------------------------------------------------------------
+	.byte $BF ; |X.XXXXXX|  Chai top (also cmd: odd = HMOVE)
+	.byte $CE ; |XX..XXX.|  Chai mid-top (also cmd: even = COLUP0)
 	.byte $00 ; |........|
-	.byte $00 ; |........|
-	.byte $00 ; |........|
-	.byte $00 ; |........|
-	.byte $00 ; |........|
-	.byte $1C ; |...XXX..|
-	.byte $70 ; |.XXX....|
-	.byte $07 ; |.....XXX|
-	.byte $70 ; |.XXX....|
-	.byte $0E ; |....XXX.|
-	.byte $00 ; |........|
-	.byte SET_PLAYER_0_HMOVE | (HMOVE_R7 | 14) >> 1;$CF
-	.byte SET_PLAYER_0_COLOR | (ORANGE + 12) >> 1;$A6
-	.byte $00 ; |........|
-	.byte SET_PLAYER_0_HMOVE | HMOVE_0 >> 1;$81
-	.byte $77 ; |.XXX.XXX|
-	.byte $36 ; |..XX.XX.|
-	.byte $14 ; |...X.X..|
-	.byte $22 ; |..X...X.|
-	.byte SET_PLAYER_0_COLOR | (DK_PINK + 12) >> 1;$AE
-	.byte $14 ; |...X.X..|
-	.byte $36 ; |..XX.XX.|
-	.byte $77 ; |.XXX.XXX|
-	.byte $00 ; |........|
-	.byte $BF ; |X.XXXXXX|
-	.byte $CE ; |XX..XXX.|
-	.byte $00 ; |........|
-	.byte $EF ; |XXX.XXXX|
-	.byte SET_PLAYER_0_HMOVE | HMOVE_0 >> 1;$81
+	.byte $EF ; |XXX.XXXX|  Chai body (also cmd: odd = HMOVE)
+	.byte SET_PLAYER_0_HMOVE | HMOVE_0 >> 1		; Stop horizontal motion
 	.byte $00 ; |........|
 	.byte $00 ; |........|
 	.byte $00 ; |........|
 	.byte $00 ; |........|
+	.byte $00 ; |........|  Gap
 	.byte $00 ; |........|
+	.byte $68 ; |.XX.X...|  Chai bottom stroke (left arm)
+	.byte $2F ; |..X.XXXX|  Chai connecting bar
+	.byte $0A ; |....X.X.|  Chai right post
+	.byte $0C ; |....XX..|  Chai right post base
+	.byte $08 ; |....X...|  Chai base
 	.byte $00 ; |........|
-	.byte $68 ; |.XX.X...|
-	.byte $2F ; |..X.XXXX|
-	.byte $0A ; |....X.X.|
-	.byte $0C ; |....XX..|
-	.byte $08 ; |....X...|
-	.byte $00 ; |........|
-	.byte $80 ; |X.......|
-	.byte SET_PLAYER_0_HMOVE | HMOVE_0 >> 1;$81
+	.byte $80 ; |X.......|  (cmd: even = COLUP0, sets new color)
+	.byte SET_PLAYER_0_HMOVE | HMOVE_0 >> 1		; Stop horizontal motion
 	.byte $00 ; |........|
 	.byte $00 ; |........|
 
@@ -6981,83 +7027,146 @@ devInitialsGfx0
 
 
 MarketplacePlayerGraphics
-	.byte $80 ; |X.......|
-	.byte $7E ; |.XXXXXX.|
-	.byte $86 ; |X....XX.|
-	.byte $80 ; |X.......|
-	.byte $A6 ; |X.X..XX.|
-	.byte $5A ; |.X.XX.X.|
-	.byte $7E ; |.XXXXXX.|
-	.byte $80 ; |X.......|
-	.byte $7F ; |.XXXXXXX|
-	.byte $00 ; |........|
-	.byte $B1 ; |X.XX...X|
-	.byte $F9 ; |XXXXX..X|
+	; ---------------------------------------------------------------
+	; Marketplace (Room 1) P0 data stream.
+	; Initial P0 color: LT_RED + 8 (from roomP0ColorTable),
+	; immediately overridden by BLACK.
+	;
+	; This stream draws the marketplace scene's static elements:
+	; two sellers (merchants), a flute for sale, three baskets
+	; (blue, green, purple), and a parachute pack display.
+	; HMOVE commands reposition P0 horizontally between items.
+	;
+	; GRP0 persists through command scanlines — color commands
+	; create multi-colored horizontal bands from the same sprite
+	; shape without rewriting GRP0 (e.g., the sellers' striped
+	; hat/face/body appearance).
+	;
+	; Visual layout (top to bottom):
+	;   1. Seller 1 — black hat, grey stripe, pink face, black robes
+	;   2. Flute — diagonal (HMOVE_R1 drift), yellow
+	;   3. Blue basket — shifted far left (cyan checkerboard)
+	;   4. Green basket — shifted far right (green checkerboard)
+	;   5. Seller 2 — grey hat, black stripe, pink face, grey robes
+	;   6. Parachute pack — teal two-column blocks
+	;   7. Purple basket — shifted right (purple checkerboard)
+	; ---------------------------------------------------------------
 
-	.byte $F6 ; |XXXX.XX.|
-	.byte $06 ; |.....XX.|
-	.byte $1E ; |...XXXX.|
-	.byte $12 ; |...X..X.|
-	.byte $1E ; |...XXXX.|
-	.byte $12 ; |...X..X.|
-	.byte $1E ; |...XXXX.|
-	.byte $7F ; |.XXXXXXX|
+	; ---------------------------------------------------------------
+	; Seller 1 — merchant with black hat, grey stripe, pink face
+	; GRP0 shape $7E persists through color changes, creating
+	; horizontal color bands (hat → stripe → face → body).
+	; ---------------------------------------------------------------
+	.byte SET_PLAYER_0_COLOR | BLACK >> 1			; Set color to black (hat)
+	.byte $7E ; |.XXXXXX.|  Hat top
+	.byte SET_PLAYER_0_COLOR | (BLACK + 12) >> 1	; Set color to grey (hat stripe)
+	.byte SET_PLAYER_0_COLOR | BLACK >> 1			; Set color to black (hat band)
+	.byte SET_PLAYER_0_COLOR | (ORANGE + 12) >> 1	; Set color to pink (face)
+	.byte $5A ; |.X.XX.X.|  Face features (eyes)
+	.byte $7E ; |.XXXXXX.|  Face fill
+	.byte SET_PLAYER_0_COLOR | BLACK >> 1			; Set color to black (body)
+	.byte $7F ; |.XXXXXXX|  Body/robes
 	.byte $00 ; |........|
-	.byte $B9 ; |X.XXX..X|
+
+	; ---------------------------------------------------------------
+	; Flute — diagonal staff/instrument for sale
+	; HMOVE_L6 repositions P0 left, then HMOVE_R1 drifts P0 right
+	; 1 pixel per scanline, creating the diagonal angle visible
+	; in the screenshot.
+	; ---------------------------------------------------------------
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L6 >> 1		; Shift P0 left 6 (reposition)
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1		; Shift P0 right 1/line (diagonal)
+	.byte SET_PLAYER_0_COLOR | (LT_BROWN + 12) >> 1	; Set color to yellow
+	.byte $06 ; |.....XX.|  Flute tip
+	.byte $1E ; |...XXXX.|  Flute body
+	.byte $12 ; |...X..X.|  Flute holes
+	.byte $1E ; |...XXXX.|  Flute body
+	.byte $12 ; |...X..X.|  Flute holes
+	.byte $1E ; |...XXXX.|  Flute body
+	.byte $7F ; |.XXXXXXX|  Flute base (wide)
 	.byte $00 ; |........|
-	.byte $D4 ; |XX.X.X..|
+
+	; ---------------------------------------------------------------
+	; Blue basket — shifted far left
+	; Cyan/teal checkerboard pattern (marketplace item basket).
+	; ---------------------------------------------------------------
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L7 >> 1		; Shift P0 left 7 (reposition)
+	.byte $00 ; |........|  (repositioning scanline)
+	.byte SET_PLAYER_0_COLOR | (GREEN_BLUE + 8) >> 1	; Set color to cyan
 	.byte $00 ; |........|
-	.byte SET_PLAYER_0_HMOVE | HMOVE_0 >> 1;$81
-	.byte $1C ; |...XXX..|
-	.byte $2A ; |..X.X.X.|
-	.byte $55 ; |.X.X.X.X|
-	.byte $2A ; |..X.X.X.|
-	.byte $14 ; |...X.X..|
-	.byte $3E ; |..XXXXX.|
+	.byte SET_PLAYER_0_HMOVE | HMOVE_0 >> 1		; Stop horizontal motion
+	.byte $1C ; |...XXX..|  Basket top
+	.byte $2A ; |..X.X.X.|  Basket weave
+	.byte $55 ; |.X.X.X.X|  Basket weave
+	.byte $2A ; |..X.X.X.|  Basket weave
+	.byte $14 ; |...X.X..|  Basket bottom
+	.byte $3E ; |..XXXXX.|  Basket base
 	.byte $00 ; |........|
-	.byte $C1 ; |XX.....X|
-	.byte $E6 ; |XXX..XX.|
+
+	; ---------------------------------------------------------------
+	; Green basket — shifted far right
+	; Green checkerboard pattern (marketplace item basket).
+	; ---------------------------------------------------------------
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R8 >> 1		; Shift P0 right 8 (reposition)
+	.byte SET_PLAYER_0_COLOR | (GREEN + 12) >> 1	; Set color to green
+	.byte $00 ; |........|  (repositioning scanline)
 	.byte $00 ; |........|
 	.byte $00 ; |........|
+	.byte SET_PLAYER_0_HMOVE | HMOVE_0 >> 1		; Stop horizontal motion
+	.byte $7F ; |.XXXXXXX|  Basket rim (wide)
+	.byte $55 ; |.X.X.X.X|  Basket weave
+	.byte $2A ; |..X.X.X.|  Basket weave
+	.byte $55 ; |.X.X.X.X|  Basket weave
+	.byte $2A ; |..X.X.X.|  Basket weave
+	.byte $3E ; |..XXXXX.|  Basket base
 	.byte $00 ; |........|
-	.byte SET_PLAYER_0_HMOVE | HMOVE_0 >> 1;$81
-	.byte $7F ; |.XXXXXXX|
-	.byte $55 ; |.X.X.X.X|
-	.byte $2A ; |..X.X.X.|
-	.byte $55 ; |.X.X.X.X|
-	.byte $2A ; |..X.X.X.|
-	.byte $3E ; |..XXXXX.|
+
+	; ---------------------------------------------------------------
+	; Seller 2 — merchant with grey hat, pink face, grey robes
+	; Same GRP0 shapes as seller 1 ($7E/$5A/$7E/$7F) but
+	; different color ordering produces a lighter appearance.
+	; ---------------------------------------------------------------
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L7 >> 1		; Shift P0 left 7 (reposition)
+	.byte SET_PLAYER_0_COLOR | (BLACK + 12) >> 1	; Set color to grey (hat)
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L2 >> 1		; Shift P0 left 2 (fine-tune)
+	.byte SET_PLAYER_0_HMOVE | HMOVE_0 >> 1		; Stop horizontal motion
+	.byte $7E ; |.XXXXXX.|  Hat/head (grey)
+	.byte SET_PLAYER_0_COLOR | BLACK >> 1			; Set color to black (hat band)
+	.byte SET_PLAYER_0_COLOR | (BLACK + 12) >> 1	; Set color to grey (hat stripe)
+	.byte SET_PLAYER_0_COLOR | (ORANGE + 12) >> 1	; Set color to pink (face)
+	.byte $5A ; |.X.XX.X.|  Face features (eyes)
+	.byte $7E ; |.XXXXXX.|  Face fill
+	.byte SET_PLAYER_0_COLOR | (BLACK + 12) >> 1	; Set color to grey (body)
+	.byte $7F ; |.XXXXXXX|  Body/robes
 	.byte $00 ; |........|
-	.byte $B9 ; |X.XXX..X|
-	.byte $86 ; |X....XX.|
-	.byte $91 ; |X..X...X|
-	.byte SET_PLAYER_0_HMOVE | HMOVE_0 >> 1;$81
-	.byte $7E ; |.XXXXXX.|
-	.byte $80 ; |X.......|
-	.byte $86 ; |X....XX.|
-	.byte $A6 ; |X.X..XX.|
-	.byte $5A ; |.X.XX.X.|
-	.byte $7E ; |.XXXXXX.|
-	.byte $86 ; |X....XX.|
-	.byte $7F ; |.XXXXXXX|
+
+	; ---------------------------------------------------------------
+	; Parachute pack — teal two-column block display
+	; GRP0 $77 persists through color commands, creating a
+	; striped block pattern (teal → black strap → teal).
+	; ---------------------------------------------------------------
+	.byte SET_PLAYER_0_COLOR | (GREEN_BLUE + 12) >> 1	; Set color to teal
+	.byte $77 ; |.XXX.XXX|  Pack top
+	.byte $77 ; |.XXX.XXX|  Pack middle
+	.byte SET_PLAYER_0_COLOR | BLACK >> 1			; Set color to black (strap)
+	.byte SET_PLAYER_0_COLOR | (GREEN_BLUE + 12) >> 1	; Set color to teal
+	.byte $77 ; |.XXX.XXX|  Pack bottom
 	.byte $00 ; |........|
-	.byte $D6 ; |XX.X.XX.|
-	.byte $77 ; |.XXX.XXX|
-	.byte $77 ; |.XXX.XXX|
-	.byte $80 ; |X.......|
-	.byte $D6 ; |XX.X.XX.|
-	.byte $77 ; |.XXX.XXX|
-	.byte $00 ; |........|
-	.byte $C1 ; |XX.....X|
-	.byte $B6 ; |X.XX.XX.|
-	.byte $A1 ; |X.X....X|
-	.byte SET_PLAYER_0_HMOVE | HMOVE_0 >> 1;$81
-	.byte $1C ; |...XXX..|
-	.byte $2A ; |..X.X.X.|
-	.byte $55 ; |.X.X.X.X|
-	.byte $2A ; |..X.X.X.|
-	.byte $14 ; |...X.X..|
-	.byte $3E ; |..XXXXX.|
+
+	; ---------------------------------------------------------------
+	; Purple basket — shifted right
+	; Purple/magenta checkerboard pattern (marketplace item basket).
+	; ---------------------------------------------------------------
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R8 >> 1		; Shift P0 right 8 (reposition)
+	.byte SET_PLAYER_0_COLOR | (PURPLE + 12) >> 1	; Set color to purple
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L4 >> 1		; Shift P0 left 4 (fine-tune)
+	.byte SET_PLAYER_0_HMOVE | HMOVE_0 >> 1		; Stop horizontal motion
+	.byte $1C ; |...XXX..|  Basket top
+	.byte $2A ; |..X.X.X.|  Basket weave
+	.byte $55 ; |.X.X.X.X|  Basket weave
+	.byte $2A ; |..X.X.X.|  Basket weave
+	.byte $14 ; |...X.X..|  Basket bottom
+	.byte $3E ; |..XXXXX.|  Basket base
 	.byte $00 ; |........|
 	.byte $00 ; |........|
 	.byte $00 ; |........|
@@ -7067,89 +7176,139 @@ MarketplacePlayerGraphics
 
 
 EntranceRoomPlayerGraphics
-	;Rock Sprite Setup
-	.byte $00						; Padding/Space.
-	.byte SET_PLAYER_0_COLOR | (BLACK + 12) >> 1; Set Color (Grey/White).
+	; ---------------------------------------------------------------
+	; Entrance Room (Room 2) P0 data stream.
+	; Initial P0 color: BROWN + 8 (from roomP0ColorTable),
+	; immediately overridden by grey (BLACK + 12).
+	;
+	; This stream draws four elements in the Entrance Room:
+	;   1. A small loose rock/stone near the top
+	;   2. The temple cave entrance (right wall opening) — a tall
+	;      jagged silhouette using extensive HMOVE jitter (L1/R1)
+	;      to produce a natural, rough stone edge
+	;   3. A rock/boulder (center-left)
+	;   4. The whip lying on the ground (diagonal via HMOVE drift)
+	;
+	; The cave entrance is the dominant feature. P0 draws the LEFT
+	; edge of the opening; the GRP0 pixel pattern ($1F/$7F/$3F)
+	; persists through many HMOVE-only command scanlines, shifting
+	; left and right each line to create the irregular stone wall.
+	; ---------------------------------------------------------------
 
-	; The Rock Sprite Pattern
-	.byte $70						; |.XXX....|
-	.byte $5F						; |.X.XXXXX|
-	.byte $72						; |.XXX..X.|
-	.byte $05						; |.....X.X|
+	; ---------------------------------------------------------------
+	; Key - Unused
+	; ---------------------------------------------------------------
+	.byte $00						; Padding
+	.byte SET_PLAYER_0_COLOR | (BLACK + 12) >> 1	; Set color to grey
 
-	.byte $00						; End of sprite.
+	.byte $70						; |.XXX....|  
+	.byte $5F						; |.X.XXXXX| 
+	.byte $72						; |.XXX..X.| 
+	.byte $05						; |.....X.X| 
 
-	; Positioning Commands (for subsequent items or HMOVE logic)
-	.byte SET_PLAYER_0_HMOVE | HMOVE_R8 >> 1
-	.byte $00
-	.byte SET_PLAYER_0_HMOVE | HMOVE_0 >> 1
-	.byte SET_PLAYER_0_COLOR | (BLACK + 8) >> 1
-	.byte $1F ; |...XXXXX|
-	.byte SET_PLAYER_0_HMOVE | HMOVE_L1 >> 1
-	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1
-	.byte SET_PLAYER_0_HMOVE | HMOVE_L2 >> 1
-	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1
-	.byte $18 ; |...XX...|
-	.byte SET_PLAYER_0_HMOVE | HMOVE_0 >> 1
-	.byte SET_PLAYER_0_COLOR | BLACK >> 1
-	.byte $1C ; |...XXX..|
-	.byte $1F ; |...XXXXX|
-	.byte SET_PLAYER_0_HMOVE | HMOVE_R2 >> 1
-	.byte $7F ; |.XXXXXXX|
-	.byte SET_PLAYER_0_HMOVE | HMOVE_L1 >> 1
-	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1
-	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1
-	.byte SET_PLAYER_0_HMOVE | HMOVE_L1 >> 1
-	.byte SET_PLAYER_0_HMOVE | HMOVE_L2 >> 1
-	.byte SET_PLAYER_0_HMOVE | HMOVE_R2 >> 1
-	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1
-	.byte SET_PLAYER_0_HMOVE | HMOVE_L1 >> 1
-	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1
-	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1
-	.byte SET_PLAYER_0_HMOVE | HMOVE_L1 >> 1
-	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1
-	.byte SET_PLAYER_0_HMOVE | HMOVE_L1 >> 1
-	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1
-	.byte SET_PLAYER_0_HMOVE | HMOVE_L1 >> 1
-	.byte $3F ; |..XXXXXX|
-	.byte SET_PLAYER_0_HMOVE | HMOVE_L2 >> 1
-	.byte SET_PLAYER_0_HMOVE | HMOVE_0 >> 1
-	.byte $70 ; |.XXX....|
-	.byte $40 ; |.X......|
-	.byte SET_PLAYER_0_COLOR | (BLACK + 8) >> 1
-	.byte SET_PLAYER_0_HMOVE | HMOVE_L1 >> 1
-	.byte $7E ; |.XXXXXX.|
-	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1
-	.byte SET_PLAYER_0_HMOVE | HMOVE_L2 >> 1
-	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1
-	.byte SET_PLAYER_0_HMOVE | HMOVE_R2 >> 1
+	.byte $00						; |........|	; padding
+
+	; ---------------------------------------------------------------
+	; Temple cave entrance — left edge of opening on right wall
+	; Repositions P0 far right (HMOVE_R8) to align with right wall.
+	; Three zones: grey stone top lip, black interior depth with
+	; jagged HMOVE edge, grey stone bottom lip.
+	; ---------------------------------------------------------------
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R8 >> 1		; Shift P0 right 8 (to right wall)
+	.byte $00						; (repositioning scanline)
+	.byte SET_PLAYER_0_HMOVE | HMOVE_0 >> 1		; Stop horizontal motion
+
+	; --- Entrance top lip (grey stone edge) ---
+	.byte SET_PLAYER_0_COLOR | (BLACK + 8) >> 1	; Set color to dark grey (stone)
+	.byte $1F ; |...XXXXX|  Stone lip (wide)
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L1 >> 1		; Stagger edge left
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1		; Stagger edge right
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L2 >> 1		; Stagger edge left 2
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1		; Stagger edge right
+	.byte $18 ; |...XX...|  Stone lip narrows
+	.byte SET_PLAYER_0_HMOVE | HMOVE_0 >> 1		; Stop horizontal motion
+
+	; --- Entrance interior (black cave depth, jagged edge) ---
+	; GRP0 shapes ($1C→$1F→$7F) persist through HMOVE commands.
+	; Each HMOVE shifts the sprite 1-2 pixels left or right per
+	; scanline, creating the rough/natural stone wall silhouette.
+	.byte SET_PLAYER_0_COLOR | BLACK >> 1			; Set color to black (cave depth)
+	.byte $1C ; |...XXX..|  Opening top
+	.byte $1F ; |...XXXXX|  Opening widens
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R2 >> 1		; Jag right 2
+	.byte $7F ; |.XXXXXXX|  Interior (widest)
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L1 >> 1		; Jagged edge: L1
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1		; Jagged edge: R1
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1		; Jagged edge: R1
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L1 >> 1		; Jagged edge: L1
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L2 >> 1		; Jagged edge: L2
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R2 >> 1		; Jagged edge: R2
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1		; Jagged edge: R1
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L1 >> 1		; Jagged edge: L1
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1		; Jagged edge: R1
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1		; Jagged edge: R1
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L1 >> 1		; Jagged edge: L1
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1		; Jagged edge: R1
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L1 >> 1		; Jagged edge: L1
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1		; Jagged edge: R1
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L1 >> 1		; Jagged edge: L1
+	.byte $3F ; |..XXXXXX|  Opening narrows
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L2 >> 1		; Pull edge left 2
+	.byte SET_PLAYER_0_HMOVE | HMOVE_0 >> 1		; Stop horizontal motion
+	.byte $70 ; |.XXX....|  Opening bottom
+	.byte $40 ; |.X......|  Opening tip
+
+	; --- Entrance bottom lip (grey stone edge) ---
+	.byte SET_PLAYER_0_COLOR | (BLACK + 8) >> 1	; Set color to dark grey (stone)
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L1 >> 1		; Stagger left
+	.byte $7E ; |.XXXXXX.|  Bottom stone lip (wide)
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1		; Stagger right
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L2 >> 1		; Stagger left 2
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1		; Stagger right
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R2 >> 1		; Stagger right 2
 	.byte $00 ; |........|
-	.byte SET_PLAYER_0_HMOVE | HMOVE_L7 >> 1
-	.byte SET_PLAYER_0_COLOR | (BLACK + 8) >> 1
+
+	; ---------------------------------------------------------------
+	; Rock/boulder — grey stone, repositioned to center-left
+	; Irregular shape with HMOVE wobble for natural appearance.
+	; ---------------------------------------------------------------
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L7 >> 1		; Shift P0 left 7 (reposition)
+	.byte SET_PLAYER_0_COLOR | (BLACK + 8) >> 1	; Set color to dark grey
+	.byte $00 ; |........|  (repositioning scanline)
+	.byte $00 ; |........|  (repositioning scanline)
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L1 >> 1		; Fine-tune left
+	.byte $38 ; |..XXX...|  Boulder top
+	.byte $78 ; |.XXXX...|  Boulder widening
+	.byte $7B ; |.XXXX.XX|  Boulder body (irregular)
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1		; Wobble right
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L1 >> 1		; Wobble left
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1		; Wobble right
+	.byte $6F ; |.XX.XXXX|  Boulder base (irregular)
 	.byte $00 ; |........|
+
+	; ---------------------------------------------------------------
+	; Whip — Indy's whip lying on the ground
+	; Repositions P0 far left (HMOVE_L6), then drifts right
+	; (R3, R1) each scanline to create the diagonal angle.
+	; Color is orange/brown (LT_RED + 4).
+	; ---------------------------------------------------------------
+	.byte SET_PLAYER_0_HMOVE | HMOVE_L6 >> 1		; Shift P0 left 6 (reposition)
+	.byte SET_PLAYER_0_COLOR | (LT_RED + 4) >> 1	; Set color to orange/brown
+
+	; --- Whip handle ---
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R3 >> 1		; Drift right 3 (angle start)
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1		; Drift right 1
 	.byte $00 ; |........|
-	.byte SET_PLAYER_0_HMOVE | HMOVE_L1 >> 1
-	.byte $38 ; |..XXX...|
-	.byte $78 ; |.XXXX...|
-	.byte $7B ; |.XXXX.XX|
-	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1
-	.byte SET_PLAYER_0_HMOVE | HMOVE_L1 >> 1
-	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1
-	.byte $6F ; |.XX.XXXX|
-	.byte $00 ; |........|
-	.byte SET_PLAYER_0_HMOVE | HMOVE_L6 >> 1
-	.byte SET_PLAYER_0_COLOR | (LT_RED + 4) >> 1
-	.byte SET_PLAYER_0_HMOVE | HMOVE_R3 >> 1
-	.byte SET_PLAYER_0_HMOVE | HMOVE_R1 >> 1
-	.byte $00 ; |........|
-	.byte $30 ; |..XX....|
-	.byte $30 ; |..XX....|
-	.byte $30 ; |..XX....|
-	.byte SET_PLAYER_0_HMOVE | HMOVE_R3 >> 1
-	.byte $30 ; |..XX....|
-	.byte $30 ; |..XX....|
-	.byte $30 ; |..XX....|
-	.byte $10 ; |...X....|
+	.byte $30 ; |..XX....|  Handle segment
+	.byte $30 ; |..XX....|  Handle segment
+	.byte $30 ; |..XX....|  Handle segment
+
+	; --- Whip lash ---
+	.byte SET_PLAYER_0_HMOVE | HMOVE_R3 >> 1		; Drift right 3 (steeper angle)
+	.byte $30 ; |..XX....|  Lash segment
+	.byte $30 ; |..XX....|  Lash segment
+	.byte $30 ; |..XX....|  Lash segment
+	.byte $10 ; |...X....|  Lash tip (tapers)
 	.byte $00 ; |........|
 	.byte $00 ; |........|
 	.byte $00 ; |........|
