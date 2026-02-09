@@ -314,6 +314,86 @@ Each kernel handles TIA register writes differently to accommodate the visual ne
 - **`multiplexedSpriteKernel`**: P0 is repositioned and redrawn multiple times per frame via coarse timing loops — classic scanline multiplexing to display several enemies from one hardware sprite.
 - **`arkPedestalKernel`**: Single-purpose kernel for the title/ending screen — draws the Ark sprite and Indy on a height-adjustable pedestal.
 
+### P0 Graphics Stream Encoding
+
+The `staticSpriteKernel` rooms (0–5) use a clever data encoding for Player 0 that allows a single byte stream to carry **both** pixel data and inline TIA register commands. This is handled by the `drawP0GraphicsStream` routine.
+
+#### How It Works
+
+Each byte in a `*PlayerGraphics` data table (e.g., `MarketplacePlayerGraphics`, `EntranceRoomPlayerGraphics`) is read once per scanline. The routine checks **bit 7** to determine the byte's meaning:
+
+| Bit 7 | Meaning | Action |
+|-------|---------|--------|
+| **0** | Pixel data | Written directly to `GRP0` (the Player 0 graphics register) |
+| **1** | Command byte | Decoded as a TIA register write (color or horizontal motion) |
+
+#### Command Byte Decoding
+
+When bit 7 is set, the byte encodes both a **target register** and a **payload value**:
+
+```
+Byte layout:  1 R PPPPPP 0
+              │ │ └─────┘
+              │ │    └── Payload (6 bits → shifted into bits 7-2 of TIA register)
+              │ └─────── Register select: 0 = COLUP0 (color), 1 = HMP0 (motion)
+              └───────── Bit 7: always 1 (command flag)
+```
+
+The decoding steps:
+1. **ASL** — Shift left, pushing bit 7 out (into carry) and the register-select bit into bit 1.
+2. **AND #$02** — Isolate bit 1 → becomes the X index: `0` = `COLUP0`, `2` = `HMP0`.
+3. **STA (pf1GfxPtrLo,X)** — Write the shifted payload to the selected TIA register via indirect indexed addressing. The `pf1GfxPtrLo` pointer is set up so that `X=0` targets `COLUP0` and `X=2` targets `HMP0`.
+
+Two assembly constants simplify authoring these command bytes:
+
+```asm
+SET_PLAYER_0_COLOR = %10000000   ; bit 7 set, bit 0 clear → writes COLUP0
+SET_PLAYER_0_HMOVE = %10000001   ; bit 7 set, bit 0 set   → writes HMP0
+```
+
+A color command is written as:
+```asm
+.byte SET_PLAYER_0_COLOR | (GREEN + 8) >> 1   ; Set P0 color to green (luminance 8)
+```
+
+An HMOVE command is written as:
+```asm
+.byte SET_PLAYER_0_HMOVE | HMOVE_L7 >> 1      ; Shift P0 left 7 pixels
+```
+
+The `>> 1` is necessary because ASL will shift the payload back left during decoding.
+
+#### GRP0 Persistence
+
+A critical detail: **GRP0 is not cleared between command scanlines**. When a command byte is processed, the TIA register is updated but GRP0 retains whatever pixel pattern was last written. This means the same sprite shape continues to be displayed across multiple scanlines while its color or position changes.
+
+This is exploited heavily for multi-colored sprites. For example, the marketplace sellers use a single `$7E` (`.XXXXXX.`) pixel pattern that persists through rapid color changes — BLACK (hat) → grey (stripe) → pink (face) → BLACK (body) — creating the illusion of a multi-colored character from a single repeating shape.
+
+#### HMOVE for Repositioning and Diagonals
+
+HMOVE commands serve two purposes in the data streams:
+
+1. **Repositioning between items**: Large moves (e.g., `HMOVE_L7`, `HMOVE_R8`) shift P0 to a new screen location for the next visual element. GRP0 is typically set to `$00` during these scanlines so nothing is visible during the move.
+
+2. **Diagonal shapes**: Sustained small moves (e.g., `HMOVE_R1` every scanline) shift the sprite 1 pixel per line, creating angled shapes. The Entrance Room whip uses `HMOVE_R3` drift, and the Marketplace flute uses `HMOVE_R1` drift to produce their diagonal angles.
+
+3. **Jagged edges**: Alternating `HMOVE_L1`/`HMOVE_R1` commands with a persistent GRP0 pattern create irregular, natural-looking silhouettes. The Entrance Room cave opening uses 15 consecutive HMOVE jitter commands to produce its rough stone wall edge.
+
+#### Per-Room Data Tables
+
+Each `staticSpriteKernel` room has its own `*PlayerGraphics` data table:
+
+| Room | Data Table | Key Elements |
+|------|-----------|--------------|
+| Treasure Room | `TreasureRoomPlayerGraphics` | Ankh, coins, hourglass, chai (cycling treasures) |
+| Marketplace | `MarketplacePlayerGraphics` | Two sellers, flute, three baskets, parachute pack |
+| Entrance Room | `EntranceRoomPlayerGraphics` | Loose rock, cave entrance (jagged edge), boulder, whip |
+| Black Market | `BlackMarketPlayerGraphics` | Two sellers, bullets, basket, shovel |
+| Map Room | `MapRoomPlayerGraphics` | Sun disc, hieroglyphic wall, model chamber, pedestal |
+| Mesa Side | `MesaSidePlayerGraphics` | Parachute figure, tree (canopy/trunk), mesa ground |
+
+The initial P0 color for each room is set from `roomP0ColorTable` during pre-kernel setup, but is typically overridden immediately by the first `SET_PLAYER_0_COLOR` command in the data stream.
+
 ### Room System
 
 There are **14 rooms** defined as constants (IDs `$00`–`$0D`):
