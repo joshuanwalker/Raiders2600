@@ -36,6 +36,7 @@ The project has been reorganized for a clean development workflow:
 ### Compiling
 
 * Windows
+
 Run the build script from the root directory:
 
 ```cmd
