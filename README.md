@@ -19,6 +19,7 @@ The project has been reorganized for a clean development workflow:
 * **`out/`**: Destination for compiled binaries (`.bin`), symbol files (`.sym`), and listing files (`.lst`). (auto generated at compile time)
 * **`make.bat`**: Windows batch script to compile the project.
 * **`run.bat`**: Windows batch script to launch the compiled game.
+* **`Makefile`**: Makefile to compile and launch the compiled in in Windows with Powershell or Linux with make.
 
 ## How to Build & Run
 
@@ -28,12 +29,25 @@ The project has been reorganized for a clean development workflow:
 * **DASM**: `dasm.exe` must be in the `bin/` folder.
 * **Stella**: `Stella.exe` and `SDL2.dll` must be in the `bin/` folder (optional, for running).
 
+* Linux
+* **dasm** `dasm` must be installed on the system.
+* **stella**: `stella` must be installed on the system.
+
 ### Compiling
 
+* Windows
 Run the build script from the root directory:
 
 ```cmd
 make.bat
+```
+
+* Linux (or Windows PowerShell with make)
+
+Build the rom by running make:
+
+```cmd
+make
 ```
 
 ### Running
@@ -42,6 +56,14 @@ Launch the compiled ROM in Stella:
 
 ```cmd
 run.bat
+```
+
+* Linux (or Windows PowerShell with make)
+
+Launch the compiled ROM in Stella:
+
+```cmd
+make run
 ```
 
 ---
@@ -489,7 +511,7 @@ The score (`adventurePoints`) starts at `INIT_SCORE` (100) and is modified in `g
 | `escapePrisonPenalty` | Escaped dungeon via secret exit | 13 |
 | `thiefShotPenalty` | Shot the thief | 4 |
 
-The final value determines Indy's pedestal height in the Ark Room. Unlike what the legends say, you can not get enough points to "Touch" the Ark. 
+The final value determines Indy's pedestal height in the Ark Room. Unlike what the legends say, you can not get enough points to "Touch" the Ark.
 
 ### Win Condition
 

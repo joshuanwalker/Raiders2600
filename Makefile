@@ -1,9 +1,17 @@
-DASM=bin/dasm.exe
-STELLA=bin/Stella.exe
+ifeq ($(OS),Windows_NT)
+    DASM=bin/dasm.exe
+    STELLA=bin/Stella.exe
+    MKDIR=@if not exist out mkdir out
+else
+    DASM=dasm
+    STELLA=stella
+    MKDIR=@mkdir -p out
+endif
+
 DASM_FLAGS=-Isrc -T1 -f3
 
 out/raiders.bin:
-	@if not exist out mkdir out
+	$(MKDIR)
 	$(DASM) src/raiders.asm $(DASM_FLAGS) -sout/raiders.sym -Lout/raiders.lst -o$@
 
 .PHONY: clean
