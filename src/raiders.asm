@@ -515,7 +515,6 @@ checkForObjHit:
 ; First we check if the weapon (M1) hit a player sprite (thief). This is only relevant
 ; in rooms with thieves (Valley of Poison, Thieves' Den, Well of Souls
 ; Check if weapon (M1) hit a player sprite (thief).
-; Only relevant in rooms with thieves (Valley of Poison, Thieves' Den, Well of Souls).
 ; --------------------------------------------------------------------------
 	bit		CXM1P						; check weapon (M1) vs player collision
 	bpl		checkWeaponPFHit			; branch to next check if no collision
