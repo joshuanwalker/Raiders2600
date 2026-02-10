@@ -52,6 +52,8 @@ make
 
 ### Running
 
+* Windows
+
 Launch the compiled ROM in Stella:
 
 ```cmd
