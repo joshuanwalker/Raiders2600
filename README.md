@@ -392,7 +392,7 @@ Each `staticSpriteKernel` room has its own `*playerGraphics` data table:
 | ---- | ---------- | ------------ |
 | Treasure Room | `treasureRoomPlayerGraphics` | Ankh, coins, hourglass, chai (cycling treasures) |
 | Marketplace | `marketplacePlayerGraphics` | Two sellers, flute, three baskets, parachute pack |
-| Entrance Room | `entranceRoomPlayerGraphics` | Loose rock, cave entrance (jagged edge), boulder, whip |
+| Entrance Room | `entranceRoomPlayerGraphics` | Cave entrance (jagged edge), boulder, whip |
 | Black Market | `blackMarketPlayerGraphics` | Two sellers, bullets, basket, shovel |
 | Map Room | `mapRoomPlayerGraphics` | Sun disc, hieroglyphic wall, model chamber, pedestal |
 | Mesa Side | `mesaSidePlayerGraphics` | Parachute figure, tree (canopy/trunk), mesa ground |
@@ -489,7 +489,7 @@ The score (`adventurePoints`) starts at `INIT_SCORE` (100) and is modified in `g
 | `escapePrisonPenalty` | Escaped dungeon via secret exit | 13 |
 | `thiefShotPenalty` | Shot the thief | 4 |
 
-The final value determines Indy's pedestal height in the Ark Room.
+The final value determines Indy's pedestal height in the Ark Room. Unlike what the legends say, you can not get enough points to "Touch" the Ark. 
 
 ### Win Condition
 
