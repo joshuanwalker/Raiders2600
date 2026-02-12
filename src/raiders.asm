@@ -101,6 +101,7 @@ CXCLR			= $2c  ; <strobe>  clear collision latches
 
 CXM0P			= $30  ; 11......  read collision M0-P1, M0-P0 (Bit 7,6)
 CXM1P			= $31  ; 11......  read collision M1-P0, M1-P1
+CXP0FB			= $32  ; 11......  read collision P0-PF, P0-BL
 CXP1FB			= $33  ; 11......  read collision P1-PF, P1-BL
 CXM1FB			= $35  ; 11......  read collision M1-PF, M1-BL
 CXPPMM			= $37  ; 11......  read collision P0-P1, M0-M1
