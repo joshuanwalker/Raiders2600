@@ -5874,7 +5874,7 @@ arkTopWingsSprite
 	.byte $C3 ; |XX....XX| $FB46
 	.byte $E7 ; |XXX..XXX| $FB47
 
-copyrightGfx1: ;copyright2
+copyrightGfx1: ;copyright1
 	.byte $17 ; |...X.XXX| $FB48
 	.byte $15 ; |...X.X.X| $FB49
 	.byte $15 ; |...X.X.X| $FB4A
@@ -6064,7 +6064,7 @@ copyrightGfx2 ;copyright2
 	.byte $BE ; |X.XXXXX.| $FBDE
 	.byte $00 ; |........| $FBDF
 
-copyrightGfx4: ;copyright5
+copyrightGfx4: ;copyright4
 	.byte $55 ; |.X.X.X.X| $FBE0
 	.byte $55 ; |.X.X.X.X| $FBE1
 	.byte $55 ; |.X.X.X.X| $FBE2
