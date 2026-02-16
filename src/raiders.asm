@@ -134,21 +134,21 @@ spiderRoomState			= $b6	; State: Animation timer (bits 0-2) / Aggressive mode (b
 ; 8-byte sprite in ROM. The Lo byte encodes item identity:
 ;   itemId = (slotLo - <inventorySprites) / HEIGHT_ITEM_SPRITES
 ; Slots are accessed two ways:
-;   Rendering:  (invSlotLo),y / (invSlotLo2),y  — indirect indexed per-slot
-;   Management: invSlotLo,x  (x = 0,2,4,6,8,10) — array base with byte offset
+;   Rendering:  (invSlotLo0),y / (invSlotLo1),y  — indirect indexed per-slot
+;   Management: invSlotLo0,x  (x = 0,2,4,6,8,10) — array base with byte offset
 ;----------------------------------------------------------------------------
-invSlotLo				= $b7	; Inventory Slot 1 (Sprite Ptr Low)  — also array base
-invSlotHi				= $b8	; Inventory Slot 1 (Sprite Ptr High)
-invSlotLo2				= $b9	; Inventory Slot 2 (Sprite Ptr Low)
-invSlotHi2				= $ba	; Inventory Slot 2 (Sprite Ptr High)
-invSlotLo3				= $bb	; Inventory Slot 3 (Sprite Ptr Low)
-invSlotHi3				= $bc	; Inventory Slot 3 (Sprite Ptr High)
-invSlotLo4				= $bd	; Inventory Slot 4 (Sprite Ptr Low)
-invSlotHi4				= $be	; Inventory Slot 4 (Sprite Ptr High)
-invSlotLo5				= $bf	; Inventory Slot 5 (Sprite Ptr Low)
-invSlotHi5				= $c0	; Inventory Slot 5 (Sprite Ptr High)
-invSlotLo6				= $c1	; Inventory Slot 6 (Sprite Ptr Low)
-invSlotHi6				= $c2	; Inventory Slot 6 (Sprite Ptr High)
+invSlotLo0				= $b7	; Inventory Slot 1 (Sprite Ptr Low)  — also array base
+invSlotHi0				= $b8	; Inventory Slot 1 (Sprite Ptr High)
+invSlotLo1				= $b9	; Inventory Slot 2 (Sprite Ptr Low)
+invSlotHi1				= $ba	; Inventory Slot 2 (Sprite Ptr High)
+invSlotLo2				= $bb	; Inventory Slot 3 (Sprite Ptr Low)
+invSlotHi2				= $bc	; Inventory Slot 3 (Sprite Ptr High)
+invSlotLo3				= $bd	; Inventory Slot 4 (Sprite Ptr Low)
+invSlotHi3				= $be	; Inventory Slot 4 (Sprite Ptr High)
+invSlotLo4				= $bf	; Inventory Slot 5 (Sprite Ptr Low)
+invSlotHi4				= $c0	; Inventory Slot 5 (Sprite Ptr High)
+invSlotLo5				= $c1	; Inventory Slot 6 (Sprite Ptr Low)
+invSlotHi5				= $c2	; Inventory Slot 6 (Sprite Ptr High)
 selectedItemSlot		= $c3	; Byte offset (0,2,4,6,8,10) into invSlot array for selected item
 inventoryItemCount		= $c4	; Number of items currently held (0-6)
 selectedInventoryId		= $c5	; ID of the item currently selected (e.g. ID_INVENTORY_WHIP)
@@ -1264,12 +1264,12 @@ checkForArkRoom:
 	bit		arkRoomStateFlag
 	bmi		checkEasterEggFail			; If arkRoomStateFlag has bit 7 set, skip
 	ldx		#>devInitialsGfx0			; get programmer initials part 1 high byte
-	stx		invSlotHi					; put address in slot 1 high byte
-	stx		invSlotHi2					; put address in slot 2 high byte
+	stx		invSlotHi0					; put address in slot 1 high byte
+	stx		invSlotHi1					; put address in slot 2 high byte
 	lda		#<devInitialsGfx0			; get programmer initials low byte
-	sta		invSlotLo					; put in slot 1 low byte
+	sta		invSlotLo0					; put in slot 1 low byte
 	lda		#<devInitialsGfx1			; get programmer initials part 2 low byte
-	sta		invSlotLo2					; put in slot 2 low byte
+	sta		invSlotLo1					; put in slot 2 low byte
 checkEasterEggFail:
 	ldy		indyPosY					; get Indy's vertical position
 	cpy		#$7c						; 124 levels
@@ -2328,14 +2328,14 @@ dropInvIentoryItem
 	asl
 	ldx		#$0a						; Start from the last inventory slot
 dropItemLoop
-	cmp		invSlotLo,x					; Compare target LSB value to
+	cmp		invSlotLo0,x					; Compare target LSB value to
 										; current inventory slot
 	bne		checkNextItem				; If not a match, try the next slot
 	cpx		selectedItemSlot
 	beq		checkNextItem
 	dec		inventoryItemCount			; reduce number of inventory items
 	lda		##<emptySprite				; place empty sprite in inventory
-	sta		invSlotLo,x
+	sta		invSlotLo0,x
 	cpy		#$05						; If item index is less than 5,
 										; skip clearing pickup flag
 	bcc		finishItemRemoval
@@ -2359,7 +2359,7 @@ checkNextItem
 clearInventorySlot
 	lda		#ID_INVENTORY_EMPTY			; load blank space
 	ldx		selectedItemSlot			; get slot at current position
-	sta		invSlotLo,x					; put empy item in current slot
+	sta		invSlotLo0,x					; put empy item in current slot
 	ldx		selectedInventoryId			; is the current object
 	cpx		#ID_INVENTORY_KEY			; the key?
 	bcc		handleInventoryRemove		; If not jump to handler
@@ -2490,7 +2490,7 @@ nextItemIndex:
 	bcc		selectNextItem
 	ldx		#$00						; wrap around to the beginning
 selectNextItem:
-	lda		invSlotLo,x					; get inventory graphic LSB value
+	lda		invSlotLo0,x					; get inventory graphic LSB value
 	beq		nextItemIndex				; branch if nothing in the inventory location
 	stx		selectedItemSlot			; set inventory index
 	lsr
@@ -2835,7 +2835,7 @@ placeItemInInventory
 getSpaceForItem
 	ldx		#$0a							; start from last inventory slot (10)
 invSearchLoop
-	ldy		invSlotLo,x						; get the LSB for the inventory graphic
+	ldy		invSlotLo0,x						; get the LSB for the inventory graphic
 	beq		addItem							; branch if current slot is free
 	dex
 	dex										; Move to the previous slot
@@ -2848,7 +2848,7 @@ addItem
 	asl										; multiply object number by 8 for gfx
 	asl										;...
 	asl										;...
-	sta		invSlotLo,x						; place graphic LSB in inventory
+	sta		invSlotLo0,x						; place graphic LSB in inventory
 	lda		inventoryItemCount				; get number of inventory items
 	bne		updateInventory					; branch if Indy carrying items
 	stx		selectedItemSlot				; set index to newly picked up item
@@ -2954,24 +2954,24 @@ clearZeroPage
 	; It manually populates the `inventoryGfxPtrs` with the Copyright_X sprites.
 	; -------------------------------------------------------------------------
 	lda		#>emptySprite					; blank inventory
-	sta		invSlotHi						; slot 1
-	sta		invSlotHi2						; slot 2
-	sta		invSlotHi3						; slot 3
-	sta		invSlotHi4						; slot 4
-	sta		invSlotHi5						; slot 5
-	sta		invSlotHi6						; slot 6
+	sta		invSlotHi0						; slot 1
+	sta		invSlotHi1						; slot 2
+	sta		invSlotHi2						; slot 3
+	sta		invSlotHi3						; slot 4
+	sta		invSlotHi4						; slot 5
+	sta		invSlotHi5						; slot 6
 
 	;fill with copyright text
 	lda		#<copyrightGfx0
-	sta		invSlotLo
+	sta		invSlotLo0
 	lda		#<copyrightGfx1
-	sta		invSlotLo2
+	sta		invSlotLo1
 	lda		#<copyrightGfx2
-	sta		invSlotLo4
-	lda		#<copyrightGfx3
 	sta		invSlotLo3
+	lda		#<copyrightGfx3
+	sta		invSlotLo2
 	lda		#<copyrightGfx4
-	sta		invSlotLo5
+	sta		invSlotLo4
 	lda		#ID_ARK_ROOM					; set "ark elevator room" (room 13)
 	sta		currentRoomId					; as current room
 	lsr										; A = ID_ARK_ROOM / 2 (becomes 6)
@@ -2981,17 +2981,17 @@ clearZeroPage
 
 initGameVars:
 	lda		#<invCoinsSprite
-	sta		invSlotLo						; place coins in Indy's inventory
+	sta		invSlotLo0						; place coins in Indy's inventory
 	lsr										; divide by 8 to get the inventory id
 	lsr
 	lsr
 	sta		selectedInventoryId				; set the current selected inventory id
 	inc		inventoryItemCount				; increment number of inventory items
 	lda		#<emptySprite
-	sta		invSlotLo2						; clear the remainder of Indy's inventory
+	sta		invSlotLo1						; clear the remainder of Indy's inventory
+	sta		invSlotLo2
 	sta		invSlotLo3
 	sta		invSlotLo4
-	sta		invSlotLo5
 	lda		#INIT_SCORE						; set initial adventurePoints
 	sta		adventurePoints
 	lda		#<indyStandSprite				; set Indy's initial sprite (standing)
@@ -3706,19 +3706,19 @@ updateInventoryMenu
 
 drawInventoryItems
 	ldy		temp0						; Load Y with index.
-	lda		(invSlotLo),y				; Load inv item 1.
+	lda		(invSlotLo0),y				; Load inv item 1.
 	sta		GRP0						; Store GRP0.
 	sta		WSYNC
 ;---------------------------------------
-	lda		(invSlotLo2),y				; Load inv item 2.
+	lda		(invSlotLo1),y				; Load inv item 2.
 	sta		GRP1						; Store GRP1.
-	lda		(invSlotLo3),y				; Load inv item 3.
+	lda		(invSlotLo2),y				; Load inv item 3.
 	sta		GRP0						; Store GRP0
-	lda		(invSlotLo4),y				; Load inv item 4.
+	lda		(invSlotLo3),y				; Load inv item 4.
 	sta		temp1						; Save to temp.
-	lda		(invSlotLo5),y				; Load inv item 5.
+	lda		(invSlotLo4),y				; Load inv item 5.
 	tax									; Save to X.
-	lda		(invSlotLo6),y				; Load inv item 6.
+	lda		(invSlotLo5),y				; Load inv item 6.
 	tay									; Save to Y
 	lda		temp1						; Restore item 4.
 	sta		GRP1						; Store GRP1
@@ -3855,7 +3855,7 @@ updateTimepieceSprite
 
 storeTimepieceSprite
 	ldx		selectedItemSlot			; Get the current slot for the timepiece.
-	sta		invSlotLo,x					; Update the graphics pointer (Low Byte).
+	sta		invSlotLo0,x					; Update the graphics pointer (Low Byte).
 
 resetInventoryState
 	lda		#$00						; Clear A.
@@ -3987,7 +3987,7 @@ checkInvCycle
 	and		#MAX_INVENTORY_ITEMS
 	beq		finishInvCycle				; branch if Indy not carrying items
 	ldx		selectedItemSlot
-	lda		invSlotLo,x					; get inventory graphic LSB value
+	lda		invSlotLo0,x					; get inventory graphic LSB value
 	cmp		#<timepiece1200
 	bcc		checkInvItemChoice			; branch if the item is not open clock sprite
 	lda		#<closedTimepieceSprite		; close the timepiece
@@ -3995,7 +3995,7 @@ checkInvCycle
 checkInvItemChoice
 	bit		SWCHA						; check joystick values
 	bmi		checkInvCycleLeft			; branch if left joystick not pushed right
-	sta		invSlotLo,x					; set inventory graphic LSB value
+	sta		invSlotLo0,x					; set inventory graphic LSB value
 
 checkInvCycleRight
 	inx
@@ -4005,13 +4005,13 @@ checkInvCycleRight
 	ldx		#$00						; Wrap around to first slot if > 10
 
 continueInvCycleRight
-	ldy		invSlotLo,x					; get inventory graphic LSB value
+	ldy		invSlotLo0,x					; get inventory graphic LSB value
 	beq		checkInvCycleRight			; If empty (0), skip and keep searching Right
 	bne		setSelectedInvSlot			; Found an item, select it
 
 checkInvCycleLeft
 	bvs		finishInvCycle				; branch if left joystick not pushed left
-	sta		invSlotLo,x
+	sta		invSlotLo0,x
 
 cycleInvLeft
 	dex
@@ -4020,7 +4020,7 @@ cycleInvLeft
 	ldx		#$0a						; Wrap around to last slot if < 0
 
 continueInvCycleLeft
-	ldy		invSlotLo,x
+	ldy		invSlotLo0,x
 	beq		cycleInvLeft				; If empty (0), skip and keep searching Left
 
 setSelectedInvSlot
