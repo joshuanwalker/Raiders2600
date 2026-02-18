@@ -86,7 +86,7 @@ roomPFControlFlags		= $94	; Playfield priority and reflection flags (CTRLPF)
 pickupStatusFlags		= $95	; Bitmask: Items taken in current room (prevents infinite pickup)
 dirtPileGfxState		= $96	; Graphics pointer offset for dirt pile sprite (shrinks as Indy digs)
 digSpeedLimiter			= $97	; Overflow counter limiting dig speed (digs only on wrap to 0)
-swarmEventCounter		= $98	; Countdown for tsetse swarm spawns in Valley of Poison
+swarmSpawnCounter		= $98	; Countdown for tsetse swarm spawns in Valley of Poison
 screenInitFlag			= $99	; Non-zero if the screen needs initialization logic
 grenadeState			= $9a	; Status: Bit 7=Active, Bit 6=Wall Effect Trigger
 grenadeDetonateTime		= $9b	; timeOfDay value at which active grenade detonates
@@ -766,7 +766,7 @@ updateAfterItemRemove:
 	rol		blackMarketState			; rotate left to show Indy not carrying Shovel
 setPickupProcessedFlag:
 	lda		pickupStatusFlags
-	jsr		updateRoomEventState
+	jsr		updateSwarmState
 	tya
 	ora		#$c0
 	sta		pickupStatusFlags
@@ -1991,7 +1991,7 @@ dispatchRoomHandler
 setupNewRoom
 	lda		screenInitFlag				; Check status flag
 	beq		setRoomAttr					; If zero, skip subroutine
-	jsr		updateRoomEventState		; Run special screen setup routine
+	jsr		updateSwarmState			; Run special screen setup routine
 	lda		#$00						; Clear the flag afterward
 setRoomAttr
 	sta		screenInitFlag				; Store the updated flag
@@ -2014,7 +2014,7 @@ setRoomAttr
 	sta		kernelRenderState			; set object state value
 	ldx		#$04
 
-setupThievesDenObjects
+setupThievesDenObjs
 	; --------------------------------------------------------------------------
 	; INITIALIZE THIEVES POSITIONS
 	; Uses a lookup table to set initial HMOVE values for 5 thieves.
@@ -2023,7 +2023,7 @@ setupThievesDenObjects
 	lda		hmoveTable,y				; Load X position from table.
 	sta		thiefPosX,x					; Store
 	dex									; Next thief.
-	bpl		setupThievesDenObjects		; Loop through all Thieves' Den
+	bpl		setupThievesDenObjs		; Loop through all Thieves' Den
 										; enemy positions
 placeObjectPosX
 	jmp		setThievesPosX
@@ -2037,7 +2037,7 @@ initArkRoomObjPos
 	sta		indyPosY					; Set Indy's Y position in the Ark Room
 	rts
 
-clearGameStateMem
+clearThievesDenObjs
 	ldx		#$00						; Start at index 0
 	txa									; A also 0
 clearStateLoop
@@ -2063,10 +2063,10 @@ initRoomState
 	lda		grenadeState				; Load grenade/parachute state.
 	bpl		resetRoomFlags				; If bit 7 is clear (not active),
 										; skip setting the "warped/re-entered" flag.
-	ora		#$40						; Set bit 6 to indicate re-entry or warp status.
+	ora		#$40						; Set bit 6 to indicate moved to a new room
 	sta		grenadeState				; Update the state.
 resetRoomFlags
-	lda		#<fullDirtPile			; Full pile (topmost read window position)
+	lda		#<fullDirtPile				; Full pile (topmost read window position)
 	sta		dirtPileGfxState
 	ldx		#$00						; Initialize X to 0 for clearing.
 	stx		screenEventState			; Clear screen event state.
@@ -2075,7 +2075,7 @@ resetRoomFlags
 	stx		unused90					; Clear unknown flag at $90
 	lda		pickupStatusFlags			; Load pickup flags.
 	stx		pickupStatusFlags			; Clear pickup flags.
-	jsr		updateRoomEventState		; Update room event counters/offsets.
+	jsr		updateSwarmState			; Update room event counters/offsets.
 	rol		playerInputState			; Rotate input flags
 	clc
 	ror		playerInputState			; Reverse the bit rotation
@@ -2101,15 +2101,15 @@ loadRoomGfx
 	sta		p0GfxPtrHi					; Set high byte of sprite pointer for P0
 	lda		p0SpriteHeightData,x
 	sta		p0SpriteHeight				; Set sprite height for P0
-	lda		objectPosXTable,x
+	lda		p0PosXTable,x
 	sta		p0PosX						; Set default object X position
 	lda		m0PosXTable,x
 	sta		m0PosX						; Set default missile X position
 	lda		m0PosYTable,x
 	sta		m0PosY						; Set default missile Y position
 	cpx		#ID_THIEVES_DEN				; Are we in the Thieves' Den?
-	bcs		clearGameStateMem			; jump to clear game state memory.
-	adc		roomSpecialTable,x			; set special behavior flags for room
+	bcs		clearThievesDenObjs			; jump to clear game state memory.
+	adc		p0DrawStartTable,x			; set special behavior flags for room
 	sta		p0DrawStartLine					; Set kernel scanline boundary
 	lda		pf1GfxDataLo,x
 	sta		pf1GfxPtrLo					; Store PF1 graphics pointer LSB.
@@ -2625,7 +2625,7 @@ p0SpriteHeightData
 	.byte $01						; Mesa Field
 	.byte $10						; Valley of Poison
 
-objectPosXTable
+p0PosXTable
 	.byte	$78,$4c,$5d,$4c,$4f,$4c,$12,$4c
 	.byte	$4c,$4c,$4c,$12,$12
 
@@ -2669,7 +2669,7 @@ snakeMoveTableLSB
 snakePosXOffsetTable:
 	.byte	$fe,$fa,$02,$06
 
-roomSpecialTable
+p0DrawStartTable
 	.byte	$00,$00,$18,$04,$03,$03,$85,$85,$3b,$85,$85
 
 m0PosXTable
@@ -2920,14 +2920,14 @@ isItemTaken:
 	rts
 
 
-updateRoomEventState
+updateSwarmState
 	and		#$1f
 	tax
-	lda		swarmEventCounter
+	lda		swarmSpawnCounter
 	cpx		#$0c
 	bcs		doneRoomEventState
 	adc		swarmEventCounterTable,x
-	sta		swarmEventCounter
+	sta		swarmSpawnCounter
 doneRoomEventState
 	rts
 
@@ -2951,7 +2951,7 @@ clearZeroPage
 	;
 	; The game displays the Copyright Notice ("(c) 1982 Atari Inc") inside the
 	; Inventory Strip at the very beginning of the game or after a reset.
-	; It manually populates the `inventoryGfxPtrs` with the Copyright_X sprites.
+	; It manually populates the `inventoryGfxPtrs` with the Copyright_X spritetexts.
 	; -------------------------------------------------------------------------
 	lda		#>emptySprite					; blank inventory
 	sta		invSlotHi0						; slot 1
@@ -4418,10 +4418,10 @@ faceThiefLeft:
 		lda		p0PosY						; Load Thief Y
 		cmp		#$4a						; Check Bound.
 		bcs		swarmOffscreen				; If >= $4A, Skip.
-		ldy		swarmEventCounter			; Load swarm spawn counter.
+		ldy		swarmSpawnCounter			; Load swarm spawn counter.
 		beq		swarmOffscreen				; If 0, Skip.
 		dey									; Decrement.
-		sty		swarmEventCounter			; Update counter.
+		sty		swarmSpawnCounter			; Update counter.
 		ldy		#$8e						; Default Y.
 		adc		#$03						; Add 3 to thief Y location
 		sta		m0PosY						; Set swarm Y near Thief.
