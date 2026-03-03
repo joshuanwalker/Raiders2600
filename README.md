@@ -419,7 +419,7 @@ Each `staticSpriteKernel` room has its own `*playerGraphics` data table:
 | Marketplace | `marketplacePlayerGraphics` | Two sellers, flute, three baskets, parachute pack |
 | Entrance Room | `entranceRoomPlayerGraphics` | Cave entrance (jagged edge), boulder, whip |
 | Black Market | `blackMarketPlayerGraphics` | Two sellers, bullets, basket, shovel |
-| Map Room | `mapRoomPlayerGraphics` | Sun disc, hieroglyphic wall, model chamber, pedestal |
+| Map Room | `mapRoomPlayerGraphics` | Sun disc, mesa map, chamber, headpiece image |
 | Mesa Side | `mesaSidePlayerGraphics` | Parachute figure, tree (canopy/trunk), mesa ground |
 
 The initial P0 color for each room is set from `roomP0ColorTable` during pre-kernel setup, but is typically overridden immediately by the first `SET_PLAYER_0_COLOR` command in the data stream.
