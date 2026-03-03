@@ -104,7 +104,7 @@ startNewFrame
   │   │
   │   └── [Bank 0] Pre-kernel setup
   │         Colors, NUSIZ, CTRLPF from tables
-  │         setObjPosX: position all 5 TIA objects
+  │         setThievesPosX: position all 5 TIA objects
   │         Spin on INTIM until VBLANK expires
   │
   ├── VISIBLE KERNEL (~192 scanlines)
